@@ -1,0 +1,13 @@
+[package]
+name = "todoo"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gtk4 = "0.4.6"
+relm4 = {version = "0.4.3", features = ["libadwaita", "macros"] }
+relm4-macros = "0.4.3"
+relm4-components = "0.4.0"
+cascade = "1.0.0"
