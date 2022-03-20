@@ -1,7 +1,11 @@
-use gtk::prelude::{ BoxExt };
+use gtk::prelude::{
+    BoxExt, CheckButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
+};
 use relm4::factory::{FactoryVec, FactoryPrototype};
-use relm4::{gtk, WidgetPlus};
+use relm4::{ComponentUpdate, gtk, Model, WidgetPlus, Widgets};
 use cascade::cascade;
+use relm4_macros::view;
+use crate::{AppModel, AppMsg, Sender};
 
 pub enum ListMsg {
     Delete(usize),
@@ -11,7 +15,7 @@ pub enum ListMsg {
 }
 
 pub struct List {
-    name: String,
+    pub name: String,
 }
 
 #[derive(Debug)]
@@ -21,11 +25,11 @@ pub struct ListWidgets {
 }
 
 impl FactoryPrototype for List {
-    type Root = gtk::ListBox;
-    type Msg = ListMsg;
     type Factory = FactoryVec<List>;
     type Widgets = ListWidgets;
-    type View = gtk::Box;
+    type Root = gtk::Box;
+    type View = gtk::ListBox;
+    type Msg = ListMsg;
 
     fn init_view(
         &self,
@@ -45,22 +49,67 @@ impl FactoryPrototype for List {
         ListWidgets { name, hbox }
     }
 
-    fn position(
-        &self,
-        key: &<Self::Factory as relm4::factory::Factory<Self, Self::View>>::Key,
-    ) -> <Self::View as relm4::factory::FactoryView<Self::Root>>::Position {
-        todo!();
-    }
+    fn position(&self, _key: &usize) {}
 
-    fn view(
-        &self,
-        key: &<Self::Factory as relm4::factory::Factory<Self, Self::View>>::Key,
-        widgets: &Self::Widgets,
-    ) {
-        todo!();
+    fn view(&self, _key: &usize, widgets: &Self::Widgets) {
+
     }
 
     fn root_widget(widgets: &Self::Widgets) -> &Self::Root {
-        todo!()
+        &widgets.hbox
+    }
+}
+
+pub struct ListsModel {
+    list: FactoryVec<List>
+}
+
+impl Model for ListsModel {
+    type Msg = ListMsg;
+    type Widgets = ListsWidgets;
+    type Components = ();
+}
+
+impl ComponentUpdate<AppModel> for ListsModel {
+    fn init_model(parent_model: &AppModel) -> Self {
+        ListsModel {
+            list: FactoryVec::from_vec(vec![
+                List {
+                    name: "Shopping 🛍️".into()
+                },
+                List {
+                    name: "Projects 🖥️".into()
+                },
+                List {
+                    name: "Work 💼".into()
+                }
+            ])
+        }
+    }
+
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+        match msg {
+            ListMsg::Delete(index) => {}
+            ListMsg::Create(name) => {}
+            ListMsg::Select(index) => {}
+            ListMsg::Rename(index, name) => {}
+        }
+    }
+}
+
+#[relm4::widget(pub)]
+impl Widgets<ListsModel, AppModel> for ListsWidgets {
+    view! {
+        vbox = Some(&gtk::Box) {
+
+            append = &gtk::ScrolledWindow {
+                set_hscrollbar_policy: gtk::PolicyType::Never,
+                set_min_content_height: 360,
+                set_vexpand: true,
+                set_child = Some(&gtk::ListBox) {
+                    factory!(model.list),
+                }
+            },
+        }
     }
 }

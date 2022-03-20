@@ -1,10 +1,11 @@
 use adw::prelude::AdwApplicationWindowExt;
 use gtk::prelude::{
-    BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
+    BoxExt, OrientableExt, WidgetExt,
 };
-use relm4::factory::FactoryVec;
-use relm4::{adw, gtk, send, WidgetPlus, Widgets, RelmApp, Model};
-use tasks_view::task::{Task, TaskMsg};
+use relm4::{adw, gtk, Widgets, RelmApp, Model, AppUpdate, RelmComponent};
+use crate::adw::glib::Sender;
+use crate::list_view::list::ListsModel;
+use crate::tasks_view::tasks::TasksModel;
 
 mod tasks_view;
 mod list_view;
@@ -13,22 +14,29 @@ pub struct AppModel {
     pub show_panel: bool,
 }
 
-enum AppMsg {
+pub enum AppMsg {
     ShowPanel(bool),
 }
 
 impl Model for AppModel {
     type Msg = AppMsg;
     type Widgets = AppWidgets;
-    type Components = ();
+    type Components = AppComponents;
 }
 
 impl AppUpdate for AppModel {
-    update(&mut self, event: AppMsg) {
-        match event {
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>) -> bool {
+        match msg {
             AppMsg::ShowPanel(show_panel) => self.show_panel = show_panel,
         }
+        true
     }
+}
+
+#[derive(relm4::Components)]
+pub struct AppComponents {
+    lists: RelmComponent<ListsModel, AppModel>,
+    tasks: RelmComponent<TasksModel, AppModel>,
 }
 
 #[relm4::widget(pub)]
@@ -45,50 +53,19 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     },
                     set_show_start_title_buttons: true
                 },
-
                 append = &gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
-
-                    append = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_width_request:  200,
-                        // TODO: Implement TreeView
-                    },
-
-                    append = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_margin_all: 12,
-                        set_spacing: 6,
-                        set_hexpand: true,
-                        
-
-                        append = &gtk::ScrolledWindow {
-                            set_hscrollbar_policy: gtk::PolicyType::Never,
-                            set_min_content_height: 360,
-                            set_vexpand: true,
-                            set_child = Some(&gtk::ListBox) {
-                                factory!(model.tasks),
-                            }
-                        },
-        
-                        append = &gtk::Entry {
-                            
-                            connect_activate(sender) => move |entry| {
-                                let buffer = entry.buffer();
-                                send!(sender, TaskMsg::AddEntry(buffer.text()));
-                                buffer.delete_text(0, None);
-                            }
-                        },
-                    },
-                },
-            },
+                    append: components.lists.root_widget(),
+                    append: components.tasks.root_widget(),
+                }
+            }
         }
     }
 }
 
 fn main() {
     let model = AppModel {
-        tasks: FactoryVec::new(),
+        show_panel: false,
     };
     let relm = RelmApp::new(model);
     relm.run();
