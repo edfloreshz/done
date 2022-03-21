@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 gtk4 = "0.4.6"
+tracker = "0.1"
 relm4 = {version = "0.4.3", features = ["libadwaita", "macros"] }
 relm4-macros = "0.4.3"
 relm4-components = "0.4.0"

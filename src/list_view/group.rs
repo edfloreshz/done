@@ -14,17 +14,16 @@ pub struct Group {
 
 #[derive(Debug)]
 pub struct GroupWidgets {
-    name: gtk::Label,
-    hbox: gtk::Box,
-    lists: gtk::Label,
+    model: gtk::TreeModel,
+    tree_view: gtk::TreeView,
 }
 
 impl FactoryPrototype for Group {
-    type Root = gtk::ListBox;
-    type Msg = GroupMsg;
     type Factory = FactoryVec<Group>;
     type Widgets = GroupWidgets;
+    type Root = gtk::ListBox;
     type View = gtk::Box;
+    type Msg = GroupMsg;
 
     fn init_view(
         &self,
