@@ -6,13 +6,13 @@ use gtk4::prelude::TreeViewExt;
 use gtk::prelude::{
     BoxExt, ButtonExt, GridExt, WidgetExt, OrientableExt, GtkWindowExt
 };
-use relm4::{adw, AppUpdate, gtk, Model, RelmApp, send, WidgetPlus, Widgets};
+use relm4::{adw, AppUpdate, gtk, Model, RelmApp, RelmComponent, send, WidgetPlus, Widgets};
 
 use models::task::Task;
 
 use crate::adw::glib::Sender;
 use crate::glib::StaticType;
-use crate::models::list::List;
+use crate::models::list::{List, ListModel};
 
 mod models;
 mod views;
@@ -31,7 +31,23 @@ pub enum AppMsg {
 impl Model for AppModel {
     type Msg = AppMsg;
     type Widgets = AppWidgets;
-    type Components = ();
+    type Components = AppComponents;
+}
+
+pub struct AppComponents {
+    lists: RelmComponent<ListModel, AppModel>
+}
+
+impl relm4::Components<AppModel> for AppComponents {
+    fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
+        AppComponents {
+            lists: RelmComponent::new(parent_model, parent_sender)
+        }
+    }
+
+    fn connect_parent(&mut self, _parent_widgets: &AppWidgets) {
+
+    }
 }
 
 impl AppUpdate for AppModel {
@@ -80,7 +96,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_width_request: 250,
                             set_hscrollbar_policy: gtk::PolicyType::Never,
 
-                            set_child: Some(&populated_tree_view(&model))
+                            set_child: Some(components.lists.root_widget())
                         }
                     },
                     append = &gtk::Separator {
@@ -97,38 +113,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
             }
         }
     }
-}
-
-fn populated_tree_view(model: &AppModel) -> gtk::TreeView {
-    let tree_view = gtk::TreeView::builder()
-        .width_request(200)
-        .headers_visible(false)
-        .level_indentation(12)
-        .can_focus(true)
-        .visible(true)
-        .show_expanders(true)
-        .build();
-
-    let column = gtk::TreeViewColumn::builder().title("List").build();
-    tree_view.append_column(&column);
-    let list_store = gtk::TreeStore::new(&[Type::STRING]);
-    tree_view.set_model(Some(&list_store));
-    append_text_column(&tree_view);
-
-    for (i, list) in model.lists.iter().enumerate() {
-        list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
-    }
-
-    tree_view
-}
-
-fn append_text_column(tree: &gtk::TreeView) {
-    let column = gtk::TreeViewColumn::new();
-    let cell = gtk::CellRendererText::new();
-
-    column.pack_start(&cell, true);
-    column.add_attribute(&cell, "text", 0);
-    tree.append_column(&column);
 }
 
 fn main() {

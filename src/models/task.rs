@@ -4,7 +4,7 @@ use gtk::prelude::{
 use relm4::factory::{FactoryPrototype, FactoryVec};
 use relm4::{gtk, send, Model, Sender, WidgetPlus, Widgets, ComponentUpdate};
 use crate::List;
-use crate::models::list::ListMsg;
+use crate::models::list::{ListModel, ListMsg};
 
 pub enum TaskMsg {
     SetCompleted((usize, bool)),
@@ -76,9 +76,9 @@ impl Model for TaskModel {
     type Components = ();
 }
 
-impl ComponentUpdate<List> for TaskModel {
-    fn init_model(parent_model: &List) -> Self {
-        TaskModel { tasks: FactoryVec::from_vec(parent_model.tasks.clone()) }
+impl ComponentUpdate<ListModel> for TaskModel {
+    fn init_model(parent_model: &ListModel) -> Self {
+        TaskModel { tasks: FactoryVec::from_vec(parent_model.lists[0].clone().tasks) }
     }
 
     fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<ListMsg>) {
@@ -99,7 +99,7 @@ impl ComponentUpdate<List> for TaskModel {
 }
 
 #[relm4::widget(pub)]
-impl Widgets<TaskModel, List> for TaskModelWidgets {
+impl Widgets<TaskModel, ListModel> for TaskModelWidgets {
     view! {
         vbox = Some(&gtk::Box) {
             set_orientation: gtk::Orientation::Vertical,

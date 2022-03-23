@@ -1,9 +1,11 @@
+use gtk4::glib::Type;
+use gtk4::prelude::TreeViewExt;
 use gtk::prelude::{
     BoxExt
 };
-use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate};
-use crate::Sender;
-use crate::models::task::Task;
+use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate, ComponentUpdate, RelmComponent, Components};
+use crate::{AppModel, AppMsg, Sender};
+use crate::models::task::{Task, TaskModel};
 
 pub enum ListMsg {
     Delete(usize),
@@ -18,57 +20,89 @@ pub struct List {
     pub tasks: Vec<Task>
 }
 
-pub struct ListWidgets {
-    view: gtk::Box
+pub struct ListModel {
+    pub lists: Vec<List>
 }
 
-impl Model for List {
+pub struct ListWidgets {
+    tree_view: gtk::TreeView
+}
+
+impl Model for ListModel {
     type Msg = ListMsg;
     type Widgets = ListWidgets;
-    type Components = ();
+    type Components = ListComponents;
 }
 
-impl AppUpdate for List {
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>) -> bool {
+pub struct ListComponents {
+    tasks: RelmComponent<TaskModel, ListModel>
+}
+
+impl Components<ListModel> for ListComponents {
+    fn init_components(parent_model: &ListModel, parent_sender: Sender<ListMsg>) -> Self {
+        ListComponents { tasks: RelmComponent::new(parent_model, parent_sender) }
+    }
+
+    fn connect_parent(&mut self, _parent_widgets: &ListWidgets) {
+        todo!()
+    }
+}
+
+impl ComponentUpdate<AppModel> for ListModel {
+    fn init_model(parent_model: &AppModel) -> Self {
+        ListModel { lists: parent_model.lists.clone()}
+    }
+
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
         match msg {
             ListMsg::Delete(index) => {}
             ListMsg::Create(name) => {}
             ListMsg::Select(index) => {},
             ListMsg::Rename(index, name) => {}
         }
-        true
     }
 }
 
-impl Widgets<List, ()> for ListWidgets {
-    type Root = gtk::Box;
+impl Widgets<ListModel, AppModel> for ListWidgets {
+    type Root = gtk::TreeView;
 
-    fn init_view(model: &List, _components: &(), sender: Sender<ListMsg>) -> Self {
-        let view = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        for task in &model.tasks {
-            let hbox = gtk::Box::builder()
-                .orientation(gtk::Orientation::Horizontal)
-                .build();
-            let checkbox = gtk::CheckButton::builder().active(false).build();
-            let label = gtk::Label::new(Some(&model.name));
+    fn init_view(model: &ListModel, components: &ListComponents, sender: Sender<ListMsg>) -> Self {
+        let tree_view = gtk::TreeView::builder()
+            .width_request(200)
+            .headers_visible(false)
+            .level_indentation(12)
+            .can_focus(true)
+            .visible(true)
+            .show_expanders(true)
+            .build();
 
-            assert!(!task.completed);
+        let column = gtk::TreeViewColumn::builder().title("List").build();
+        tree_view.append_column(&column);
+        let list_store = gtk::TreeStore::new(&[Type::STRING]);
+        tree_view.set_model(Some(&list_store));
+        append_text_column(&tree_view);
 
-            checkbox.set_margin_all(12);
-            label.set_margin_all(12);
-
-            hbox.append(&checkbox);
-            hbox.append(&label);
-            view.append(&hbox);
+        for list in model.lists.iter() {
+            list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
         }
-        ListWidgets { view }
+
+        ListWidgets { tree_view }
     }
 
     fn root_widget(&self) -> Self::Root {
-        self.view.clone()
+        self.tree_view.clone()
     }
 
-    fn view(&mut self, model: &List, sender: Sender<ListMsg>) {
+    fn view(&mut self, model: &ListModel, sender: Sender<ListMsg>) {
         todo!()
     }
+}
+
+fn append_text_column(tree: &gtk::TreeView) {
+    let column = gtk::TreeViewColumn::new();
+    let cell = gtk::CellRendererText::new();
+
+    column.pack_start(&cell, true);
+    column.add_attribute(&cell, "text", 0);
+    tree.append_column(&column);
 }
