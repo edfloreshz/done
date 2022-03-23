@@ -3,22 +3,24 @@ use gtk::prelude::{
 };
 use relm4::factory::{FactoryPrototype, FactoryVec};
 use relm4::{gtk, send, Model, Sender, WidgetPlus, Widgets, ComponentUpdate};
-use crate::{AppModel, AppMsg};
+use crate::List;
+use crate::models::list::ListMsg;
 
 pub enum TaskMsg {
     SetCompleted((usize, bool)),
     AddEntry(String),
 }
 
+#[derive(Clone)]
 pub struct Task {
-    name: String,
-    completed: bool,
+    pub(crate) name: String,
+    pub(crate) completed: bool,
 }
 
 #[derive(Debug)]
 pub struct TaskWidgets {
     label: gtk::Label,
-    hbox: gtk::Box,
+    hbox: gtk::Box
 }
 
 impl FactoryPrototype for Task {
@@ -64,22 +66,22 @@ impl FactoryPrototype for Task {
     }
 }
 
-pub struct TasksModel {
+pub struct TaskModel {
     tasks: FactoryVec<Task>,
 }
 
-impl Model for TasksModel {
+impl Model for TaskModel {
     type Msg = TaskMsg;
-    type Widgets = TasksWidgets;
+    type Widgets = TaskModelWidgets;
     type Components = ();
 }
 
-impl ComponentUpdate<AppModel> for TasksModel {
-    fn init_model(parent_model: &AppModel) -> Self {
-        TasksModel { tasks: FactoryVec::new() }
+impl ComponentUpdate<List> for TaskModel {
+    fn init_model(parent_model: &List) -> Self {
+        TaskModel { tasks: FactoryVec::from_vec(parent_model.tasks.clone()) }
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<ListMsg>) {
         match msg {
             TaskMsg::SetCompleted((index, completed)) => {
                 if let Some(task) = self.tasks.get_mut(index) {
@@ -97,7 +99,7 @@ impl ComponentUpdate<AppModel> for TasksModel {
 }
 
 #[relm4::widget(pub)]
-impl Widgets<TasksModel, AppModel> for TasksWidgets {
+impl Widgets<TaskModel, List> for TaskModelWidgets {
     view! {
         vbox = Some(&gtk::Box) {
             set_orientation: gtk::Orientation::Vertical,
