@@ -1,12 +1,12 @@
 use adw::prelude::AdwApplicationWindowExt;
 use gtk4::glib;
-use gtk4::glib::OptionArg::String;
 use gtk4::glib::Type;
 use gtk4::prelude::TreeViewExt;
 use gtk::prelude::{
-    BoxExt, ButtonExt, GridExt, WidgetExt, OrientableExt, GtkWindowExt
+    BoxExt, ButtonExt, GridExt, WidgetExt, OrientableExt, GtkWindowExt, EntryExt, EntryBufferExtManual
 };
-use relm4::{adw, AppUpdate, gtk, Model, RelmApp, RelmComponent, send, WidgetPlus, Widgets};
+use relm4::{adw, AppUpdate, Components, ComponentUpdate, gtk, Model, RelmApp, RelmComponent, send, WidgetPlus, Widgets};
+use relm4::factory::FactoryVec;
 
 use models::task::Task;
 
@@ -19,13 +19,15 @@ mod views;
 
 #[tracker::track]
 pub struct AppModel {
-    pub show_panel: bool,
+    pub selected: usize,
     #[tracker::do_not_track]
     pub lists: Vec<List>
 }
 
 pub enum AppMsg {
-    ShowPanel,
+    Select(usize),
+    SetCompleted((usize, bool)),
+    AddEntry(String),
 }
 
 impl Model for AppModel {
@@ -38,7 +40,7 @@ pub struct AppComponents {
     lists: RelmComponent<ListModel, AppModel>
 }
 
-impl relm4::Components<AppModel> for AppComponents {
+impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
             lists: RelmComponent::new(parent_model, parent_sender)
@@ -46,7 +48,6 @@ impl relm4::Components<AppModel> for AppComponents {
     }
 
     fn connect_parent(&mut self, _parent_widgets: &AppWidgets) {
-
     }
 }
 
@@ -54,7 +55,18 @@ impl AppUpdate for AppModel {
     fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
         self.reset();
         match msg {
-            AppMsg::ShowPanel => self.set_show_panel(!self.show_panel),
+            AppMsg::Select(index) => self.set_selected(index),
+            AppMsg::SetCompleted((index, completed)) => {
+                if let Some(task) = self.lists[self.selected].tasks.get_mut(index) {
+                    task.completed = completed;
+                }
+            }
+            AppMsg::AddEntry(name) => {
+                self.lists[self.selected].tasks.push(Task {
+                    name,
+                    completed: false,
+                });
+            }
         }
         true
     }
@@ -84,12 +96,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_title_widget = Some(&gtk::Label) {
                                 set_label: "To Do",
                             },
-                            pack_end = &gtk::ToggleButton {
-                                set_icon_name: "open-menu-symbolic",
-                                connect_clicked(sender) => move |_| {
-                                    send!(sender, AppMsg::ShowPanel)
-                                }
-                            },
                         },
                         append = &gtk::ScrolledWindow {
                             set_vexpand: true,
@@ -108,6 +114,27 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         append = &adw::HeaderBar {
                             set_hexpand: true,
                         },
+                        append = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_hexpand: true,
+                            set_margin_all: 12,
+                            set_spacing: 6,
+                            append = &gtk::ScrolledWindow {
+                                set_hscrollbar_policy: gtk::PolicyType::Never,
+                                set_min_content_height: 360,
+                                set_vexpand: true,
+                                set_child = Some(&gtk::ListBox) {
+                                    factory!(FactoryVec::from_vec(model.lists[model.selected].clone().tasks))
+                                }
+                            },
+                            append = &gtk::Entry {
+                                connect_activate(sender) => move |entry| {
+                                    let buffer = entry.buffer();
+                                    send!(sender, AppMsg::AddEntry(buffer.text()));
+                                    buffer.delete_text(0, None);
+                                }
+                            }
+                        }
                     }
                 },
             }
@@ -117,7 +144,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
 
 fn main() {
     let model = AppModel {
-        show_panel: false,
+        selected: 0,
         lists: vec![
             List {
                 name: "Shopping 🛍️".into(),

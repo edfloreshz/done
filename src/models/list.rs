@@ -5,7 +5,7 @@ use gtk::prelude::{
 };
 use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate, ComponentUpdate, RelmComponent, Components};
 use crate::{AppModel, AppMsg, Sender};
-use crate::models::task::{Task, TaskModel};
+use crate::models::task::{Task};
 
 pub enum ListMsg {
     Delete(usize),
@@ -21,7 +21,17 @@ pub struct List {
 }
 
 pub struct ListModel {
-    pub lists: Vec<List>
+    pub(crate) lists: Vec<List>
+}
+
+impl ComponentUpdate<AppModel> for ListModel {
+    fn init_model(parent_model: &AppModel) -> Self {
+        ListModel { lists: parent_model.lists.clone() }
+    }
+
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+        todo!()
+    }
 }
 
 pub struct ListWidgets {
@@ -31,42 +41,13 @@ pub struct ListWidgets {
 impl Model for ListModel {
     type Msg = ListMsg;
     type Widgets = ListWidgets;
-    type Components = ListComponents;
-}
-
-pub struct ListComponents {
-    tasks: RelmComponent<TaskModel, ListModel>
-}
-
-impl Components<ListModel> for ListComponents {
-    fn init_components(parent_model: &ListModel, parent_sender: Sender<ListMsg>) -> Self {
-        ListComponents { tasks: RelmComponent::new(parent_model, parent_sender) }
-    }
-
-    fn connect_parent(&mut self, _parent_widgets: &ListWidgets) {
-        todo!()
-    }
-}
-
-impl ComponentUpdate<AppModel> for ListModel {
-    fn init_model(parent_model: &AppModel) -> Self {
-        ListModel { lists: parent_model.lists.clone()}
-    }
-
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
-        match msg {
-            ListMsg::Delete(index) => {}
-            ListMsg::Create(name) => {}
-            ListMsg::Select(index) => {},
-            ListMsg::Rename(index, name) => {}
-        }
-    }
+    type Components = ();
 }
 
 impl Widgets<ListModel, AppModel> for ListWidgets {
     type Root = gtk::TreeView;
 
-    fn init_view(model: &ListModel, components: &ListComponents, sender: Sender<ListMsg>) -> Self {
+    fn init_view(model: &ListModel, components: &(), sender: Sender<ListMsg>) -> Self {
         let tree_view = gtk::TreeView::builder()
             .width_request(200)
             .headers_visible(false)

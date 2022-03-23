@@ -3,13 +3,8 @@ use gtk::prelude::{
 };
 use relm4::factory::{FactoryPrototype, FactoryVec};
 use relm4::{gtk, send, Model, Sender, WidgetPlus, Widgets, ComponentUpdate};
-use crate::List;
+use crate::AppMsg;
 use crate::models::list::{ListModel, ListMsg};
-
-pub enum TaskMsg {
-    SetCompleted((usize, bool)),
-    AddEntry(String),
-}
 
 #[derive(Clone)]
 pub struct Task {
@@ -20,7 +15,7 @@ pub struct Task {
 #[derive(Debug)]
 pub struct TaskWidgets {
     label: gtk::Label,
-    hbox: gtk::Box
+    container: gtk::Box
 }
 
 impl FactoryPrototype for Task {
@@ -28,7 +23,7 @@ impl FactoryPrototype for Task {
     type Widgets = TaskWidgets;
     type Root = gtk::Box;
     type View = gtk::ListBox;
-    type Msg = TaskMsg;
+    type Msg = AppMsg;
 
     fn init_view(&self, key: &usize, sender: Sender<Self::Msg>) -> Self::Widgets {
         let hbox = gtk::Box::builder()
@@ -47,10 +42,10 @@ impl FactoryPrototype for Task {
 
         let index = *key;
         checkbox.connect_toggled(move |checkbox| {
-            send!(sender, TaskMsg::SetCompleted((index, checkbox.is_active())));
+            send!(sender, AppMsg::SetCompleted((index, checkbox.is_active())));
         });
 
-        TaskWidgets { label, hbox }
+        TaskWidgets { label, container: hbox }
     }
 
     fn position(&self, _key: &usize) {}
@@ -62,67 +57,12 @@ impl FactoryPrototype for Task {
     }
 
     fn root_widget(widgets: &Self::Widgets) -> &Self::Root {
-        &widgets.hbox
+        &widgets.container
     }
 }
 
-pub struct TaskModel {
-    tasks: FactoryVec<Task>,
-}
-
-impl Model for TaskModel {
-    type Msg = TaskMsg;
-    type Widgets = TaskModelWidgets;
+impl Model for Task {
+    type Msg = AppMsg;
+    type Widgets = ();
     type Components = ();
-}
-
-impl ComponentUpdate<ListModel> for TaskModel {
-    fn init_model(parent_model: &ListModel) -> Self {
-        TaskModel { tasks: FactoryVec::from_vec(parent_model.lists[0].clone().tasks) }
-    }
-
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<ListMsg>) {
-        match msg {
-            TaskMsg::SetCompleted((index, completed)) => {
-                if let Some(task) = self.tasks.get_mut(index) {
-                    task.completed = completed;
-                }
-            }
-            TaskMsg::AddEntry(name) => {
-                self.tasks.push(Task {
-                    name,
-                    completed: false,
-                });
-            }
-        }
-    }
-}
-
-#[relm4::widget(pub)]
-impl Widgets<TaskModel, ListModel> for TaskModelWidgets {
-    view! {
-        vbox = Some(&gtk::Box) {
-            set_orientation: gtk::Orientation::Vertical,
-            set_margin_all: 12,
-            set_spacing: 6,
-            set_hexpand: true,
-
-            append = &gtk::ScrolledWindow {
-                set_hscrollbar_policy: gtk::PolicyType::Never,
-                set_min_content_height: 360,
-                set_vexpand: true,
-                set_child = Some(&gtk::ListBox) {
-                    factory!(model.tasks),
-                }
-            },
-
-            append = &gtk::Entry {
-                connect_activate(sender) => move |entry| {
-                    let buffer = entry.buffer();
-                    send!(sender, TaskMsg::AddEntry(buffer.text()));
-                    buffer.delete_text(0, None);
-                }
-            }
-        }
-    }
 }
