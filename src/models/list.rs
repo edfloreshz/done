@@ -1,9 +1,9 @@
 use gtk4::glib::Type;
-use gtk4::prelude::TreeViewExt;
+use gtk4::prelude::{TreeModelExt, TreeViewExt};
 use gtk::prelude::{
     BoxExt
 };
-use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate, ComponentUpdate, RelmComponent, Components};
+use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate, ComponentUpdate, RelmComponent, Components, send};
 use crate::{AppModel, AppMsg, Sender};
 use crate::models::task::{Task};
 
@@ -30,7 +30,10 @@ impl ComponentUpdate<AppModel> for ListModel {
     }
 
     fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
-        todo!()
+        match msg {
+            ListMsg::Select(index) => send!(parent_sender, AppMsg::Select(index)),
+            _ => {}
+        }
     }
 }
 
@@ -67,6 +70,14 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
             list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
         }
 
+        let selection = tree_view.selection();
+
+        selection.connect_changed(move |tree_view| {
+            let (model, iter) = tree_view.selected().expect("Couldn't get selected");
+            let path = model.path(&iter);
+            send!(sender, ListMsg::Select(path.indices()[0].try_into().unwrap()))
+        });
+
         ListWidgets { tree_view }
     }
 
@@ -75,7 +86,7 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
     }
 
     fn view(&mut self, model: &ListModel, sender: Sender<ListMsg>) {
-        todo!()
+
     }
 }
 
