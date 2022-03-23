@@ -11,6 +11,7 @@ use relm4::{adw, AppUpdate, gtk, Model, RelmApp, send, WidgetPlus, Widgets};
 use models::task::Task;
 
 use crate::adw::glib::Sender;
+use crate::glib::StaticType;
 use crate::models::list::List;
 
 mod models;
@@ -64,8 +65,10 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_width_request: 250,
                             set_show_end_title_buttons: false,
                             set_show_start_title_buttons: false,
-
-                            pack_start = &gtk::ToggleButton {
+                            set_title_widget = Some(&gtk::Label) {
+                                set_label: "To Do",
+                            },
+                            pack_end = &gtk::ToggleButton {
                                 set_icon_name: "open-menu-symbolic",
                                 connect_clicked(sender) => move |_| {
                                     send!(sender, AppMsg::ShowPanel)
@@ -88,13 +91,9 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_orientation: gtk::Orientation::Vertical,
                         append = &adw::HeaderBar {
                             set_hexpand: true,
-                            set_title_widget = Some(&gtk::Label) {
-                                set_label: "To Do",
-                            },
                         },
                     }
                 },
-
             }
         }
     }
@@ -112,17 +111,24 @@ fn populated_tree_view(model: &AppModel) -> gtk::TreeView {
 
     let column = gtk::TreeViewColumn::builder().title("List").build();
     tree_view.append_column(&column);
+    let list_store = gtk::TreeStore::new(&[Type::STRING]);
+    tree_view.set_model(Some(&list_store));
+    append_text_column(&tree_view);
 
-    let list_store = gtk::TreeStore::new(&[Type::OBJECT]);
     for (i, list) in model.lists.iter().enumerate() {
-        let list_view = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        list_view.append(&gtk::Label::new(Some(&list.name)));
-        list_store.insert_with_values(None, Some(i as u32), &[(0, &list_view)]); // TODO: Need to render list names.
+        list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
     }
 
-    tree_view.set_model(Some(&list_store));
-
     tree_view
+}
+
+fn append_text_column(tree: &gtk::TreeView) {
+    let column = gtk::TreeViewColumn::new();
+    let cell = gtk::CellRendererText::new();
+
+    column.pack_start(&cell, true);
+    column.add_attribute(&cell, "text", 0);
+    tree.append_column(&column);
 }
 
 fn main() {
