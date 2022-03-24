@@ -1,5 +1,5 @@
 use gtk4::glib::Type;
-use gtk4::prelude::{TreeModelExt, TreeViewExt};
+use gtk4::prelude::{CellRendererExt, TreeModelExt, TreeViewExt};
 use gtk::prelude::{
     BoxExt
 };
@@ -67,6 +67,8 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
         append_text_column(&tree_view);
 
         for list in model.lists.iter() {
+            let container = gtk::Box::builder().hexpand(true).height_request(20).orientation(gtk::Orientation::Vertical).build();
+            container.append(&gtk::Label::new(Some(&list.name)));
             list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
         }
 
@@ -93,6 +95,7 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
 fn append_text_column(tree: &gtk::TreeView) {
     let column = gtk::TreeViewColumn::new();
     let cell = gtk::CellRendererText::new();
+    cell.set_height(50);
 
     column.pack_start(&cell, true);
     column.add_attribute(&cell, "text", 0);
