@@ -5,7 +5,7 @@ use gtk4::prelude::TreeViewExt;
 use gtk::prelude::{
     BoxExt, ButtonExt, GridExt, WidgetExt, OrientableExt, GtkWindowExt, EntryExt, EntryBufferExtManual
 };
-use relm4::{adw, AppUpdate, Components, ComponentUpdate, gtk, Model, RelmApp, RelmComponent, send, WidgetPlus, Widgets};
+use relm4::{adw, AppUpdate, Components, ComponentUpdate, gtk, MicroComponent, Model, RelmApp, RelmComponent, send, WidgetPlus, Widgets};
 use relm4::factory::FactoryVec;
 
 use models::task::Task;
@@ -13,6 +13,7 @@ use models::task::Task;
 use crate::adw::glib::Sender;
 use crate::glib::StaticType;
 use crate::models::list::{List, ListModel};
+use crate::models::task::TaskModel;
 
 mod models;
 mod views;
@@ -21,13 +22,13 @@ mod views;
 pub struct AppModel {
     pub selected: usize,
     #[tracker::do_not_track]
-    pub lists: Vec<List>
+    pub lists: Vec<List>,
+    #[tracker::do_not_track]
+    pub task: MicroComponent<TaskModel>
 }
 
 pub enum AppMsg {
     Select(usize),
-    SetCompleted((usize, bool)),
-    AddEntry(String),
 }
 
 impl Model for AppModel {
@@ -55,18 +56,15 @@ impl AppUpdate for AppModel {
     fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
         self.reset();
         match msg {
-            AppMsg::Select(index) => self.set_selected(index),
-            AppMsg::SetCompleted((index, completed)) => {
-                if let Some(task) = self.lists[self.selected].tasks.get_mut(index) {
-                    task.completed = completed;
-                }
-            }
-            AppMsg::AddEntry(name) => {
-                self.lists[self.selected].tasks.push(Task {
-                    name,
-                    completed: false,
-                });
-            }
+            AppMsg::Select(index) => {
+                self.set_selected(index);
+                self.task = MicroComponent::new(
+                    TaskModel {
+                        tasks: FactoryVec::from_vec(self.lists[self.selected].clone().tasks)
+                    },
+                    ()
+                );
+            },
         }
         true
     }
@@ -84,7 +82,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
             set_content: main_box = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
 
-                append = &adw::Leaflet {
+                append: leaflet = &adw::Leaflet {
                     set_can_navigate_back: true,
                     append: side_headerbar = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
@@ -109,35 +107,28 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_orientation: gtk::Orientation::Vertical,
                         set_visible: true
                     },
+
                     append = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
+
                         append = &adw::HeaderBar {
-                            set_hexpand: true,
+                            set_width_request: 250,
                         },
-                        append = &gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
-                            set_hexpand: true,
-                            set_margin_all: 12,
-                            set_spacing: 6,
-                            append = &gtk::ScrolledWindow {
-                                set_hscrollbar_policy: gtk::PolicyType::Never,
-                                set_min_content_height: 360,
-                                set_vexpand: true,
-                                set_child = Some(&gtk::ListBox) {
-                                    factory!(FactoryVec::from_vec(model.lists[model.selected].clone().tasks))
-                                }
-                            },
-                            append = &gtk::Entry {
-                                connect_activate(sender) => move |entry| {
-                                    let buffer = entry.buffer();
-                                    send!(sender, AppMsg::AddEntry(buffer.text()));
-                                    buffer.delete_text(0, None);
-                                }
-                            }
-                        }
+                        append: content = &gtk::Box { }
                     }
                 },
             }
+        }
+    }
+    fn pre_view() {
+        match self.content.last_child() {
+            Some(last) => {
+                self.content.remove(&last);
+            },
+            None => {}
+        }
+        if !model.task.is_connected() {
+            self.content.append(model.task.root_widget());
         }
     }
 }
@@ -166,6 +157,7 @@ fn main() {
             }
         ],
         tracker: 0,
+        task: MicroComponent::new(TaskModel { tasks: FactoryVec::new() }, ())
     };
     let relm = RelmApp::new(model);
     relm.run();
