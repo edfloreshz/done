@@ -1,19 +1,84 @@
+use std::time::SystemTime;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use gtk::prelude::{
     BoxExt, CheckButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 };
 use relm4::factory::{Factory, FactoryPrototype, FactoryVec};
 use relm4::{gtk, send, Model, Sender, WidgetPlus, Widgets, ComponentUpdate, MicroComponent, MicroModel, MicroWidgets};
 use crate::models::list::{ListModel, ListMsg};
-
+use serde::{Serialize, Deserialize};
 pub enum TaskMsg {
     SetCompleted((usize, bool)),
     AddEntry(String),
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
-    pub(crate) name: String,
-    pub(crate) completed: bool,
+    pub id: String,
+    pub importance: TaskImportance,
+    #[serde(rename = "isReminderOn")]
+    pub is_reminder_on: bool,
+    pub status: TaskStatus,
+    pub title: String,
+    pub created: DateTime<Utc>,
+    pub last_modified: DateTime<Utc>,
+    pub completed: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct ToDoTask {
+    pub id: String,
+    pub importance: String,
+    #[serde(rename = "isReminderOn")]
+    pub is_reminder_on: bool,
+    pub status: String,
+    pub title: String,
+    #[serde(rename = "createdDateTime")]
+    pub created: String,
+    #[serde(rename = "lastModifiedDateTime")]
+    pub last_modified: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum TaskImportance {
+    Normal,
+}
+
+impl Default for TaskImportance {
+    fn default() -> Self {
+        TaskImportance::Normal
+    }
+}
+
+impl TaskImportance {
+    pub fn from(importance: &str) -> Self {
+        match importance {
+            "normal" => TaskImportance::Normal,
+            _ => TaskImportance::Normal
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum TaskStatus {
+    NotStarted,
+    Started
+}
+
+impl Default for TaskStatus {
+    fn default() -> Self {
+        TaskStatus::NotStarted
+    }
+}
+
+impl TaskStatus {
+    pub fn from(status: &str) -> Self {
+        match status {
+            "notStarted" => TaskStatus::NotStarted,
+            "started" => TaskStatus::Started,
+            _ => TaskStatus::NotStarted
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -34,7 +99,7 @@ impl FactoryPrototype for Task {
             .orientation(gtk::Orientation::Horizontal)
             .build();
         let checkbox = gtk::CheckButton::builder().active(false).build();
-        let label = gtk::Label::new(Some(&self.name));
+        let label = gtk::Label::new(Some(&self.title));
 
         assert!(!self.completed);
 
@@ -54,25 +119,6 @@ impl FactoryPrototype for Task {
 
     fn position(&self, _index: &usize) {}
 
-    // view! {
-    //     container = gtk::Box {
-    //         set_orientation: gtk::Orientation::Horizontal,
-    //
-    //         append = &gtk::CheckButton {
-    //             set_active: false,
-    //             set_margin_all: 12,
-    //
-    //             connect_toggled(key) => move |checkbox| {
-    //                 send!(sender, AppMsg::SetCompleted((key, checkbox.is_active())));
-    //             }
-    //         },
-    //         append = &gtk::Label {
-    //             set_label: &self.name,
-    //             set_margin_all: 12
-    //         }
-    //     }
-    // }
-
     fn view(&self, key: &usize, widgets: &Self::Widgets) {
         let attrs = widgets.label.attributes().unwrap_or_default();
         attrs.change(gtk::pango::AttrInt::new_strikethrough(self.completed));
@@ -85,7 +131,7 @@ impl FactoryPrototype for Task {
 }
 
 pub struct TaskModel {
-    pub(crate) tasks: FactoryVec<Task>
+    pub tasks: FactoryVec<Task>
 }
 
 impl MicroModel for TaskModel {
@@ -102,7 +148,13 @@ impl MicroModel for TaskModel {
             }
             TaskMsg::AddEntry(name) => {
                 self.tasks.push(Task {
-                    name,
+                    id: "".to_string(),
+                    importance: TaskImportance::Normal,
+                    is_reminder_on: false,
+                    status: TaskStatus::NotStarted,
+                    title: name,
+                    created: DateTime::from(SystemTime::now()),
+                    last_modified: DateTime::from(SystemTime::now()),
                     completed: false,
                 });
             }
