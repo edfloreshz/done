@@ -138,16 +138,22 @@ fn main() {
         selected: 0,
         lists: vec![
             List {
-                name: "Shopping 🛍️".into(),
+                display_name: "Shopping 🛍️".into(),
+                is_owner: false,
+                is_shared: false,
                 tasks: vec![
                     Task {
                         name: "Eggs 🥚".into(),
                         completed: false
                     }
-                ]
+                ],
+                task_list_id: "".to_string()
             },
             List {
-                name: "Pending 😟".into(),
+                display_name: "Pending 😟".into(),
+                is_owner: false,
+                is_shared: false,
+                task_list_id: "".to_string(),
                 tasks: vec![
                     Task {
                         name: "Pay bills 💸".into(),

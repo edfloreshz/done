@@ -16,7 +16,10 @@ pub enum ListMsg {
 
 #[derive(Clone)]
 pub struct List {
-    pub name: String,
+    pub display_name: String,
+    pub is_owner: bool,
+    pub is_shared: bool,
+    pub task_list_id: String,
     pub tasks: Vec<Task>
 }
 
@@ -68,8 +71,8 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
 
         for list in model.lists.iter() {
             let container = gtk::Box::builder().hexpand(true).height_request(20).orientation(gtk::Orientation::Vertical).build();
-            container.append(&gtk::Label::new(Some(&list.name)));
-            list_store.insert_with_values(None, Some(0), &[(0, &list.name)]);
+            container.append(&gtk::Label::new(Some(&list.display_name)));
+            list_store.insert_with_values(None, Some(0), &[(0, &list.display_name)]);
         }
 
         let selection = tree_view.selection();
