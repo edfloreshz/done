@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use cascade::cascade;
 use serde::{Serialize, Deserialize};
 use crate::List;
-use crate::models::task::Task;
+use crate::models::task::{Task, ToDoTask};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Requester {
@@ -163,6 +163,17 @@ impl Requester {
             let lists = response.text().await?;
             let lists: Collection<List> = serde_json::from_str(lists.as_str())?;
             Ok(lists.value)
+        } else {
+            Ok(vec![])
+        }
+    }
+    pub async fn get_task(&self, task_id: &str) -> anyhow::Result<Vec<ToDoTask>> {
+        let client = reqwest::Client::new();
+        let response = client.get(format!("https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks", task_id)).bearer_auth(&self.access_token).send().await?;
+        if response.status().is_success() {
+            let response = response.text().await?;
+            let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
+            Ok(collection.value)
         } else {
             Ok(vec![])
         }
