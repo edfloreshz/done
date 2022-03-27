@@ -9,6 +9,7 @@ use gtk4::CssProvider;
 use gtk4::gdk::Display;
 use gtk::prelude::*;
 use libdmd::{config::Config, dir, element::Element, fi, format::{ElementFormat, FileType}};
+
 use relm4_macros::view;
 use tokio::sync::mpsc::channel;
 
@@ -130,6 +131,7 @@ fn build_ui(
         .borrow_mut()
         .try_send(UiEvent::Fetch)
         .expect("Send UI event");
+
     let widgets = BaseWidgets::new(&window);
     let closure_widgets = widgets.clone();
     let uie = ui_event_sender.clone();
