@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use relm4_macros::view;
+
 use gtk4 as gtk;
 use gtk4::glib::clone;
 use gtk::prelude::*;
+use relm4_macros::view;
 
 #[derive(Clone)]
 pub struct SidebarWidgets {
@@ -27,7 +28,7 @@ impl SidebarWidgets {
         navigation_box.append(&list);
         navigation_box.append(&subsection_revealer);
         revealer.set_child(Some(&navigation_box));
-        let labels = Rc::new(RefCell::new(vec![gtk::Label::new(Some("Test"))]));
+        let labels = Rc::new(RefCell::new(vec![]));
         Self {
             revealer,
             navigation_box,
@@ -35,7 +36,7 @@ impl SidebarWidgets {
             labels,
             reveal_button,
             subsection_revealer,
-            stack
+            stack,
         }
     }
 
@@ -78,56 +79,12 @@ impl SidebarWidgets {
         button.connect_clicked(clone!(@weak revealer => move |_| {
             let active = revealer.reveals_child();
             if active {
-				revealer.set_reveal_child(false);
-			} else {
-				revealer.set_reveal_child(true);
-			}
+                revealer.set_reveal_child(false);
+            } else {
+                revealer.set_reveal_child(true);
+            }
         }));
         header_box.append(&button);
         button
     }
-    // pub fn create_scroll_area(navigation_box: &gtk::Box) -> gtk::ScrolledWindow {
-    //     view! {
-    //         scroll_area = &gtk::ScrolledWindow {
-    //             set_vexpand: true,
-    //             set_width_request: 250,
-    //             set_hscrollbar_policy: gtk::PolicyType::Never,
-    //
-    //             // set_child: Some(components.lists.root_widget())
-    //         }
-    //     }
-    //     navigation_box.append(&scroll_area);
-    //     scroll_area
-    // }
-    // pub fn create_tree_view(scroll_area: &gtk::ScrolledWindow) -> gtk::TreeView {
-    //     view! {
-    //         tree_view = &gtk::TreeView {
-    //             set_width_request: 200,
-    //             set_headers_visible: false,
-    //             set_level_indentation: 12,
-    //             set_can_focus: false,
-    //             set_visible: true,
-    //             set_show_expanders: true,
-    //
-    //             append_column = &gtk::TreeViewColumn {
-    //                 set_title: "List"
-    //             },
-    //             set_model: Some(&gtk::TreeStore::new(&[glib::Type::STRING])),
-    //         }
-    //     }
-    //     append_text_column(&tree_view);
-    //
-    //     scroll_area.set_child(Some(&tree_view));
-    //     tree_view
-    // }
-}
-
-fn append_text_column(tree: &gtk::TreeView) {
-    let column = gtk::TreeViewColumn::new();
-    let cell = gtk::CellRendererText::new();
-    cell.set_height(50);
-
-    column.pack_start(&cell, true);
-    column.add_attribute(&cell, "text", 0);
-    tree.append_column(&column);
 }

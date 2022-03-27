@@ -1,5 +1,6 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
+#[allow(dead_code)]
 pub enum ListMsg {
     Delete(usize),
     Create(String),
@@ -7,8 +8,7 @@ pub enum ListMsg {
     Rename(usize, String),
 }
 
-#[derive(Clone)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct List {
     #[serde(rename = "displayName")]
     pub display_name: String,

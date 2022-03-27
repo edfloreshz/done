@@ -1,17 +1,16 @@
-use relm4_macros::view;
 use gtk4 as gtk;
 use gtk::glib::clone;
 use gtk::prelude::*;
 
 #[derive(Clone)]
-pub struct ContentWidgets {
+pub struct MainWidgets {
     pub overlay: gtk::Overlay,
     pub revealer: gtk::Revealer,
     pub stack: gtk::Stack,
     pub label: gtk::Label,
 }
 
-impl ContentWidgets {
+impl MainWidgets {
     pub fn new(child: &gtk4::Box) -> Self {
         let stack = Self::create_stack();
         let revealer = Self::create_revealer();
@@ -45,6 +44,8 @@ impl ContentWidgets {
             .margin_bottom(24)
             .margin_start(24)
             .margin_end(24)
+            .hexpand(true)
+            .vexpand(true)
             .build()
     }
 
@@ -65,8 +66,8 @@ impl ContentWidgets {
             .css_classes(vec!["settings-popup-close".into()])
             .build();
         button.connect_clicked(clone!(@weak revealer => move |_| {
-			revealer.set_reveal_child(false);
-		}));
+            revealer.set_reveal_child(false);
+        }));
         button
     }
 
