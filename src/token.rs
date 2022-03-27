@@ -1,12 +1,14 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use anyhow::Context;
 use cascade::cascade;
+use chrono::DateTime;
 use libdmd::config::Config;
 use libdmd::format::FileType;
 use serde::{Deserialize, Serialize};
 
-use crate::List;
+use crate::{List, Task, TaskImportance, TaskStatus};
 use crate::models::task::ToDoTask;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -50,7 +52,6 @@ impl Requester {
         if response.status().is_success() {
             let response = response.text().await?;
             let auth: Requester = serde_json::from_str(response.as_str())?;
-            println!("{:#?}", auth);
             Config::set("ToDo/config/config.toml", auth.clone(), FileType::TOML)?;
             Ok(auth)
         } else {
@@ -76,7 +77,6 @@ impl Requester {
         if response.status().is_success() {
             let response = response.text().await?;
             let auth: Requester = serde_json::from_str(response.as_str())?;
-            println!("{:#?}", auth);
             Config::set("ToDo/config/config.toml", auth.clone(), FileType::TOML)?;
             Ok(auth)
         } else {
@@ -100,7 +100,7 @@ impl Requester {
             Ok(vec![])
         }
     }
-    pub async fn get_task(task_id: &str) -> anyhow::Result<Vec<ToDoTask>> {
+    pub async fn get_task(task_id: &str) -> anyhow::Result<Vec<Task>> {
         let config = Requester::current_config().with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
@@ -114,7 +114,20 @@ impl Requester {
         if response.status().is_success() {
             let response = response.text().await?;
             let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            Ok(collection.value)
+            let collection = collection.value.iter()
+                .map(|task| Task {
+                    id: task.id.clone(),
+                    importance: TaskImportance::from(task.importance.as_str()),
+                    is_reminder_on: task.is_reminder_on,
+                    status: TaskStatus::from(task.status.as_str()),
+                    title: task.title.clone(),
+                    created: DateTime::from_str(task.created.as_str()).unwrap(),
+                    last_modified: DateTime::from_str(task.last_modified.as_str())
+                        .unwrap(),
+                    completed: false,
+                })
+                .collect();
+            Ok(collection)
         } else {
             Ok(vec![])
         }

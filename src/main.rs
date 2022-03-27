@@ -1,9 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
 use cascade::cascade;
-use chrono::DateTime;
 use libadwaita as adw;
 use gtk4 as gtk;
 use gtk4::CssProvider;
@@ -12,10 +11,10 @@ use gtk::prelude::*;
 use libdmd::{config::Config, dir, element::Element, fi, format::{ElementFormat, FileType}};
 
 use relm4_macros::view;
-use tokio::sync::mpsc::channel;
+use tokio::sync::mpsc::{channel, Sender, Receiver};
 
 use crate::models::list::List;
-use crate::models::task::{Task, TaskImportance, TaskStatus, ToDoTask};
+use crate::models::task::{Task, TaskImportance, TaskStatus};
 use crate::token::Requester;
 use crate::ui::base::BaseWidgets;
 
@@ -34,7 +33,7 @@ enum UiEvent {
 
 #[derive(Debug)]
 enum DataEvent {
-    UpdateTasks(Vec<ToDoTask>),
+    UpdateTasks(Vec<Task>),
     UpdateLists(Vec<List>),
 }
 
@@ -50,8 +49,21 @@ fn main() -> anyhow::Result<()> {
     let application = adw::Application::builder()
         .application_id("com.edfloreshz.github")
         .build();
-    let (ui_event_sender, mut ui_event_receiver) = channel(1);
-    let (data_event_sender, data_event_receiver) = channel(1);
+    let (ui_sender, ui_recv): (Sender<UiEvent>, Receiver<UiEvent>) = channel(1);
+    let (data_sender, data_recv): (Sender<DataEvent>, Receiver<DataEvent>) = channel(1);
+    let data_recv = Rc::new(RefCell::new(Some(data_recv)));
+    let data_sender = Arc::new(Mutex::new(data_sender));
+    let ui_sender = Rc::new(RefCell::new(ui_sender));
+    let ui_recv = Arc::new(Mutex::new(ui_recv));
+    handle_events(ui_recv.clone(), data_sender.clone());
+    application.connect_activate(move |app| {
+        build_ui(app, ui_sender.clone(), data_recv.clone())
+    });
+    application.run();
+    Ok(())
+}
+
+fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data_sender: Arc<Mutex<tokio::sync::mpsc::Sender<DataEvent>>>) {
     std::thread::spawn(move || {
         use tokio::runtime::Runtime;
         let rt = Runtime::new().expect("create tokio runtime");
@@ -66,15 +78,17 @@ fn main() -> anyhow::Result<()> {
                 let rq = Requester::token(CODE).await.unwrap();
                 Config::set::<Requester>("ToDo/config/config.toml", rq, FileType::TOML).unwrap();
             }
-
-            while let Some(event) = ui_event_receiver.recv().await {
+            let ui_recv = ui_recv.clone();
+            let mut ui_recv = ui_recv.lock().unwrap();
+            while let Some(event) = ui_recv.recv().await {
                 println!("got event: {:?}", event);
                 match event {
                     UiEvent::ListSelected(index) => {
-                        let lists = Requester::get_lists().await.unwrap();
-                        data_event_sender
+                        let lists: Vec<crate::List> = Requester::get_lists().await.unwrap();
+                        let task_id = lists[index.clone()].clone().task_list_id;
+                        data_sender.clone().lock().unwrap()
                             .send(DataEvent::UpdateTasks(
-                                Requester::get_task(&lists[index].clone().task_list_id)
+                                Requester::get_task(task_id.as_str())
                                     .await
                                     .unwrap(),
                             ))
@@ -84,7 +98,7 @@ fn main() -> anyhow::Result<()> {
                     UiEvent::Fetch => {
                         let lists = Requester::get_lists().await.unwrap();
 
-                        data_event_sender
+                        data_sender.clone().lock().unwrap()
                             .send(DataEvent::UpdateLists(lists.clone()))
                             .await
                             .expect("send refresh result")
@@ -96,13 +110,6 @@ fn main() -> anyhow::Result<()> {
             }
         })
     });
-    let data_event_receiver = Rc::new(RefCell::new(Some(data_event_receiver)));
-    let ui_event_sender = Rc::new(RefCell::new(ui_event_sender));
-    application.connect_activate(move |app| {
-        build_ui(app, ui_event_sender.clone(), data_event_receiver.clone())
-    });
-    application.run();
-    Ok(())
 }
 
 fn build_ui(
@@ -159,20 +166,7 @@ fn build_ui(
                         println!("{:#?}", tasks);
                         fill_tasks(
                             &closure_widgets,
-                            &tasks
-                                .iter()
-                                .map(|task| Task {
-                                    id: task.id.clone(),
-                                    importance: TaskImportance::from(task.importance.as_str()),
-                                    is_reminder_on: task.is_reminder_on,
-                                    status: TaskStatus::from(task.status.as_str()),
-                                    title: task.title.clone(),
-                                    created: DateTime::from_str(task.created.as_str()).unwrap(),
-                                    last_modified: DateTime::from_str(task.last_modified.as_str())
-                                        .unwrap(),
-                                    completed: false,
-                                })
-                                .collect(),
+                            &tasks,
                         );
                     }
                 }
