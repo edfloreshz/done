@@ -82,7 +82,6 @@ impl Task {
         ui.content.set_halign(gtk::Align::Fill);
         ui.content.append(&container);
     }
-
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
