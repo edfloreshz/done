@@ -1,11 +1,10 @@
 use std::time::SystemTime;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use gtk::prelude::{
     BoxExt, CheckButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 };
 use relm4::factory::{Factory, FactoryPrototype, FactoryVec};
-use relm4::{gtk, send, Model, Sender, WidgetPlus, Widgets, ComponentUpdate, MicroComponent, MicroModel, MicroWidgets};
-use crate::models::list::{ListModel, ListMsg};
+use relm4::{gtk, send, Sender, WidgetPlus, MicroModel, MicroWidgets};
 use serde::{Serialize, Deserialize};
 pub enum TaskMsg {
     SetCompleted((usize, bool)),
@@ -24,6 +23,8 @@ pub struct Task {
     pub last_modified: DateTime<Utc>,
     pub completed: bool,
 }
+
+unsafe impl Send for Task {}
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct ToDoTask {
@@ -62,7 +63,8 @@ impl TaskImportance {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum TaskStatus {
     NotStarted,
-    Started
+    Started,
+    Completed
 }
 
 impl Default for TaskStatus {
@@ -76,8 +78,12 @@ impl TaskStatus {
         match status {
             "notStarted" => TaskStatus::NotStarted,
             "started" => TaskStatus::Started,
+            "completed" => TaskStatus::Completed,
             _ => TaskStatus::NotStarted
         }
+    }
+    pub fn is_completed(status: &str) -> bool {
+        status.eq("completed")
     }
 }
 
@@ -100,8 +106,6 @@ impl FactoryPrototype for Task {
             .build();
         let checkbox = gtk::CheckButton::builder().active(false).build();
         let label = gtk::Label::new(Some(&self.title));
-
-        assert!(!self.completed);
 
         checkbox.set_margin_all(12);
         label.set_margin_all(12);
@@ -130,8 +134,9 @@ impl FactoryPrototype for Task {
     }
 }
 
+#[derive(Clone)]
 pub struct TaskModel {
-    pub tasks: FactoryVec<Task>
+    pub tasks: Vec<Task>
 }
 
 impl MicroModel for TaskModel {
@@ -177,7 +182,7 @@ impl MicroWidgets<TaskModel> for TaskModelWidgets {
                 set_min_content_height: 360,
                 set_vexpand: true,
                 set_child = Some(&gtk::ListBox) {
-                    factory!(model.tasks)
+                    factory!(FactoryVec::from_vec(model.tasks.clone()))
                 }
             },
             append = &gtk::Entry {

@@ -3,9 +3,8 @@ use gtk4::prelude::{CellRendererExt, TreeModelExt, TreeViewExt};
 use gtk::prelude::{
     BoxExt
 };
-use relm4::{gtk, Model, WidgetPlus, Widgets, AppUpdate, ComponentUpdate, RelmComponent, Components, send};
+use relm4::{gtk, Model, Widgets, send, ComponentUpdate};
 use crate::{AppModel, AppMsg, Sender};
-use crate::models::task::{Task};
 use serde::{Serialize, Deserialize};
 
 pub enum ListMsg {
@@ -18,15 +17,17 @@ pub enum ListMsg {
 #[derive(Clone)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct List {
+    #[serde(rename = "id")]
+    pub task_list_id: String,
     #[serde(rename = "displayName")]
     pub display_name: String,
     #[serde(rename = "isOwner")]
     pub is_owner: bool,
     #[serde(rename = "isShared")]
     pub is_shared: bool,
-    #[serde(rename = "id")]
-    pub task_list_id: String,
 }
+
+unsafe impl Send for List {}
 
 pub struct ListModel {
     pub(crate) lists: Vec<List>
@@ -37,7 +38,7 @@ impl ComponentUpdate<AppModel> for ListModel {
         ListModel { lists: parent_model.lists.clone() }
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: relm4::Sender<Self::Msg>, parent_sender: relm4::Sender<AppMsg>) {
         match msg {
             ListMsg::Select(index) => send!(parent_sender, AppMsg::Select(index)),
             _ => {}
@@ -58,7 +59,7 @@ impl Model for ListModel {
 impl Widgets<ListModel, AppModel> for ListWidgets {
     type Root = gtk::TreeView;
 
-    fn init_view(model: &ListModel, components: &(), sender: Sender<ListMsg>) -> Self {
+    fn init_view(model: &ListModel, components: &(), sender: relm4::Sender<ListMsg>) -> Self {
         let tree_view = gtk::TreeView::builder()
             .width_request(200)
             .headers_visible(false)
@@ -95,7 +96,7 @@ impl Widgets<ListModel, AppModel> for ListWidgets {
         self.tree_view.clone()
     }
 
-    fn view(&mut self, model: &ListModel, sender: Sender<ListMsg>) {
+    fn view(&mut self, model: &ListModel, sender: relm4::Sender<ListMsg>) {
 
     }
 }
