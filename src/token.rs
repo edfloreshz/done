@@ -23,15 +23,14 @@ pub struct Collection<T> {
 
 impl Requester {
     pub fn is_token_present() -> bool {
-        let config = Config::get::<Requester>("ToDo/config/config.toml", FileType::TOML);
+        let config = Requester::current_config();
         match config {
             Some(config) => !config.refresh_token.is_empty(),
             None => false,
         }
     }
-    pub fn current_config() -> anyhow::Result<Self> {
+    pub fn current_config() -> Option<Self> {
         Config::get::<Requester>("ToDo/config/config.toml", FileType::TOML)
-            .with_context(|| "Failed to get settings.")
     }
     pub async fn token(code: &str) -> anyhow::Result<Requester> {
         let client = reqwest::Client::new();
@@ -86,8 +85,7 @@ impl Requester {
         }
     }
     pub async fn get_lists() -> anyhow::Result<Vec<List>> {
-        let config = Config::get::<Requester>("ToDo/config/config.toml", FileType::TOML)
-            .with_context(|| "Failed to get settings.")?;
+        let config = Requester::current_config().with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
             .get("https://graph.microsoft.com/v1.0/me/todo/lists")
@@ -103,8 +101,7 @@ impl Requester {
         }
     }
     pub async fn get_task(task_id: &str) -> anyhow::Result<Vec<ToDoTask>> {
-        let config = Config::get::<Requester>("ToDo/config/config.toml", FileType::TOML)
-            .with_context(|| "Failed to get settings.")?;
+        let config = Requester::current_config().with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
             .get(format!(

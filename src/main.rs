@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use cascade::cascade;
 use chrono::DateTime;
+use libadwaita as adw;
 use gtk4 as gtk;
 use gtk4::CssProvider;
 use gtk4::gdk::Display;
@@ -46,7 +47,7 @@ fn main() -> anyhow::Result<()> {
             .add(dir!("config").child(fi!("config.toml")))
             .write()?;
     }
-    let application = gtk::Application::builder()
+    let application = adw::Application::builder()
         .application_id("com.edfloreshz.github")
         .build();
     let (ui_event_sender, mut ui_event_receiver) = channel(1);
@@ -105,12 +106,12 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn build_ui(
-    application: &gtk::Application,
+    application: &adw::Application,
     ui_event_sender: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>,
     data_event_receiver: Rc<RefCell<Option<tokio::sync::mpsc::Receiver<DataEvent>>>>,
 ) {
     view! {
-        window = &gtk::ApplicationWindow {
+        window = &adw::ApplicationWindow {
             set_application: Some(application),
             set_default_width: 600,
             set_default_height: 700,
@@ -198,7 +199,8 @@ pub fn fill_lists(ui: &BaseWidgets, data: &Vec<List>) {
     for list in data.iter() {
         view! {
             label = &gtk::Label {
-                set_text: list.display_name.as_str()
+                set_text: list.display_name.as_str(),
+                set_height_request: 40,
             }
         }
         ui.sidebar.list.append(&label);
@@ -211,14 +213,16 @@ pub fn fill_tasks(ui: &BaseWidgets, task_list: &Vec<Task>) {
         container = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
             set_hexpand: true,
-            set_margin_bottom: 12,
+            set_vexpand: true,
             set_spacing: 12,
 
             append = &gtk::ScrolledWindow {
                 set_hscrollbar_policy: gtk::PolicyType::Never,
                 set_min_content_height: 360,
+                set_hexpand: true,
                 set_vexpand: true,
                 set_child: tasks = Some(&gtk::ListBox) {
+
                 }
             },
             append: entry = &gtk::Entry {
@@ -229,11 +233,9 @@ pub fn fill_tasks(ui: &BaseWidgets, task_list: &Vec<Task>) {
     for task in task_list {
         let container = gtk::Box::builder()
             .orientation(gtk::Orientation::Horizontal)
-            .hexpand(true)
-            .vexpand(true)
             .build();
         let checkbox = gtk::CheckButton::builder().active(false).build();
-        let label = gtk::Label::new(Some(&task.title));
+        let label = gtk::Label::builder().label(&task.title).build();
 
         assert!(!task.completed);
 
@@ -258,5 +260,6 @@ pub fn fill_tasks(ui: &BaseWidgets, task_list: &Vec<Task>) {
         let buffer = entry.buffer();
         buffer.delete_text(0, None);
     });
-    ui.content.add_titled(&container, Some("tasks"), "tasks");
+    ui.content.set_halign(gtk::Align::Fill);
+    ui.content.append(&container);
 }
