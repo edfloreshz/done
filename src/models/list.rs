@@ -1,4 +1,8 @@
+use gtk4 as gtk;
+use gtk::prelude::*;
+use relm4_macros::view;
 use serde::{Deserialize, Serialize};
+use crate::BaseWidgets;
 
 #[allow(dead_code)]
 pub enum ListMsg {
@@ -18,4 +22,18 @@ pub struct List {
     pub is_shared: bool,
     #[serde(rename = "id")]
     pub task_list_id: String,
+}
+
+impl List {
+    pub fn fill_lists(ui: &BaseWidgets, data: &Vec<List>) {
+        for list in data.iter() {
+            view! {
+            label = &gtk::Label {
+                set_text: list.display_name.as_str(),
+                set_height_request: 40,
+            }
+        }
+            ui.sidebar.list.append(&label);
+        }
+    }
 }

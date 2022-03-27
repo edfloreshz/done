@@ -11,10 +11,12 @@ glib = "0.15.10"
 libadwaita = "0.1.1"
 relm4-macros = "0.4.3"
 cascade = "1.0.0"
-reqwest = { version = "0.11.10", features = ["blocking"]}
+reqwest = { version = "0.11.10", features = ["blocking", "json"]}
 tokio = { version = "1.17.0", features = ["full"]}
 libdmd = "0.1.6"
 serde = { version = "1.0.136", features = ["derive"]}
 serde_json = "1.0"
 anyhow = "1.0.56"
 chrono = { version = "0.4.19", features = ["serde"] }
+async-trait = "0.1.53"
+tokio-compat-02 = "0.2.0"

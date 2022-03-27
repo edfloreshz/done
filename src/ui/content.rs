@@ -70,19 +70,4 @@ impl MainWidgets {
         }));
         button
     }
-
-    pub fn pop_up(&self, name: &str) {
-        self.label.set_text(name);
-        self.stack.set_visible_child_name(name);
-        self.revealer.set_reveal_child(true);
-    }
-
-    pub fn add_overlay<W, F>(&self, name: &str, create_overlay: F)
-        where
-            W: IsA<gtk::Widget>,
-            F: FnOnce() -> W,
-    {
-        let new_overlay = create_overlay();
-        self.stack.add_named(&new_overlay, Some(name));
-    }
 }

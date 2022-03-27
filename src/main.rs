@@ -5,54 +5,57 @@ use std::sync::{Arc, Mutex};
 use cascade::cascade;
 use libadwaita as adw;
 use gtk4 as gtk;
-use gtk4::CssProvider;
-use gtk4::gdk::Display;
 use gtk::prelude::*;
+use gtk::CssProvider;
+use gtk::gdk::Display;
 use libdmd::{config::Config, dir, element::Element, fi, format::{ElementFormat, FileType}};
 
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Sender, Receiver};
+use crate::backends::microsoft::MicrosoftTokenAccess;
 
 use crate::models::list::List;
 use crate::models::task::{Task, TaskImportance, TaskStatus};
-use crate::token::Requester;
+use crate::backends::ToDoService;
 use crate::ui::base::BaseWidgets;
 
 mod models;
-mod token;
 mod ui;
+mod backends;
 
-const CODE: &str = "M.R3_BAY.80886bc9-72a6-ed9a-4006-e652d4a42dfb";
+const CODE: &str = "M.R3_BAY.70f046ae-81aa-20e5-2ddf-eec65ef51a79";
 
 #[derive(Debug)]
-enum UiEvent {
+pub enum UiEvent {
     Fetch,
     Login,
     ListSelected(usize),
+    TaskCompleted(String, String, bool)
 }
 
 #[derive(Debug)]
 enum DataEvent {
-    UpdateTasks(Vec<Task>),
+    UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
 }
 
 fn main() -> anyhow::Result<()> {
-    if !Requester::is_token_present() {
-        Config::new("ToDo")
+    if !MicrosoftTokenAccess::is_token_present() {
+        let mut config = Config::new("ToDo")
             .about("Microsoft To Do Client")
             .author("Eduardo Flores")
             .version("0.1.0")
             .add(dir!("config").child(fi!("config.toml")))
             .write()?;
+        MicrosoftTokenAccess::create_config(&mut config)?;
     }
     let application = adw::Application::builder()
         .application_id("com.edfloreshz.github")
         .build();
     let (ui_sender, ui_recv): (Sender<UiEvent>, Receiver<UiEvent>) = channel(1);
     let (data_sender, data_recv): (Sender<DataEvent>, Receiver<DataEvent>) = channel(1);
-    let data_recv = Rc::new(RefCell::new(Some(data_recv)));
     let data_sender = Arc::new(Mutex::new(data_sender));
+    let data_recv = Rc::new(RefCell::new(Some(data_recv)));
     let ui_sender = Rc::new(RefCell::new(ui_sender));
     let ui_recv = Arc::new(Mutex::new(ui_recv));
     handle_events(ui_recv.clone(), data_sender.clone());
@@ -61,55 +64,6 @@ fn main() -> anyhow::Result<()> {
     });
     application.run();
     Ok(())
-}
-
-fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data_sender: Arc<Mutex<tokio::sync::mpsc::Sender<DataEvent>>>) {
-    std::thread::spawn(move || {
-        use tokio::runtime::Runtime;
-        let rt = Runtime::new().expect("create tokio runtime");
-        rt.block_on(async {
-            if Requester::is_token_present() {
-                let config = Requester::current_config().unwrap();
-                let rq = Requester::refresh_token(config.refresh_token.as_str())
-                    .await
-                    .unwrap();
-                Config::set::<Requester>("ToDo/config/config.toml", rq, FileType::TOML).unwrap();
-            } else {
-                let rq = Requester::token(CODE).await.unwrap();
-                Config::set::<Requester>("ToDo/config/config.toml", rq, FileType::TOML).unwrap();
-            }
-            let ui_recv = ui_recv.clone();
-            let mut ui_recv = ui_recv.lock().unwrap();
-            while let Some(event) = ui_recv.recv().await {
-                println!("got event: {:?}", event);
-                match event {
-                    UiEvent::ListSelected(index) => {
-                        let lists: Vec<crate::List> = Requester::get_lists().await.unwrap();
-                        let task_id = lists[index.clone()].clone().task_list_id;
-                        data_sender.clone().lock().unwrap()
-                            .send(DataEvent::UpdateTasks(
-                                Requester::get_task(task_id.as_str())
-                                    .await
-                                    .unwrap(),
-                            ))
-                            .await
-                            .expect("send refresh result")
-                    }
-                    UiEvent::Fetch => {
-                        let lists = Requester::get_lists().await.unwrap();
-
-                        data_sender.clone().lock().unwrap()
-                            .send(DataEvent::UpdateLists(lists.clone()))
-                            .await
-                            .expect("send refresh result")
-                    }
-                    UiEvent::Login => {
-                        println!("Logging in...");
-                    }
-                }
-            }
-        })
-    });
 }
 
 fn build_ui(
@@ -142,10 +96,11 @@ fn build_ui(
 
     let widgets = BaseWidgets::new(&window);
     let closure_widgets = widgets.clone();
-    let uie = ui_event_sender.clone();
+    let ui_e_sender = ui_event_sender.clone();
+    let ui_e_sender2 = ui_event_sender.clone();
     widgets.login_button.connect_clicked(move |_| {
         widgets.login_dialog.show();
-        uie.borrow_mut()
+        ui_e_sender.borrow_mut()
             .try_send(UiEvent::Login)
             .expect("Failed to login.")
     });
@@ -160,13 +115,15 @@ fn build_ui(
                 match event {
                     DataEvent::UpdateLists(lists) => {
                         println!("{:#?}", lists);
-                        fill_lists(&closure_widgets, &lists);
+                        List::fill_lists(&closure_widgets, &lists);
                     }
-                    DataEvent::UpdateTasks(tasks) => {
+                    DataEvent::UpdateTasks(task_list_id, tasks) => {
                         println!("{:#?}", tasks);
-                        fill_tasks(
+                        Task::fill_tasks(
                             &closure_widgets,
+                            task_list_id,
                             &tasks,
+                            ui_e_sender2.clone()
                         );
                     }
                 }
@@ -189,71 +146,56 @@ fn build_ui(
     window.show();
 }
 
-pub fn fill_lists(ui: &BaseWidgets, data: &Vec<List>) {
-    for list in data.iter() {
-        view! {
-            label = &gtk::Label {
-                set_text: list.display_name.as_str(),
-                set_height_request: 40,
+fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data_sender: Arc<Mutex<tokio::sync::mpsc::Sender<DataEvent>>>) {
+    std::thread::spawn(move || {
+        use tokio::runtime::Runtime;
+        let rt = Runtime::new().expect("create tokio runtime");
+        rt.block_on(async {
+            if MicrosoftTokenAccess::is_token_present() {
+                let config = MicrosoftTokenAccess::current_token_data().unwrap();
+                let rq = MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str())
+                    .await
+                    .unwrap();
+                Config::set::<MicrosoftTokenAccess>("ToDo/config/config.toml", rq, FileType::TOML).unwrap();
+            } else {
+                let token_data = MicrosoftTokenAccess::token(CODE).await.unwrap();
+                MicrosoftTokenAccess::update_token_data(&token_data).unwrap();
             }
-        }
-        ui.sidebar.list.append(&label);
-    }
-}
+            let ui_recv = ui_recv.clone();
+            let mut ui_recv = ui_recv.lock().unwrap();
+            while let Some(event) = ui_recv.recv().await {
+                println!("got event: {:?}", event);
+                match event {
+                    UiEvent::ListSelected(index) => {
+                        let lists: Vec<crate::List> = MicrosoftTokenAccess::get_lists().await.unwrap();
+                        let task_list_id = lists[index.clone()].clone().task_list_id;
+                        let task_list_id_2 = lists[index.clone()].clone().task_list_id;
+                        data_sender.clone().lock().unwrap()
+                            .send(DataEvent::UpdateTasks(
+                                task_list_id,
+                                MicrosoftTokenAccess::get_tasks(task_list_id_2.as_str())
+                                    .await
+                                    .unwrap(),
+                            ))
+                            .await
+                            .expect("Failed to send UpdateTasks event.")
+                    }
+                    UiEvent::Fetch => {
+                        let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
 
-pub fn fill_tasks(ui: &BaseWidgets, task_list: &Vec<Task>) {
-    ui.content.remove(&ui.content.last_child().unwrap());
-    view! {
-        container = &gtk::Box {
-            set_orientation: gtk::Orientation::Vertical,
-            set_hexpand: true,
-            set_vexpand: true,
-            set_spacing: 12,
-
-            append = &gtk::ScrolledWindow {
-                set_hscrollbar_policy: gtk::PolicyType::Never,
-                set_min_content_height: 360,
-                set_hexpand: true,
-                set_vexpand: true,
-                set_child: tasks = Some(&gtk::ListBox) {
-
+                        data_sender.clone().lock().unwrap()
+                            .send(DataEvent::UpdateLists(lists.clone()))
+                            .await
+                            .expect("Failed to send UpdateLists event.")
+                    }
+                    UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
+                        MicrosoftTokenAccess::set_task_as_completed(task_list_id.as_str(), task_id.as_str(), completed).await;
+                    }
+                    UiEvent::Login => {
+                        println!("Logging in...");
+                    }
                 }
-            },
-            append: entry = &gtk::Entry {
-
             }
-        }
-    }
-    for task in task_list {
-        let container = gtk::Box::builder()
-            .orientation(gtk::Orientation::Horizontal)
-            .build();
-        let checkbox = gtk::CheckButton::builder().active(false).build();
-        let label = gtk::Label::builder().label(&task.title).build();
-
-        assert!(!task.completed);
-
-        checkbox.set_margin_end(12);
-        checkbox.set_margin_start(12);
-        checkbox.set_margin_top(12);
-        checkbox.set_margin_bottom(12);
-        label.set_margin_end(12);
-        label.set_margin_start(12);
-        label.set_margin_top(12);
-        label.set_margin_bottom(12);
-
-        container.append(&checkbox);
-        container.append(&label);
-
-        checkbox.connect_toggled(move |_| {
-            // send!(sender, TaskMsg::SetCompleted((index, checkbox.is_active())));
-        });
-        tasks.append(&container);
-    }
-    entry.connect_activate(move |entry| {
-        let buffer = entry.buffer();
-        buffer.delete_text(0, None);
+        })
     });
-    ui.content.set_halign(gtk::Align::Fill);
-    ui.content.append(&container);
 }
