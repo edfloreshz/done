@@ -29,8 +29,12 @@ impl List {
         for list in data.iter() {
             view! {
                 label = &gtk::Label {
+                    set_halign: gtk::Align::Start,
                     set_text: list.display_name.as_str(),
-                    set_height_request: 40,
+                    set_margin_bottom: 15,
+                    set_margin_top: 15,
+                    set_margin_start: 15,
+                    set_margin_end: 15,
                 }
             }
             ui.sidebar.list.append(&label);

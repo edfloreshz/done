@@ -23,7 +23,7 @@ mod models;
 mod ui;
 mod services;
 
-const CODE: &str = "M.R3_BAY.70f046ae-81aa-20e5-2ddf-eec65ef51a79";
+const CODE: &str = "M.R3_BAY.4a99432e-d5dd-9c51-7ed5-4203f33e568b";
 
 #[derive(Debug)]
 pub enum UiEvent {
@@ -37,6 +37,14 @@ pub enum UiEvent {
 enum DataEvent {
     UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
+}
+
+#[derive(Clone)]
+struct EventHandler {
+    ui_tx: Rc<RefCell<Sender<UiEvent>>>,
+    ui_rv: Arc<Mutex<Receiver<UiEvent>>>,
+    data_tx: Arc<Mutex<Sender<DataEvent>>>,
+    data_rv: Rc<RefCell<Option<Receiver<DataEvent>>>>
 }
 
 fn main() -> anyhow::Result<()> {
@@ -54,23 +62,21 @@ fn main() -> anyhow::Result<()> {
         .build();
     let (ui_sender, ui_recv): (Sender<UiEvent>, Receiver<UiEvent>) = channel(1);
     let (data_sender, data_recv): (Sender<DataEvent>, Receiver<DataEvent>) = channel(1);
-    let data_sender = Arc::new(Mutex::new(data_sender));
-    let data_recv = Rc::new(RefCell::new(Some(data_recv)));
-    let ui_sender = Rc::new(RefCell::new(ui_sender));
-    let ui_recv = Arc::new(Mutex::new(ui_recv));
-    handle_events(ui_recv.clone(), data_sender.clone());
+    let event_handler = EventHandler {
+        ui_tx: Rc::new(RefCell::new(ui_sender)),
+        ui_rv: Arc::new(Mutex::new(ui_recv)),
+        data_tx: Arc::new(Mutex::new(data_sender)),
+        data_rv: Rc::new(RefCell::new(Some(data_recv)))
+    };
+    handle_events(event_handler.clone());
     application.connect_activate(move |app| {
-        build_ui(app, ui_sender.clone(), data_recv.clone())
+        build_ui(app, event_handler.clone())
     });
     application.run();
     Ok(())
 }
 
-fn build_ui(
-    application: &adw::Application,
-    ui_event_sender: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>,
-    data_event_receiver: Rc<RefCell<Option<tokio::sync::mpsc::Receiver<DataEvent>>>>,
-) {
+fn build_ui(application: &adw::Application, event_handler: EventHandler) {
     view! {
         window = &adw::ApplicationWindow {
             set_application: Some(application),
@@ -89,15 +95,15 @@ fn build_ui(
         &provider,
         gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
-    ui_event_sender
+    event_handler.ui_tx
         .borrow_mut()
         .try_send(UiEvent::Fetch)
         .expect("Send UI event");
 
     let widgets = BaseWidgets::new(&window);
     let closure_widgets = widgets.clone();
-    let ui_e_sender = ui_event_sender.clone();
-    let ui_e_sender2 = ui_event_sender.clone();
+    let ui_e_sender = event_handler.ui_tx.clone();
+    let ui_e_sender2 = event_handler.ui_tx.clone();
     widgets.login_button.connect_clicked(move |_| {
         widgets.login_dialog.show();
         ui_e_sender.borrow_mut()
@@ -105,7 +111,7 @@ fn build_ui(
             .expect("Failed to login.")
     });
     let future = {
-        let mut data_event_receiver = data_event_receiver
+        let mut data_event_receiver = event_handler.data_rv
             .replace(None)
             .take()
             .expect("data_event_receiver");
@@ -138,7 +144,7 @@ fn build_ui(
         .list
         .connect_row_activated(move |listbox, _| {
             let index = listbox.selected_row().unwrap().index() as usize;
-            ui_event_sender
+            event_handler.ui_tx
                 .borrow_mut()
                 .try_send(UiEvent::ListSelected(index))
                 .expect("Send UI event");
@@ -146,7 +152,7 @@ fn build_ui(
     window.show();
 }
 
-fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data_sender: Arc<Mutex<tokio::sync::mpsc::Sender<DataEvent>>>) {
+fn handle_events(event_handler: EventHandler) {
     std::thread::spawn(move || {
         use tokio::runtime::Runtime;
         let rt = Runtime::new().expect("create tokio runtime");
@@ -161,7 +167,7 @@ fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data
                 let token_data = MicrosoftTokenAccess::token(CODE).await.unwrap();
                 MicrosoftTokenAccess::update_token_data(&token_data).unwrap();
             }
-            let ui_recv = ui_recv.clone();
+            let ui_recv = event_handler.ui_rv.clone();
             let mut ui_recv = ui_recv.lock().unwrap();
             while let Some(event) = ui_recv.recv().await {
                 println!("got event: {:?}", event);
@@ -170,7 +176,7 @@ fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data
                         let lists: Vec<crate::List> = MicrosoftTokenAccess::get_lists().await.unwrap();
                         let task_list_id = lists[index.clone()].clone().task_list_id;
                         let task_list_id_2 = lists[index.clone()].clone().task_list_id;
-                        data_sender.clone().lock().unwrap()
+                        event_handler.data_tx.clone().lock().unwrap()
                             .send(DataEvent::UpdateTasks(
                                 task_list_id,
                                 MicrosoftTokenAccess::get_tasks(task_list_id_2.as_str())
@@ -183,7 +189,7 @@ fn handle_events(ui_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<UiEvent>>>, data
                     UiEvent::Fetch => {
                         let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
 
-                        data_sender.clone().lock().unwrap()
+                        event_handler.data_tx.clone().lock().unwrap()
                             .send(DataEvent::UpdateLists(lists.clone()))
                             .await
                             .expect("Failed to send UpdateLists event.")
