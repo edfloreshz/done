@@ -12,16 +12,16 @@ use libdmd::{config::Config, dir, element::Element, fi, format::{ElementFormat, 
 
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Sender, Receiver};
-use crate::backends::microsoft::MicrosoftTokenAccess;
+use crate::services::microsoft::MicrosoftTokenAccess;
 
 use crate::models::list::List;
 use crate::models::task::{Task, TaskImportance, TaskStatus};
-use crate::backends::ToDoService;
+use crate::services::ToDoService;
 use crate::ui::base::BaseWidgets;
 
 mod models;
 mod ui;
-mod backends;
+mod services;
 
 const CODE: &str = "M.R3_BAY.70f046ae-81aa-20e5-2ddf-eec65ef51a79";
 

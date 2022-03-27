@@ -28,11 +28,11 @@ impl List {
     pub fn fill_lists(ui: &BaseWidgets, data: &Vec<List>) {
         for list in data.iter() {
             view! {
-            label = &gtk::Label {
-                set_text: list.display_name.as_str(),
-                set_height_request: 40,
+                label = &gtk::Label {
+                    set_text: list.display_name.as_str(),
+                    set_height_request: 40,
+                }
             }
-        }
             ui.sidebar.list.append(&label);
         }
     }
