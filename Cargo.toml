@@ -14,7 +14,7 @@ relm4-macros = "0.4.3"
 cascade = "1.0.0"
 reqwest = { version = "0.11.10", features = ["blocking"]}
 tokio = { version = "1.17.0", features = ["full"]}
-#tokio-stream-ext = "0.1.5"
+libdmd = "0.1.6"
 serde = { version = "1.0.136", features = ["derive"]}
 serde_json = "1.0"
 anyhow = "1.0.56"

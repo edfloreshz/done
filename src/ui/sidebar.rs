@@ -27,7 +27,7 @@ impl SidebarWidgets {
         navigation_box.append(&list);
         navigation_box.append(&subsection_revealer);
         revealer.set_child(Some(&navigation_box));
-        let labels = Rc::new(RefCell::new(vec![gtk::Label::new(Some("Test"))]));
+        let labels = Rc::new(RefCell::new(vec![]));
         Self {
             revealer,
             navigation_box,
