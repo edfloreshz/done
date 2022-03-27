@@ -1,34 +1,33 @@
-use std::str::FromStr;
-use std::thread::sleep;
-use std::time::SystemTime;
+use std::sync::mpsc;
 use adw::prelude::AdwApplicationWindowExt;
-use chrono::DateTime;
+use cascade::cascade;
 use gtk::prelude::{
-    BoxExt, WidgetExt, OrientableExt, GtkWindowExt, EntryBufferExtManual
+    BoxExt, WidgetExt, OrientableExt, GtkWindowExt
 };
-use relm4::{adw, AppUpdate, gtk, MicroComponent, Model, RelmApp, RelmComponent, WidgetPlus, Widgets};
-use relm4::factory::FactoryVec;
+use libdmd::config::Config;
+use libdmd::{dir, fi, format::ElementFormat, element::Element};
+use relm4::{adw, AppUpdate, gtk, MicroComponent, Model, RelmApp, RelmComponent, Widgets};
+use relm4::gtk::CssProvider;
+use tracker::track;
 
-use crate::adw::glib::Sender;
 use crate::models::list::{List, ListModel};
 use crate::models::task::{Task, TaskImportance, TaskModel, TaskStatus};
-use crate::token::Requester;
 
 mod models;
-mod token;
-mod msft;
+mod services;
 
-const TOKEN: &str = "M.R3_BAY.41fe1b38-22a3-9176-58ca-e959238fdbec";
+const TOKEN: &str = "M.R3_BAY.9380a78f-50f7-f43f-f5a7-65ee34feebd0";
 
-#[tracker::track]
+#[track]
+#[derive(Clone)]
 pub struct AppModel {
     pub selected: usize,
-    #[tracker::do_not_track]
+    #[do_not_track]
     pub lists: Vec<List>,
-    #[tracker::do_not_track]
-    pub task: MicroComponent<TaskModel>,
-    #[tracker::do_not_track]
-    pub refresh_token: String
+    #[do_not_track]
+    pub task: TaskModel,
+    #[do_not_track]
+    pub refresh_token: String,
 }
 
 pub enum AppMsg {
@@ -46,7 +45,7 @@ pub struct AppComponents {
 }
 
 impl relm4::Components<AppModel> for AppComponents {
-    fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
+    fn init_components(parent_model: &AppModel, parent_sender: relm4::Sender<AppMsg>) -> Self {
         AppComponents {
             lists: RelmComponent::new(parent_model, parent_sender)
         }
@@ -57,30 +56,18 @@ impl relm4::Components<AppModel> for AppComponents {
 }
 
 impl AppUpdate for AppModel {
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
+    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: relm4::Sender<Self::Msg>) -> bool {
         self.reset();
         match msg {
             AppMsg::Select(index) => {
-                let rq = Requester::refresh_token_blocking(self.refresh_token.clone().as_str()).unwrap();
                 self.set_selected(index);
-                let tasks = rq.get_task_blocking(self.lists[self.selected].task_list_id.as_str()).unwrap().iter().map(|task| {
-                    Task {
-                        id: task.id.clone(),
-                        importance: TaskImportance::from(task.importance.as_str()),
-                        is_reminder_on: task.is_reminder_on,
-                        status: TaskStatus::from(task.status.as_str()),
-                        title: task.title.clone(),
-                        created: DateTime::from_str(task.created.as_str()).unwrap(),
-                        last_modified: DateTime::from_str(task.last_modified.as_str()).unwrap(),
-                        completed: false
+                let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+                rt.block_on(async {
+                    let tasks = MicrosoftTokenAccess::get_tasks(self.lists[self.selected].task_list_id.as_str()).await.unwrap();
+                    self.task = TaskModel {
+                        tasks
                     }
-                }).collect();
-                self.task = MicroComponent::new(
-                    TaskModel {
-                        tasks: FactoryVec::from_vec(tasks)
-                    },
-                    ()
-                );
+                })
 
             },
         }
@@ -94,8 +81,8 @@ impl Widgets<AppModel, ()> for AppWidgets {
         main_window = &adw::ApplicationWindow {
             set_default_width: 600,
             set_default_height: 700,
-            set_width_request: 200,
-            set_height_request: 200,
+            set_width_request: 600,
+            set_height_request: 700,
 
             set_content: main_box = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
@@ -139,30 +126,59 @@ impl Widgets<AppModel, ()> for AppWidgets {
         }
     }
     fn pre_view() {
+        let provider = cascade! {
+            CssProvider::new();
+            ..load_from_data(include_bytes!("ui/style.css"));
+        };
+        gtk4::StyleContext::add_provider_for_display(
+            &Display::default().expect("Could not connect to a display."),
+            &provider,
+            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
+
         match self.content.last_child() {
             Some(last) => {
                 self.content.remove(&last);
             },
             None => {}
         }
-        if !model.task.is_connected() {
-            self.content.append(model.task.root_widget());
+        let task = MicroComponent::new(model.task.clone(), ());
+        if !task.is_connected() {
+            self.content.append(task.root_widget());
         }
     }
 }
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use crate::adw::gdk::Display;
+use crate::services::microsoft::MicrosoftTokenAccess;
+use crate::services::ToDoService;
 
-fn main() -> anyhow::Result<()> {
-    let rq = Requester::token_blocking(TOKEN)?;
-    let model = AppModel {
-        selected: 0,
-        lists: rq.get_lists_blocking()?,
-        tracker: 0,
-        task: MicroComponent::new(TaskModel { tasks: FactoryVec::new() }, ()),
-        refresh_token: rq.refresh_token
-    };
-    let relm = RelmApp::new(model);
+fn main() {
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        use tokio::runtime::Runtime;
+        let rt = Runtime::new().expect("Failed to create Tokio runtime");
+        rt.block_on(async {
+            if !MicrosoftTokenAccess::is_token_present() {
+                let mut config = Config::new("ToDo")
+                    .about("Microsoft To Do Client")
+                    .author("Eduardo Flores")
+                    .version("0.1.0")
+                    .add(dir!("config").child(fi!("config.toml")))
+                    .write().unwrap();
+                MicrosoftTokenAccess::create_config(&mut config).unwrap();
+            }
+            let token = MicrosoftTokenAccess::token(TOKEN).await.unwrap();
+            let model = AppModel {
+                selected: 0,
+                lists: MicrosoftTokenAccess::get_lists().await.unwrap(),
+                task: TaskModel { tasks: Vec::new() },
+                refresh_token: token.refresh_token,
+                tracker: 0,
+            };
+            tx.send(model)
+        }).unwrap();
+    });
+    let relm = RelmApp::new(rx.recv().unwrap());
     relm.run();
-    Ok(())
 }
