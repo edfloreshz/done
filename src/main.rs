@@ -3,16 +3,22 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use cascade::cascade;
-use libadwaita as adw;
-use gtk4 as gtk;
+use gtk::gdk::Display;
 use gtk::prelude::*;
 use gtk::CssProvider;
-use gtk::gdk::Display;
-use libdmd::{config::Config, dir, element::Element, fi, format::{ElementFormat, FileType}};
+use gtk4 as gtk;
+use libadwaita as adw;
+use libdmd::{
+    config::Config,
+    dir,
+    element::Element,
+    fi,
+    format::{ElementFormat, FileType},
+};
 
-use relm4_macros::view;
-use tokio::sync::mpsc::{channel, Sender, Receiver};
 use crate::services::microsoft::MicrosoftTokenAccess;
+use relm4_macros::view;
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 use crate::models::list::List;
 use crate::models::task::{Task, TaskImportance, TaskStatus};
@@ -20,8 +26,8 @@ use crate::services::ToDoService;
 use crate::ui::base::BaseWidgets;
 
 mod models;
-mod ui;
 mod services;
+mod ui;
 
 const CODE: &str = "M.R3_BAY.4a99432e-d5dd-9c51-7ed5-4203f33e568b";
 
@@ -30,7 +36,8 @@ pub enum UiEvent {
     Fetch,
     Login,
     ListSelected(usize),
-    TaskCompleted(String, String, bool)
+    TaskCompleted(String, String, bool),
+    TaskSelected(String, String),
 }
 
 #[derive(Debug)]
@@ -44,7 +51,7 @@ struct EventHandler {
     ui_tx: Rc<RefCell<Sender<UiEvent>>>,
     ui_rv: Arc<Mutex<Receiver<UiEvent>>>,
     data_tx: Arc<Mutex<Sender<DataEvent>>>,
-    data_rv: Rc<RefCell<Option<Receiver<DataEvent>>>>
+    data_rv: Rc<RefCell<Option<Receiver<DataEvent>>>>,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -66,12 +73,10 @@ fn main() -> anyhow::Result<()> {
         ui_tx: Rc::new(RefCell::new(ui_sender)),
         ui_rv: Arc::new(Mutex::new(ui_recv)),
         data_tx: Arc::new(Mutex::new(data_sender)),
-        data_rv: Rc::new(RefCell::new(Some(data_recv)))
+        data_rv: Rc::new(RefCell::new(Some(data_recv))),
     };
     handle_events(event_handler.clone());
-    application.connect_activate(move |app| {
-        build_ui(app, event_handler.clone())
-    });
+    application.connect_activate(move |app| build_ui(app, event_handler.clone()));
     application.run();
     Ok(())
 }
@@ -95,42 +100,38 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
         &provider,
         gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
-    event_handler.ui_tx
+    event_handler
+        .ui_tx
         .borrow_mut()
         .try_send(UiEvent::Fetch)
         .expect("Send UI event");
 
     let widgets = BaseWidgets::new(&window);
     let closure_widgets = widgets.clone();
-    let ui_e_sender = event_handler.ui_tx.clone();
-    let ui_e_sender2 = event_handler.ui_tx.clone();
+    let login_tx = event_handler.ui_tx.clone();
+    let ui_tx = event_handler.ui_tx.clone();
     widgets.login_button.connect_clicked(move |_| {
         widgets.login_dialog.show();
-        ui_e_sender.borrow_mut()
+        login_tx
+            .borrow_mut()
             .try_send(UiEvent::Login)
             .expect("Failed to login.")
     });
     let future = {
-        let mut data_event_receiver = event_handler.data_rv
+        let mut data_event_receiver = event_handler
+            .data_rv
             .replace(None)
             .take()
             .expect("data_event_receiver");
         async move {
             while let Some(event) = data_event_receiver.recv().await {
-                println!("data event: {:?}", event);
+                println!("Received data event: {:?}", event);
                 match event {
                     DataEvent::UpdateLists(lists) => {
-                        println!("{:#?}", lists);
                         List::fill_lists(&closure_widgets, &lists);
                     }
                     DataEvent::UpdateTasks(task_list_id, tasks) => {
-                        println!("{:#?}", tasks);
-                        Task::fill_tasks(
-                            &closure_widgets,
-                            task_list_id,
-                            &tasks,
-                            ui_e_sender2.clone()
-                        );
+                        Task::fill_tasks(&closure_widgets, task_list_id, &tasks, ui_tx.clone());
                     }
                 }
             }
@@ -144,7 +145,8 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
         .list
         .connect_row_activated(move |listbox, _| {
             let index = listbox.selected_row().unwrap().index() as usize;
-            event_handler.ui_tx
+            event_handler
+                .ui_tx
                 .borrow_mut()
                 .try_send(UiEvent::ListSelected(index))
                 .expect("Send UI event");
@@ -162,7 +164,8 @@ fn handle_events(event_handler: EventHandler) {
                 let rq = MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str())
                     .await
                     .unwrap();
-                Config::set::<MicrosoftTokenAccess>("ToDo/config/config.toml", rq, FileType::TOML).unwrap();
+                Config::set::<MicrosoftTokenAccess>("ToDo/config/config.toml", rq, FileType::TOML)
+                    .unwrap();
             } else {
                 let token_data = MicrosoftTokenAccess::token(CODE).await.unwrap();
                 MicrosoftTokenAccess::update_token_data(&token_data).unwrap();
@@ -170,13 +173,18 @@ fn handle_events(event_handler: EventHandler) {
             let ui_recv = event_handler.ui_rv.clone();
             let mut ui_recv = ui_recv.lock().unwrap();
             while let Some(event) = ui_recv.recv().await {
-                println!("got event: {:?}", event);
+                println!("Received UI event: {:?}", event);
                 match event {
                     UiEvent::ListSelected(index) => {
-                        let lists: Vec<crate::List> = MicrosoftTokenAccess::get_lists().await.unwrap();
+                        let lists: Vec<crate::List> =
+                            MicrosoftTokenAccess::get_lists().await.unwrap();
                         let task_list_id = lists[index.clone()].clone().task_list_id;
                         let task_list_id_2 = lists[index.clone()].clone().task_list_id;
-                        event_handler.data_tx.clone().lock().unwrap()
+                        event_handler
+                            .data_tx
+                            .clone()
+                            .lock()
+                            .unwrap()
                             .send(DataEvent::UpdateTasks(
                                 task_list_id,
                                 MicrosoftTokenAccess::get_tasks(task_list_id_2.as_str())
@@ -189,16 +197,32 @@ fn handle_events(event_handler: EventHandler) {
                     UiEvent::Fetch => {
                         let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
 
-                        event_handler.data_tx.clone().lock().unwrap()
+                        event_handler
+                            .data_tx
+                            .clone()
+                            .lock()
+                            .unwrap()
                             .send(DataEvent::UpdateLists(lists.clone()))
                             .await
                             .expect("Failed to send UpdateLists event.")
                     }
                     UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
-                        MicrosoftTokenAccess::set_task_as_completed(task_list_id.as_str(), task_id.as_str(), completed).await;
+                        #[allow(unused_must_use)]
+                        {
+                            MicrosoftTokenAccess::set_task_as_completed(
+                                task_list_id.as_str(),
+                                task_id.as_str(),
+                                completed,
+                            )
+                            .await;
+                        }
                     }
                     UiEvent::Login => {
                         println!("Logging in...");
+                    }
+                    UiEvent::TaskSelected(task_list_id, task_id) => {
+                        let task = MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id).await.unwrap();
+                        println!("{:#?}", task);
                     }
                 }
             }

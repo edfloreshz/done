@@ -1,15 +1,16 @@
-use std::str::FromStr;
+use crate::services::ToDoService;
+use crate::{List, Task, TaskImportance, TaskStatus};
+use anyhow::Context;
 use cascade::cascade;
 use chrono::DateTime;
 use libdmd::config::Config;
-use libdmd::{dir, fi};
 use libdmd::element::Element;
 use libdmd::format::{ElementFormat, FileType};
-use serde::{Serialize, Deserialize};
-use crate::{List, Task, TaskImportance, TaskStatus};
-use crate::services::ToDoService;
+use libdmd::{dir, fi};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use anyhow::Context;
+use std::str::FromStr;
+use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MicrosoftTokenAccess {
@@ -40,11 +41,9 @@ pub struct ToDoTask {
 #[async_trait::async_trait]
 impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     fn create_config(config: &mut Config) -> anyhow::Result<Config> {
-        config.add(dir!("services")
-            .child(dir!("microsoft")
-                .child(fi!("token.toml"))
-            )
-        ).write()
+        config
+            .add(dir!("services").child(dir!("microsoft").child(fi!("token.toml"))))
+            .write()
     }
 
     fn is_token_present() -> bool {
@@ -60,7 +59,11 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     fn update_token_data(config: &MicrosoftTokenAccess) -> anyhow::Result<()> {
-        Config::set("ToDo/services/microsoft/token.toml", config.clone(), FileType::TOML)
+        Config::set(
+            "ToDo/services/microsoft/token.toml",
+            config.clone(),
+            FileType::TOML,
+        )
     }
 
     async fn token(code: &str) -> anyhow::Result<MicrosoftTokenAccess> {
@@ -116,7 +119,8 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_lists() -> anyhow::Result<Vec<List>> {
-        let config = MicrosoftTokenAccess::current_token_data().with_context(|| "Failed to get current configuration.")?;
+        let config = MicrosoftTokenAccess::current_token_data()
+            .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
             .get("https://graph.microsoft.com/v1.0/me/todo/lists")
@@ -133,7 +137,8 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_tasks(task_list_id: &str) -> anyhow::Result<Vec<Task>> {
-        let config = MicrosoftTokenAccess::current_token_data().with_context(|| "Failed to get current configuration.")?;
+        let config = MicrosoftTokenAccess::current_token_data()
+            .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
             .get(format!(
@@ -153,15 +158,27 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         }
     }
 
-    async fn set_task_as_completed(task_list_id: &str, task_id: &str, completed: bool) -> anyhow::Result<Vec<Task>> {
-        let config = MicrosoftTokenAccess::current_token_data().with_context(|| "Failed to get current configuration.")?;
-        let status = format!("{}:{}", "{\"status\"", if completed { "\"notStarted\"}" } else { "\"completed\"}" });
+    async fn set_task_as_completed(
+        task_list_id: &str,
+        task_id: &str,
+        completed: bool,
+    ) -> anyhow::Result<Vec<Task>> {
+        let config = MicrosoftTokenAccess::current_token_data()
+            .with_context(|| "Failed to get current configuration.")?;
+        let status = format!(
+            "{}:{}",
+            "{\"status\"",
+            if completed {
+                "\"notStarted\"}"
+            } else {
+                "\"completed\"}"
+            }
+        );
         let client = reqwest::Client::new();
         let response = client
             .patch(format!(
                 "https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/{}",
-                task_list_id,
-                task_id
+                task_list_id, task_id
             ))
             .header("Content-Type", "application/json")
             .body(status)
@@ -177,10 +194,59 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             Ok(vec![])
         }
     }
+
+    async fn get_task(task_list_id: &str, task_id: &str) -> anyhow::Result<Task> { // TODO: Response does not contain anything...
+        let config = MicrosoftTokenAccess::current_token_data()
+            .with_context(|| "Failed to get current configuration.")?;
+        let client = reqwest::Client::new();
+        let response = client
+            .get(format!(
+                "https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks{}",
+                task_list_id,
+                task_id
+            ))
+            .bearer_auth(&config.access_token)
+            .send()
+            .await?;
+        if response.status().is_success() {
+            let response = response.text().await?;
+            let task: ToDoTask = serde_json::from_str(response.as_str())?;
+            println!("{:#?}", task);
+            let task: Task = task.into();
+            Ok(task)
+        } else {
+            let task = Task {
+                id: "".to_string(),
+                importance: Default::default(),
+                is_reminder_on: false,
+                status: Default::default(),
+                title: "".to_string(),
+                created: DateTime::from(SystemTime::now()),
+                last_modified: DateTime::from(SystemTime::now()),
+                completed: false
+            };
+            Ok(task)
+        }
+    }
 }
 
 impl From<&ToDoTask> for Task {
     fn from(task: &ToDoTask) -> Self {
+        Task {
+            id: task.id.clone(),
+            importance: TaskImportance::from(task.importance.as_str()),
+            is_reminder_on: task.is_reminder_on,
+            status: TaskStatus::from(task.status.as_str()),
+            title: task.title.clone(),
+            created: DateTime::from_str(task.created.as_str()).unwrap(),
+            last_modified: DateTime::from_str(task.last_modified.as_str()).unwrap(),
+            completed: TaskStatus::is_completed(task.status.as_str()),
+        }
+    }
+}
+
+impl From<ToDoTask> for Task {
+    fn from(task: ToDoTask) -> Self {
         Task {
             id: task.id.clone(),
             importance: TaskImportance::from(task.importance.as_str()),

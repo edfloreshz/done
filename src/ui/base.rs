@@ -1,8 +1,7 @@
 use std::path::Path;
 
-use libadwaita as adw;
 use gtk4 as gtk;
-use gtk::prelude::*;
+use libadwaita as adw;
 use libadwaita::prelude::*;
 use relm4_macros::view;
 

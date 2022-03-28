@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use gtk::prelude::*;
 use gtk4 as gtk;
 use gtk4::glib::clone;
-use gtk::prelude::*;
 use relm4_macros::view;
 
 #[derive(Clone)]

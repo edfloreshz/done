@@ -1,8 +1,8 @@
-use gtk4 as gtk;
+use crate::BaseWidgets;
 use gtk::prelude::*;
+use gtk4 as gtk;
 use relm4_macros::view;
 use serde::{Deserialize, Serialize};
-use crate::BaseWidgets;
 
 #[allow(dead_code)]
 pub enum ListMsg {

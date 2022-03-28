@@ -1,11 +1,11 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::{BaseWidgets, UiEvent};
 use chrono::{DateTime, Utc};
-use gtk4 as gtk;
 use gtk::prelude::*;
+use gtk4 as gtk;
 use relm4_macros::view;
 use serde::{Deserialize, Serialize};
-use crate::{BaseWidgets, UiEvent};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[allow(dead_code)]
 pub enum TaskMsg {
@@ -27,7 +27,12 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn fill_tasks(ui: &BaseWidgets, task_list_id: String, task_list: &Vec<Task>, ui_event_sender: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>) {
+    pub fn fill_tasks(
+        ui: &BaseWidgets,
+        task_list_id: String,
+        task_list: &Vec<Task>,
+        ui_tx: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>,
+    ) {
         ui.content.remove(&ui.content.last_child().unwrap());
         view! {
             container = &gtk::Box {
@@ -51,10 +56,25 @@ impl Task {
             }
         }
         for task in task_list.clone() {
-            let task_list_id_2 = task_list_id.clone();
             let container = gtk::Box::builder()
                 .orientation(gtk::Orientation::Horizontal)
                 .build();
+            let gesture = gtk::GestureClick::new();
+            let sender2 = ui_tx.clone();
+            let task_list_id_gesture = task_list_id.clone();
+            let task_gesture = task.clone();
+            gesture.connect_released(move |gesture, _, _, _| {
+                gesture.set_state(gtk::EventSequenceState::Claimed);
+                sender2
+                    .borrow_mut()
+                    .try_send(UiEvent::TaskSelected(
+                        task_list_id_gesture.clone(),
+                        task_gesture.clone().id,
+                    ))
+                    .expect("Failed to complete task.");
+                println!("Box pressed!");
+            });
+            container.add_controller(&gesture);
             let checkbox = gtk::CheckButton::builder().active(task.completed).build();
             let label = gtk::Label::builder().label(&task.title).build();
 
@@ -69,12 +89,21 @@ impl Task {
 
             container.append(&checkbox);
             container.append(&label);
-            let sender = ui_event_sender.clone();
+            let sender = ui_tx.clone();
+            let task_list_id = task_list_id.clone();
             checkbox.connect_toggled(move |_| {
-                sender.borrow_mut().try_send(UiEvent::TaskCompleted(task_list_id_2.clone(), task.clone().id, task.completed)).expect("Failed to complete task.");
+                sender
+                    .borrow_mut()
+                    .try_send(UiEvent::TaskCompleted(
+                        task_list_id.clone(),
+                        task.clone().id,
+                        task.completed,
+                    ))
+                    .expect("Failed to complete task.");
             });
             tasks.append(&container);
         }
+
         entry.connect_activate(move |entry| {
             let buffer = entry.buffer();
             buffer.delete_text(0, None);
@@ -108,7 +137,7 @@ impl TaskImportance {
 pub enum TaskStatus {
     NotStarted,
     Started,
-    Completed
+    Completed,
 }
 
 impl Default for TaskStatus {
@@ -123,7 +152,7 @@ impl TaskStatus {
             "notStarted" => TaskStatus::NotStarted,
             "started" => TaskStatus::Started,
             "completed" => TaskStatus::Completed,
-            _ => TaskStatus::NotStarted
+            _ => TaskStatus::NotStarted,
         }
     }
     pub fn is_completed(status: &str) -> bool {
