@@ -39,10 +39,10 @@ impl Task {
                 set_orientation: gtk::Orientation::Vertical,
                 set_hexpand: true,
                 set_vexpand: true,
+                set_width_request: 500,
                 set_spacing: 12,
 
                 append = &gtk::ScrolledWindow {
-                    set_hscrollbar_policy: gtk::PolicyType::Never,
                     set_min_content_height: 360,
                     set_hexpand: true,
                     set_vexpand: true,
@@ -60,19 +60,17 @@ impl Task {
                 .orientation(gtk::Orientation::Horizontal)
                 .build();
             let gesture = gtk::GestureClick::new();
-            let sender2 = ui_tx.clone();
+            let sender = ui_tx.clone();
             let task_list_id_gesture = task_list_id.clone();
             let task_gesture = task.clone();
             gesture.connect_released(move |gesture, _, _, _| {
                 gesture.set_state(gtk::EventSequenceState::Claimed);
-                sender2
+                sender
                     .borrow_mut()
                     .try_send(UiEvent::TaskSelected(
                         task_list_id_gesture.clone(),
                         task_gesture.clone().id,
-                    ))
-                    .expect("Failed to complete task.");
-                println!("Box pressed!");
+                    )).expect("Failed to complete task");
             });
             container.add_controller(&gesture);
             let checkbox = gtk::CheckButton::builder().active(task.completed).build();
@@ -110,6 +108,75 @@ impl Task {
         });
         ui.content.set_halign(gtk::Align::Fill);
         ui.content.append(&container);
+    }
+    pub fn fill_details(
+        ui: &BaseWidgets,
+        task: Task,
+        _ui_tx: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>
+    ) {
+        let reveals = ui.details.revealer.reveals_child();
+        if reveals {
+            if let Some(child) = ui.details.navigation_box.last_child() {
+                ui.details.navigation_box.remove(&child);
+            }
+            ui.details.revealer.set_reveal_child(!reveals);
+        } else {
+            view! {
+            container = gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
+                set_hexpand: true,
+                set_vexpand: true,
+                set_margin_start: 15,
+                set_margin_bottom: 15,
+                set_margin_end: 15,
+                set_margin_top: 15,
+                set_spacing: 20,
+
+                append = &gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 10,
+
+                    append = &gtk::CheckButton {
+                        set_active: task.completed
+                    },
+                    append = &gtk::Entry {
+                        set_placeholder_text: Some("Title"),
+                        set_hexpand: true,
+                        set_text: task.title.as_str()
+                    },
+
+                },
+                append = &gtk::Button {
+                    set_label: "+ Add Step"
+                },
+                append = &gtk::Separator {},
+                append = &gtk::Button {
+                    set_label: "Add to My Day"
+                },
+                append = &gtk::Separator {},
+                append = &gtk::Button {
+                    set_label: "Remind me"
+                },
+                append = &gtk::Button {
+                    set_label: "Due"
+                },
+                append = &gtk::Button {
+                    set_label: "Repeat"
+                },
+                append = &gtk::Separator {},
+                append = &gtk::Button {
+                    set_label: "Add file"
+                },
+                append = &gtk::Separator {},
+                append = &gtk::Entry {
+                    set_placeholder_text: Some("Add Note"),
+                    set_hexpand: true,
+                },
+            }
+        }
+            ui.details.navigation_box.append(&container);
+            ui.details.revealer.set_reveal_child(!reveals);
+        }
     }
 }
 

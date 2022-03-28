@@ -77,12 +77,7 @@ impl SidebarWidgets {
             }
         }
         button.connect_clicked(clone!(@weak revealer => move |_| {
-            let active = revealer.reveals_child();
-            if active {
-                revealer.set_reveal_child(false);
-            } else {
-                revealer.set_reveal_child(true);
-            }
+            revealer.set_reveal_child(!revealer.reveals_child());
         }));
         header_box.append(&button);
         button

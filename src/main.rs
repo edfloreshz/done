@@ -44,6 +44,7 @@ pub enum UiEvent {
 enum DataEvent {
     UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
+    UpdateDetails(Task)
 }
 
 #[derive(Clone)]
@@ -79,6 +80,78 @@ fn main() -> anyhow::Result<()> {
     application.connect_activate(move |app| build_ui(app, event_handler.clone()));
     application.run();
     Ok(())
+}
+
+fn handle_events(event_handler: EventHandler) {
+    std::thread::spawn(move || {
+        use tokio::runtime::Runtime;
+        let rt = Runtime::new().expect("create tokio runtime");
+        rt.block_on(async {
+            if MicrosoftTokenAccess::is_token_present() {
+                let config = MicrosoftTokenAccess::current_token_data().unwrap();
+                let rq = MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str())
+                    .await
+                    .unwrap();
+                Config::set::<MicrosoftTokenAccess>("ToDo/config/config.toml", rq, FileType::TOML)
+                    .unwrap();
+            } else {
+                let token_data = MicrosoftTokenAccess::token(CODE).await.unwrap();
+                MicrosoftTokenAccess::update_token_data(&token_data).unwrap();
+            }
+            let (ui_recv, data_tx) = (event_handler.ui_rv.clone(), event_handler.data_tx.clone());
+            let mut ui_recv = ui_recv.lock().unwrap();
+            let data_tx = data_tx.lock().unwrap();
+            while let Some(event) = ui_recv.recv().await {
+                println!("Received UI event: {:?}", event);
+                match event {
+                    UiEvent::ListSelected(index) => {
+                        let lists: Vec<crate::List> =
+                            MicrosoftTokenAccess::get_lists().await.unwrap();
+                        let task_list_id = lists[index.clone()].clone().task_list_id;
+                        data_tx
+                            .send(DataEvent::UpdateTasks(
+                                task_list_id.clone(),
+                                MicrosoftTokenAccess::get_tasks(task_list_id.as_str())
+                                    .await
+                                    .unwrap(),
+                            ))
+                            .await
+                            .expect("Failed to send UpdateTasks event.")
+                    }
+                    UiEvent::Fetch => {
+                        let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
+                        data_tx
+                            .send(DataEvent::UpdateLists(lists.clone()))
+                            .await
+                            .expect("Failed to send UpdateLists event.")
+                    }
+                    UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
+                        #[allow(unused_must_use)]
+                        {
+                            MicrosoftTokenAccess::set_task_as_completed(
+                                task_list_id.as_str(),
+                                task_id.as_str(),
+                                completed,
+                            )
+                            .await;
+                        }
+                    }
+                    UiEvent::Login => {
+                        println!("Logging in...");
+                    }
+                    UiEvent::TaskSelected(task_list_id, task_id) => {
+                        let task = MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id)
+                            .await
+                            .unwrap();
+                        data_tx
+                            .send(DataEvent::UpdateDetails(task))
+                            .await
+                            .expect("Failed to send UpdateLists event.");
+                    }
+                }
+            }
+        })
+    });
 }
 
 fn build_ui(application: &adw::Application, event_handler: EventHandler) {
@@ -133,6 +206,9 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
                     DataEvent::UpdateTasks(task_list_id, tasks) => {
                         Task::fill_tasks(&closure_widgets, task_list_id, &tasks, ui_tx.clone());
                     }
+                    DataEvent::UpdateDetails(task) => {
+                        Task::fill_details(&closure_widgets, task, ui_tx.clone())
+                    }
                 }
             }
         }
@@ -152,80 +228,4 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
                 .expect("Send UI event");
         });
     window.show();
-}
-
-fn handle_events(event_handler: EventHandler) {
-    std::thread::spawn(move || {
-        use tokio::runtime::Runtime;
-        let rt = Runtime::new().expect("create tokio runtime");
-        rt.block_on(async {
-            if MicrosoftTokenAccess::is_token_present() {
-                let config = MicrosoftTokenAccess::current_token_data().unwrap();
-                let rq = MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str())
-                    .await
-                    .unwrap();
-                Config::set::<MicrosoftTokenAccess>("ToDo/config/config.toml", rq, FileType::TOML)
-                    .unwrap();
-            } else {
-                let token_data = MicrosoftTokenAccess::token(CODE).await.unwrap();
-                MicrosoftTokenAccess::update_token_data(&token_data).unwrap();
-            }
-            let ui_recv = event_handler.ui_rv.clone();
-            let mut ui_recv = ui_recv.lock().unwrap();
-            while let Some(event) = ui_recv.recv().await {
-                println!("Received UI event: {:?}", event);
-                match event {
-                    UiEvent::ListSelected(index) => {
-                        let lists: Vec<crate::List> =
-                            MicrosoftTokenAccess::get_lists().await.unwrap();
-                        let task_list_id = lists[index.clone()].clone().task_list_id;
-                        let task_list_id_2 = lists[index.clone()].clone().task_list_id;
-                        event_handler
-                            .data_tx
-                            .clone()
-                            .lock()
-                            .unwrap()
-                            .send(DataEvent::UpdateTasks(
-                                task_list_id,
-                                MicrosoftTokenAccess::get_tasks(task_list_id_2.as_str())
-                                    .await
-                                    .unwrap(),
-                            ))
-                            .await
-                            .expect("Failed to send UpdateTasks event.")
-                    }
-                    UiEvent::Fetch => {
-                        let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
-
-                        event_handler
-                            .data_tx
-                            .clone()
-                            .lock()
-                            .unwrap()
-                            .send(DataEvent::UpdateLists(lists.clone()))
-                            .await
-                            .expect("Failed to send UpdateLists event.")
-                    }
-                    UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
-                        #[allow(unused_must_use)]
-                        {
-                            MicrosoftTokenAccess::set_task_as_completed(
-                                task_list_id.as_str(),
-                                task_id.as_str(),
-                                completed,
-                            )
-                            .await;
-                        }
-                    }
-                    UiEvent::Login => {
-                        println!("Logging in...");
-                    }
-                    UiEvent::TaskSelected(task_list_id, task_id) => {
-                        let task = MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id).await.unwrap();
-                        println!("{:#?}", task);
-                    }
-                }
-            }
-        })
-    });
 }

@@ -10,7 +10,6 @@ use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MicrosoftTokenAccess {
@@ -151,7 +150,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         if response.status().is_success() {
             let response = response.text().await?;
             let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection.value.iter().map(|t| t.into()).collect();
+            let collection = collection.value.iter().map(|t| t.to_owned().into()).collect();
             Ok(collection)
         } else {
             Ok(vec![])
@@ -188,59 +187,33 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         if response.status().is_success() {
             let response = response.text().await?;
             let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection.value.iter().map(|t| t.into()).collect();
+            let collection = collection.value.iter().map(|t| t.to_owned().into()).collect();
             Ok(collection)
         } else {
             Ok(vec![])
         }
     }
 
-    async fn get_task(task_list_id: &str, task_id: &str) -> anyhow::Result<Task> { // TODO: Response does not contain anything...
+    async fn get_task(task_list_id: &str, task_id: &str) -> anyhow::Result<Task> {
+        // TODO: Response does not contain anything...
         let config = MicrosoftTokenAccess::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
             .get(format!(
-                "https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks{}",
-                task_list_id,
-                task_id
+                "https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/{}",
+                task_list_id, task_id
             ))
             .bearer_auth(&config.access_token)
             .send()
             .await?;
-        if response.status().is_success() {
-            let response = response.text().await?;
-            let task: ToDoTask = serde_json::from_str(response.as_str())?;
-            println!("{:#?}", task);
-            let task: Task = task.into();
-            Ok(task)
-        } else {
-            let task = Task {
-                id: "".to_string(),
-                importance: Default::default(),
-                is_reminder_on: false,
-                status: Default::default(),
-                title: "".to_string(),
-                created: DateTime::from(SystemTime::now()),
-                last_modified: DateTime::from(SystemTime::now()),
-                completed: false
-            };
-            Ok(task)
-        }
-    }
-}
-
-impl From<&ToDoTask> for Task {
-    fn from(task: &ToDoTask) -> Self {
-        Task {
-            id: task.id.clone(),
-            importance: TaskImportance::from(task.importance.as_str()),
-            is_reminder_on: task.is_reminder_on,
-            status: TaskStatus::from(task.status.as_str()),
-            title: task.title.clone(),
-            created: DateTime::from_str(task.created.as_str()).unwrap(),
-            last_modified: DateTime::from_str(task.last_modified.as_str()).unwrap(),
-            completed: TaskStatus::is_completed(task.status.as_str()),
+        match response.error_for_status() {
+            Ok(response) => {
+                let response = response.text().await?;
+                let task: ToDoTask = serde_json::from_str(response.as_str())?;
+                Ok(task.into())
+            }
+            Err(error) => Err(error.into())
         }
     }
 }

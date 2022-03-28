@@ -6,6 +6,7 @@ use libadwaita::prelude::*;
 use relm4_macros::view;
 
 use crate::ui::content::MainWidgets;
+use crate::ui::details::DetailsWidgets;
 use crate::ui::sidebar::SidebarWidgets;
 
 #[derive(Clone)]
@@ -14,6 +15,7 @@ pub struct BaseWidgets {
     pub header_box: gtk::Box,
     pub container: gtk::Box,
     pub sidebar: SidebarWidgets,
+    pub details: DetailsWidgets,
     pub main: MainWidgets,
     pub content: gtk::Box,
     pub login_button: gtk::Button,
@@ -36,6 +38,7 @@ impl BaseWidgets {
             .vexpand(true)
             .build();
         let sidebar = SidebarWidgets::new(&header_box);
+        let details = DetailsWidgets::new();
         let login_button = gtk::Button::builder().label("Login").build();
         let welcome = Self::create_welcome(&login_button);
         let login_dialog = Self::create_login_dialog();
@@ -43,6 +46,8 @@ impl BaseWidgets {
         top.append(&header);
         container.append(&sidebar.revealer);
         container.append(&content);
+        container.append(&gtk::Separator::default());
+        container.append(&details.revealer);
         content.append(&welcome);
         let main = MainWidgets::new(&container);
         top.append(&main.overlay);
@@ -52,6 +57,7 @@ impl BaseWidgets {
             header_box,
             container,
             sidebar,
+            details,
             main,
             content,
             login_button,
