@@ -2,7 +2,7 @@ use crate::services::ToDoService;
 use crate::{List, Task, TaskImportance, TaskStatus};
 use anyhow::Context;
 use cascade::cascade;
-use chrono::DateTime;
+use chrono::{DateTime, Utc};
 use libdmd::config::Config;
 use libdmd::element::Element;
 use libdmd::format::{ElementFormat, FileType};
@@ -10,6 +10,7 @@ use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MicrosoftTokenAccess {
@@ -23,7 +24,7 @@ pub struct Collection<T> {
     pub value: Vec<T>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ToDoTask {
     pub id: String,
     pub importance: String,
@@ -35,6 +36,20 @@ pub struct ToDoTask {
     pub created: String,
     #[serde(rename = "lastModifiedDateTime")]
     pub last_modified: String,
+}
+
+impl Default for ToDoTask {
+    fn default() -> Self {
+        Self {
+            id: "".to_string(),
+            importance: "normal".to_string(),
+            is_reminder_on: false,
+            status: "notStarted".to_string(),
+            title: "".to_string(),
+            created: DateTime::<Utc>::from(SystemTime::now()).to_rfc3339(),
+            last_modified: DateTime::<Utc>::from(SystemTime::now()).to_rfc3339(),
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -150,7 +165,11 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         if response.status().is_success() {
             let response = response.text().await?;
             let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection.value.iter().map(|t| t.to_owned().into()).collect();
+            let collection = collection
+                .value
+                .iter()
+                .map(|t| t.to_owned().into())
+                .collect();
             Ok(collection)
         } else {
             Ok(vec![])
@@ -187,7 +206,11 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         if response.status().is_success() {
             let response = response.text().await?;
             let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection.value.iter().map(|t| t.to_owned().into()).collect();
+            let collection = collection
+                .value
+                .iter()
+                .map(|t| t.to_owned().into())
+                .collect();
             Ok(collection)
         } else {
             Ok(vec![])
@@ -195,7 +218,6 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_task(task_list_id: &str, task_id: &str) -> anyhow::Result<Task> {
-        // TODO: Response does not contain anything...
         let config = MicrosoftTokenAccess::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
@@ -213,7 +235,31 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
                 let task: ToDoTask = serde_json::from_str(response.as_str())?;
                 Ok(task.into())
             }
-            Err(error) => Err(error.into())
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    async fn push_task(task_list_id: &str, entry: String) -> anyhow::Result<()> {
+        let config = MicrosoftTokenAccess::current_token_data()
+            .with_context(|| "Failed to get current configuration.")?;
+        let client = reqwest::Client::new();
+        let task = ToDoTask {
+            title: entry,
+            ..std::default::Default::default()
+        };
+        let data = serde_json::to_string(&task).unwrap();
+        let request = client
+            .post(format!(
+                "https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks",
+                task_list_id
+            ))
+            .header("Content-Type", "application/json")
+            .bearer_auth(&config.access_token)
+            .body(data);
+        let response = request.send().await?;
+        match response.error_for_status() {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err.into()),
         }
     }
 }

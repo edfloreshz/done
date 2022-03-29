@@ -35,6 +35,7 @@ const CODE: &str = "M.R3_BAY.4a99432e-d5dd-9c51-7ed5-4203f33e568b";
 pub enum UiEvent {
     Fetch,
     Login,
+    AddEntry(String, String),
     ListSelected(usize),
     TaskCompleted(String, String, bool),
     TaskSelected(String, String),
@@ -44,7 +45,7 @@ pub enum UiEvent {
 enum DataEvent {
     UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
-    UpdateDetails(Task)
+    UpdateDetails(String, Task),
 }
 
 #[derive(Clone)]
@@ -105,48 +106,77 @@ fn handle_events(event_handler: EventHandler) {
                 println!("Received UI event: {:?}", event);
                 match event {
                     UiEvent::ListSelected(index) => {
-                        let lists: Vec<crate::List> =
-                            MicrosoftTokenAccess::get_lists().await.unwrap();
-                        let task_list_id = lists[index.clone()].clone().task_list_id;
-                        data_tx
-                            .send(DataEvent::UpdateTasks(
-                                task_list_id.clone(),
-                                MicrosoftTokenAccess::get_tasks(task_list_id.as_str())
-                                    .await
-                                    .unwrap(),
-                            ))
-                            .await
-                            .expect("Failed to send UpdateTasks event.")
+                        match MicrosoftTokenAccess::get_lists().await {
+                            Ok(lists) => {
+                                let task_list_id = lists[index.clone()].clone().task_list_id;
+                                match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
+                                    Ok(tasks) => {
+                                        data_tx
+                                            .send(DataEvent::UpdateTasks(
+                                                task_list_id.clone(), tasks
+                                            ))
+                                            .await
+                                            .expect("Failed to send UpdateTasks event.")
+                                    }
+                                    Err(err) => println!("{err}")
+                                }
+                            }
+                            Err(err) => println!("{err}")
+                        }
+
                     }
                     UiEvent::Fetch => {
-                        let lists = MicrosoftTokenAccess::get_lists().await.unwrap();
-                        data_tx
-                            .send(DataEvent::UpdateLists(lists.clone()))
-                            .await
-                            .expect("Failed to send UpdateLists event.")
+                        match MicrosoftTokenAccess::get_lists().await {
+                            Ok(lists) => {
+                                data_tx
+                                    .send(DataEvent::UpdateLists(lists))
+                                    .await
+                                    .expect("Failed to send UpdateLists event.")
+                            }
+                            Err(err) => println!("{err}")
+                        }
+
                     }
                     UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
-                        #[allow(unused_must_use)]
+                        // TODO: When a task is completed in the details view it needs to be updated in the list view.
+                        match MicrosoftTokenAccess::set_task_as_completed(
+                            task_list_id.as_str(),
+                            task_id.as_str(),
+                            completed,
+                        )
+                        .await
                         {
-                            MicrosoftTokenAccess::set_task_as_completed(
-                                task_list_id.as_str(),
-                                task_id.as_str(),
-                                completed,
-                            )
-                            .await;
+                            Ok(_) => {}
+                            Err(err) => println!("{err}"),
                         }
                     }
                     UiEvent::Login => {
                         println!("Logging in...");
                     }
                     UiEvent::TaskSelected(task_list_id, task_id) => {
-                        let task = MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id)
-                            .await
-                            .unwrap();
-                        data_tx
-                            .send(DataEvent::UpdateDetails(task))
-                            .await
-                            .expect("Failed to send UpdateLists event.");
+                        match MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id).await {
+                            Ok(task) => {
+                                data_tx
+                                    .send(DataEvent::UpdateDetails(task_list_id, task))
+                                    .await
+                                    .expect("Failed to send UpdateLists event.");
+                            }
+                            Err(err) => println!("{err}"),
+                        }
+                    }
+                    UiEvent::AddEntry(entry, task_list_id) => {
+                        match MicrosoftTokenAccess::push_task(&*task_list_id.clone(), entry).await {
+                            Ok(_) => data_tx
+                                .send(DataEvent::UpdateTasks(
+                                    task_list_id.clone(),
+                                    MicrosoftTokenAccess::get_tasks(task_list_id.as_str())
+                                        .await
+                                        .unwrap(),
+                                ))
+                                .await
+                                .expect("Failed to send UpdateTasks event."),
+                            Err(err) => println!("{err}"),
+                        }
                     }
                 }
             }
@@ -206,8 +236,8 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
                     DataEvent::UpdateTasks(task_list_id, tasks) => {
                         Task::fill_tasks(&closure_widgets, task_list_id, &tasks, ui_tx.clone());
                     }
-                    DataEvent::UpdateDetails(task) => {
-                        Task::fill_details(&closure_widgets, task, ui_tx.clone())
+                    DataEvent::UpdateDetails(task_list_id, task) => {
+                        Task::fill_details(&closure_widgets, task_list_id, task, ui_tx.clone())
                     }
                 }
             }

@@ -19,6 +19,7 @@ pub trait ToDoService<T> {
         completed: bool,
     ) -> Result<Vec<Task>>;
     async fn get_task(task_list_id: &str, task_id: &str) -> Result<Task>;
+    async fn push_task(task_list_id: &str, entry: String) -> Result<()>;
 }
 
 pub mod microsoft;
