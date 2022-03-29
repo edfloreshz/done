@@ -20,12 +20,14 @@ pub struct SidebarWidgets {
 impl SidebarWidgets {
     pub fn new(header_box: &gtk::Box) -> Self {
         let navigation_box = Self::create_navigation_box();
+        let scroll_window = Self::create_scrolled_window();
         let stack = Self::create_stack();
         let revealer = Self::create_revealer(&navigation_box);
         let subsection_revealer = Self::create_subsection_revealer(&stack);
         let reveal_button = Self::create_reveal_button(&header_box, &revealer);
         let list = gtk4::ListBox::builder().vexpand(true).build();
-        navigation_box.append(&list);
+        scroll_window.set_child(Some(&list));
+        navigation_box.append(&scroll_window);
         navigation_box.append(&subsection_revealer);
         revealer.set_child(Some(&navigation_box));
         let labels = Rc::new(RefCell::new(vec![]));
@@ -39,7 +41,12 @@ impl SidebarWidgets {
             stack,
         }
     }
-
+    fn create_scrolled_window() -> gtk::ScrolledWindow {
+        view! {
+            scrolled = gtk::ScrolledWindow {}
+        }
+        scrolled
+    }
     fn create_navigation_box() -> gtk::Box {
         view! {
             navigation_box = gtk::Box {
