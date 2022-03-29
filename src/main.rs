@@ -166,15 +166,21 @@ fn handle_events(event_handler: EventHandler) {
                     }
                     UiEvent::AddEntry(entry, task_list_id) => {
                         match MicrosoftTokenAccess::push_task(&*task_list_id.clone(), entry).await {
-                            Ok(_) => data_tx
-                                .send(DataEvent::UpdateTasks(
-                                    task_list_id.clone(),
-                                    MicrosoftTokenAccess::get_tasks(task_list_id.as_str())
-                                        .await
-                                        .unwrap(),
-                                ))
-                                .await
-                                .expect("Failed to send UpdateTasks event."),
+                            Ok(_) => {
+                                match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
+                                    Ok(tasks) => {
+                                        data_tx
+                                            .send(DataEvent::UpdateTasks(
+                                                task_list_id.clone(),
+                                                tasks,
+                                            ))
+                                            .await
+                                            .expect("Failed to send UpdateTasks event.")
+                                    }
+                                    Err(err) => println!("{err}")
+                                }
+
+                            },
                             Err(err) => println!("{err}"),
                         }
                     }
