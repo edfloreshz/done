@@ -41,6 +41,7 @@ pub enum UiEvent {
 
 #[derive(Debug)]
 enum DataEvent {
+    Login,
     UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
     UpdateDetails(String, Task),
@@ -56,7 +57,7 @@ struct EventHandler {
 
 fn main() -> anyhow::Result<()> {
     if !MicrosoftTokenAccess::is_token_present() {
-        let mut config = Config::new("ToDo")
+        let mut config = Config::new("Do")
             .about("Microsoft To Do Client")
             .author("Eduardo Flores")
             .version("0.1.0")
@@ -65,7 +66,7 @@ fn main() -> anyhow::Result<()> {
         MicrosoftTokenAccess::create_config(&mut config)?;
     }
     let application = adw::Application::builder()
-        .application_id("com.edfloreshz.github")
+        .application_id("do.edfloreshz.github")
         .build();
     let (ui_sender, ui_recv): (Sender<UiEvent>, Receiver<UiEvent>) = channel(1);
     let (data_sender, data_recv): (Sender<DataEvent>, Receiver<DataEvent>) = channel(1);
@@ -86,41 +87,6 @@ fn handle_events(event_handler: EventHandler) {
         use tokio::runtime::Runtime;
         let rt = Runtime::new().expect("create tokio runtime");
         rt.block_on(async {
-            if MicrosoftTokenAccess::is_token_present() {
-                match MicrosoftTokenAccess::current_token_data() {
-                    None => println!("Couldn't find current token data"),
-                    Some(config) => {
-                        match MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str()).await {
-                            Ok(token) => {
-                                match MicrosoftTokenAccess::update_token_data(&token) {
-                                    Ok(_) => println!("Token configuration updated."),
-                                    Err(err) => println!("{err}")
-                                }
-                            }
-                            Err(err) => println!("{err}")
-                        }
-                    }
-                };
-            } else {
-                match MicrosoftTokenAccess::authenticate().await {
-                    Ok(code) => {
-                        match MicrosoftTokenAccess::token(code).await {
-                            Ok(token_data) => {
-                                match MicrosoftTokenAccess::update_token_data(&token_data) {
-                                    Ok(_) => {
-                                        println!("Updated token data.");
-                                    },
-                                    Err(err) => println!("{err}")
-                                }
-                            }
-                            Err(err) => println!("{err}")
-                        }
-                    }
-                    Err(err) => println!("{err}")
-                }
-
-
-            }
             let (ui_recv, data_tx) = (event_handler.ui_rv.clone(), event_handler.data_tx.clone());
             let mut ui_recv = ui_recv.lock().unwrap();
             let data_tx = data_tx.lock().unwrap();
@@ -161,7 +127,46 @@ fn handle_events(event_handler: EventHandler) {
                         }
                     }
                     UiEvent::Login => {
-                        println!("Logging in...");
+                        if MicrosoftTokenAccess::is_token_present() {
+                            match MicrosoftTokenAccess::current_token_data() {
+                                None => println!("Couldn't find current token data"),
+                                Some(config) => {
+                                    match MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str()).await {
+                                        Ok(token) => {
+                                            match MicrosoftTokenAccess::update_token_data(&token) {
+                                                Ok(_) => println!("Token configuration updated."),
+                                                Err(err) => println!("{err}")
+                                            }
+                                        }
+                                        Err(err) => println!("{err}")
+                                    }
+                                }
+                            };
+                        } else {
+                            match MicrosoftTokenAccess::authenticate().await {
+                                Ok(code) => {
+                                    match MicrosoftTokenAccess::token(code).await {
+                                        Ok(token_data) => {
+                                            match MicrosoftTokenAccess::update_token_data(&token_data) {
+                                                Ok(_) => {
+                                                    match MicrosoftTokenAccess::get_lists().await {
+                                                        Ok(lists) => {
+                                                            data_tx.send(DataEvent::Login).await.expect("Failed to send Login event.");
+                                                            data_tx.send(DataEvent::UpdateLists(lists)).await.expect("Failed to send Login event.");
+                                                        }
+                                                        Err(err) => println!("{err}")
+                                                    }
+                                                    println!("Updated token data.");
+                                                },
+                                                Err(err) => println!("{err}")
+                                            }
+                                        }
+                                        Err(err) => println!("{err}")
+                                    }
+                                }
+                                Err(err) => println!("{err}")
+                            }
+                        }
                     }
                     UiEvent::TaskSelected(task_list_id, task_id) => {
                         match MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id).await {
@@ -213,18 +218,19 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
         &provider,
         gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
-    event_handler
-        .ui_tx
-        .borrow_mut()
-        .try_send(UiEvent::Fetch)
-        .expect("Send UI event");
+    if MicrosoftTokenAccess::is_token_present() {
+        event_handler
+            .ui_tx
+            .borrow_mut()
+            .try_send(UiEvent::Fetch)
+            .expect("Send UI event");
+    }
 
     let widgets = BaseWidgets::new(&window);
     let closure_widgets = widgets.clone();
     let login_tx = event_handler.ui_tx.clone();
     let ui_tx = event_handler.ui_tx.clone();
     widgets.login_button.connect_clicked(move |_| {
-        widgets.login_dialog.show();
         login_tx
             .borrow_mut()
             .try_send(UiEvent::Login)
@@ -248,6 +254,9 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
                     }
                     DataEvent::UpdateDetails(task_list_id, task) => {
                         Task::fill_details(&closure_widgets, task_list_id, task, ui_tx.clone())
+                    }
+                    DataEvent::Login => {
+                        closure_widgets.update_welcome();
                     }
                 }
             }

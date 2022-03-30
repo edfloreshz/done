@@ -19,7 +19,7 @@ pub struct BaseWidgets {
     pub main: MainWidgets,
     pub content: gtk::Box,
     pub login_button: gtk::Button,
-    pub login_dialog: gtk::Dialog,
+    pub welcome: gtk::Box
 }
 
 impl BaseWidgets {
@@ -41,7 +41,6 @@ impl BaseWidgets {
         let details = DetailsWidgets::new();
         let login_button = gtk::Button::builder().label("Login").build();
         let welcome = Self::create_welcome(&login_button);
-        let login_dialog = Self::create_login_dialog();
         header.pack_start(&header_box);
         top.append(&header);
         container.append(&sidebar.revealer);
@@ -61,10 +60,10 @@ impl BaseWidgets {
             main,
             content,
             login_button,
-            login_dialog,
+            welcome
         }
     }
-    fn create_welcome(login_button: &gtk::Button) -> gtk::Box {
+    pub fn create_welcome(login_button: &gtk::Button) -> gtk::Box {
         view! {
             welcome = gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -87,6 +86,10 @@ impl BaseWidgets {
             }
         }
         welcome
+    }
+    pub fn update_welcome(&self) {
+        let last = self.welcome.last_child().unwrap();
+        self.welcome.remove(&last);
     }
     fn create_header() -> adw::HeaderBar {
         view! {
@@ -113,26 +116,5 @@ impl BaseWidgets {
             }
         }
         container
-    }
-    fn create_login_dialog() -> gtk::Dialog {
-        // let context = WebContext::default().unwrap();
-        // #[cfg(feature = "v2_4")]
-        // context.set_web_extensions_initialization_user_data(&"webkit".to_variant());
-        // context.set_web_extensions_directory("../do/target/debug/");
-        // #[cfg(feature = "v2_6")]
-        // let webview = WebView::new_with_context_and_user_content_manager(&context, &UserContentManager::new());
-        // #[cfg(not(feature = "v2_6"))]
-        // let webview = webkit2gtk::WebView::with_context(&context);
-        // webview.load_uri("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
-        //     client_id=af13f4ae-b607-4a07-9ddc-6c5c5d59979f
-        //     &response_type=code
-        //     &redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient
-        //     &response_mode=form_post
-        //     &scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
-        //     &state=1234");
-        let dialog = gtk::Dialog::new();
-        // dialog.set_(Some(&webview));
-        // dialog.set_child(Some(&container));
-        dialog
     }
 }
