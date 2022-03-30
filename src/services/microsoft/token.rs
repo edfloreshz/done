@@ -1,5 +1,5 @@
 use crate::services::ToDoService;
-use crate::{List};
+use crate::{List, Task};
 use anyhow::Context;
 use cascade::cascade;
 use libdmd::config::Config;
@@ -8,7 +8,6 @@ use libdmd::format::{ElementFormat, FileType};
 use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::services::microsoft::task::Task;
 use crate::services::microsoft::types::Collection;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
