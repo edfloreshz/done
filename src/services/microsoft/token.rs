@@ -8,13 +8,40 @@ use libdmd::format::{ElementFormat, FileType};
 use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::mpsc;
 use crate::services::microsoft::types::Collection;
+use warp::Filter;
+use warp::http::Uri;
+
+#[derive(Deserialize)]
+pub struct Query {
+    pub code: String,
+    pub state: String,
+}
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MicrosoftTokenAccess {
     pub expires_in: usize,
     pub access_token: String,
     pub refresh_token: String,
+}
+
+async fn receive_query() -> Query {
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let route = warp::get()
+        .and(warp::filters::query::query())
+        .map(move |query: Query| {
+            warp::redirect(Uri::from_static("do://open"));
+            query
+        })
+        .map(move |query: Query| {
+            sender.send(query).expect("failed to send query");
+            "Go back to the app to continue."
+        });
+
+    tokio::task::spawn(warp::serve(route).run(([127, 0, 0, 1], 8000)));
+
+    receiver.recv().expect("channel has hung up")
 }
 
 #[async_trait::async_trait]
@@ -45,16 +72,28 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         )
     }
 
-    async fn token(code: &str) -> anyhow::Result<MicrosoftTokenAccess> {
-        println!("{code}");
+    async fn authenticate() -> anyhow::Result<String> {
+        let url = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
+            client_id=af13f4ae-b607-4a07-9ddc-6c5c5d59979f
+            &response_type=code
+            &redirect_uri=http://127.0.0.1:8000
+            &response_mode=query
+            &scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
+            &state=1234";
+        open::that(url)?;
+        let query = receive_query().await;
+        Ok(query.code)
+    }
+
+    async fn token(code: String) -> anyhow::Result<MicrosoftTokenAccess> {
         let client = reqwest::Client::new();
         let params = cascade! {
             HashMap::new();
             ..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
             ..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
-            ..insert("redirect_uri", "https://login.microsoftonline.com/common/oauth2/nativeclient");
+            ..insert("redirect_uri", "http://127.0.0.1:8000");
             ..insert("grant_type", "authorization_code");
-            ..insert("code", code);
+            ..insert("code", code.as_str());
         };
         let response = client
             .post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")
@@ -80,7 +119,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             HashMap::new();
             ..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
             ..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
-            ..insert("redirect_uri", "https://login.microsoftonline.com/common/oauth2/nativeclient");
+            ..insert("redirect_uri", "http://127.0.0.1:8000");
             ..insert("grant_type", "refresh_token");
             ..insert("refresh_token", refresh_token);
         };

@@ -29,8 +29,6 @@ mod models;
 mod services;
 mod ui;
 
-const CODE: &str = "M.R3_BAY.33390a60-df01-a11d-e237-340474e3b238";
-
 #[derive(Debug)]
 pub enum UiEvent {
     Fetch,
@@ -104,16 +102,23 @@ fn handle_events(event_handler: EventHandler) {
                     }
                 };
             } else {
-                println!("{CODE}");
-                match MicrosoftTokenAccess::token(CODE).await {
-                    Ok(token_data) => {
-                        match MicrosoftTokenAccess::update_token_data(&token_data) {
-                            Ok(_) => println!("Updated token data."),
+                match MicrosoftTokenAccess::authenticate().await {
+                    Ok(code) => {
+                        match MicrosoftTokenAccess::token(code).await {
+                            Ok(token_data) => {
+                                match MicrosoftTokenAccess::update_token_data(&token_data) {
+                                    Ok(_) => {
+                                        println!("Updated token data.");
+                                    },
+                                    Err(err) => println!("{err}")
+                                }
+                            }
                             Err(err) => println!("{err}")
                         }
                     }
                     Err(err) => println!("{err}")
                 }
+
 
             }
             let (ui_recv, data_tx) = (event_handler.ui_rv.clone(), event_handler.data_tx.clone());
