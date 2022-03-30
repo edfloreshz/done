@@ -1,55 +1,21 @@
 use crate::services::ToDoService;
-use crate::{List, Task, TaskImportance, TaskStatus};
+use crate::{List};
 use anyhow::Context;
 use cascade::cascade;
-use chrono::{DateTime, Utc};
 use libdmd::config::Config;
 use libdmd::element::Element;
 use libdmd::format::{ElementFormat, FileType};
 use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::str::FromStr;
-use std::time::SystemTime;
+use crate::services::microsoft::task::Task;
+use crate::services::microsoft::types::Collection;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MicrosoftTokenAccess {
     pub expires_in: usize,
     pub access_token: String,
     pub refresh_token: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct Collection<T> {
-    pub value: Vec<T>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ToDoTask {
-    pub id: String,
-    pub importance: String,
-    #[serde(rename = "isReminderOn")]
-    pub is_reminder_on: bool,
-    pub status: String,
-    pub title: String,
-    #[serde(rename = "createdDateTime")]
-    pub created: String,
-    #[serde(rename = "lastModifiedDateTime")]
-    pub last_modified: String,
-}
-
-impl Default for ToDoTask {
-    fn default() -> Self {
-        Self {
-            id: "".to_string(),
-            importance: "normal".to_string(),
-            is_reminder_on: false,
-            status: "notStarted".to_string(),
-            title: "".to_string(),
-            created: DateTime::<Utc>::from(SystemTime::now()).to_rfc3339(),
-            last_modified: DateTime::<Utc>::from(SystemTime::now()).to_rfc3339(),
-        }
-    }
 }
 
 #[async_trait::async_trait]
@@ -81,6 +47,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn token(code: &str) -> anyhow::Result<MicrosoftTokenAccess> {
+        println!("{code}");
         let client = reqwest::Client::new();
         let params = cascade! {
             HashMap::new();
@@ -95,14 +62,16 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .form(&params)
             .send()
             .await?;
-        if response.status().is_success() {
-            let response = response.text().await?;
-            let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
-            MicrosoftTokenAccess::update_token_data(&token_data)?;
-            Ok(token_data)
-        } else {
-            // TODO: Let know the user the error.
-            Ok(MicrosoftTokenAccess::default())
+        match response.error_for_status() {
+            Ok(response) => {
+                let response = response.text().await?;
+                let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
+                MicrosoftTokenAccess::update_token_data(&token_data)?;
+                Ok(token_data)
+            }
+            Err(error) => {
+                Err(error.into())
+            },
         }
     }
 
@@ -121,14 +90,16 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .form(&params)
             .send()
             .await?;
-        if response.status().is_success() {
-            let response = response.text().await?;
-            let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
-            MicrosoftTokenAccess::update_token_data(&token_data)?;
-            Ok(token_data)
-        } else {
-            // TODO: Let know the user the error.
-            Ok(MicrosoftTokenAccess::default())
+        match response.error_for_status() {
+            Ok(response) => {
+                let response = response.text().await?;
+                let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
+                MicrosoftTokenAccess::update_token_data(&token_data)?;
+                Ok(token_data)
+            }
+            Err(error) => {
+                Err(error.into())
+            },
         }
     }
 
@@ -141,12 +112,15 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .bearer_auth(&config.access_token)
             .send()
             .await?;
-        if response.status().is_success() {
-            let lists = response.text().await?;
-            let lists: Collection<List> = serde_json::from_str(lists.as_str())?;
-            Ok(lists.value)
-        } else {
-            Ok(vec![])
+        match response.error_for_status() {
+            Ok(response) => {
+                let lists = response.text().await?;
+                let lists: Collection<List> = serde_json::from_str(lists.as_str())?;
+                Ok(lists.value)
+            }
+            Err(error) => {
+                Err(error.into())
+            },
         }
     }
 
@@ -162,17 +136,15 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .bearer_auth(&config.access_token)
             .send()
             .await?;
-        if response.status().is_success() {
-            let response = response.text().await?;
-            let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection
-                .value
-                .iter()
-                .map(|t| t.to_owned().into())
-                .collect();
-            Ok(collection)
-        } else {
-            Ok(vec![])
+        match response.error_for_status() {
+            Ok(response) => {
+                let response = response.text().await?;
+                let collection: Collection<Task> = serde_json::from_str(response.as_str())?;
+                Ok(collection.value)
+            }
+            Err(error) => {
+                Err(error.into())
+            },
         }
     }
 
@@ -203,17 +175,15 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .bearer_auth(&config.access_token)
             .send()
             .await?;
-        if response.status().is_success() {
-            let response = response.text().await?;
-            let collection: Collection<ToDoTask> = serde_json::from_str(response.as_str())?;
-            let collection = collection
-                .value
-                .iter()
-                .map(|t| t.to_owned().into())
-                .collect();
-            Ok(collection)
-        } else {
-            Ok(vec![])
+        match response.error_for_status() {
+            Ok(response) => {
+                let response = response.text().await?;
+                let collection: Collection<Task> = serde_json::from_str(response.as_str())?;
+                Ok(collection.value)
+            }
+            Err(error) => {
+                Err(error.into())
+            },
         }
     }
 
@@ -232,7 +202,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         match response.error_for_status() {
             Ok(response) => {
                 let response = response.text().await?;
-                let task: ToDoTask = serde_json::from_str(response.as_str())?;
+                let task: Task = serde_json::from_str(response.as_str())?;
                 Ok(task.into())
             }
             Err(error) => Err(error.into()),
@@ -243,7 +213,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         let config = MicrosoftTokenAccess::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
-        let task = ToDoTask {
+        let task = Task {
             title: entry,
             ..std::default::Default::default()
         };
@@ -260,21 +230,6 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         match response.error_for_status() {
             Ok(_) => Ok(()),
             Err(err) => Err(err.into()),
-        }
-    }
-}
-
-impl From<ToDoTask> for Task {
-    fn from(task: ToDoTask) -> Self {
-        Task {
-            id: task.id.clone(),
-            importance: TaskImportance::from(task.importance.as_str()),
-            is_reminder_on: task.is_reminder_on,
-            status: TaskStatus::from(task.status.as_str()),
-            title: task.title.clone(),
-            created: DateTime::from_str(task.created.as_str()).unwrap(),
-            last_modified: DateTime::from_str(task.last_modified.as_str()).unwrap(),
-            completed: TaskStatus::is_completed(task.status.as_str()),
         }
     }
 }

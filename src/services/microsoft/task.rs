@@ -1,45 +1,27 @@
-use crate::{BaseWidgets, UiEvent};
-use chrono::{DateTime, Utc};
-use gtk::prelude::*;
-use gtk4 as gtk;
-use relm4_macros::view;
-use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
 use std::rc::Rc;
-use std::time::SystemTime;
-
-#[allow(dead_code)]
-pub enum TaskMsg {
-    SetCompleted((usize, bool)),
-    AddEntry(String),
-}
+use gtk4 as gtk;
+use gtk::prelude::*;
+use relm4_macros::view;
+use std::cell::RefCell;
+use serde::{Deserialize, Serialize};
+use crate::{BaseWidgets, UiEvent};
+use crate::services::microsoft::types::{DateTimeTimeZone, ItemBody};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Task {
     pub id: String,
+    pub body: ItemBody,
+    pub completed_date_time: Option<DateTimeTimeZone>,
+    pub due_date_time: Option<DateTimeTimeZone>,
     pub importance: TaskImportance,
-    #[serde(rename = "isReminderOn")]
     pub is_reminder_on: bool,
+    // pub recurrence: PatternedRecurrence,
+    pub reminder_date_time: Option<DateTimeTimeZone>,
     pub status: TaskStatus,
     pub title: String,
-    pub created: DateTime<Utc>,
-    pub last_modified: DateTime<Utc>,
-    pub completed: bool,
-}
-
-impl Default for Task {
-    fn default() -> Self {
-        Self {
-            id: "".to_string(),
-            importance: Default::default(),
-            is_reminder_on: false,
-            status: Default::default(),
-            title: "".to_string(),
-            created: DateTime::from(SystemTime::now()),
-            last_modified: DateTime::from(SystemTime::now()),
-            completed: false,
-        }
-    }
+    pub created_date_time: String,
+    pub last_modified_date_time: String,
 }
 
 impl Task {
@@ -95,7 +77,7 @@ impl Task {
                     .expect("Failed to complete task");
             });
             container.add_controller(&gesture);
-            let checkbox = gtk::CheckButton::builder().active(task.completed).build();
+            let checkbox = gtk::CheckButton::builder().active(task.is_completed()).build();
             let label = gtk::Label::builder().label(&task.title).build();
 
             checkbox.set_margin_end(12);
@@ -117,7 +99,7 @@ impl Task {
                     .try_send(UiEvent::TaskCompleted(
                         task_list_id.clone(),
                         task.clone().id,
-                        task.completed,
+                        task.is_completed(),
                     ))
                     .expect("Failed to complete task.");
             });
@@ -160,13 +142,13 @@ impl Task {
                         set_spacing: 10,
 
                         append = &gtk::CheckButton {
-                            set_active: task.completed,
+                            set_active: task.is_completed(),
 
                             connect_toggled(ui_tx) => move |_| {
                                 ui_tx.borrow_mut().try_send(UiEvent::TaskCompleted(
                                         task_list_id.clone(),
                                         task.clone().id,
-                                        task.completed,
+                                        task.is_completed(),
                                     )).expect("");
                             }
                         },
@@ -209,11 +191,36 @@ impl Task {
             ui.details.revealer.set_reveal_child(!reveals);
         }
     }
+    pub fn is_completed(&self) -> bool {
+        self.status == TaskStatus::Completed
+    }
+}
+
+impl Default for Task {
+    fn default() -> Self {
+        Self {
+            id: "".to_string(),
+            body: ItemBody::default(),
+            completed_date_time: None,
+            due_date_time: None,
+            importance: TaskImportance::default(),
+            is_reminder_on: false,
+            // recurrence: Default::default(),
+            reminder_date_time: None,
+            status: TaskStatus::default(),
+            title: "".to_string(),
+            created_date_time: String::new(),
+            last_modified_date_time: String::new(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub enum TaskImportance {
+    Low,
     Normal,
+    High
 }
 
 impl Default for TaskImportance {
@@ -222,38 +229,18 @@ impl Default for TaskImportance {
     }
 }
 
-impl TaskImportance {
-    pub fn from(importance: &str) -> Self {
-        match importance {
-            "normal" => TaskImportance::Normal,
-            _ => TaskImportance::Normal,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum TaskStatus {
     NotStarted,
     Started,
     Completed,
+    WaitingOnOthers,
+    Deferred,
 }
 
 impl Default for TaskStatus {
     fn default() -> Self {
         TaskStatus::NotStarted
-    }
-}
-
-impl TaskStatus {
-    pub fn from(status: &str) -> Self {
-        match status {
-            "notStarted" => TaskStatus::NotStarted,
-            "started" => TaskStatus::Started,
-            "completed" => TaskStatus::Completed,
-            _ => TaskStatus::NotStarted,
-        }
-    }
-    pub fn is_completed(status: &str) -> bool {
-        status.eq("completed")
     }
 }

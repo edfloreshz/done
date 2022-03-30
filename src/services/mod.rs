@@ -1,7 +1,10 @@
-use crate::{List, Task};
+use crate::{List};
 use anyhow::Result;
 use async_trait::async_trait;
 use libdmd::config::Config;
+use crate::services::microsoft::task::Task;
+
+pub mod microsoft;
 
 #[async_trait]
 pub trait ToDoService<T> {
@@ -22,4 +25,3 @@ pub trait ToDoService<T> {
     async fn push_task(task_list_id: &str, entry: String) -> Result<()>;
 }
 
-pub mod microsoft;

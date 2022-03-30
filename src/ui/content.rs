@@ -25,6 +25,7 @@ impl MainWidgets {
         top_box.append(&button);
         let internal_box = gtk4::Box::builder()
             .orientation(gtk::Orientation::Vertical)
+            .css_classes(vec!["main-box".to_string()])
             .build();
         internal_box.append(&top_box);
         internal_box.append(&stack);
