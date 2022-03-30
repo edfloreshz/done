@@ -31,8 +31,8 @@ impl List {
                 label = &gtk::Label {
                     set_halign: gtk::Align::Start,
                     set_text: list.display_name.as_str(),
-                    set_margin_bottom: 15,
-                    set_margin_top: 15,
+                    set_margin_top: 10,
+                    set_margin_bottom: 10,
                     set_margin_start: 15,
                     set_margin_end: 15,
                 }

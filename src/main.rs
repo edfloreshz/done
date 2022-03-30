@@ -21,7 +21,7 @@ use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 use crate::models::list::List;
-use crate::models::task::{Task, TaskImportance, TaskStatus};
+use crate::services::microsoft::Task;
 use crate::services::ToDoService;
 use crate::ui::base::BaseWidgets;
 
@@ -105,38 +105,26 @@ fn handle_events(event_handler: EventHandler) {
             while let Some(event) = ui_recv.recv().await {
                 println!("Received UI event: {:?}", event);
                 match event {
-                    UiEvent::ListSelected(index) => {
-                        match MicrosoftTokenAccess::get_lists().await {
-                            Ok(lists) => {
-                                let task_list_id = lists[index.clone()].clone().task_list_id;
-                                match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
-                                    Ok(tasks) => {
-                                        data_tx
-                                            .send(DataEvent::UpdateTasks(
-                                                task_list_id.clone(), tasks
-                                            ))
-                                            .await
-                                            .expect("Failed to send UpdateTasks event.")
-                                    }
-                                    Err(err) => println!("{err}")
-                                }
-                            }
-                            Err(err) => println!("{err}")
-                        }
-
-                    }
-                    UiEvent::Fetch => {
-                        match MicrosoftTokenAccess::get_lists().await {
-                            Ok(lists) => {
-                                data_tx
-                                    .send(DataEvent::UpdateLists(lists))
+                    UiEvent::ListSelected(index) => match MicrosoftTokenAccess::get_lists().await {
+                        Ok(lists) => {
+                            let task_list_id = lists[index.clone()].clone().task_list_id;
+                            match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
+                                Ok(tasks) => data_tx
+                                    .send(DataEvent::UpdateTasks(task_list_id.clone(), tasks))
                                     .await
-                                    .expect("Failed to send UpdateLists event.")
+                                    .expect("Failed to send UpdateTasks event."),
+                                Err(err) => println!("{err}"),
                             }
-                            Err(err) => println!("{err}")
                         }
-
-                    }
+                        Err(err) => println!("{err}"),
+                    },
+                    UiEvent::Fetch => match MicrosoftTokenAccess::get_lists().await {
+                        Ok(lists) => data_tx
+                            .send(DataEvent::UpdateLists(lists))
+                            .await
+                            .expect("Failed to send UpdateLists event."),
+                        Err(err) => println!("{err}"),
+                    },
                     UiEvent::TaskCompleted(task_list_id, task_id, completed) => {
                         // TODO: When a task is completed in the details view it needs to be updated in the list view.
                         match MicrosoftTokenAccess::set_task_as_completed(
@@ -168,19 +156,13 @@ fn handle_events(event_handler: EventHandler) {
                         match MicrosoftTokenAccess::push_task(&*task_list_id.clone(), entry).await {
                             Ok(_) => {
                                 match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
-                                    Ok(tasks) => {
-                                        data_tx
-                                            .send(DataEvent::UpdateTasks(
-                                                task_list_id.clone(),
-                                                tasks,
-                                            ))
-                                            .await
-                                            .expect("Failed to send UpdateTasks event.")
-                                    }
-                                    Err(err) => println!("{err}")
+                                    Ok(tasks) => data_tx
+                                        .send(DataEvent::UpdateTasks(task_list_id.clone(), tasks))
+                                        .await
+                                        .expect("Failed to send UpdateTasks event."),
+                                    Err(err) => println!("{err}"),
                                 }
-
-                            },
+                            }
                             Err(err) => println!("{err}"),
                         }
                     }
