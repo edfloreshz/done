@@ -5,10 +5,10 @@ use libadwaita as adw;
 use libadwaita::prelude::*;
 use relm4_macros::view;
 
-use crate::{MicrosoftTokenAccess, ToDoService};
 use crate::ui::content::MainWidgets;
 use crate::ui::details::DetailsWidgets;
 use crate::ui::sidebar::SidebarWidgets;
+use crate::{MicrosoftTokenAccess, ToDoService};
 
 #[derive(Clone)]
 pub struct BaseWidgets {
@@ -20,7 +20,7 @@ pub struct BaseWidgets {
     pub main: MainWidgets,
     pub content: gtk::Box,
     pub login_button: gtk::Button,
-    pub welcome: gtk::Box
+    pub welcome: gtk::Box,
 }
 
 impl BaseWidgets {
@@ -65,11 +65,34 @@ impl BaseWidgets {
             main,
             content,
             login_button,
-            welcome
+            welcome,
         }
     }
     pub fn create_welcome(login_button: Option<&gtk::Button>) -> gtk::Box {
         if login_button.is_some() {
+            view! {
+                welcome = gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_spacing: 20,
+                    set_valign: gtk::Align::Center,
+                    set_halign: gtk::Align::Center,
+                    set_width_request: 100,
+
+                    append = &gtk::Picture {
+                        set_filename: Some(Path::new("/src/assets/logo.png")),
+                        set_keep_aspect_ratio: true,
+                        set_can_shrink: true
+                    },
+                    append = &gtk::Label {
+                        set_label: "Microsoft To Do",
+                        add_css_class: "title"
+                    },
+                    append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
+                    append: login_button.unwrap()
+                }
+            }
+            welcome
+        } else {
             view! {
                 welcome = gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
@@ -88,31 +111,8 @@ impl BaseWidgets {
                         add_css_class: "title"
                     },
                     append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
-                    append: login_button.unwrap()
                 }
             }
-            welcome
-        } else {
-            view! {
-            welcome = gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 20,
-                set_valign: gtk::Align::Center,
-                set_halign: gtk::Align::Center,
-                set_width_request: 100,
-
-                append = &gtk::Picture {
-                    set_filename: Some(Path::new("src/assets/logo.png")),
-                    set_keep_aspect_ratio: true,
-                    set_can_shrink: true
-                },
-                append = &gtk::Label {
-                    set_label: "Microsoft To Do",
-                    add_css_class: "title"
-                },
-                append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
-            }
-        }
             welcome
         }
     }

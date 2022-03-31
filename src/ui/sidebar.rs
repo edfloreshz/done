@@ -26,8 +26,10 @@ impl SidebarWidgets {
         let subsection_revealer = Self::create_subsection_revealer(&stack);
         let reveal_button = Self::create_reveal_button(&header_box, &revealer);
         let list = gtk4::ListBox::builder().vexpand(true).build();
+        let action_buttons = Self::create_action_buttons();
         scroll_window.set_child(Some(&list));
         navigation_box.append(&scroll_window);
+        navigation_box.append(&action_buttons);
         navigation_box.append(&subsection_revealer);
         revealer.set_child(Some(&navigation_box));
         let labels = Rc::new(RefCell::new(vec![]));
@@ -40,6 +42,26 @@ impl SidebarWidgets {
             subsection_revealer,
             stack,
         }
+    }
+    fn create_action_buttons() -> gtk::Box {
+        view! {
+            action_buttons = gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_spacing: 10,
+                set_margin_top: 10,
+                set_margin_bottom: 10,
+                set_margin_start: 10,
+                set_margin_end: 10,
+                set_halign: gtk::Align::Center,
+                append = &gtk::Button {
+                    set_label: "Add List",
+                },
+                append = &gtk::Button {
+                    set_label: "Add Group",
+                }
+            }
+        }
+        action_buttons
     }
     fn create_scrolled_window() -> gtk::ScrolledWindow {
         view! {

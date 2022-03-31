@@ -1,20 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use cascade::cascade;
-use gtk4 as gtk;
-use gtk::CssProvider;
 use gtk::gdk::Display;
 use gtk::prelude::*;
+use gtk::CssProvider;
+use gtk4 as gtk;
+use gtk4::gio::{ApplicationFlags, File};
 use libadwaita as adw;
-use libdmd::{
-    config::Config,
-    dir,
-    element::Element,
-    fi,
-    format::ElementFormat,
-};
+use libdmd::{config::Config, dir, element::Element, fi, format::ElementFormat};
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -32,6 +28,7 @@ mod ui;
 pub enum UiEvent {
     Fetch,
     Login,
+    Uri(String),
     AddEntry(String, String),
     ListSelected(usize),
     TaskCompleted(String, String, bool),
@@ -66,6 +63,7 @@ fn main() -> anyhow::Result<()> {
     }
     let application = adw::Application::builder()
         .application_id("do.edfloreshz.github")
+        .flags(ApplicationFlags::HANDLES_OPEN)
         .build();
     let (ui_sender, ui_recv): (Sender<UiEvent>, Receiver<UiEvent>) = channel(1);
     let (data_sender, data_recv): (Sender<DataEvent>, Receiver<DataEvent>) = channel(1);
@@ -76,9 +74,21 @@ fn main() -> anyhow::Result<()> {
         data_rv: Rc::new(RefCell::new(Some(data_recv))),
     };
     handle_events(event_handler.clone());
+    let open_sender = event_handler.clone();
+    application.connect_open(move |_, files, _| handle_uri(files, open_sender.clone()));
     application.connect_activate(move |app| build_ui(app, event_handler.clone()));
     application.run();
     Ok(())
+}
+
+fn handle_uri(files: &[File], event_handler: EventHandler) {
+    let bytes = files[0].uri();
+    let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
+    let pairs = uri.query_pairs().next().unwrap().1;
+    event_handler
+        .ui_tx
+        .borrow_mut()
+        .try_send(UiEvent::Uri(pairs.to_string())).unwrap();
 }
 
 fn handle_events(event_handler: EventHandler) {
@@ -90,7 +100,7 @@ fn handle_events(event_handler: EventHandler) {
             let mut ui_recv = ui_recv.lock().unwrap();
             let data_tx = data_tx.lock().unwrap();
             while let Some(event) = ui_recv.recv().await {
-                println!("Received UI event: {:?}", event);
+                // println!("Received UI event: {:?}", event);
                 match event {
                     UiEvent::ListSelected(index) => match MicrosoftTokenAccess::get_lists().await {
                         Ok(lists) => {
@@ -130,40 +140,25 @@ fn handle_events(event_handler: EventHandler) {
                             match MicrosoftTokenAccess::current_token_data() {
                                 None => println!("Couldn't find current token data"),
                                 Some(config) => {
-                                    match MicrosoftTokenAccess::refresh_token(config.refresh_token.as_str()).await {
+                                    match MicrosoftTokenAccess::refresh_token(
+                                        config.refresh_token.as_str(),
+                                    )
+                                    .await
+                                    {
                                         Ok(token) => {
                                             match MicrosoftTokenAccess::update_token_data(&token) {
                                                 Ok(_) => println!("Token configuration updated."),
-                                                Err(err) => println!("{err}")
+                                                Err(err) => println!("{err}"),
                                             }
                                         }
-                                        Err(err) => println!("{err}")
+                                        Err(err) => println!("{err}"),
                                     }
                                 }
                             };
                         } else {
                             match MicrosoftTokenAccess::authenticate().await {
-                                Ok(code) => {
-                                    match MicrosoftTokenAccess::token(code).await {
-                                        Ok(token_data) => {
-                                            match MicrosoftTokenAccess::update_token_data(&token_data) {
-                                                Ok(_) => {
-                                                    match MicrosoftTokenAccess::get_lists().await {
-                                                        Ok(lists) => {
-                                                            data_tx.send(DataEvent::Login).await.expect("Failed to send Login event.");
-                                                            data_tx.send(DataEvent::UpdateLists(lists)).await.expect("Failed to send Login event.");
-                                                        }
-                                                        Err(err) => println!("{err}")
-                                                    }
-                                                    println!("Updated token data.");
-                                                },
-                                                Err(err) => println!("{err}")
-                                            }
-                                        }
-                                        Err(err) => println!("{err}")
-                                    }
-                                }
-                                Err(err) => println!("{err}")
+                                Ok(_) => {}
+                                Err(err) => println!("{err}"),
                             }
                         }
                     }
@@ -192,6 +187,30 @@ fn handle_events(event_handler: EventHandler) {
                             Err(err) => println!("{err}"),
                         }
                     }
+                    UiEvent::Uri(code) => match MicrosoftTokenAccess::token(code).await {
+                        Ok(token_data) => {
+                            match MicrosoftTokenAccess::update_token_data(&token_data) {
+                                Ok(_) => {
+                                    match MicrosoftTokenAccess::get_lists().await {
+                                        Ok(lists) => {
+                                            data_tx
+                                                .send(DataEvent::Login)
+                                                .await
+                                                .expect("Failed to send Login event.");
+                                            data_tx
+                                                .send(DataEvent::UpdateLists(lists))
+                                                .await
+                                                .expect("Failed to send Login event.");
+                                        }
+                                        Err(err) => println!("{err}"),
+                                    }
+                                    println!("Updated token data.");
+                                }
+                                Err(err) => println!("{err}"),
+                            }
+                        }
+                        Err(err) => println!("{err}"),
+                    },
                 }
             }
         })
@@ -217,6 +236,7 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
         &provider,
         gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+
     if MicrosoftTokenAccess::is_token_present() {
         event_handler
             .ui_tx
@@ -243,7 +263,7 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
             .expect("data_event_receiver");
         async move {
             while let Some(event) = data_event_receiver.recv().await {
-                println!("Received data event: {:?}", event);
+                // println!("Received data event: {:?}", event);
                 match event {
                     DataEvent::UpdateLists(lists) => {
                         List::fill_lists(&closure_widgets, &lists);

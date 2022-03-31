@@ -1,9 +1,14 @@
 [package]
 name = "do"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
+license = "GPL-2.0"
+description = "Do is a Microsoft To Do client for Linux built with Rust and GTK."
+homepage = "https://do.edfloreshz.dev/"
+documentation = "https://docs.rs/do"
+repository = "https://github.com/edfloreshz/do/"
+readme = "README.md"
 
 [dependencies]
 gtk4 = "0.4.6"
@@ -20,4 +25,3 @@ anyhow = "1.0.56"
 chrono = { version = "0.4.19", features = ["serde"] }
 async-trait = "0.1.53"
 open = "2.1.1"
-warp = "0.3.2"

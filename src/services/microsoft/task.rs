@@ -1,11 +1,11 @@
-use std::rc::Rc;
-use gtk4 as gtk;
-use gtk::prelude::*;
-use relm4_macros::view;
-use std::cell::RefCell;
-use serde::{Deserialize, Serialize};
-use crate::{BaseWidgets, UiEvent};
 use crate::services::microsoft::types::{DateTimeTimeZone, ItemBody};
+use crate::{BaseWidgets, UiEvent};
+use gtk::prelude::*;
+use gtk4 as gtk;
+use relm4_macros::view;
+use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -77,7 +77,9 @@ impl Task {
                     .expect("Failed to complete task");
             });
             container.add_controller(&gesture);
-            let checkbox = gtk::CheckButton::builder().active(task.is_completed()).build();
+            let checkbox = gtk::CheckButton::builder()
+                .active(task.is_completed())
+                .build();
             let label = gtk::Label::builder().label(&task.title).build();
 
             checkbox.set_margin_end(12);
@@ -220,7 +222,7 @@ impl Default for Task {
 pub enum TaskImportance {
     Low,
     Normal,
-    High
+    High,
 }
 
 impl Default for TaskImportance {

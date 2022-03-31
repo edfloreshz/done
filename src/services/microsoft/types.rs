@@ -10,21 +10,21 @@ pub struct Collection<T> {
 #[serde(rename_all = "camelCase")]
 pub struct DateTimeTimeZone {
     pub date_time: String,
-    pub time_zone: String
+    pub time_zone: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemBody {
     content: String,
-    content_type: BodyType
+    content_type: BodyType,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum BodyType {
     Text,
-    Html
+    Html,
 }
 
 impl Default for BodyType {
@@ -36,14 +36,14 @@ impl Default for BodyType {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PatternedRecurrence {
     pub pattern: RecurrencePattern,
-    pub range: RecurrenceRange
+    pub range: RecurrenceRange,
 }
 
 impl Default for PatternedRecurrence {
     fn default() -> Self {
         Self {
             pattern: RecurrencePattern::default(),
-            range: RecurrenceRange::default()
+            range: RecurrenceRange::default(),
         }
     }
 }
@@ -70,7 +70,7 @@ impl Default for RecurrencePattern {
             index: None,
             interval: 0,
             month: 0,
-            recurrence_type: None
+            recurrence_type: None,
         }
     }
 }
@@ -83,7 +83,7 @@ pub struct RecurrenceRange {
     pub recurrence_time_zone: Option<String>,
     pub start_date: Option<DateTime<Utc>>,
     #[serde(rename = "type")]
-    pub recurrence_range_type: Option<RecurrenceRangeType>
+    pub recurrence_range_type: Option<RecurrenceRangeType>,
 }
 
 impl Default for RecurrenceRange {
@@ -93,7 +93,7 @@ impl Default for RecurrenceRange {
             number_of_occurrences: 0,
             recurrence_time_zone: None,
             start_date: None,
-            recurrence_range_type: None
+            recurrence_range_type: None,
         }
     }
 }
@@ -107,7 +107,7 @@ pub enum DayOfWeek {
     Wednesday,
     Thursday,
     Friday,
-    Saturday
+    Saturday,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -117,7 +117,7 @@ pub enum WeekIndex {
     Second,
     Third,
     Fourth,
-    Last
+    Last,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -136,6 +136,5 @@ pub enum RecurrenceType {
 pub enum RecurrenceRangeType {
     EndDate,
     NoEnd,
-    Numbered
+    Numbered,
 }
-
