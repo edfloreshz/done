@@ -1,17 +1,19 @@
-use crate::services::ToDoService;
-use crate::{List, Task};
+use std::collections::HashMap;
+use std::sync::mpsc;
+
 use anyhow::Context;
 use cascade::cascade;
+use libdmd::{dir, fi};
 use libdmd::config::Config;
 use libdmd::element::Element;
 use libdmd::format::{ElementFormat, FileType};
-use libdmd::{dir, fi};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::mpsc;
-use crate::services::microsoft::types::Collection;
 use warp::Filter;
 use warp::http::Uri;
+
+use crate::{List, Task};
+use crate::services::microsoft::types::Collection;
+use crate::services::ToDoService;
 
 #[derive(Deserialize)]
 pub struct Query {
@@ -61,12 +63,12 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     fn current_token_data() -> Option<MicrosoftTokenAccess> {
-        Config::get::<MicrosoftTokenAccess>("ToDo/services/microsoft/token.toml", FileType::TOML)
+        Config::get::<MicrosoftTokenAccess>("do/services/microsoft/token.toml", FileType::TOML)
     }
 
     fn update_token_data(config: &MicrosoftTokenAccess) -> anyhow::Result<()> {
         Config::set(
-            "ToDo/services/microsoft/token.toml",
+            "do/services/microsoft/token.toml",
             config.clone(),
             FileType::TOML,
         )

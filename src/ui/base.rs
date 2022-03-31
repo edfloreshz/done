@@ -5,6 +5,7 @@ use libadwaita as adw;
 use libadwaita::prelude::*;
 use relm4_macros::view;
 
+use crate::{MicrosoftTokenAccess, ToDoService};
 use crate::ui::content::MainWidgets;
 use crate::ui::details::DetailsWidgets;
 use crate::ui::sidebar::SidebarWidgets;
@@ -40,7 +41,11 @@ impl BaseWidgets {
         let sidebar = SidebarWidgets::new(&header_box);
         let details = DetailsWidgets::new();
         let login_button = gtk::Button::builder().label("Login").build();
-        let welcome = Self::create_welcome(&login_button);
+        let welcome = if MicrosoftTokenAccess::is_token_present() {
+            Self::create_welcome(None)
+        } else {
+            Self::create_welcome(Some(&login_button))
+        };
         header.pack_start(&header_box);
         top.append(&header);
         container.append(&sidebar.revealer);
@@ -63,8 +68,32 @@ impl BaseWidgets {
             welcome
         }
     }
-    pub fn create_welcome(login_button: &gtk::Button) -> gtk::Box {
-        view! {
+    pub fn create_welcome(login_button: Option<&gtk::Button>) -> gtk::Box {
+        if login_button.is_some() {
+            view! {
+                welcome = gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_spacing: 20,
+                    set_valign: gtk::Align::Center,
+                    set_halign: gtk::Align::Center,
+                    set_width_request: 100,
+
+                    append = &gtk::Picture {
+                        set_filename: Some(Path::new("src/assets/logo.png")),
+                        set_keep_aspect_ratio: true,
+                        set_can_shrink: true
+                    },
+                    append = &gtk::Label {
+                        set_label: "Microsoft To Do",
+                        add_css_class: "title"
+                    },
+                    append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
+                    append: login_button.unwrap()
+                }
+            }
+            welcome
+        } else {
+            view! {
             welcome = gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 20,
@@ -82,10 +111,10 @@ impl BaseWidgets {
                     add_css_class: "title"
                 },
                 append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
-                append: login_button
             }
         }
-        welcome
+            welcome
+        }
     }
     pub fn update_welcome(&self) {
         let last = self.welcome.last_child().unwrap();

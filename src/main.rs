@@ -3,19 +3,18 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use cascade::cascade;
+use gtk4 as gtk;
+use gtk::CssProvider;
 use gtk::gdk::Display;
 use gtk::prelude::*;
-use gtk::CssProvider;
-use gtk4 as gtk;
 use libadwaita as adw;
 use libdmd::{
     config::Config,
     dir,
     element::Element,
     fi,
-    format::{ElementFormat},
+    format::ElementFormat,
 };
-
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -57,7 +56,7 @@ struct EventHandler {
 
 fn main() -> anyhow::Result<()> {
     if !MicrosoftTokenAccess::is_token_present() {
-        let mut config = Config::new("Do")
+        let mut config = Config::new("do")
             .about("Microsoft To Do Client")
             .author("Eduardo Flores")
             .version("0.1.0")
