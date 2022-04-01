@@ -25,7 +25,7 @@ pub struct List {
 }
 
 impl List {
-    pub fn fill_lists(ui: &BaseWidgets, data: &Vec<List>) {
+    pub fn fill_lists(ui: &BaseWidgets, data: &[List]) {
         for list in data.iter() {
             view! {
                 label = &gtk::Label {

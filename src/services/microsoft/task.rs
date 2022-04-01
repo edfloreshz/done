@@ -28,7 +28,7 @@ impl Task {
     pub fn fill_tasks(
         ui: &BaseWidgets,
         task_list_id: String,
-        task_list: &Vec<Task>,
+        task_list: &[Task],
         ui_tx: Rc<RefCell<tokio::sync::mpsc::Sender<UiEvent>>>,
     ) {
         ui.content.remove(&ui.content.last_child().unwrap());
@@ -58,7 +58,7 @@ impl Task {
                 }
             }
         }
-        for task in task_list.clone() {
+        for task in task_list.iter().cloned() {
             let container = gtk::Box::builder()
                 .orientation(gtk::Orientation::Horizontal)
                 .build();

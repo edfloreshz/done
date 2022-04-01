@@ -10,7 +10,7 @@ use gtk::CssProvider;
 use gtk4 as gtk;
 use gtk4::gio::{ApplicationFlags, File};
 use libadwaita as adw;
-use libdmd::{config::Config, dir, element::Element, format::ElementFormat};
+use libdmd::config::Config;
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -40,7 +40,7 @@ enum DataEvent {
     Login,
     UpdateTasks(String, Vec<Task>),
     UpdateLists(Vec<List>),
-    UpdateDetails(String, Task),
+    UpdateDetails(String, Box<Task>),
 }
 
 #[derive(Clone)]
@@ -57,7 +57,6 @@ fn main() -> anyhow::Result<()> {
             .about("Microsoft To Do Client")
             .author("Eduardo Flores")
             .version("0.1.0")
-            .add(dir!("icons"))
             .write()?;
         MicrosoftTokenAccess::create_config(&mut config)?;
     }
@@ -88,7 +87,8 @@ fn handle_uri(files: &[File], event_handler: EventHandler) {
     event_handler
         .ui_tx
         .borrow_mut()
-        .try_send(UiEvent::Uri(pairs.to_string())).unwrap();
+        .try_send(UiEvent::Uri(pairs.to_string()))
+        .unwrap();
 }
 
 fn handle_events(event_handler: EventHandler) {
@@ -104,7 +104,7 @@ fn handle_events(event_handler: EventHandler) {
                 match event {
                     UiEvent::ListSelected(index) => match MicrosoftTokenAccess::get_lists().await {
                         Ok(lists) => {
-                            let task_list_id = lists[index.clone()].clone().task_list_id;
+                            let task_list_id = lists[index].clone().task_list_id;
                             match MicrosoftTokenAccess::get_tasks(task_list_id.as_str()).await {
                                 Ok(tasks) => data_tx
                                     .send(DataEvent::UpdateTasks(task_list_id.clone(), tasks))
@@ -166,7 +166,7 @@ fn handle_events(event_handler: EventHandler) {
                         match MicrosoftTokenAccess::get_task(&*task_list_id, &*task_id).await {
                             Ok(task) => {
                                 data_tx
-                                    .send(DataEvent::UpdateDetails(task_list_id, task))
+                                    .send(DataEvent::UpdateDetails(task_list_id, Box::from(task)))
                                     .await
                                     .expect("Failed to send UpdateLists event.");
                             }
@@ -272,7 +272,7 @@ fn build_ui(application: &adw::Application, event_handler: EventHandler) {
                         Task::fill_tasks(&closure_widgets, task_list_id, &tasks, ui_tx.clone());
                     }
                     DataEvent::UpdateDetails(task_list_id, task) => {
-                        Task::fill_details(&closure_widgets, task_list_id, task, ui_tx.clone())
+                        Task::fill_details(&closure_widgets, task_list_id, *task, ui_tx.clone())
                     }
                     DataEvent::Login => {
                         closure_widgets.update_welcome();

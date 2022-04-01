@@ -33,22 +33,13 @@ impl Default for BodyType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct PatternedRecurrence {
     pub pattern: RecurrencePattern,
     pub range: RecurrenceRange,
 }
 
-impl Default for PatternedRecurrence {
-    fn default() -> Self {
-        Self {
-            pattern: RecurrencePattern::default(),
-            range: RecurrenceRange::default(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RecurrencePattern {
     pub day_of_month: Option<i32>,
@@ -61,21 +52,7 @@ pub struct RecurrencePattern {
     pub recurrence_type: Option<RecurrenceType>,
 }
 
-impl Default for RecurrencePattern {
-    fn default() -> Self {
-        Self {
-            day_of_month: None,
-            days_of_week: None,
-            first_day_of_week: None,
-            index: None,
-            interval: 0,
-            month: 0,
-            recurrence_type: None,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RecurrenceRange {
     pub end_date: Option<DateTime<Utc>>,
@@ -84,18 +61,6 @@ pub struct RecurrenceRange {
     pub start_date: Option<DateTime<Utc>>,
     #[serde(rename = "type")]
     pub recurrence_range_type: Option<RecurrenceRangeType>,
-}
-
-impl Default for RecurrenceRange {
-    fn default() -> Self {
-        Self {
-            end_date: None,
-            number_of_occurrences: 0,
-            recurrence_time_zone: None,
-            start_date: None,
-            recurrence_range_type: None,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

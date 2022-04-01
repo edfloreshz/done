@@ -67,7 +67,7 @@ impl BaseWidgets {
         }
     }
     pub fn create_welcome(login_button: Option<&gtk::Button>) -> gtk::Box {
-        if login_button.is_some() {
+        if let Some(button) = login_button {
             view! {
                 welcome = gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
@@ -86,7 +86,7 @@ impl BaseWidgets {
                         add_css_class: "title"
                     },
                     append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
-                    append: login_button.unwrap()
+                    append: button
                 }
             }
             welcome

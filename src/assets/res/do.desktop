@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=0.1.1
+Name=Microsoft To Do
+Comment=Unofficial desktop app for Microsoft To Do
+TryExec=do
+Exec=do %u
+Icon=/usr/share/icons/hicolor/scalable/apps/do.svg
+Terminal=false
+Type=Application
+Categories=ToDo;Network;Productivity;GTK;
+MimeType=x-scheme-handler/do;
+Keywords=do;todo;microsoft;productivity;

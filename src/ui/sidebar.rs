@@ -24,7 +24,7 @@ impl SidebarWidgets {
         let stack = Self::create_stack();
         let revealer = Self::create_revealer(&navigation_box);
         let subsection_revealer = Self::create_subsection_revealer(&stack);
-        let reveal_button = Self::create_reveal_button(&header_box, &revealer);
+        let reveal_button = Self::create_reveal_button(header_box, &revealer);
         let list = gtk4::ListBox::builder().vexpand(true).build();
         let action_buttons = Self::create_action_buttons();
         scroll_window.set_child(Some(&list));
