@@ -10,11 +10,12 @@ Do is an unofficial client for Microsoft To Do built for Linux with Rust and GTK
 <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/app.png"/>
 
 ## List of things to do
+This is still a work in progress... but so far you can:
 
 ### Account
-- [x] Login
+- [x] Login to your personal Microsoft account
 - [ ] Logout
-- [ ] Manage account
+- [ ] Manage your account
 
 ### Lists
 - [x] Show lists
