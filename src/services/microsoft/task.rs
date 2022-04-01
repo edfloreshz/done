@@ -1,11 +1,14 @@
-use crate::services::microsoft::types::{DateTimeTimeZone, ItemBody};
-use crate::{BaseWidgets, UiEvent};
-use gtk::prelude::*;
-use gtk4 as gtk;
-use relm4_macros::view;
-use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use gtk4 as gtk;
+use gtk::prelude::*;
+use relm4_macros::view;
+use serde::{Deserialize, Serialize};
+
+use crate::events::UiEvent;
+use crate::services::microsoft::types::{DateTimeTimeZone, ItemBody};
+use crate::ui::base::BaseWidgets;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

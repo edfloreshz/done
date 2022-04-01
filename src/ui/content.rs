@@ -1,6 +1,6 @@
+use gtk4 as gtk;
 use gtk::glib::clone;
 use gtk::prelude::*;
-use gtk4 as gtk;
 
 #[derive(Clone)]
 pub struct MainWidgets {

@@ -1,8 +1,9 @@
-use crate::services::microsoft::task::Task;
-use crate::List;
 use anyhow::Result;
 use async_trait::async_trait;
 use libdmd::config::Config;
+
+use crate::models::list::List;
+use crate::services::microsoft::task::Task;
 
 pub mod microsoft;
 
@@ -18,7 +19,7 @@ pub trait ToDoService<T> {
     async fn refresh_token(refresh_token: &str) -> Result<T>;
     async fn get_lists() -> Result<Vec<List>>;
     async fn get_tasks(task_list_id: &str) -> Result<Vec<Task>>;
-    async fn set_task_as_completed(
+    async fn set_task_complete(
         task_list_id: &str,
         task_id: &str,
         completed: bool,

@@ -2,16 +2,17 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use cascade::cascade;
+use libdmd::{dir, fi};
 use libdmd::config::Config;
 use libdmd::element::Element;
 use libdmd::format::{ElementFormat, FileType};
-use libdmd::{dir, fi};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
+use crate::models::list::List;
+use crate::services::microsoft::task::Task;
 use crate::services::microsoft::types::Collection;
 use crate::services::ToDoService;
-use crate::{List, Task};
 
 #[derive(Deserialize)]
 pub struct Query {
@@ -20,14 +21,14 @@ pub struct Query {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct MicrosoftTokenAccess {
+pub struct MicrosoftService {
     pub expires_in: usize,
     pub access_token: String,
     pub refresh_token: String,
 }
 
 #[async_trait::async_trait]
-impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
+impl ToDoService<MicrosoftService> for MicrosoftService {
     fn create_config(config: &mut Config) -> anyhow::Result<Config> {
         config
             .add(dir!("services").child(dir!("microsoft").child(fi!("token.toml"))))
@@ -35,7 +36,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     fn is_token_present() -> bool {
-        let config = MicrosoftTokenAccess::current_token_data();
+        let config = MicrosoftService::current_token_data();
         match config {
             Some(config) => !config.refresh_token.is_empty(),
             None => false,
@@ -54,11 +55,11 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     //     }
     // }
 
-    fn current_token_data() -> Option<MicrosoftTokenAccess> {
-        Config::get::<MicrosoftTokenAccess>("do/services/microsoft/token.toml", FileType::TOML)
+    fn current_token_data() -> Option<MicrosoftService> {
+        Config::get::<MicrosoftService>("do/services/microsoft/token.toml", FileType::TOML)
     }
 
-    fn update_token_data(config: &MicrosoftTokenAccess) -> anyhow::Result<()> {
+    fn update_token_data(config: &MicrosoftService) -> anyhow::Result<()> {
         Config::set(
             "do/services/microsoft/token.toml",
             config.clone(),
@@ -78,7 +79,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         Ok(())
     }
 
-    async fn token(code: String) -> anyhow::Result<MicrosoftTokenAccess> {
+    async fn token(code: String) -> anyhow::Result<MicrosoftService> {
         let client = reqwest::Client::new();
         let params = cascade! {
             HashMap::new();
@@ -96,16 +97,16 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         match response.error_for_status() {
             Ok(response) => {
                 let response = response.text().await?;
-                let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
+                let token_data: MicrosoftService = serde_json::from_str(response.as_str())?;
                 // token_data.creation_date = DateTime::<Utc>::from(SystemTime::now()).to_rfc3339();
-                MicrosoftTokenAccess::update_token_data(&token_data)?;
+                MicrosoftService::update_token_data(&token_data)?;
                 Ok(token_data)
             }
             Err(error) => Err(error.into()),
         }
     }
 
-    async fn refresh_token(refresh_token: &str) -> anyhow::Result<MicrosoftTokenAccess> {
+    async fn refresh_token(refresh_token: &str) -> anyhow::Result<MicrosoftService> {
         let client = reqwest::Client::new();
         let params = cascade! {
             HashMap::new();
@@ -123,9 +124,9 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         match response.error_for_status() {
             Ok(response) => {
                 let response = response.text().await?;
-                let token_data: MicrosoftTokenAccess = serde_json::from_str(response.as_str())?;
+                let token_data: MicrosoftService = serde_json::from_str(response.as_str())?;
                 // token_data.creation_date = DateTime::<Utc>::from(SystemTime::now()).to_rfc3339();
-                MicrosoftTokenAccess::update_token_data(&token_data)?;
+                MicrosoftService::update_token_data(&token_data)?;
                 Ok(token_data)
             }
             Err(error) => Err(error.into()),
@@ -133,7 +134,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_lists() -> anyhow::Result<Vec<List>> {
-        let config = MicrosoftTokenAccess::current_token_data()
+        let config = MicrosoftService::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
@@ -143,7 +144,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
             .await?;
         match response.status() {
             StatusCode::UNAUTHORIZED => {
-                let token = MicrosoftTokenAccess::refresh_token(&*config.refresh_token).await?;
+                let token = MicrosoftService::refresh_token(&*config.refresh_token).await?;
                 let response = client
                     .get("https://graph.microsoft.com/v1.0/me/todo/lists")
                     .bearer_auth(&token.access_token)
@@ -169,7 +170,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_tasks(task_list_id: &str) -> anyhow::Result<Vec<Task>> {
-        let config = MicrosoftTokenAccess::current_token_data()
+        let config = MicrosoftService::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
@@ -190,12 +191,12 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
         }
     }
 
-    async fn set_task_as_completed(
+    async fn set_task_complete(
         task_list_id: &str,
         task_id: &str,
         completed: bool,
     ) -> anyhow::Result<Vec<Task>> {
-        let config = MicrosoftTokenAccess::current_token_data()
+        let config = MicrosoftService::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let status = format!(
             "{}:{}",
@@ -228,7 +229,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn get_task(task_list_id: &str, task_id: &str) -> anyhow::Result<Task> {
-        let config = MicrosoftTokenAccess::current_token_data()
+        let config = MicrosoftService::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let response = client
@@ -250,7 +251,7 @@ impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     }
 
     async fn push_task(task_list_id: &str, entry: String) -> anyhow::Result<()> {
-        let config = MicrosoftTokenAccess::current_token_data()
+        let config = MicrosoftService::current_token_data()
             .with_context(|| "Failed to get current configuration.")?;
         let client = reqwest::Client::new();
         let task = Task {

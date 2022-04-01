@@ -3,10 +3,11 @@ use libadwaita as adw;
 use libadwaita::prelude::*;
 use relm4_macros::view;
 
+use crate::services::microsoft::token::MicrosoftService;
+use crate::services::ToDoService;
 use crate::ui::content::MainWidgets;
 use crate::ui::details::DetailsWidgets;
 use crate::ui::sidebar::SidebarWidgets;
-use crate::{MicrosoftTokenAccess, ToDoService};
 
 #[derive(Clone)]
 pub struct BaseWidgets {
@@ -39,7 +40,7 @@ impl BaseWidgets {
         let sidebar = SidebarWidgets::new(&header_box);
         let details = DetailsWidgets::new();
         let login_button = gtk::Button::builder().label("Login").build();
-        let welcome = if MicrosoftTokenAccess::is_token_present() {
+        let welcome = if MicrosoftService::is_token_present() {
             Self::create_welcome(None)
         } else {
             Self::create_welcome(Some(&login_button))
