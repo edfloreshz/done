@@ -8,6 +8,7 @@ use libdmd::format::{ElementFormat, FileType};
 use libdmd::{dir, fi};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use image::io::Reader as ImageReader;
 
 use crate::services::microsoft::types::Collection;
 use crate::services::ToDoService;
@@ -29,6 +30,8 @@ pub struct MicrosoftTokenAccess {
 #[async_trait::async_trait]
 impl ToDoService<MicrosoftTokenAccess> for MicrosoftTokenAccess {
     fn create_config(config: &mut Config) -> anyhow::Result<Config> {
+        let logo = ImageReader::open(std::env::current_dir()?.join("src/assets/logo.png"))?.decode()?;
+        logo.save(dirs::home_dir().with_context(|| "Couldn't find home")?.join(".local/share/do/icons/app.png"))?;
         config
             .add(dir!("services").child(dir!("microsoft").child(fi!("token.toml"))))
             .write()

@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use gtk4 as gtk;
 use libadwaita as adw;
 use libadwaita::prelude::*;
@@ -79,7 +77,7 @@ impl BaseWidgets {
                     set_width_request: 100,
 
                     append = &gtk::Picture {
-                        set_filename: Some(Path::new("/src/assets/logo.png")),
+                        set_filename: Some(dirs::home_dir().unwrap().join(".local/share/do/icons/app.png")),
                         set_keep_aspect_ratio: true,
                         set_can_shrink: true
                     },
@@ -102,7 +100,7 @@ impl BaseWidgets {
                     set_width_request: 100,
 
                     append = &gtk::Picture {
-                        set_filename: Some(Path::new("src/assets/logo.png")),
+                        set_filename: Some(dirs::home_dir().unwrap().join(".local/share/do/icons/app.png")),
                         set_keep_aspect_ratio: true,
                         set_can_shrink: true
                     },

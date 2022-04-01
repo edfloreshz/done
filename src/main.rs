@@ -10,7 +10,7 @@ use gtk::CssProvider;
 use gtk4 as gtk;
 use gtk4::gio::{ApplicationFlags, File};
 use libadwaita as adw;
-use libdmd::{config::Config, dir, element::Element, fi, format::ElementFormat};
+use libdmd::{config::Config, dir, element::Element, format::ElementFormat};
 use relm4_macros::view;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -57,7 +57,7 @@ fn main() -> anyhow::Result<()> {
             .about("Microsoft To Do Client")
             .author("Eduardo Flores")
             .version("0.1.0")
-            .add(dir!("config").child(fi!("config.toml")))
+            .add(dir!("icons"))
             .write()?;
         MicrosoftTokenAccess::create_config(&mut config)?;
     }
