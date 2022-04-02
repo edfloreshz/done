@@ -3,7 +3,7 @@ use libadwaita as adw;
 use libadwaita::prelude::*;
 use relm4_macros::view;
 
-use crate::services::microsoft::token::MicrosoftService;
+use crate::services::microsoft::service::MicrosoftService;
 use crate::services::ToDoService;
 use crate::ui::content::MainWidgets;
 use crate::ui::details::DetailsWidgets;

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use libdmd::config::Config;
 
-use crate::services::microsoft::token::MicrosoftService;
+use crate::services::microsoft::service::MicrosoftService;
 use crate::services::ToDoService;
 
 pub struct Settings {}

@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use gtk4 as gtk;
 use gtk::prelude::*;
+use gtk4 as gtk;
 use relm4_macros::view;
 use serde::{Deserialize, Serialize};
 
@@ -54,7 +54,7 @@ impl Task {
                     connect_activate(ui_tx) => move |entry| {
                         let buffer = entry.buffer();
                         ui_tx.borrow_mut()
-                            .try_send(UiEvent::AddEntry(buffer.text(), task_list_id_2.clone()))
+                            .try_send(UiEvent::AddTaskEntry(buffer.text(), task_list_id_2.clone()))
                             .expect("Failed to send ");
                         buffer.delete_text(0, None);
                     }

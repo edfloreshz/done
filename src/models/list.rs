@@ -1,5 +1,5 @@
-use gtk4 as gtk;
 use gtk::prelude::*;
+use gtk4 as gtk;
 use relm4_macros::view;
 use serde::{Deserialize, Serialize};
 
@@ -13,15 +13,18 @@ pub enum ListMsg {
     Rename(usize, String),
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct List {
     #[serde(rename = "id")]
+    #[serde(skip_serializing)]
     pub task_list_id: String,
     #[serde(rename = "displayName")]
     pub display_name: String,
     #[serde(rename = "isOwner")]
+    #[serde(skip_serializing)]
     pub is_owner: bool,
     #[serde(rename = "isShared")]
+    #[serde(skip_serializing)]
     pub is_shared: bool,
 }
 

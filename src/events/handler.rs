@@ -1,20 +1,20 @@
 use std::str::FromStr;
 
 use cascade::cascade;
-use gtk4::CssProvider;
 use gtk4::gdk::Display;
 use gtk4::gio::File;
 use gtk4::prelude::*;
+use gtk4::CssProvider;
 use relm4_macros::view;
 
 use crate::adw;
 use crate::data::app::App;
 use crate::data::list::fetch;
-use crate::data::task::{add_entry, get_tasks, set_completed, task_selected};
+use crate::data::task::{add_entry, add_list_entry, get_tasks, set_completed, task_selected};
 use crate::events::{DataEvent, EventHandler, UiEvent};
 use crate::models::list::List;
+use crate::services::microsoft::service::MicrosoftService;
 use crate::services::microsoft::task::Task;
-use crate::services::microsoft::token::MicrosoftService;
 use crate::services::ToDoService;
 use crate::ui::base::BaseWidgets;
 
@@ -50,10 +50,11 @@ impl Handler {
                         UiEvent::TaskSelected(task_list_id, task_id) => {
                             task_selected(task_list_id, task_id, &data_tx).await
                         }
-                        UiEvent::AddEntry(entry, task_list_id) => {
+                        UiEvent::AddTaskEntry(entry, task_list_id) => {
                             add_entry(entry, task_list_id, &data_tx).await
                         }
                         UiEvent::Uri(code) => App::uri(code, &data_tx).await,
+                        UiEvent::AddListEntry(text) => add_list_entry(text).await,
                     }
                 }
             })
@@ -101,7 +102,18 @@ impl Handler {
                 .try_send(UiEvent::Login)
                 .expect("Failed to login.")
         });
-
+        let new_task_tx = event_handler.ui_tx.clone();
+        widgets
+            .sidebar
+            .new_list_entry
+            .connect_activate(move |entry| {
+                let buffer = entry.buffer();
+                new_task_tx
+                    .borrow_mut()
+                    .try_send(UiEvent::AddListEntry(buffer.text()))
+                    .expect("Failed to send ");
+                buffer.delete_text(0, None);
+            });
         let ui_tx = event_handler.ui_tx.clone();
 
         let closure_widgets = widgets.clone();

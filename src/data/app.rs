@@ -6,9 +6,9 @@ use tokio::sync::mpsc::channel;
 use tokio::sync::mpsc::Sender;
 
 use crate::data::config::Settings;
-use crate::events::{DataEvent, EventHandler};
 use crate::events::handler::Handler;
-use crate::services::microsoft::token::MicrosoftService;
+use crate::events::{DataEvent, EventHandler};
+use crate::services::microsoft::service::MicrosoftService;
 use crate::services::ToDoService;
 
 pub struct App {}
@@ -18,15 +18,13 @@ impl App {
         if MicrosoftService::is_token_present() {
             match MicrosoftService::current_token_data() {
                 None => println!("Couldn't find current token data"),
-                Some(config) => {
-                    match MicrosoftService::refresh_token(config.refresh_token.as_str()).await {
-                        Ok(token) => match MicrosoftService::update_token_data(&token) {
-                            Ok(_) => println!("Token configuration updated."),
-                            Err(err) => println!("{err}"),
-                        },
+                Some(mut config) => match config.refresh_token().await {
+                    Ok(token) => match MicrosoftService::update_token_data(&token) {
+                        Ok(_) => println!("Token configuration updated."),
                         Err(err) => println!("{err}"),
-                    }
-                }
+                    },
+                    Err(err) => println!("{err}"),
+                },
             };
         } else {
             match MicrosoftService::authenticate().await {
@@ -61,12 +59,12 @@ impl App {
     }
     pub fn connect_events(application: &adw::Application) -> anyhow::Result<()> {
         let event_handler = EventHandler::new(channel(1), channel(1));
-        let ui_tx = event_handler.clone();
+        let ui_handler = event_handler.clone();
         Handler::handle_events(event_handler.clone());
         Settings::config()?;
         application
             .connect_open(move |_, files, _| Handler::handle_uri(files, event_handler.clone()));
-        application.connect_activate(move |app| Handler::build_ui(app, ui_tx.clone()));
+        application.connect_activate(move |app| Handler::build_ui(app, ui_handler.clone()));
         Ok(())
     }
 }

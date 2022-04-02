@@ -3,7 +3,7 @@ use std::sync::MutexGuard;
 use tokio::sync::mpsc::Sender;
 
 use crate::events::DataEvent;
-use crate::services::microsoft::token::MicrosoftService;
+use crate::services::microsoft::service::MicrosoftService;
 use crate::services::ToDoService;
 
 pub async fn fetch(data_tx: &MutexGuard<'_, Sender<DataEvent>>) {
