@@ -1,16 +1,14 @@
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/icons/do.edfloreshz.github.svg" width="200" height="200"/>
-</div>
-
 # Do
 
-Do is an unofficial client for Microsoft To Do built for Linux with Rust and GTK.
+Do is a to-do app built for Linux with Rust and GTK, it can connect to various services and lets you manage your tasks from a single app.
+
+Starting with [Microsoft To Do](https://todo.microsoft.com/) support and expanding to other services soon.
+
+**WIP**
 
 <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/app.png"/>
 
 ## List of things to do
-This is still a work in progress... but so far you can:
 
 ### Account
 - [x] Login to your personal Microsoft account
