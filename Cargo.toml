@@ -10,6 +10,10 @@ documentation = "https://docs.rs/do"
 repository = "https://github.com/edfloreshz/do/"
 readme = "README.md"
 
+[[bin]]
+name = "do-app"
+path = "src/main.rs"
+
 [dependencies]
 gtk4 = "0.4.6"
 glib = "0.15.10"

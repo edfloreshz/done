@@ -2,8 +2,8 @@
 Version=0.1.1
 Name=Do
 Comment=Do is a To Do app for Linux built with Rust and GTK.
-TryExec=do
-Exec=do %u
+TryExec=do-app
+Exec=do-app %u
 Icon=/usr/share/icons/hicolor/scalable/apps/do.svg
 Terminal=false
 Type=Application
