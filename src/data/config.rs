@@ -9,7 +9,7 @@ pub struct Settings {}
 impl Settings {
     pub fn config() -> Result<()> {
         let mut config = Config::new("do")
-            .about("Microsoft To Do Client")
+            .about("Do is a To Do app for Linux built with Rust and GTK.")
             .author("Eduardo Flores")
             .version("0.1.0")
             .write()?;

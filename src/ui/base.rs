@@ -78,15 +78,15 @@ impl BaseWidgets {
                     set_width_request: 100,
 
                     append = &gtk::Picture {
-                        set_filename: Some(dirs::home_dir().unwrap().join(".local/share/do/icons/app.png")),
+                        set_filename: Some("/usr/share/icons/hicolor/scalable/apps/do.svg"),
                         set_keep_aspect_ratio: true,
                         set_can_shrink: true
                     },
                     append = &gtk::Label {
-                        set_label: "Microsoft To Do",
+                        set_label: "Do",
                         add_css_class: "title"
                     },
-                    append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
+                    append: &gtk::Label::new(Some("Do gives you focus, from work to play.")),
                     append: button
                 }
             }
@@ -101,15 +101,15 @@ impl BaseWidgets {
                     set_width_request: 100,
 
                     append = &gtk::Picture {
-                        set_filename: Some(dirs::home_dir().unwrap().join(".local/share/do/icons/app.png")),
+                        set_filename: Some("/usr/share/icons/hicolor/scalable/apps/do.svg"),
                         set_keep_aspect_ratio: true,
                         set_can_shrink: true
                     },
                     append = &gtk::Label {
-                        set_label: "Microsoft To Do",
+                        set_label: "Do",
                         add_css_class: "title"
                     },
-                    append: &gtk::Label::new(Some("To Do gives you focus, from work to play.")),
+                    append: &gtk::Label::new(Some("Do gives you focus, from work to play.")),
                 }
             }
             welcome
@@ -123,7 +123,7 @@ impl BaseWidgets {
         view! {
             header = adw::HeaderBar {
                 set_title_widget = Some(&gtk::Label) {
-                    set_label: "To Do",
+                    set_label: "Do",
                 },
             }
         }

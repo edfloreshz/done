@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=0.1.1
-Name=Microsoft To Do
-Comment=Unofficial desktop app for Microsoft To Do
+Name=Do
+Comment=Do is a To Do app for Linux built with Rust and GTK.
 TryExec=do
 Exec=do %u
 Icon=/usr/share/icons/hicolor/scalable/apps/do.svg

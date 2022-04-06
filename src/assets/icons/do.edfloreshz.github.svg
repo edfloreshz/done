@@ -7,8 +7,8 @@
    viewBox="0 0 1080 1080"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="To Do Icon.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -29,9 +29,9 @@
      inkscape:guide-bbox="true"
      borderlayer="true"
      inkscape:showpageshadow="false"
-     inkscape:zoom="0.45254834"
-     inkscape:cx="858.47183"
-     inkscape:cy="468.45824"
+     inkscape:zoom="0.90509668"
+     inkscape:cx="550.76989"
+     inkscape:cy="535.85436"
      inkscape:window-width="2560"
      inkscape:window-height="1371"
      inkscape:window-x="0"
@@ -91,7 +91,7 @@
      id="layer1"
      style="display:inline">
     <g
-       id="g309900">
+       id="g15573">
       <rect
          style="display:inline;fill:url(#linearGradient59720);fill-opacity:1"
          id="rect979-9"
@@ -99,7 +99,7 @@
          height="958.72009"
          x="64.720299"
          y="81.730202"
-         ry="68.298042" />
+         ry="154.36447" />
       <rect
          style="font-variation-settings:normal;fill:#cead90;fill-opacity:1;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
          id="rect979"
@@ -107,47 +107,43 @@
          height="958.72009"
          x="64.720299"
          y="65.730202"
-         ry="68.298042" />
-      <g
-         id="g309810"
-         transform="matrix(0.94878869,0,0,0.94878869,27.86306,20.324483)">
-        <rect
-           style="font-variation-settings:normal;display:inline;fill:#dfdedb;fill-opacity:1;stroke-width:0.859387;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
-           id="rect979-7-6"
-           width="823.91174"
-           height="823.91174"
-           x="132.12448"
-           y="149.13437"
-           ry="58.694458" />
-        <rect
-           style="font-variation-settings:normal;display:inline;fill:#f9f9f9;fill-opacity:1;stroke-width:0.859387;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
-           id="rect979-7"
-           width="823.91174"
-           height="823.91174"
-           x="132.12448"
-           y="133.13437"
-           ry="58.694458" />
-      </g>
-      <g
-         id="g953"
-         transform="rotate(-45,591.49103,381.19095)"
-         style="fill:#3b3544;fill-opacity:1">
-        <rect
-           style="fill:#3b3544;fill-opacity:1;fill-rule:evenodd"
-           id="rect820"
-           width="115.17675"
-           height="318.00815"
-           x="195.86133"
-           y="253.84892" />
-        <rect
-           style="fill:#3b3544;fill-opacity:1;fill-rule:evenodd;stroke-width:1.36652"
-           id="rect820-6"
-           width="115.17675"
-           height="593.83765"
-           x="456.6803"
-           y="-789.69897"
-           transform="rotate(90)" />
-      </g>
+         ry="169.47853" />
+    </g>
+    <rect
+       style="font-variation-settings:normal;display:inline;fill:#dfdedb;fill-opacity:1;stroke-width:0.788615;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
+       id="rect979-3-6"
+       width="756.06134"
+       height="756.06134"
+       x="166.04968"
+       y="191.05957"
+       ry="133.65337" />
+    <rect
+       style="font-variation-settings:normal;display:inline;fill:#f9f9f9;fill-opacity:1;stroke-width:0.788615;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
+       id="rect979-3"
+       width="756.06134"
+       height="756.06134"
+       x="166.04968"
+       y="175.05957"
+       ry="133.65337" />
+    <g
+       id="g953"
+       transform="matrix(0.63925497,-0.63925497,0.63925497,0.63925497,-34.850131,539.35359)"
+       style="fill:#3b3544;fill-opacity:1">
+      <rect
+         style="fill:#3b3544;fill-opacity:1;fill-rule:evenodd"
+         id="rect820"
+         width="115.17675"
+         height="318.00815"
+         x="195.86133"
+         y="253.84892" />
+      <rect
+         style="fill:#3b3544;fill-opacity:1;fill-rule:evenodd;stroke-width:1.36652"
+         id="rect820-6"
+         width="115.17675"
+         height="593.83765"
+         x="456.6803"
+         y="-789.69897"
+         transform="rotate(90)" />
     </g>
   </g>
   <g
