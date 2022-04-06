@@ -1,4 +1,17 @@
-# Do
+<div align="center">
+  <br>
+  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/icons/do.edfloreshz.github.svg" width="150" />
+  <h1>Do</h1>
+  <a href="https://github.com/edfloreshz/do/actions/workflows/rust.yml">
+    <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
+  </a>
+  <a href="https://crates.io/crates/do">
+    <img src="https://img.shields.io/crates/v/do?label=Do" alt="crate"/>
+  </a>
+   <a href="https://crates.io/crates/do">
+    <img src="https://img.shields.io/crates/d/do" alt="downloads"/>
+  </a>
+</div>
 
 Do is a to-do app built for Linux with Rust and GTK, it can connect to various services and lets you manage your tasks from a single app.
 
