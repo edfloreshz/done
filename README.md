@@ -1,6 +1,6 @@
-# Okay
+# Do
 
-Okay is a to-do app built for Linux with Rust and GTK, it can connect to various services and lets you manage your tasks from a single app.
+Do is a to-do app built for Linux with Rust and GTK, it can connect to various services and lets you manage your tasks from a single app.
 
 Starting with [Microsoft To Do](https://todo.microsoft.com/) support and expanding to other services soon.
 
