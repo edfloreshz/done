@@ -1,7 +1,7 @@
 use anyhow::Result;
 use diesel::prelude::*;
 use crate::storage::database::DatabaseConnection;
-use crate::storage::models::list::List;
+use crate::models::list::List;
 
 pub fn get_lists() -> Result<Vec<List>> {
     use crate::schema::lists::dsl::*;

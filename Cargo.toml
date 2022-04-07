@@ -22,3 +22,4 @@ tracker = "0.1.1"
 diesel = { version = "1.4.8", features = ["sqlite"] }
 dotenv = "0.15.0"
 dirs = "4.0.0"
+chrono = "0.4.19"

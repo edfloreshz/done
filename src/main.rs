@@ -11,6 +11,7 @@ mod widgets;
 mod storage;
 mod services;
 mod schema;
+pub mod models;
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
