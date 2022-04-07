@@ -1,37 +1,39 @@
+use std::fmt::Debug;
 use once_cell::sync::OnceCell;
-use relm4::{
-    adw,
-    adw::prelude::AdwApplicationWindowExt,
-    AppUpdate,
-    Components,
-    gtk,
-    gtk::prelude::{
-        BoxExt,
-        ButtonExt,
-        GtkWindowExt,
-        OrientableExt,
-        WidgetExt
-    },
-    Model,
-    RelmComponent,
-    send,
-    Sender,
-    WidgetPlus,
-    Widgets
-};
+use relm4::{adw, adw::prelude::AdwApplicationWindowExt, AppUpdate, Components, gtk, gtk::prelude::{
+    BoxExt,
+    ButtonExt,
+    GtkWindowExt,
+    OrientableExt,
+    WidgetExt
+}, MicroComponent, Model, RelmComponent, send, Sender, WidgetPlus, Widgets};
 use tokio::runtime::Runtime;
-
+use tracker::track;
+use crate::services::local::tasks::get_tasks;
 use crate::widgets::content::ContentModel;
 use crate::widgets::details::DetailsModel;
 use crate::widgets::sidebar::SidebarModel;
 
 static RT: OnceCell<Runtime> = OnceCell::new();
 
-#[derive(Default)]
-pub struct AppModel {}
+#[track]
+pub struct AppModel {
+    #[tracker::no_eq]
+    pub(crate) selected_list: MicroComponent<ContentModel>
+}
+
+impl AppModel {
+    pub fn new(selected_list: MicroComponent<ContentModel>) -> Self {
+        Self {
+            selected_list,
+            tracker: 0
+        }
+    }
+}
 
 pub enum AppMsg {
     Login,
+    ListSelected(String)
 }
 
 impl Model for AppModel {
@@ -46,6 +48,16 @@ impl AppUpdate for AppModel {
             AppMsg::Login => {
                 println!("Login...")
             }
+            AppMsg::ListSelected(list_id) => {
+                self.set_selected_list(
+                    MicroComponent::new(ContentModel {
+                        list_id: list_id.clone(),
+                        tasks: get_tasks(list_id).unwrap().iter().map(|task| {
+                            MicroComponent::new(task.to_owned().into(), ())
+                        }).collect()
+                    }, ())
+                );
+            }
         }
         true
     }
@@ -54,7 +66,6 @@ impl AppUpdate for AppModel {
 pub struct AppComponents {
     sidebar: RelmComponent<SidebarModel, AppModel>,
     details: RelmComponent<DetailsModel, AppModel>,
-    content: RelmComponent<ContentModel, AppModel>,
 }
 
 impl Components<AppModel> for AppComponents {
@@ -62,7 +73,6 @@ impl Components<AppModel> for AppComponents {
         AppComponents {
             sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
             details: RelmComponent::new(parent_model, parent_sender.clone()),
-            content: RelmComponent::new(parent_model, parent_sender.clone())
         }
     }
 
@@ -94,7 +104,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     append: &components.sidebar.widgets().unwrap().list_container
                 },
                 append: &gtk::Separator::default(),
-                append = &gtk::Box {
+                append: content_box = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     set_hexpand: true,
                     set_vexpand: true,
@@ -102,10 +112,16 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_hexpand: true,
                         set_show_end_title_buttons: true,
                     },
-                    append: &components.content.widgets().unwrap().task_container
+                    append: track!(
+                        model.changed(AppModel::selected_list()),
+                        &model.selected_list.root_widget() as &gtk::Box
+                    )
                 }
             }
         }
+    }
+    fn pre_view() {
+        content_box.remove(&content_box.last_child().unwrap());
     }
 }
 

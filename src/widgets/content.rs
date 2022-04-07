@@ -3,57 +3,42 @@ use chrono::DateTime;
 use glib::clone;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt, EntryExt, EntryBufferExtManual};
-use relm4::{send, ComponentUpdate, Model, Widgets, Sender, MicroComponent, WidgetPlus};
+use relm4::{send, ComponentUpdate, Model, Widgets, Sender, MicroComponent, WidgetPlus, MicroModel, MicroWidgets};
 use uuid::Uuid;
 use crate::{AppModel};
 use crate::models::task::Task;
+use crate::services::local::tasks::post_task;
 use crate::widgets::app::AppMsg;
 
+#[derive(Debug)]
 pub struct ContentModel {
-    tasks: Vec<MicroComponent<Task>>
+    pub(crate) list_id: String,
+    pub(crate) tasks: Vec<MicroComponent<Task>>
 }
 
 pub enum ContentMsg {
     AddTaskEntry(String)
 }
 
-impl Model for ContentModel {
+impl MicroModel for ContentModel {
     type Msg = ContentMsg;
     type Widgets = ContentWidgets;
-    type Components = ();
-}
+    type Data = ();
 
-impl ComponentUpdate<AppModel> for ContentModel {
-    fn init_model(_parent_model: &AppModel) -> Self {
-        let tasks = vec![
-            Task {
-                id_task: Uuid::new_v4().to_string(),
-                title: "Test".to_string(),
-                body: "".to_string(),
-                completed_on: None,
-                due_date: None,
-                importance: Default::default(),
-                is_reminder_on: false,
-                reminder_date: None,
-                status: Default::default(),
-                created_date_time: DateTime::from(SystemTime::now()),
-                last_modified_date_time: DateTime::from(SystemTime::now())
-            }
-        ];
-        ContentModel { tasks: tasks.iter().map(|task| {
-            MicroComponent::new(task.to_owned(), ())
-        }).collect() }
-    }
-
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, msg: Self::Msg, data: &Self::Data, sender: Sender<Self::Msg>) {
+        let id = &self.list_id.to_owned();
         match msg {
-            ContentMsg::AddTaskEntry(entry) => println!("Adding task with name {entry}")
+            ContentMsg::AddTaskEntry(title) => {
+                post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
+                self.tasks.push(MicroComponent::new(Task::new(title, id.to_owned()), ()))
+            }
         }
     }
 }
 
-#[relm4_macros::widget(pub)]
-impl Widgets<ContentModel, AppModel> for ContentWidgets {
+#[relm4::micro_widget(pub)]
+#[derive(Debug)]
+impl MicroWidgets<ContentModel> for ContentWidgets {
     view! {
         task_container = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,

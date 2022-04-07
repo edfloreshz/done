@@ -3,9 +3,10 @@ extern crate diesel;
 extern crate dotenv;
 
 use std::io::Write;
-use relm4::{adw, gtk, RelmApp};
+use relm4::{adw, gtk, MicroComponent, RelmApp};
 use widgets::app::AppModel;
 use anyhow::{Context, Result};
+use crate::widgets::content::ContentModel;
 
 mod widgets;
 mod storage;
@@ -18,7 +19,10 @@ fn main() -> Result<()> {
         .application_id("do.edfloreshz.github")
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
-    let model = AppModel::default();
+    let model = AppModel::new(MicroComponent::new(ContentModel {
+        list_id: "test".to_string(),
+        tasks: vec![]
+    }, ()));
     let app = RelmApp::with_app(model, application);
     set_dotenv()?;
     app.run();

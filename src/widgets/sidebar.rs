@@ -1,15 +1,14 @@
+use std::ops::Index;
 use gtk4::prelude::*;
 use gtk4 as gtk;
 use relm4::{ComponentUpdate, Model, Widgets, send, Sender, MicroComponent, WidgetPlus};
 use crate::{AppModel};
 use crate::services::local::lists::{get_lists, post_list};
 use crate::models::list::List;
-use crate::models::smart_list::SmartList;
 use crate::widgets::app::AppMsg;
 
 #[derive(Default)]
 pub(crate) struct SidebarModel {
-    smart_lists: Vec<MicroComponent<SmartList>>,
     lists: Vec<MicroComponent<List>>,
 }
 
@@ -28,27 +27,34 @@ impl Model for SidebarModel {
 
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
+        let mut lists = vec![
+            MicroComponent::new(List::new("Inbox", "list-add-symbolic"), ()),
+            MicroComponent::new(List::new("Today", "list-add-symbolic"), ()),
+            MicroComponent::new(List::new("Next 7 Days", "list-add-symbolic"), ()),
+            MicroComponent::new(List::new("All", "list-add-symbolic"), ()),
+        ];
+        let fe = &mut get_lists().unwrap().iter().map(|list| {
+            MicroComponent::new(list.to_owned(), ())
+        }).collect();
+        lists.append(fe);
         SidebarModel {
-            smart_lists: vec![
-                MicroComponent::new(SmartList::new("Inbox", "list-add-symbolic"), ()),
-                MicroComponent::new(SmartList::new("Today", "list-add-symbolic"), ()),
-                MicroComponent::new(SmartList::new("Next 7 Days", "list-add-symbolic"), ()),
-                MicroComponent::new(SmartList::new("All", "list-add-symbolic"), ()),
-            ],
-            lists: get_lists().unwrap().iter().map(|list| {
-                MicroComponent::new(list.to_owned(), ())
-            }).collect(),
+            lists,
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
         match msg {
             SidebarMsg::Delete(i) => println!("Deleting list at index {i}"),
             SidebarMsg::AddList(name) => {
                 post_list(name.clone()).unwrap();
-                self.lists.push(MicroComponent::new(List::new(name), ()))
+                self.lists.push(MicroComponent::new(List::new(&*name, ""), ()))
             },
-            SidebarMsg::SelectList(i) => println!("{i}"),
+            SidebarMsg::SelectList(i) => {
+                let list = self.lists.index(i);
+                let model = list.model_mut().unwrap();
+                let id_list = &model.id_list;
+                parent_sender.send(AppMsg::ListSelected(id_list.to_owned())).expect("Failed to get task list.");
+            },
             SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}")
         }
     }
@@ -70,15 +76,9 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                         send!(sender, SidebarMsg::SelectList(index))
                     },
                     append: iterate! {
-                        model.smart_lists.iter().map(|list| {
+                        model.lists.iter().map(|list| {
                             list.root_widget() as &gtk::Box
                         }).collect::<Vec<&gtk::Box>>()
-                    },
-                    // append: &gtk::Separator::default(),
-                    append: iterate! {
-                        model.lists.iter().map(|list| {
-                            list.root_widget() as &gtk::Label
-                        }).collect::<Vec<&gtk::Label>>()
                     }
                 },
             },
