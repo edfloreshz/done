@@ -62,6 +62,11 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                             let index = listbox.selected_row().unwrap().index() as usize;
                             send!(sender, SidebarMsg::SelectList(index))
                         },
+                        append: iterate! {
+                            model.lists.iter().map(|list| {
+                                list.root_widget() as &gtk::Label
+                            }).collect::<Vec<&gtk::Label>>()
+                        }
                     }
                 },
                 append: action_buttons = &gtk::Box {
@@ -93,13 +98,6 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                 }
             },
             set_transition_type: gtk::RevealerTransitionType::SlideRight,
-        }
-    }
-    fn pre_view() {
-        for list in &model.lists {
-            if !list.is_connected() {
-                self.list.append(list.root_widget())
-            }
         }
     }
     fn post_view() {
