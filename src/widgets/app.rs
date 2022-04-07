@@ -15,7 +15,6 @@ pub struct AppModel {
 
 pub enum AppMsg {
     Login,
-    ListSelect,
     RevealSidebar
 }
 
@@ -28,7 +27,6 @@ impl Model for AppModel {
 impl AppUpdate for AppModel {
     fn update(&mut self, msg: Self::Msg, components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
         match msg {
-            AppMsg::ListSelect => println!("List selected"),
             AppMsg::RevealSidebar => {
                 let sidebar = components.sidebar.widgets().unwrap();
                 sidebar.revealer.set_reveal_child(!sidebar.revealer.is_child_revealed());
