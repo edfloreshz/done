@@ -35,13 +35,13 @@ impl ComponentUpdate<AppModel> for SidebarModel {
 
     fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         match msg {
-            SidebarMsg::Delete(_) => {}
+            SidebarMsg::Delete(i) => println!("Deleting list at index {i}"),
             SidebarMsg::AddList(name) => {
                 post_list(name.clone()).unwrap();
                 self.lists.push(MicroComponent::new(List::new(name), ()))
             },
             SidebarMsg::SelectList(i) => println!("{i}"),
-            SidebarMsg::Rename(_, _) => {}
+            SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}")
         }
     }
 }

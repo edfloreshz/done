@@ -3,9 +3,7 @@ use diesel::sqlite::SqliteConnection;
 use dotenv::dotenv;
 use std::env;
 
-pub struct DatabaseConnection {
-    connection: SqliteConnection
-}
+pub struct DatabaseConnection {}
 
 impl DatabaseConnection {
     pub fn establish_connection() -> SqliteConnection {
