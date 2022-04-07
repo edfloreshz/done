@@ -1,25 +1,26 @@
 use glib::Sender;
 use relm4::{MicroModel, MicroWidgets};
 use serde::{Serialize, Deserialize};
+use diesel::{Queryable, Insertable};
+use crate::schema::lists;
 use gtk4 as gtk;
 use gtk4::prelude::WidgetExt;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
+#[table_name="lists"]
 pub struct List {
-    pub list_id: String,
+    pub id_list: String,
     pub display_name: String,
     pub is_owner: bool,
-    pub is_shared: bool,
 }
 
 impl List {
     pub fn new(name: String) -> Self {
         Self {
-            list_id: Uuid::new_v4().to_string(),
+            id_list: Uuid::new_v4().to_string(),
             display_name: name,
             is_owner: true,
-            is_shared: false
         }
     }
 }

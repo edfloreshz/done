@@ -19,3 +19,5 @@ anyhow = "1.0.56"
 cascade = "1.0.0"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 tracker = "0.1.1"
+diesel = { version = "1.4.8", features = ["sqlite"] }
+dotenv = "0.15.0"

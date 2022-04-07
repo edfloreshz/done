@@ -1,13 +1,33 @@
 use once_cell::sync::OnceCell;
-use relm4::{send, adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::prelude::{WidgetExt, BoxExt, GtkWindowExt, OrientableExt, ButtonExt}, WidgetPlus, AppUpdate, Sender, Components, Model, RelmComponent, Widgets};
+use relm4::{
+    adw,
+    adw::prelude::AdwApplicationWindowExt,
+    AppUpdate,
+    Components,
+    gtk,
+    gtk::prelude::{
+        BoxExt,
+        ButtonExt,
+        GtkWindowExt,
+        OrientableExt,
+        WidgetExt
+    },
+    Model,
+    RelmComponent,
+    send,
+    Sender,
+    WidgetPlus,
+    Widgets
+};
 use tokio::runtime::Runtime;
+
 use crate::widgets::content::ContentModel;
-use crate::widgets::details::{DetailsModel};
+use crate::widgets::details::DetailsModel;
 use crate::widgets::sidebar::SidebarModel;
 
 static RT: OnceCell<Runtime> = OnceCell::new();
 
-#[derive(Clone)]
+#[derive(Default)]
 pub struct AppModel {}
 
 pub enum AppMsg {

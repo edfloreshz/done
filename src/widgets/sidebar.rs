@@ -1,14 +1,14 @@
 use gtk4::prelude::*;
 use gtk4 as gtk;
 use relm4::{ComponentUpdate, Model, Widgets, send, Sender, MicroComponent};
-use uuid::Uuid;
 use crate::{AppModel};
-use crate::models::list::List;
+use crate::services::local::lists::{get_lists, post_list};
+use crate::storage::models::list::List;
 use crate::widgets::app::AppMsg;
 
 #[derive(Default)]
 pub(crate) struct SidebarModel {
-    lists: Vec<MicroComponent<List>>
+    lists: Vec<MicroComponent<List>>,
 }
 
 pub enum SidebarMsg {
@@ -27,12 +27,9 @@ impl Model for SidebarModel {
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         SidebarModel {
-            lists: vec![
-                MicroComponent::new(List::new("Test".into()), ()),
-                MicroComponent::new(List::new("Test".into()), ()),
-                MicroComponent::new(List::new("Test".into()), ()),
-                MicroComponent::new(List::new("Test".into()), ()),
-            ],
+            lists: get_lists().unwrap().iter().map(|list| {
+                MicroComponent::new(list.to_owned(), ())
+            }).collect(),
         }
     }
 
@@ -40,6 +37,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         match msg {
             SidebarMsg::Delete(_) => {}
             SidebarMsg::AddList(name) => {
+                post_list(name.clone()).unwrap();
                 self.lists.push(MicroComponent::new(List::new(name), ()))
             },
             SidebarMsg::SelectList(i) => println!("{i}"),
