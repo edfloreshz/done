@@ -4,6 +4,7 @@ use glib::clone;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt, EntryExt, EntryBufferExtManual};
 use relm4::{send, ComponentUpdate, Model, Widgets, Sender, MicroComponent, WidgetPlus};
+use uuid::Uuid;
 use crate::{AppModel};
 use crate::models::task::Task;
 use crate::widgets::app::AppMsg;
@@ -26,6 +27,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         let tasks = vec![
             Task {
+                id_task: Uuid::new_v4().to_string(),
                 title: "Test".to_string(),
                 body: "".to_string(),
                 completed_on: None,
@@ -55,32 +57,40 @@ impl Widgets<ContentModel, AppModel> for ContentWidgets {
     view! {
         task_container = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            set_spacing: 12,
-            set_margin_all: 12,
-            append: main_stack = &gtk::Stack {
-                add_child = &gtk::ScrolledWindow {
-                    set_vexpand: true,
-                    set_hexpand: true,
-                    set_child: list_box = Some(&gtk::Box) {
-                        append: task_list = &gtk::ListBox {
+
+            append = &gtk::Box {
+                append: main_stack = &gtk::Stack {
+                    add_child = &gtk::ScrolledWindow {
+                        set_vexpand: true,
+                        set_hexpand: true,
+                        set_child: list_box = Some(&gtk::Box) {
+                            set_vexpand: true,
                             set_hexpand: true,
-                            append: iterate! {
-                                model.tasks.iter().map(|task| {
-                                    task.root_widget() as &gtk::Box
-                                }).collect::<Vec<&gtk::Box>>()
-                            }
-                        },
-                    }
+                            append: task_list = &gtk::ListBox {
+                                set_hexpand: true,
+                                append: iterate! {
+                                    model.tasks.iter().map(|task| {
+                                        task.root_widget() as &gtk::Box
+                                    }).collect::<Vec<&gtk::Box>>()
+                                }
+                            },
+                        }
+                    },
                 },
             },
-            append: entry = &gtk::Entry {
-                set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("list-add-symbolic")),
-                set_placeholder_text: Some("New task..."),
-                set_height_request: 42,
-                connect_activate(sender) => move |entry| {
-                    let buffer = entry.buffer();
-                    send!(sender, ContentMsg::AddTaskEntry(buffer.text()));
-                    buffer.delete_text(0, None);
+            append = &gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_margin_all: 12,
+                append: entry = &gtk::Entry {
+                    set_hexpand: true,
+                    set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("list-add-symbolic")),
+                    set_placeholder_text: Some("New task..."),
+                    set_height_request: 42,
+                    connect_activate(sender) => move |entry| {
+                        let buffer = entry.buffer();
+                        send!(sender, ContentMsg::AddTaskEntry(buffer.text()));
+                        buffer.delete_text(0, None);
+                    }
                 }
             }
         }

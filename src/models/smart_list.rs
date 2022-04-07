@@ -1,0 +1,68 @@
+use glib::Sender;
+use relm4::{MicroModel, MicroWidgets};
+use serde::{Serialize, Deserialize};
+use diesel::{Queryable, Insertable};
+use crate::schema::lists;
+use gtk4 as gtk;
+use gtk4::prelude::{WidgetExt, BoxExt, OrientableExt};
+use uuid::Uuid;
+
+pub struct SmartList {
+    pub id_list: String,
+    pub display_name: String,
+    pub is_owner: bool,
+    pub count: i32,
+    pub icon_name: String
+}
+
+impl SmartList {
+    pub fn new(display_name: &str, icon_name: &str) -> Self {
+        Self {
+            id_list: Uuid::new_v4().to_string(),
+            display_name: display_name.to_string(),
+            is_owner: true,
+            count: 0,
+            icon_name: icon_name.to_string()
+        }
+    }
+}
+
+impl MicroModel for SmartList {
+    type Msg = ();
+    type Widgets = SmartListWidgets;
+    type Data = ();
+
+    fn update(&mut self, _msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
+        todo!()
+    }
+}
+
+#[relm4::micro_widget(pub)]
+#[derive(Debug)]
+impl MicroWidgets<SmartList> for SmartListWidgets {
+    view! {
+        smart_list_box = &gtk::Box {
+            set_orientation: gtk::Orientation::Horizontal,
+            append: icon = &gtk::Image {
+                set_from_icon_name: Some(model.icon_name.as_str())
+            },
+            append: name = &gtk::Label {
+                set_halign: gtk::Align::Start,
+                set_hexpand: true,
+                set_text: model.display_name.as_str(),
+                set_margin_top: 10,
+                set_margin_bottom: 10,
+                set_margin_start: 15,
+                set_margin_end: 15,
+            },
+            append: count = &gtk::Label {
+                set_halign: gtk::Align::End,
+                set_text: &model.count.to_string(),
+                set_margin_top: 10,
+                set_margin_bottom: 10,
+                set_margin_start: 15,
+                set_margin_end: 15,
+            },
+        }
+    }
+}

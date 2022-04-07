@@ -98,7 +98,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     set_orientation: gtk::Orientation::Vertical,
                     set_hexpand: true,
                     set_vexpand: true,
-                    set_spacing: 12,
                     append = &adw::HeaderBar {
                         set_hexpand: true,
                         set_show_end_title_buttons: true,

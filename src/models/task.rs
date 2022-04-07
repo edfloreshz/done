@@ -4,6 +4,7 @@ use relm4::{gtk, gtk::prelude::{WidgetExt, BoxExt, OrientableExt}, WidgetPlus, M
 
 #[derive(Debug, Clone)]
 pub struct Task {
+    pub id_task: String,
     pub title: String,
     pub body: String,
     pub completed_on: Option<DateTime<Utc>>,

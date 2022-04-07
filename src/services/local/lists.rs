@@ -7,7 +7,6 @@ pub fn get_lists() -> Result<Vec<List>> {
     use crate::schema::lists::dsl::*;
     let connection = DatabaseConnection::establish_connection();
     let results = lists
-        .limit(5)
         .load::<List>(&connection)?;
     Ok(results)
 }

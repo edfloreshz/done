@@ -4,10 +4,12 @@ use relm4::{ComponentUpdate, Model, Widgets, send, Sender, MicroComponent, Widge
 use crate::{AppModel};
 use crate::services::local::lists::{get_lists, post_list};
 use crate::models::list::List;
+use crate::models::smart_list::SmartList;
 use crate::widgets::app::AppMsg;
 
 #[derive(Default)]
 pub(crate) struct SidebarModel {
+    smart_lists: Vec<MicroComponent<SmartList>>,
     lists: Vec<MicroComponent<List>>,
 }
 
@@ -27,6 +29,12 @@ impl Model for SidebarModel {
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         SidebarModel {
+            smart_lists: vec![
+                MicroComponent::new(SmartList::new("Inbox", "list-add-symbolic"), ()),
+                MicroComponent::new(SmartList::new("Today", "list-add-symbolic"), ()),
+                MicroComponent::new(SmartList::new("Next 7 Days", "list-add-symbolic"), ()),
+                MicroComponent::new(SmartList::new("All", "list-add-symbolic"), ()),
+            ],
             lists: get_lists().unwrap().iter().map(|list| {
                 MicroComponent::new(list.to_owned(), ())
             }).collect(),
@@ -61,6 +69,12 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                         let index = listbox.selected_row().unwrap().index() as usize;
                         send!(sender, SidebarMsg::SelectList(index))
                     },
+                    append: iterate! {
+                        model.smart_lists.iter().map(|list| {
+                            list.root_widget() as &gtk::Box
+                        }).collect::<Vec<&gtk::Box>>()
+                    },
+                    // append: &gtk::Separator::default(),
                     append: iterate! {
                         model.lists.iter().map(|list| {
                             list.root_widget() as &gtk::Label
