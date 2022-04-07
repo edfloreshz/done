@@ -1,7 +1,6 @@
 use once_cell::sync::OnceCell;
 use relm4::{send, adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::prelude::{WidgetExt, BoxExt, GtkWindowExt, OrientableExt, ButtonExt}, WidgetPlus, AppUpdate, Sender, Components, Model, RelmComponent, Widgets};
 use tokio::runtime::Runtime;
-use crate::models::list::List;
 use crate::widgets::content::ContentModel;
 use crate::widgets::details::{DetailsModel};
 use crate::widgets::sidebar::SidebarModel;
@@ -9,13 +8,11 @@ use crate::widgets::sidebar::SidebarModel;
 static RT: OnceCell<Runtime> = OnceCell::new();
 
 #[derive(Clone)]
-pub struct AppModel {
-    pub(crate) lists: Vec<List>
-}
+pub struct AppModel {}
 
 pub enum AppMsg {
     Login,
-    RevealSidebar
+    RevealSidebar,
 }
 
 impl Model for AppModel {

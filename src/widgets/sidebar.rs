@@ -1,13 +1,14 @@
 use gtk4::prelude::*;
 use gtk4 as gtk;
-use relm4::{ComponentUpdate, Model, Widgets, send, Sender};
-use relm4_macros::view;
+use relm4::{ComponentUpdate, Model, Widgets, send, Sender, MicroComponent};
+use uuid::Uuid;
 use crate::{AppModel};
 use crate::models::list::List;
 use crate::widgets::app::AppMsg;
 
+#[derive(Default)]
 pub(crate) struct SidebarModel {
-    lists: Vec<List>
+    lists: Vec<MicroComponent<List>>
 }
 
 pub enum SidebarMsg {
@@ -24,16 +25,23 @@ impl Model for SidebarModel {
 }
 
 impl ComponentUpdate<AppModel> for SidebarModel {
-    fn init_model(parent_model: &AppModel) -> Self {
+    fn init_model(_parent_model: &AppModel) -> Self {
         SidebarModel {
-            lists: parent_model.lists.clone()
+            lists: vec![
+                MicroComponent::new(List::new("Test".into()), ()),
+                MicroComponent::new(List::new("Test".into()), ()),
+                MicroComponent::new(List::new("Test".into()), ()),
+                MicroComponent::new(List::new("Test".into()), ()),
+            ],
         }
     }
 
     fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         match msg {
             SidebarMsg::Delete(_) => {}
-            SidebarMsg::AddList(entry) => println!("{entry}"),
+            SidebarMsg::AddList(name) => {
+                self.lists.push(MicroComponent::new(List::new(name), ()))
+            },
             SidebarMsg::SelectList(i) => println!("{i}"),
             SidebarMsg::Rename(_, _) => {}
         }
@@ -53,7 +61,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                         connect_row_activated(sender) => move |listbox, _| {
                             let index = listbox.selected_row().unwrap().index() as usize;
                             send!(sender, SidebarMsg::SelectList(index))
-                        }
+                        },
                     }
                 },
                 append: action_buttons = &gtk::Box {
@@ -87,19 +95,18 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
             set_transition_type: gtk::RevealerTransitionType::SlideRight,
         }
     }
-    fn post_init() {
-        for input in &model.lists {
-            view! {
-                label = &gtk::Label {
-                    set_halign: gtk::Align::Start,
-                    set_text: input.display_name.as_str(),
-                    set_margin_top: 10,
-                    set_margin_bottom: 10,
-                    set_margin_start: 15,
-                    set_margin_end: 15,
-                }
+    fn pre_view() {
+        for list in &model.lists {
+            if !list.is_connected() {
+                self.list.append(list.root_widget())
             }
-            list.append(&label)
+        }
+    }
+    fn post_view() {
+        for list in &model.lists {
+            if !list.is_connected() {
+                self.list.append(list.root_widget())
+            }
         }
     }
 }
