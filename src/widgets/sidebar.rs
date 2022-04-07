@@ -1,9 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use glib::clone;
 use gtk4::prelude::*;
-use relm4::{ComponentUpdate, Model, Widgets, view};
-use crate::{AppModel, AppMsg, gtk, List, Sender};
+use gtk4 as gtk;
+use relm4::{ComponentUpdate, Model, Widgets, view, Sender};
+use crate::{AppModel};
+use crate::models::list::List;
+use crate::widgets::app::AppMsg;
 
 pub(crate) struct SidebarModel {
     lists: Vec<List>
@@ -29,7 +31,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, _msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         todo!()
     }
 }
@@ -148,7 +150,7 @@ impl SidebarWidgets {
 impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
     type Root = gtk::Revealer;
 
-    fn init_view(model: &SidebarModel, _components: &(), sender: Sender<SidebarMsg>) -> Self {
+    fn init_view(_model: &SidebarModel, _components: &(), _sender: Sender<SidebarMsg>) -> Self {
         SidebarWidgets::new()
     }
 
@@ -156,7 +158,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
         self.revealer.clone()
     }
 
-    fn view(&mut self, model: &SidebarModel, sender: Sender<SidebarMsg>) {
+    fn view(&mut self, _model: &SidebarModel, _sender: Sender<SidebarMsg>) {
 
     }
 }

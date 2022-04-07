@@ -93,6 +93,7 @@ dependencies = [
  "once_cell",
  "relm4",
  "relm4-components",
+ "relm4-macros",
  "serde",
  "serde_json",
  "tokio",

@@ -1,6 +1,7 @@
 use gtk4 as gtk;
-use relm4::{ComponentUpdate, Model, view, Widgets, gtk::prelude::{OrientableExt, WidgetExt}};
-use crate::{AppModel, AppMsg, Sender};
+use relm4::{ComponentUpdate, Model, view, Sender, Widgets, gtk::prelude::{OrientableExt, WidgetExt}};
+use crate::{AppModel};
+use crate::widgets::app::AppMsg;
 
 pub struct DetailsModel {}
 
@@ -19,7 +20,7 @@ impl ComponentUpdate<AppModel> for DetailsModel {
         DetailsModel {}
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, _msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         todo!()
     }
 }

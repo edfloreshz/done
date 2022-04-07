@@ -1,8 +1,9 @@
 use glib::clone;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, ButtonExt};
-use relm4::{ComponentUpdate, Model, Widgets};
-use crate::{AppModel, AppMsg, Sender};
+use relm4::{ComponentUpdate, Model, Widgets, Sender};
+use crate::{AppModel};
+use crate::widgets::app::AppMsg;
 
 pub struct ContentModel {
 
@@ -23,7 +24,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
         ContentModel {}
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(&mut self, _msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         todo!()
     }
 }
@@ -98,7 +99,7 @@ impl ContentWidgets {
 impl Widgets<ContentModel, AppModel> for ContentWidgets {
     type Root = gtk::Revealer;
 
-    fn init_view(model: &ContentModel, _components: &(), sender: Sender<ContentMsg>) -> Self {
+    fn init_view(_model: &ContentModel, _components: &(), _sender: Sender<ContentMsg>) -> Self {
         ContentWidgets::new()
     }
 
@@ -106,7 +107,7 @@ impl Widgets<ContentModel, AppModel> for ContentWidgets {
         self.revealer.clone()
     }
 
-    fn view(&mut self, model: &ContentModel, sender: Sender<ContentMsg>) {
+    fn view(&mut self, _model: &ContentModel, _sender: Sender<ContentMsg>) {
         todo!()
     }
 }
