@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/icons/do.edfloreshz.github.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/resources/icons/do.edfloreshz.github.svg" width="150" />
   <h1>Do</h1>
   <a href="https://github.com/edfloreshz/do/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
@@ -13,42 +13,33 @@
   </a>
 </div>
 
-Do is a to-do app built for Linux with Rust and GTK, it can connect to various services and lets you manage your tasks from a single app.
+Do is a rewrite of [Gnome To Do]() in Rust using [gtk-rs]() and [Relm4](), we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.
 
-Starting with [Microsoft To Do](https://todo.microsoft.com/) support and expanding to other services soon.
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/22224438/162361232-d3d5d5b9-11ca-45e3-9c85-3bee901828d0.png"/>
+</div>
 
-**WIP**
-
-<img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/assets/app.png"/>
 
 ## List of things to do
 
-### Account
-- [x] Login to your personal Microsoft account
-- [ ] Logout
-- [ ] Manage your account
+### Accounts
+- [ ] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
 
 ### Lists
 - [x] Show lists
-- [ ] Add a new list
+- [x] Add a new list
 - [ ] Delete an existing list
 - [ ] Rename an existing list
-
-### List groups
-- [ ] Show list groups
-- [ ] Add a new list groups
-- [ ] Delete an existing list groups
-- [ ] Rename an existing list groups
 
 ### Tasks
 - [x] Add a new task
 - [x] Show tasks for every list
-- [x] Mark a task as completed
+- [ ] Mark a task as completed
 - [ ] Delete a task
 - [ ] Rename a task
 - [ ] Add steps
 - [ ] Add to My Day
-- [ ] Add files
+- [ ] Mark as Favorite
 - [ ] Add notes
 
 ### Reminders
