@@ -1,9 +1,9 @@
 use std::ops::Index;
 use gtk4::prelude::*;
-use gtk4 as gtk;
-use relm4::{ComponentUpdate, Model, Widgets, send, Sender, MicroComponent, WidgetPlus};
+use relm4::{gtk, ComponentUpdate, Model, Widgets, send, Sender, MicroComponent, WidgetPlus};
 use crate::{AppModel};
 use crate::services::local::lists::{get_lists, post_list};
+use glib::clone;
 use crate::models::list::List;
 use crate::widgets::app::AppMsg;
 
@@ -28,10 +28,12 @@ impl Model for SidebarModel {
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         let mut lists = vec![
-            MicroComponent::new(List::new("Inbox", "list-add-symbolic"), ()),
-            MicroComponent::new(List::new("Today", "list-add-symbolic"), ()),
-            MicroComponent::new(List::new("Next 7 Days", "list-add-symbolic"), ()),
-            MicroComponent::new(List::new("All", "list-add-symbolic"), ()),
+            MicroComponent::new(List::new("Inbox", "mail-inbox-symbolic"), ()),
+            MicroComponent::new(List::new("Today", "daytime-sunset-symbolic"), ()),
+            MicroComponent::new(List::new("Next 7 Days", "media-view-subtitles-symbolic"), ()),
+            MicroComponent::new(List::new("All", "view-list-symbolic"), ()),
+            MicroComponent::new(List::new("Starred", "starred-symbolic"), ()),
+            MicroComponent::new(List::new("Archived", "folder-symbolic"), ()),
         ];
         let fe = &mut get_lists().unwrap().iter().map(|list| {
             MicroComponent::new(list.to_owned(), ())
@@ -89,21 +91,42 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                 set_margin_bottom: 10,
                 set_margin_start: 10,
                 set_margin_end: 10,
-                set_halign: gtk::Align::Center,
+                set_halign: gtk::Align::Fill,
                 append: add_list_button = &gtk::MenuButton {
                     set_label: "Add List",
+                    set_direction: gtk::ArrowType::Up,
                     set_popover: new_list_popover = Some(&gtk::Popover) {
-                        set_child: new_list_entry = Some(&gtk::Entry) {
-                            connect_activate(sender) => move |entry| {
-                                let buffer = entry.buffer();
-                                send!(sender, SidebarMsg::AddList(buffer.text()))
+                        set_child: stack = Some(&gtk::Stack) {
+                            add_child = &gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_spacing: 10,
+                                append: &gtk::Label::new(Some("List Name")),
+                                append: new_list_entry = &gtk::Entry {
+                                    connect_activate(sender) => move |entry| {
+                                        let buffer = entry.buffer();
+                                        if !buffer.text().is_empty() {
+                                            send!(sender, SidebarMsg::AddList(buffer.text()))
+                                        }
+                                    }
+                                },
+                                append: add_button = &gtk::Button {
+                                    set_label: "Create List",
+                                    set_css_classes: &["suggested-action"],
+                                    connect_clicked: clone!(@weak new_list_entry, @strong sender => move |_| {
+                                        let buffer = new_list_entry.buffer();
+                                        if !buffer.text().is_empty() {
+                                            send!(sender, SidebarMsg::AddList(buffer.text()))
+                                        }
+                                    })
+                                },
                             }
                         }
                     }
                 },
-                append: add_group_button = &gtk::MenuButton {
-                    set_label: "Add Group",
-                }
+                // append: add_group_button = &gtk::MenuButton {
+                //     set_label: "Add Group",
+                //     set_direction: gtk::ArrowType::Up,
+                // } // TODO: Add this when we can
             },
         }
     }

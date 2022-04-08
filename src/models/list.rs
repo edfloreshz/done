@@ -59,6 +59,7 @@ impl MicroWidgets<List> for ListWidgets {
             },
             append: count = &gtk::Label {
                 set_halign: gtk::Align::End,
+                set_css_classes: &["dim-label", "caption"],
                 set_text: &model.count.to_string(),
                 set_margin_top: 10,
                 set_margin_bottom: 10,
