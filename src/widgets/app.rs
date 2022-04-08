@@ -1,14 +1,13 @@
-use std::fmt::Debug;
 use once_cell::sync::OnceCell;
 use relm4::{adw, adw::prelude::AdwApplicationWindowExt, AppUpdate, Components, gtk, gtk::prelude::{
     BoxExt,
-    ButtonExt,
     GtkWindowExt,
     OrientableExt,
     WidgetExt
-}, MicroComponent, Model, RelmComponent, send, Sender, WidgetPlus, Widgets};
+}, MicroComponent, Model, RelmComponent, Sender, Widgets};
 use tokio::runtime::Runtime;
 use tracker::track;
+
 use crate::services::local::tasks::get_tasks;
 use crate::widgets::content::ContentModel;
 use crate::widgets::details::DetailsModel;
@@ -43,7 +42,8 @@ impl Model for AppModel {
 }
 
 impl AppUpdate for AppModel {
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
+    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
+        self.reset();
         match msg {
             AppMsg::Login => {
                 println!("Login...")
@@ -72,7 +72,7 @@ impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
             sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
-            details: RelmComponent::new(parent_model, parent_sender.clone()),
+            details: RelmComponent::new(parent_model, parent_sender),
         }
     }
 
@@ -120,7 +120,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             },
                             append: track!(
                                 model.changed(AppModel::selected_list()),
-                                &model.selected_list.root_widget() as &gtk::Box
+                                model.selected_list.root_widget() as &gtk::Box
                             )
                         }
                     },

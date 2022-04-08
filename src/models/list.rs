@@ -24,7 +24,8 @@ impl List {
             display_name: display_name.to_string(),
             is_owner: true,
             count: 0,
-            icon_name: icon_name.to_string()
+            icon_name: icon_name.to_string(),
+
         }
     }
 }

@@ -12,6 +12,7 @@
     <img src="https://img.shields.io/crates/d/do" alt="downloads"/>
   </a>
 </div>
+<br/>
 
 Do is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.
 

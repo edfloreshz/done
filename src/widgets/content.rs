@@ -1,14 +1,8 @@
-use std::time::SystemTime;
-use chrono::DateTime;
-use glib::clone;
 use gtk4 as gtk;
-use gtk4::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt, EntryExt, EntryBufferExtManual};
-use relm4::{send, ComponentUpdate, Model, Widgets, Sender, MicroComponent, WidgetPlus, MicroModel, MicroWidgets};
-use uuid::Uuid;
-use crate::{AppModel};
+use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt, EntryExt, EntryBufferExtManual};
+use relm4::{send, Sender, MicroComponent, WidgetPlus, MicroModel, MicroWidgets};
 use crate::models::task::Task;
 use crate::services::local::tasks::post_task;
-use crate::widgets::app::AppMsg;
 
 #[derive(Debug)]
 pub struct ContentModel {
@@ -25,7 +19,7 @@ impl MicroModel for ContentModel {
     type Widgets = ContentWidgets;
     type Data = ();
 
-    fn update(&mut self, msg: Self::Msg, data: &Self::Data, sender: Sender<Self::Msg>) {
+    fn update(&mut self, msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
         let id = &self.list_id.to_owned();
         match msg {
             ContentMsg::AddTaskEntry(title) => {

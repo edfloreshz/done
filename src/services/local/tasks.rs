@@ -1,8 +1,7 @@
 use anyhow::Result;
 use diesel::prelude::*;
 use crate::storage::database::DatabaseConnection;
-use crate::models::list::List;
-use crate::models::task::{QueryableTask, Task};
+use crate::models::task::QueryableTask;
 
 pub fn get_tasks(list_id: String) -> Result<Vec<QueryableTask>> {
     use crate::schema::tasks::dsl::*;

@@ -1,11 +1,8 @@
-use chrono::{DateTime, Utc};
 use glib::Sender;
-use relm4::{gtk, gtk::prelude::{WidgetExt, BoxExt, OrientableExt}, WidgetPlus, MicroModel, MicroWidgets};
+use relm4::{gtk, gtk::prelude::{BoxExt, OrientableExt}, WidgetPlus, MicroModel, MicroWidgets};
 use uuid::Uuid;
 use diesel::{Insertable, Queryable};
-use crate::schema::lists::id_list;
 use crate::schema::tasks;
-use crate::schema::tasks::importance;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
 #[table_name="tasks"]
@@ -87,10 +84,10 @@ impl From<QueryableTask> for Task {
             body: task.body,
             completed_on: task.completed_on,
             due_date: task.due_date,
-            importance: TaskImportance::from_str(task.importance.as_str()),
+            importance: TaskImportance::from_importance_str(task.importance.as_str()),
             is_reminder_on: task.is_reminder_on,
             reminder_date: task.reminder_date,
-            status: TaskStatus::from_str(task.status.as_str()),
+            status: TaskStatus::from_status_str(task.status.as_str()),
             created_date_time: task.created_date_time,
             last_modified_date_time: task.last_modified_date_time
         }
@@ -105,7 +102,7 @@ pub enum TaskImportance {
 }
 
 impl TaskImportance {
-    pub fn from_str(imp: &str) -> Self {
+    pub fn from_importance_str(imp: &str) -> Self {
         match imp.to_lowercase().as_str() {
             "normal" => Self::Normal,
             "high" => Self::High,
@@ -133,7 +130,7 @@ impl Default for TaskStatus {
 }
 
 impl TaskStatus {
-    pub fn from_str(status: &str) -> Self {
+    pub fn from_status_str(status: &str) -> Self {
         match status.to_lowercase().as_str() {
             "completed" => Self::Completed,
             _ => Self::NotStarted
@@ -153,7 +150,7 @@ impl MicroModel for Task {
     type Widgets = TaskWidgets;
     type Data = ();
 
-    fn update(&mut self, msg: Self::Msg, data: &Self::Data, sender: Sender<Self::Msg>) {
+    fn update(&mut self, _msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
         todo!()
     }
 }
