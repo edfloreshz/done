@@ -13,7 +13,7 @@
   </a>
 </div>
 
-Do is a rewrite of [Gnome To Do]() in Rust using [gtk-rs]() and [Relm4](), we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.
+Do is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/22224438/162361232-d3d5d5b9-11ca-45e3-9c85-3bee901828d0.png"/>
