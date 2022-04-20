@@ -1,6 +1,4 @@
-// @generated automatically by Diesel CLI.
-
-diesel::table! {
+table! {
     lists (id_list) {
         id_list -> Text,
         display_name -> Text,
@@ -10,7 +8,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
+table! {
     tasks (id_task) {
         id_task -> Text,
         id_list -> Text,
@@ -27,9 +25,9 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(tasks -> lists (id_list));
+joinable!(tasks -> lists (id_list));
 
-diesel::allow_tables_to_appear_in_same_query!(
+allow_tables_to_appear_in_same_query!(
     lists,
     tasks,
 );

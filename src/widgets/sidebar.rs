@@ -1,10 +1,12 @@
 use std::ops::Index;
-use gtk4::prelude::*;
-use relm4::{gtk, ComponentUpdate, Model, Widgets, send, Sender, MicroComponent, WidgetPlus};
-use crate::{AppModel};
-use crate::services::local::lists::{get_lists, post_list};
+
 use glib::clone;
+use gtk4::prelude::*;
+use relm4::{ComponentUpdate, gtk, MicroComponent, Model, send, Sender, WidgetPlus, Widgets};
+
+use crate::AppModel;
 use crate::models::list::List;
+use crate::services::local::lists::{get_lists, post_list};
 use crate::widgets::app::AppMsg;
 
 #[derive(Default)]
@@ -48,13 +50,11 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         match msg {
             SidebarMsg::Delete(i) => println!("Deleting list at index {i}"),
             SidebarMsg::AddList(name) => {
-                post_list(name.clone()).unwrap();
-                self.lists.push(MicroComponent::new(List::new(&*name, ""), ()))
+                let posted_list = post_list(name).unwrap();
+                self.lists.push(MicroComponent::new(posted_list, ()))
             },
             SidebarMsg::SelectList(i) => {
-                let list = self.lists.index(i);
-                let model = list.model_mut().unwrap();
-                let id_list = &model.id_list;
+                let id_list = &self.lists.index(i).model_mut().unwrap().id_list;
                 parent_sender.send(AppMsg::ListSelected(id_list.to_owned())).expect("Failed to get task list.");
             },
             SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}")

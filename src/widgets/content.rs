@@ -1,13 +1,23 @@
 use gtk4 as gtk;
-use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt, EntryExt, EntryBufferExtManual};
-use relm4::{send, Sender, MicroComponent, WidgetPlus, MicroModel, MicroWidgets};
+use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
+use relm4::{MicroComponent, MicroModel, MicroWidgets, send, Sender, WidgetPlus};
+
 use crate::models::task::Task;
 use crate::services::local::tasks::post_task;
 
 #[derive(Debug)]
 pub struct ContentModel {
     pub(crate) list_id: String,
-    pub(crate) tasks: Vec<MicroComponent<Task>>
+    pub(crate) tasks: Vec<MicroComponent<Task>>,
+}
+
+impl Default for ContentModel {
+    fn default() -> Self {
+        Self {
+            list_id: "".to_string(),
+            tasks: vec![],
+        }
+    }
 }
 
 pub enum ContentMsg {

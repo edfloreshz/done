@@ -1,7 +1,8 @@
 use anyhow::Result;
 use diesel::prelude::*;
-use crate::storage::database::DatabaseConnection;
+
 use crate::models::list::List;
+use crate::storage::database::DatabaseConnection;
 
 pub fn get_lists() -> Result<Vec<List>> {
     use crate::schema::lists::dsl::*;
@@ -10,7 +11,7 @@ pub fn get_lists() -> Result<Vec<List>> {
     Ok(results)
 }
 
-pub fn post_list(name: String) -> Result<()> {
+pub fn post_list(name: String) -> Result<List> {
     use crate::schema::lists::dsl::*;
 
     let connection = DatabaseConnection::establish_connection();
@@ -18,5 +19,5 @@ pub fn post_list(name: String) -> Result<()> {
     diesel::insert_into(lists)
         .values(&new_list)
         .execute(&connection)?;
-    Ok(())
+    Ok(new_list)
 }

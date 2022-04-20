@@ -20,6 +20,8 @@ cascade = "1.0.0"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 tracker = "0.1.1"
 diesel = { version = "1.4.8", features = ["sqlite"] }
+diesel_migrations = "1.4.0"
 dotenv = "0.15.0"
 dirs = "4.0.0"
 chrono = "0.4.19"
+libdmd = { path = "../libdmd" }

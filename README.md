@@ -14,19 +14,30 @@
 </div>
 <br/>
 
-Do is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.
+Do is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust
+using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
+provided by To Do to provide the ultimate to-do experience.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/22224438/162361232-d3d5d5b9-11ca-45e3-9c85-3bee901828d0.png"/>
 </div>
 
+## Build
 
-## List of things to do
+To initialize the database you will need `diesel_cli`, install it with:
+
+`cargo install diesel_cli --no-default-features --features "sqlite"`
+
+After you install it, run `diesel migration run` to initialize the database.
+
+## To do
 
 ### Accounts
+
 - [ ] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
 
 ### Lists
+
 - [x] Show lists
 - [x] Add a new list
 - [ ] Delete an existing list
