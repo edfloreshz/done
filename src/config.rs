@@ -1,12 +1,12 @@
+use anyhow::{Context, Result};
+use diesel_migrations::{any_pending_migrations, run_pending_migrations};
 use libdmd::config::Config;
 use libdmd::fi;
-use diesel_migrations::{any_pending_migrations, run_pending_migrations};
-use anyhow::{Context, Result};
 use std::io::Write;
 
 use crate::storage::database::DatabaseConnection;
 
-pub fn set_app() -> Result<()>{
+pub fn set_app() -> Result<()> {
     let config = set_config();
     if !config.is_written() {
         config.write()?;
@@ -20,9 +20,7 @@ pub fn set_app() -> Result<()>{
 }
 
 fn set_dotenv() -> Result<()> {
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .open(".env")?;
+    let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
     let home = dirs::home_dir().with_context(|| "")?;
     let home = home.display();
     let url = format!("DATABASE_URL={home}/.local/share/do/do.db");

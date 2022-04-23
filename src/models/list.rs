@@ -1,20 +1,20 @@
-use glib::Sender;
-use relm4::{MicroModel, MicroWidgets};
-use serde::{Serialize, Deserialize};
-use diesel::{Queryable, Insertable};
 use crate::schema::lists;
+use diesel::{Insertable, Queryable};
+use glib::Sender;
 use gtk4 as gtk;
-use gtk4::prelude::{WidgetExt, BoxExt, OrientableExt};
+use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
+use relm4::{MicroModel, MicroWidgets};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
-#[table_name="lists"]
+#[table_name = "lists"]
 pub struct List {
     pub id_list: String,
     pub display_name: String,
     pub is_owner: bool,
     pub count: i32,
-    pub icon_name: String
+    pub icon_name: String,
 }
 
 impl List {
@@ -25,7 +25,6 @@ impl List {
             is_owner: true,
             count: 0,
             icon_name: icon_name.to_string(),
-
         }
     }
 }

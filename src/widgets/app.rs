@@ -1,10 +1,11 @@
 use once_cell::sync::OnceCell;
-use relm4::{adw, adw::prelude::AdwApplicationWindowExt, AppUpdate, Components, gtk, gtk::prelude::{
-    BoxExt,
-    GtkWindowExt,
-    OrientableExt,
-    WidgetExt
-}, MicroComponent, Model, RelmComponent, Sender, Widgets};
+use relm4::{
+    adw,
+    adw::prelude::AdwApplicationWindowExt,
+    gtk,
+    gtk::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt},
+    AppUpdate, Components, MicroComponent, Model, RelmComponent, Sender, Widgets,
+};
 use tokio::runtime::Runtime;
 use tracker::track;
 
@@ -18,21 +19,21 @@ static RT: OnceCell<Runtime> = OnceCell::new();
 #[track]
 pub struct AppModel {
     #[tracker::no_eq]
-    pub(crate) selected_list: MicroComponent<ContentModel>
+    pub(crate) selected_list: MicroComponent<ContentModel>,
 }
 
 impl AppModel {
     pub fn new(selected_list: MicroComponent<ContentModel>) -> Self {
         Self {
             selected_list,
-            tracker: 0
+            tracker: 0,
         }
     }
 }
 
 pub enum AppMsg {
     Login,
-    ListSelected(String)
+    ListSelected(String),
 }
 
 impl Model for AppModel {
@@ -42,21 +43,29 @@ impl Model for AppModel {
 }
 
 impl AppUpdate for AppModel {
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>) -> bool {
+    fn update(
+        &mut self,
+        msg: Self::Msg,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
+    ) -> bool {
         self.reset();
         match msg {
             AppMsg::Login => {
                 println!("Login...")
             }
             AppMsg::ListSelected(list_id) => {
-                self.set_selected_list(
-                    MicroComponent::new(ContentModel {
+                self.set_selected_list(MicroComponent::new(
+                    ContentModel {
                         list_id: list_id.clone(),
-                        tasks: get_tasks(list_id).unwrap().iter().map(|task| {
-                            MicroComponent::new(task.to_owned().into(), ())
-                        }).collect()
-                    }, ())
-                );
+                        tasks: get_tasks(list_id)
+                            .unwrap()
+                            .iter()
+                            .map(|task| MicroComponent::new(task.to_owned().into(), ()))
+                            .collect(),
+                    },
+                    (),
+                ));
             }
         }
         true
@@ -76,10 +85,8 @@ impl Components<AppModel> for AppComponents {
         }
     }
 
-    fn connect_parent(&mut self, _parent_widgets: &AppWidgets) {
-    }
+    fn connect_parent(&mut self, _parent_widgets: &AppWidgets) {}
 }
-
 
 #[relm4_macros::widget(pub)]
 impl Widgets<AppModel, ()> for AppWidgets {

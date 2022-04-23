@@ -1,13 +1,14 @@
-use gtk4 as gtk;
-use relm4::{ComponentUpdate, Model, view, Sender, Widgets, gtk::prelude::{OrientableExt, WidgetExt}};
-use crate::{AppModel};
 use crate::widgets::app::AppMsg;
+use crate::AppModel;
+use gtk4 as gtk;
+use relm4::{
+    gtk::prelude::{OrientableExt, WidgetExt},
+    view, ComponentUpdate, Model, Sender, Widgets,
+};
 
 pub struct DetailsModel {}
 
-pub enum DetailsMsg {
-
-}
+pub enum DetailsMsg {}
 
 impl Model for DetailsModel {
     type Msg = DetailsMsg;
@@ -20,7 +21,13 @@ impl ComponentUpdate<AppModel> for DetailsModel {
         DetailsModel {}
     }
 
-    fn update(&mut self, _msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
+    fn update(
+        &mut self,
+        _msg: Self::Msg,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
+        _parent_sender: Sender<AppMsg>,
+    ) {
         todo!()
     }
 }
@@ -72,7 +79,5 @@ impl Widgets<DetailsModel, AppModel> for DetailsWidgets {
         self.revealer.clone()
     }
 
-    fn view(&mut self, _model: &DetailsModel, _sender: Sender<DetailsMsg>) {
-
-    }
+    fn view(&mut self, _model: &DetailsModel, _sender: Sender<DetailsMsg>) {}
 }

@@ -2,12 +2,12 @@ use std::ops::Index;
 
 use glib::clone;
 use gtk4::prelude::*;
-use relm4::{ComponentUpdate, gtk, MicroComponent, Model, send, Sender, WidgetPlus, Widgets};
+use relm4::{gtk, send, ComponentUpdate, MicroComponent, Model, Sender, WidgetPlus, Widgets};
 
-use crate::AppModel;
 use crate::models::list::List;
 use crate::services::local::lists::{get_lists, post_list};
 use crate::widgets::app::AppMsg;
+use crate::AppModel;
 
 #[derive(Default)]
 pub(crate) struct SidebarModel {
@@ -32,32 +32,43 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         let mut lists = vec![
             MicroComponent::new(List::new("Inbox", "mail-inbox-symbolic"), ()),
             MicroComponent::new(List::new("Today", "daytime-sunset-symbolic"), ()),
-            MicroComponent::new(List::new("Next 7 Days", "media-view-subtitles-symbolic"), ()),
+            MicroComponent::new(
+                List::new("Next 7 Days", "media-view-subtitles-symbolic"),
+                (),
+            ),
             MicroComponent::new(List::new("All", "view-list-symbolic"), ()),
             MicroComponent::new(List::new("Starred", "starred-symbolic"), ()),
             MicroComponent::new(List::new("Archived", "folder-symbolic"), ()),
         ];
-        let fe = &mut get_lists().unwrap().iter().map(|list| {
-            MicroComponent::new(list.to_owned(), ())
-        }).collect();
+        let fe = &mut get_lists()
+            .unwrap()
+            .iter()
+            .map(|list| MicroComponent::new(list.to_owned(), ()))
+            .collect();
         lists.append(fe);
-        SidebarModel {
-            lists,
-        }
+        SidebarModel { lists }
     }
 
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, parent_sender: Sender<AppMsg>) {
+    fn update(
+        &mut self,
+        msg: Self::Msg,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
+        parent_sender: Sender<AppMsg>,
+    ) {
         match msg {
             SidebarMsg::Delete(i) => println!("Deleting list at index {i}"),
             SidebarMsg::AddList(name) => {
                 let posted_list = post_list(name).unwrap();
                 self.lists.push(MicroComponent::new(posted_list, ()))
-            },
+            }
             SidebarMsg::SelectList(i) => {
                 let id_list = &self.lists.index(i).model_mut().unwrap().id_list;
-                parent_sender.send(AppMsg::ListSelected(id_list.to_owned())).expect("Failed to get task list.");
-            },
-            SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}")
+                parent_sender
+                    .send(AppMsg::ListSelected(id_list.to_owned()))
+                    .expect("Failed to get task list.");
+            }
+            SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}"),
         }
     }
 }

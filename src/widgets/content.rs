@@ -1,6 +1,6 @@
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
-use relm4::{MicroComponent, MicroModel, MicroWidgets, send, Sender, WidgetPlus};
+use relm4::{send, MicroComponent, MicroModel, MicroWidgets, Sender, WidgetPlus};
 
 use crate::models::task::Task;
 use crate::services::local::tasks::post_task;
@@ -21,7 +21,7 @@ impl Default for ContentModel {
 }
 
 pub enum ContentMsg {
-    AddTaskEntry(String)
+    AddTaskEntry(String),
 }
 
 impl MicroModel for ContentModel {
@@ -34,7 +34,8 @@ impl MicroModel for ContentModel {
         match msg {
             ContentMsg::AddTaskEntry(title) => {
                 post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks.push(MicroComponent::new(Task::new(title, id.to_owned()), ()))
+                self.tasks
+                    .push(MicroComponent::new(Task::new(title, id.to_owned()), ()))
             }
         }
     }

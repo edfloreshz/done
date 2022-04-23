@@ -1,4 +1,4 @@
-pub mod sidebar;
-pub mod details;
-pub mod content;
 pub mod app;
+pub mod content;
+pub mod details;
+pub mod sidebar;

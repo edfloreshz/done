@@ -1,11 +1,15 @@
-use glib::Sender;
-use relm4::{gtk, gtk::prelude::{BoxExt, OrientableExt}, WidgetPlus, MicroModel, MicroWidgets};
-use uuid::Uuid;
-use diesel::{Insertable, Queryable};
 use crate::schema::tasks;
+use diesel::{Insertable, Queryable};
+use glib::Sender;
+use relm4::{
+    gtk,
+    gtk::prelude::{BoxExt, OrientableExt},
+    MicroModel, MicroWidgets, WidgetPlus,
+};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
-#[table_name="tasks"]
+#[table_name = "tasks"]
 pub struct QueryableTask {
     pub id_task: String,
     pub id_list: String,
@@ -35,7 +39,7 @@ impl QueryableTask {
             reminder_date: None,
             status: Default::default(),
             created_date_time: "".to_string(),
-            last_modified_date_time: "".to_string()
+            last_modified_date_time: "".to_string(),
         }
     }
 }
@@ -70,7 +74,7 @@ impl Task {
             reminder_date: None,
             status: Default::default(),
             created_date_time: "".to_string(),
-            last_modified_date_time: "".to_string()
+            last_modified_date_time: "".to_string(),
         }
     }
 }
@@ -89,7 +93,7 @@ impl From<QueryableTask> for Task {
             reminder_date: task.reminder_date,
             status: TaskStatus::from_status_str(task.status.as_str()),
             created_date_time: task.created_date_time,
-            last_modified_date_time: task.last_modified_date_time
+            last_modified_date_time: task.last_modified_date_time,
         }
     }
 }
@@ -106,7 +110,7 @@ impl TaskImportance {
         match imp.to_lowercase().as_str() {
             "normal" => Self::Normal,
             "high" => Self::High,
-            _ => Self::Normal
+            _ => Self::Normal,
         }
     }
 }
@@ -133,7 +137,7 @@ impl TaskStatus {
     pub fn from_status_str(status: &str) -> Self {
         match status.to_lowercase().as_str() {
             "completed" => Self::Completed,
-            _ => Self::NotStarted
+            _ => Self::NotStarted,
         }
     }
 }
@@ -142,7 +146,7 @@ impl TaskStatus {
 pub enum TaskMsg {
     Complete,
     Edit,
-    Delete
+    Delete,
 }
 
 impl MicroModel for Task {

@@ -9,12 +9,12 @@ use widgets::app::AppModel;
 use crate::config::set_app;
 use crate::widgets::content::ContentModel;
 
-mod widgets;
-mod storage;
-mod services;
-mod schema;
-mod models;
 mod config;
+mod models;
+mod schema;
+mod services;
+mod storage;
+mod widgets;
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
@@ -27,5 +27,3 @@ fn main() -> Result<()> {
     app.run();
     Ok(())
 }
-
-
