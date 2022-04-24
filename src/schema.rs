@@ -2,7 +2,7 @@ table! {
     lists (id_list) {
         id_list -> Text,
         display_name -> Text,
-        is_owner -> Integer,
+        is_owner -> Bool,
         count -> Integer,
         icon_name -> Text,
     }
@@ -17,7 +17,7 @@ table! {
         completed_on -> Nullable<Text>,
         due_date -> Nullable<Text>,
         importance -> Text,
-        is_reminder_on -> Integer,
+        is_reminder_on -> Bool,
         reminder_date -> Nullable<Text>,
         status -> Text,
         created_date_time -> Text,

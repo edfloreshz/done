@@ -24,4 +24,4 @@ diesel_migrations = "1.4.0"
 dotenv = "0.15.0"
 dirs = "4.0.0"
 chrono = "0.4.19"
-libdmd = { git = "https://github.com/edfloreshz/libdmd", commit = "bbc28d152ba316f212eafab81b84821274a71e74" }
+libdmd = { git = "https://github.com/edfloreshz/libdmd", rev = "bbc28d152ba316f212eafab81b84821274a71e74" }
