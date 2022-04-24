@@ -22,6 +22,7 @@ impl Default for ContentModel {
 
 pub enum ContentMsg {
     AddTaskEntry(String),
+    MarkAsCompleted(String),
 }
 
 impl MicroModel for ContentModel {
@@ -37,6 +38,7 @@ impl MicroModel for ContentModel {
                 self.tasks
                     .push(MicroComponent::new(Task::new(title, id.to_owned()), ()))
             }
+            ContentMsg::MarkAsCompleted(id_task) => {}
         }
     }
 }

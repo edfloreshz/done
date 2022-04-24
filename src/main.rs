@@ -21,9 +21,9 @@ fn main() -> Result<()> {
         .application_id("do.edfloreshz.github")
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
+    set_app()?;
     let model = AppModel::new(MicroComponent::new(ContentModel::default(), ()));
     let app = RelmApp::with_app(model, application);
-    set_app()?;
     app.run();
     Ok(())
 }

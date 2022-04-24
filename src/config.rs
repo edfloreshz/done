@@ -3,13 +3,15 @@ use diesel_migrations::{any_pending_migrations, run_pending_migrations};
 use libdmd::config::Config;
 use libdmd::fi;
 use std::io::Write;
+use std::process::Command;
 
 use crate::storage::database::DatabaseConnection;
 
 pub fn set_app() -> Result<()> {
-    let config = set_config();
+    let config = get_config();
     if !config.is_written() {
         config.write()?;
+        Command::new("diesel").args(["migration", "run"]).output()?;
     }
     set_dotenv()?;
     let connection = DatabaseConnection::establish_connection();
@@ -28,7 +30,7 @@ fn set_dotenv() -> Result<()> {
     Ok(())
 }
 
-fn set_config() -> Config {
+fn get_config() -> Config {
     Config::new("do")
         .about("Do is a To Do app for Linux built with Rust and GTK.")
         .author("Eduardo Flores")

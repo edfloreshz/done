@@ -28,8 +28,6 @@ To initialize the database you will need `diesel_cli`, install it with:
 
 `cargo install diesel_cli --no-default-features --features "sqlite"`
 
-After you install it, run `diesel migration run` to initialize the database.
-
 ## To do
 
 ### Accounts
