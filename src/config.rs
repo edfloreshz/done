@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use diesel_migrations::{any_pending_migrations, run_pending_migrations};
-use libdmd::config::Config;
-use libdmd::fi;
+use libset::config::Config;
+use libset::fi;
 use std::io::Write;
 use std::process::Command;
 
