@@ -1,12 +1,11 @@
 use crate::schema::tasks;
 use diesel::{Insertable, Queryable};
 use glib::Sender;
-use relm4::{
-    gtk,
-    gtk::prelude::{BoxExt, OrientableExt},
-    MicroModel, MicroWidgets, WidgetPlus,
-};
+use gtk4::traits::CheckButtonExt;
+use relm4::{gtk, gtk::prelude::BoxExt, send, WidgetPlus};
+use relm4::factory::{FactoryPrototype, FactoryVec, FactoryView};
 use uuid::Uuid;
+use crate::widgets::content::ContentMsg;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
 #[table_name = "tasks"]
@@ -44,7 +43,7 @@ impl QueryableTask {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Task {
     pub id_task: String,
     pub id_list: String,
@@ -149,29 +148,49 @@ pub enum TaskMsg {
     Delete,
 }
 
-impl MicroModel for Task {
-    type Msg = TaskMsg;
-    type Widgets = TaskWidgets;
-    type Data = ();
-
-    fn update(&mut self, _msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
-        todo!()
-    }
+#[derive(Debug)]
+pub struct TaskWidgets {
+    label: gtk::Label,
+    hbox: gtk::Box,
 }
 
-#[relm4::micro_widget(pub)]
-#[derive(Debug)]
-impl MicroWidgets<Task> for TaskWidgets {
-    view! {
-        task_box = &gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            append = &gtk::CheckButton {
-                set_margin_all: 12
-            },
-            append = &gtk::Label {
-                set_margin_all: 12,
-                set_label: &model.title
-            }
-        }
+impl FactoryPrototype for Task {
+    type Factory = FactoryVec<Task>;
+    type Widgets = TaskWidgets;
+    type Root = gtk::Box;
+    type View = gtk::ListBox;
+    type Msg = ContentMsg;
+
+    fn init_view(&self, key: &usize, sender: Sender<Self::Msg>) -> Self::Widgets {
+        let hbox = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .build();
+        let checkbox = gtk::CheckButton::builder().active(false).build();
+        let label = gtk::Label::new(Some(&self.title));
+        checkbox.set_margin_all(12);
+        label.set_margin_all(12);
+        hbox.append(&checkbox);
+        hbox.append(&label);
+
+        let index = *key;
+        checkbox.connect_toggled(move |checkbox| {
+            send!(sender, ContentMsg::SetCompleted((index, checkbox.is_active())));
+        });
+
+        TaskWidgets { label, hbox }
+    }
+
+    fn position(&self, _key: &usize) -> <Self::View as FactoryView<Self::Root>>::Position {}
+
+    fn view(&self, _key: &usize, widgets: &Self::Widgets) {
+        let attrs = widgets.label.attributes().unwrap_or_default();
+        attrs.change(gtk::pango::AttrInt::new_strikethrough(
+            matches!(self.status, TaskStatus::Completed))
+        );
+        widgets.label.set_attributes(Some(&attrs));
+    }
+
+    fn root_widget(widgets: &Self::Widgets) -> &Self::Root {
+        &widgets.hbox
     }
 }

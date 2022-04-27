@@ -1,51 +1,93 @@
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
-use relm4::{send, MicroComponent, MicroModel, MicroWidgets, Sender, WidgetPlus};
+use relm4::{send, Sender, WidgetPlus, ComponentUpdate, Model, Widgets};
+use relm4::factory::FactoryVec;
+use crate::AppModel;
 
-use crate::models::task::Task;
-use crate::services::local::tasks::post_task;
+use crate::models::task::{Task, TaskStatus};
+use crate::services::local::tasks::{get_tasks, post_task};
+use crate::widgets::app::AppMsg;
 
 #[derive(Debug)]
 pub struct ContentModel {
     pub(crate) list_id: String,
-    pub(crate) tasks: Vec<MicroComponent<Task>>,
+    pub(crate) tasks: FactoryVec<Task>,
 }
 
 impl Default for ContentModel {
     fn default() -> Self {
         Self {
             list_id: "".to_string(),
-            tasks: vec![],
+            tasks: FactoryVec::from_vec(vec![]),
         }
     }
 }
 
 pub enum ContentMsg {
+    ParentUpdate(String),
     AddTaskEntry(String),
-    MarkAsCompleted(String),
+    SetCompleted((usize, bool)),
 }
 
-impl MicroModel for ContentModel {
+impl Model for ContentModel {
     type Msg = ContentMsg;
     type Widgets = ContentWidgets;
-    type Data = ();
+    type Components = ();
+}
 
-    fn update(&mut self, msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
+impl ComponentUpdate<AppModel> for ContentModel {
+    fn init_model(parent_model: &AppModel) -> Self {
+        Self {
+            list_id: parent_model.selected_list.clone(),
+            tasks: FactoryVec::from_vec(
+                get_tasks(parent_model.selected_list.clone())
+                    .unwrap()
+                    .iter()
+                    .map(|task| task.to_owned().into())
+                    .collect()
+            )
+        }
+    }
+
+    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
         let id = &self.list_id.to_owned();
         match msg {
             ContentMsg::AddTaskEntry(title) => {
                 post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks
-                    .push(MicroComponent::new(Task::new(title, id.to_owned()), ()))
+                self.tasks.push(Task::new(title, id.to_owned()))
             }
-            ContentMsg::MarkAsCompleted(id_task) => {}
+            ContentMsg::SetCompleted((index, completed)) => {
+                if let Some(task) = self.tasks.get_mut(index) {
+                    task.status = if completed {
+                        TaskStatus::Completed
+                    } else {
+                        TaskStatus::NotStarted
+                    };
+                }
+            }
+            ContentMsg::ParentUpdate(list_id) => {
+                self.list_id = list_id.clone();
+                let tasks = get_tasks(list_id)
+                        .unwrap()
+                        .iter()
+                        .map(|task| task.to_owned().into())
+                        .collect::<Vec<Task>>();
+                loop {
+                    let task = self.tasks.pop(); // TODO: Fix pop for ListBox
+                    if task.is_none() {
+                        break
+                    }
+                }
+                for (i, _) in tasks.iter().enumerate() {
+                    self.tasks.push(tasks[i].clone())
+                }
+            }
         }
     }
 }
 
-#[relm4::micro_widget(pub)]
-#[derive(Debug)]
-impl MicroWidgets<ContentModel> for ContentWidgets {
+#[relm4_macros::widget(pub)]
+impl Widgets<ContentModel, AppModel> for ContentWidgets {
     view! {
         task_container = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
@@ -55,17 +97,8 @@ impl MicroWidgets<ContentModel> for ContentWidgets {
                     add_child = &gtk::ScrolledWindow {
                         set_vexpand: true,
                         set_hexpand: true,
-                        set_child: list_box = Some(&gtk::Box) {
-                            set_vexpand: true,
-                            set_hexpand: true,
-                            append: task_list = &gtk::ListBox {
-                                set_hexpand: true,
-                                append: iterate! {
-                                    model.tasks.iter().map(|task| {
-                                        task.root_widget() as &gtk::Box
-                                    }).collect::<Vec<&gtk::Box>>()
-                                }
-                            },
+                        set_child: list_box = Some(&gtk::ListBox) {
+                            factory!(model.tasks)
                         }
                     },
                 },
@@ -84,13 +117,6 @@ impl MicroWidgets<ContentModel> for ContentWidgets {
                         buffer.delete_text(0, None);
                     }
                 }
-            }
-        }
-    }
-    fn post_view() {
-        for task in &model.tasks {
-            if !task.is_connected() {
-                self.task_list.append(task.root_widget())
             }
         }
     }

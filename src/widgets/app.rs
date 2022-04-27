@@ -4,13 +4,12 @@ use relm4::{
     adw::prelude::AdwApplicationWindowExt,
     gtk,
     gtk::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt},
-    AppUpdate, Components, MicroComponent, Model, RelmComponent, Sender, Widgets,
+    AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
 };
 use tokio::runtime::Runtime;
 use tracker::track;
 
-use crate::services::local::tasks::get_tasks;
-use crate::widgets::content::ContentModel;
+use crate::widgets::content::{ContentModel, ContentMsg};
 use crate::widgets::details::DetailsModel;
 use crate::widgets::sidebar::SidebarModel;
 
@@ -19,13 +18,13 @@ static RT: OnceCell<Runtime> = OnceCell::new();
 #[track]
 pub struct AppModel {
     #[tracker::no_eq]
-    pub(crate) selected_list: MicroComponent<ContentModel>,
+    pub(crate) selected_list: String,
 }
 
 impl AppModel {
-    pub fn new(selected_list: MicroComponent<ContentModel>) -> Self {
+    pub fn new(selected_list: &str) -> Self {
         Self {
-            selected_list,
+            selected_list: selected_list.to_string(),
             tracker: 0,
         }
     }
@@ -46,7 +45,7 @@ impl AppUpdate for AppModel {
     fn update(
         &mut self,
         msg: Self::Msg,
-        _components: &Self::Components,
+        components: &Self::Components,
         _sender: Sender<Self::Msg>,
     ) -> bool {
         self.reset();
@@ -55,17 +54,8 @@ impl AppUpdate for AppModel {
                 println!("Login...")
             }
             AppMsg::ListSelected(list_id) => {
-                self.set_selected_list(MicroComponent::new(
-                    ContentModel {
-                        list_id: list_id.clone(),
-                        tasks: get_tasks(list_id)
-                            .unwrap()
-                            .iter()
-                            .map(|task| MicroComponent::new(task.to_owned().into(), ()))
-                            .collect(),
-                    },
-                    (),
-                ));
+                self.set_selected_list(list_id);
+                components.content.send(ContentMsg::ParentUpdate(self.selected_list.clone())).unwrap();
             }
         }
         true
@@ -74,6 +64,7 @@ impl AppUpdate for AppModel {
 
 pub struct AppComponents {
     sidebar: RelmComponent<SidebarModel, AppModel>,
+    content: RelmComponent<ContentModel, AppModel>,
     details: RelmComponent<DetailsModel, AppModel>,
 }
 
@@ -81,6 +72,7 @@ impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
             sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
+            content: RelmComponent::new(parent_model, parent_sender.clone()),
             details: RelmComponent::new(parent_model, parent_sender),
         }
     }
@@ -125,17 +117,11 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_hexpand: true,
                                 set_show_end_title_buttons: true,
                             },
-                            append: track!(
-                                model.changed(AppModel::selected_list()),
-                                model.selected_list.root_widget() as &gtk::Box
-                            )
+                            append: &components.content.widgets().unwrap().task_container,
                         }
                     },
                 }
             },
         }
-    }
-    fn pre_view() {
-        content_box.remove(&content_box.last_child().unwrap());
     }
 }

@@ -3,11 +3,10 @@ extern crate diesel;
 extern crate dotenv;
 
 use anyhow::Result;
-use relm4::{adw, gtk, MicroComponent, RelmApp};
+use relm4::{adw, gtk, RelmApp};
 use widgets::app::AppModel;
 
 use crate::config::set_app;
-use crate::widgets::content::ContentModel;
 
 mod config;
 mod models;
@@ -22,7 +21,7 @@ fn main() -> Result<()> {
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
     set_app()?;
-    let model = AppModel::new(MicroComponent::new(ContentModel::default(), ()));
+    let model = AppModel::new("");
     let app = RelmApp::with_app(model, application);
     app.run();
     Ok(())
