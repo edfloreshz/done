@@ -1,11 +1,11 @@
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
-use relm4::{send, Sender, WidgetPlus, ComponentUpdate, Model, Widgets};
+use relm4::{ComponentUpdate, Model, send, Sender, WidgetPlus, Widgets};
 use relm4::factory::FactoryVec;
-use crate::AppModel;
 
+use crate::AppModel;
 use crate::models::task::{Task, TaskStatus};
-use crate::services::local::tasks::{get_tasks, post_task};
+use crate::services::local::tasks::{get_tasks, patch_task, post_task};
 use crate::widgets::app::AppMsg;
 
 #[derive(Debug)]
@@ -63,6 +63,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     } else {
                         TaskStatus::NotStarted
                     };
+                    patch_task(task).expect("Failed to update task.");
                 }
             }
             ContentMsg::ParentUpdate(list_id) => {

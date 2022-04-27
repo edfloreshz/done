@@ -44,7 +44,7 @@ To initialize the database you will need `diesel_cli`, install it with:
 ### Tasks
 - [x] Add a new task
 - [x] Show tasks for every list
-- [ ] Mark a task as completed
+- [x] Mark a task as completed
 - [ ] Delete a task
 - [ ] Rename a task
 - [ ] Add steps
