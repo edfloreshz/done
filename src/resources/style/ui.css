@@ -5,3 +5,12 @@
 .counter {
     background-color: aquamarine;
 }
+
+.no-border {
+    all: unset
+}
+
+.favorite {
+    background-color: #e5a50a;
+    color: white;
+}

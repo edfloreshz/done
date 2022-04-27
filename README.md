@@ -49,7 +49,7 @@ To initialize the database you will need `diesel_cli`, install it with:
 - [ ] Rename a task
 - [ ] Add steps
 - [ ] Add to My Day
-- [ ] Mark as Favorite
+- [x] Mark as Favorite
 - [ ] Add notes
 
 ### Reminders

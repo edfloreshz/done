@@ -4,6 +4,8 @@ use libset::config::Config;
 use libset::fi;
 use std::io::Write;
 use std::process::Command;
+use gtk4::{CssProvider, StyleContext};
+use crate::adw::gdk::Display;
 
 use crate::storage::database::DatabaseConnection;
 
@@ -19,6 +21,19 @@ pub fn set_app() -> Result<()> {
         run_pending_migrations(&connection)?;
     }
     Ok(())
+}
+
+pub fn load_css() {
+    // Load the CSS file and add it to the provider
+    let provider = CssProvider::new();
+    provider.load_from_data(include_bytes!("resources/style/ui.css"));
+
+    // Add the provider to the default screen
+    StyleContext::add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &provider,
+        gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
 }
 
 fn set_dotenv() -> Result<()> {

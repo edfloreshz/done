@@ -27,6 +27,7 @@ pub enum ContentMsg {
     ParentUpdate(String),
     AddTaskEntry(String),
     SetCompleted((usize, bool)),
+    Favorite((usize, bool)),
 }
 
 impl Model for ContentModel {
@@ -83,6 +84,12 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     self.tasks.push(tasks[i].clone())
                 }
             }
+            ContentMsg::Favorite((index, favorite)) => {
+                if let Some(task) = self.tasks.get_mut(index) {
+                    task.favorite = favorite;
+                    patch_task(task).expect("Failed to update task.");
+                }
+            }
         }
     }
 }
@@ -98,7 +105,8 @@ impl Widgets<ContentModel, AppModel> for ContentWidgets {
                     add_child = &gtk::ScrolledWindow {
                         set_vexpand: true,
                         set_hexpand: true,
-                        set_child: list_box = Some(&gtk::ListBox) {
+                        set_child: list_box = Some(&gtk::Box) {
+                            set_orientation: gtk::Orientation::Vertical,
                             factory!(model.tasks)
                         }
                     },
@@ -109,7 +117,7 @@ impl Widgets<ContentModel, AppModel> for ContentWidgets {
                 set_margin_all: 12,
                 append: entry = &gtk::Entry {
                     set_hexpand: true,
-                    set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("list-add-symbolic")),
+                    set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
                     set_placeholder_text: Some("New task..."),
                     set_height_request: 42,
                     connect_activate(sender) => move |entry| {

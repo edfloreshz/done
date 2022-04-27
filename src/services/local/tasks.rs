@@ -34,6 +34,7 @@ pub fn patch_task(task: &Task) -> Result<()> {
             completed_on.eq(task.completed_on),
             due_date.eq(task.due_date),
             importance.eq(task.importance),
+            favorite.eq(task.favorite),
             is_reminder_on.eq(task.is_reminder_on),
             reminder_date.eq(task.reminder_date),
             status.eq(task.status),

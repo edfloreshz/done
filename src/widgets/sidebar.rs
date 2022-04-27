@@ -31,7 +31,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         let mut lists = vec![
             MicroComponent::new(List::new("Inbox", "mail-inbox-symbolic"), ()),
-            MicroComponent::new(List::new("Today", "daytime-sunset-symbolic"), ()),
+            MicroComponent::new(List::new("Today", "media-view-subtitles-symbolic"), ()),
             MicroComponent::new(
                 List::new("Next 7 Days", "media-view-subtitles-symbolic"),
                 (),

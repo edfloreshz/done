@@ -17,6 +17,7 @@ table! {
         completed_on -> Nullable<Text>,
         due_date -> Nullable<Text>,
         importance -> Text,
+        favorite -> Bool,
         is_reminder_on -> Bool,
         reminder_date -> Nullable<Text>,
         status -> Text,

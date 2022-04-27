@@ -4,7 +4,7 @@ use relm4::{
     adw::prelude::AdwApplicationWindowExt,
     gtk,
     gtk::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt},
-    AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
+    AppUpdate, Components, Model, RelmComponent, Sender, Widgets, WidgetPlus,
 };
 use tokio::runtime::Runtime;
 use tracker::track;

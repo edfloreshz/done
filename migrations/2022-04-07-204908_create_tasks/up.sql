@@ -11,6 +11,7 @@ create table tasks
     completed_on            text,
     due_date                text,
     importance              text    not null,
+    favorite                BOOLEAN not null,
     is_reminder_on          BOOLEAN not null,
     reminder_date           text,
     status                  text    not null,
