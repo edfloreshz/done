@@ -3,9 +3,10 @@ use diesel::{Insertable, Queryable};
 use glib::Sender;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::{MicroModel, MicroWidgets};
+use relm4::{MicroModel, MicroWidgets, send};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::widgets::sidebar::SidebarMsg;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[table_name = "lists"]
@@ -30,12 +31,18 @@ impl List {
 }
 
 impl MicroModel for List {
-    type Msg = ();
+    type Msg = SidebarMsg;
     type Widgets = ListWidgets;
     type Data = ();
 
-    fn update(&mut self, _msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
-        todo!()
+    fn update(&mut self, msg: Self::Msg, _data: &Self::Data, sender: Sender<Self::Msg>) {
+        match msg {
+            SidebarMsg::Delete(index) => {}
+            SidebarMsg::AddList(index) => {}
+            SidebarMsg::SelectList(index) => {}
+            SidebarMsg::Rename(index, name) => {},
+            SidebarMsg::UpdateCounter(index) => {}
+        }
     }
 }
 

@@ -262,7 +262,7 @@ impl FactoryPrototype for Task {
                             }
                         },
                         append: delete = &gtk::Button {
-                            add_css_class: "suggested-action",
+                            add_css_class: "opaque",
                             add_css_class: "circular",
                             set_icon_name: "view-more-symbolic"
                         }

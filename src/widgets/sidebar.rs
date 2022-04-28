@@ -5,7 +5,7 @@ use gtk4::prelude::*;
 use relm4::{gtk, send, ComponentUpdate, MicroComponent, Model, Sender, WidgetPlus, Widgets};
 
 use crate::models::list::List;
-use crate::services::local::lists::{get_lists, post_list};
+use crate::services::local::lists::{get_lists, patch_list, post_list};
 use crate::widgets::app::AppMsg;
 use crate::AppModel;
 
@@ -19,6 +19,7 @@ pub enum SidebarMsg {
     AddList(String),
     SelectList(usize),
     Rename(usize, String),
+    UpdateCounter((usize, bool))
 }
 
 impl Model for SidebarModel {
@@ -69,6 +70,15 @@ impl ComponentUpdate<AppModel> for SidebarModel {
                     .expect("Failed to get task list.");
             }
             SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}"),
+            SidebarMsg::UpdateCounter((index, add)) => {
+                let list = &mut self.lists.index(index).model_mut().unwrap();
+                if add {
+                    list.count += 1;
+                } else {
+                    list.count -= 1;
+                }
+                patch_list(list).expect("Failed to update counter.");
+            }
         }
     }
 }

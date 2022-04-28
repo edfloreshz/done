@@ -5,7 +5,7 @@ use relm4::factory::FactoryVec;
 
 use crate::AppModel;
 use crate::models::task::{Task, TaskStatus};
-use crate::services::local::tasks::{get_favorite_tasks, get_tasks, patch_task, post_task};
+use crate::services::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
 use crate::widgets::app::AppMsg;
 
 #[derive(Debug)]
@@ -73,7 +73,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     0 => vec![],
                     1 => vec![],
                     2 => vec![],
-                    3 => vec![],
+                    3 => get_all_tasks().unwrap(),
                     4 => get_favorite_tasks().unwrap(),
                     _ => get_tasks(list_id).unwrap()
                 };
