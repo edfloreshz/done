@@ -19,7 +19,7 @@ using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to i
 provided by To Do to provide the ultimate to-do experience.
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/22224438/162361232-d3d5d5b9-11ca-45e3-9c85-3bee901828d0.png"/>
+  <img src="https://user-images.githubusercontent.com/22224438/165843926-c34d2aa2-7bf4-432a-aefd-200a3ed32c77.png"/>
 </div>
 
 ## Build
