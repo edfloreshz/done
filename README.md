@@ -45,7 +45,7 @@ To initialize the database you will need `diesel_cli`, install it with:
 - [ ] Inbox
 - [ ] Today
 - [ ] Next 7 Days
-- [ ] All
+- [x] All
 - [x] Starred
 - [ ] Archived
 
