@@ -5,7 +5,7 @@ use relm4::factory::FactoryVec;
 
 use crate::AppModel;
 use crate::models::task::{Task, TaskStatus};
-use crate::services::local::tasks::{get_tasks, patch_task, post_task};
+use crate::services::local::tasks::{get_favorite_tasks, get_tasks, patch_task, post_task};
 use crate::widgets::app::AppMsg;
 
 #[derive(Debug)]
@@ -24,7 +24,7 @@ impl Default for ContentModel {
 }
 
 pub enum ContentMsg {
-    ParentUpdate(String),
+    ParentUpdate((usize, String)),
     AddTaskEntry(String),
     SetCompleted((usize, bool)),
     Favorite((usize, bool)),
@@ -67,13 +67,17 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     patch_task(task).expect("Failed to update task.");
                 }
             }
-            ContentMsg::ParentUpdate(list_id) => {
+            ContentMsg::ParentUpdate((index, list_id)) => {
                 self.list_id = list_id.clone();
-                let tasks = get_tasks(list_id)
-                        .unwrap()
-                        .iter()
-                        .map(|task| task.to_owned().into())
-                        .collect::<Vec<Task>>();
+                let tasks = match index {
+                    0 => vec![],
+                    1 => vec![],
+                    2 => vec![],
+                    3 => vec![],
+                    4 => get_favorite_tasks().unwrap(),
+                    _ => get_tasks(list_id).unwrap()
+                };
+
                 loop {
                     let task = self.tasks.pop(); // TODO: Fix pop for ListBox
                     if task.is_none() {
@@ -86,7 +90,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
             }
             ContentMsg::Favorite((index, favorite)) => {
                 if let Some(task) = self.tasks.get_mut(index) {
-                    task.favorite = favorite;
+                    task.set_favorite(favorite);
                     patch_task(task).expect("Failed to update task.");
                 }
             }

@@ -7,7 +7,7 @@
 }
 
 .no-border {
-    all: unset
+    all: unset;
 }
 
 .favorite {

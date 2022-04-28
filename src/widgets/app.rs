@@ -32,7 +32,7 @@ impl AppModel {
 
 pub enum AppMsg {
     Login,
-    ListSelected(String),
+    ListSelected((usize, String)),
 }
 
 impl Model for AppModel {
@@ -53,9 +53,9 @@ impl AppUpdate for AppModel {
             AppMsg::Login => {
                 println!("Login...")
             }
-            AppMsg::ListSelected(list_id) => {
+            AppMsg::ListSelected((index, list_id)) => {
                 self.set_selected_list(list_id);
-                components.content.send(ContentMsg::ParentUpdate(self.selected_list.clone())).unwrap();
+                components.content.send(ContentMsg::ParentUpdate((index, self.selected_list.clone()))).unwrap();
             }
         }
         true

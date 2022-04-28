@@ -111,7 +111,7 @@ impl From<QueryableTask> for Task {
             completed_on: task.completed_on,
             due_date: task.due_date,
             importance: TaskImportance::from_importance_str(task.importance.as_str()),
-            favorite: task.favorite, // TODO: Get favorite from db
+            favorite: task.favorite,
             is_reminder_on: task.is_reminder_on,
             reminder_date: task.reminder_date,
             status: TaskStatus::from_status_str(task.status.as_str()),

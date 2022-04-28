@@ -30,14 +30,14 @@ impl Model for SidebarModel {
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         let mut lists = vec![
-            MicroComponent::new(List::new("Inbox", "mail-inbox-symbolic"), ()),
-            MicroComponent::new(List::new("Today", "media-view-subtitles-symbolic"), ()),
+            MicroComponent::new(List::new("Inbox", "document-save-symbolic"), ()),
+            MicroComponent::new(List::new("Today", "display-brightness-symbolic"), ()),
             MicroComponent::new(
-                List::new("Next 7 Days", "media-view-subtitles-symbolic"),
+                List::new("Next 7 Days", "x-office-calendar-symbolic"),
                 (),
             ),
-            MicroComponent::new(List::new("All", "view-list-symbolic"), ()),
-            MicroComponent::new(List::new("Starred", "starred-symbolic"), ()),
+            MicroComponent::new(List::new("All", "edit-paste-symbolic"), ()),
+            MicroComponent::new(List::new("Starred", "non-starred-symbolic"), ()),
             MicroComponent::new(List::new("Archived", "folder-symbolic"), ()),
         ];
         let fe = &mut get_lists()
@@ -65,7 +65,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
             SidebarMsg::SelectList(i) => {
                 let id_list = &self.lists.index(i).model_mut().unwrap().id_list;
                 parent_sender
-                    .send(AppMsg::ListSelected(id_list.to_owned()))
+                    .send(AppMsg::ListSelected((i, id_list.to_owned())))
                     .expect("Failed to get task list.");
             }
             SidebarMsg::Rename(i, name) => println!("Renaming list at index {i} to {name}"),
