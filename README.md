@@ -19,7 +19,7 @@ using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to i
 provided by To Do to provide the ultimate to-do experience.
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/22224438/165843926-c34d2aa2-7bf4-432a-aefd-200a3ed32c77.png"/>
+  <img src="https://user-images.githubusercontent.com/22224438/165844482-cc09cb8a-8034-466e-8958-284511127232.png"/>
 </div>
 
 ## Build
@@ -40,6 +40,14 @@ To initialize the database you will need `diesel_cli`, install it with:
 - [x] Add a new list
 - [ ] Delete an existing list
 - [ ] Rename an existing list
+
+### Smart Lists
+- [ ] Inbox
+- [ ] Today
+- [ ] Next 7 Days
+- [ ] All
+- [x] Starred
+- [ ] Archived
 
 ### Tasks
 - [x] Add a new task
