@@ -22,6 +22,11 @@ provided by To Do to provide the ultimate to-do experience.
   <img src="https://user-images.githubusercontent.com/22224438/165844482-cc09cb8a-8034-466e-8958-284511127232.png"/>
 </div>
 
+## Install
+| Platform   | Command          |
+|------------|------------------|
+| Arch Linux | `paru -S do-git` |
+
 ## Build
 
 To initialize the database you will need `diesel_cli`, install it with:

@@ -8,9 +8,7 @@ use crate::storage::database::DatabaseConnection;
 pub fn get_all_tasks() -> Result<Vec<Task>> {
     let connection = DatabaseConnection::establish_connection();
     let results = tasks.load::<QueryableTask>(&connection)?;
-    let results: Vec<Task> = results.iter()
-        .map(|task| task.to_owned().into())
-        .collect();
+    let results: Vec<Task> = results.iter().map(|task| task.to_owned().into()).collect();
     Ok(results)
 }
 
@@ -19,9 +17,7 @@ pub fn get_tasks(list_id: String) -> Result<Vec<Task>> {
     let results = tasks
         .filter(id_list.eq(list_id))
         .load::<QueryableTask>(&connection)?;
-    let results: Vec<Task> = results.iter()
-        .map(|task| task.to_owned().into())
-        .collect();
+    let results: Vec<Task> = results.iter().map(|task| task.to_owned().into()).collect();
     Ok(results)
 }
 
@@ -30,9 +26,7 @@ pub fn get_favorite_tasks() -> Result<Vec<Task>> {
     let results = tasks
         .filter(favorite.eq(true))
         .load::<QueryableTask>(&connection)?;
-    let results: Vec<Task> = results.iter()
-        .map(|task| task.to_owned().into())
-        .collect();
+    let results: Vec<Task> = results.iter().map(|task| task.to_owned().into()).collect();
     Ok(results)
 }
 
@@ -48,8 +42,7 @@ pub fn post_task(list_id: String, name: String) -> Result<()> {
 pub fn patch_task(task: &Task) -> Result<()> {
     let connection = DatabaseConnection::establish_connection();
     let task: QueryableTask = task.to_owned().into();
-    diesel::update(tasks
-        .filter(id_task.eq(task.id_task)))
+    diesel::update(tasks.filter(id_task.eq(task.id_task)))
         .set((
             id_list.eq(task.id_list),
             title.eq(task.title),

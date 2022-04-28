@@ -4,7 +4,7 @@ use relm4::{
     adw::prelude::AdwApplicationWindowExt,
     gtk,
     gtk::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt},
-    AppUpdate, Components, Model, RelmComponent, Sender, Widgets, WidgetPlus,
+    AppUpdate, Components, Model, RelmComponent, Sender, WidgetPlus, Widgets,
 };
 use tokio::runtime::Runtime;
 use tracker::track;
@@ -55,7 +55,13 @@ impl AppUpdate for AppModel {
             }
             AppMsg::ListSelected((index, list_id)) => {
                 self.set_selected_list(list_id);
-                components.content.send(ContentMsg::ParentUpdate((index, self.selected_list.clone()))).unwrap();
+                components
+                    .content
+                    .send(ContentMsg::ParentUpdate((
+                        index,
+                        self.selected_list.clone(),
+                    )))
+                    .unwrap();
             }
         }
         true

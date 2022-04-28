@@ -1,12 +1,12 @@
 use crate::schema::lists;
+use crate::widgets::sidebar::SidebarMsg;
 use diesel::{Insertable, Queryable};
 use glib::Sender;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::{MicroModel, MicroWidgets, send};
+use relm4::{send, MicroModel, MicroWidgets};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::widgets::sidebar::SidebarMsg;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[table_name = "lists"]
@@ -40,7 +40,7 @@ impl MicroModel for List {
             SidebarMsg::Delete(index) => {}
             SidebarMsg::AddList(index) => {}
             SidebarMsg::SelectList(index) => {}
-            SidebarMsg::Rename(index, name) => {},
+            SidebarMsg::Rename(index, name) => {}
             SidebarMsg::UpdateCounter(index) => {}
         }
     }

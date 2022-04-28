@@ -19,7 +19,7 @@ pub enum SidebarMsg {
     AddList(String),
     SelectList(usize),
     Rename(usize, String),
-    UpdateCounter((usize, bool))
+    UpdateCounter((usize, bool)),
 }
 
 impl Model for SidebarModel {
@@ -33,10 +33,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         let mut lists = vec![
             MicroComponent::new(List::new("Inbox", "document-save-symbolic"), ()),
             MicroComponent::new(List::new("Today", "display-brightness-symbolic"), ()),
-            MicroComponent::new(
-                List::new("Next 7 Days", "x-office-calendar-symbolic"),
-                (),
-            ),
+            MicroComponent::new(List::new("Next 7 Days", "x-office-calendar-symbolic"), ()),
             MicroComponent::new(List::new("All", "edit-paste-symbolic"), ()),
             MicroComponent::new(List::new("Starred", "non-starred-symbolic"), ()),
             MicroComponent::new(List::new("Archived", "folder-symbolic"), ()),

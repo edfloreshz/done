@@ -1,11 +1,10 @@
 #[macro_use]
 extern crate diesel;
-extern crate dotenv;
 
+use crate::adw::prelude::ApplicationExt;
 use anyhow::Result;
 use relm4::{adw, gtk, RelmApp};
 use widgets::app::AppModel;
-use crate::adw::prelude::ApplicationExt;
 
 use crate::config::{load_css, set_app};
 

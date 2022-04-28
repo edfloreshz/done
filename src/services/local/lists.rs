@@ -2,8 +2,8 @@ use anyhow::Result;
 use diesel::prelude::*;
 
 use crate::models::list::List;
-use crate::storage::database::DatabaseConnection;
 use crate::schema::lists::dsl::*;
+use crate::storage::database::DatabaseConnection;
 
 pub fn get_lists() -> Result<Vec<List>> {
     let connection = DatabaseConnection::establish_connection();
@@ -23,13 +23,12 @@ pub fn post_list(name: String) -> Result<List> {
 pub fn patch_list(list: &List) -> Result<()> {
     let connection = DatabaseConnection::establish_connection();
     let list = list.to_owned();
-    diesel::update(lists
-        .filter(id_list.eq(list.id_list)))
+    diesel::update(lists.filter(id_list.eq(list.id_list)))
         .set((
             display_name.eq(list.display_name),
             is_owner.eq(list.is_owner),
             count.eq(list.count),
-            icon_name.eq(list.icon_name)
+            icon_name.eq(list.icon_name),
         ))
         .execute(&connection)?;
     Ok(())

@@ -1,21 +1,14 @@
 use diesel::{Insertable, Queryable};
 use glib::Sender;
 use gtk4::prelude::{EntryExt, ListBoxRowExt};
+use relm4::factory::{FactoryPrototype, FactoryVec, FactoryView};
 use relm4::{
     gtk,
     gtk::prelude::{
-        BoxExt,
-        CheckButtonExt,
-        OrientableExt,
-        EditableExt,
-        WidgetExt,
-        ButtonExt,
-        ToggleButtonExt
+        BoxExt, ButtonExt, CheckButtonExt, EditableExt, OrientableExt, ToggleButtonExt, WidgetExt,
     },
-    send,
-    WidgetPlus
+    send, WidgetPlus,
 };
-use relm4::factory::{FactoryPrototype, FactoryVec, FactoryView};
 use relm4_macros::view;
 use uuid::Uuid;
 
@@ -96,7 +89,7 @@ impl Task {
             status: Default::default(),
             created_date_time: "".to_string(),
             last_modified_date_time: "".to_string(),
-            tracker: 0
+            tracker: 0,
         }
     }
 }
@@ -117,7 +110,7 @@ impl From<QueryableTask> for Task {
             status: TaskStatus::from_status_str(task.status.as_str()),
             created_date_time: task.created_date_time,
             last_modified_date_time: task.last_modified_date_time,
-            tracker: 0
+            tracker: 0,
         }
     }
 }
@@ -211,7 +204,7 @@ pub enum TaskMsg {
 #[derive(Debug)]
 pub struct TaskWidgets {
     label: gtk::Entry,
-    row: gtk::ListBoxRow
+    row: gtk::ListBoxRow,
 }
 
 impl FactoryPrototype for Task {
@@ -221,7 +214,8 @@ impl FactoryPrototype for Task {
     type View = gtk::Box;
     type Msg = ContentMsg;
 
-    fn init_view(&self, key: &usize, sender: Sender<Self::Msg>) -> Self::Widgets { let index = *key;
+    fn init_view(&self, key: &usize, sender: Sender<Self::Msg>) -> Self::Widgets {
+        let index = *key;
         view! {
             row = &gtk::ListBoxRow {
                 set_selectable: false,
@@ -270,19 +264,17 @@ impl FactoryPrototype for Task {
                 }
             }
         }
-        TaskWidgets {
-            label,
-            row
-        }
+        TaskWidgets { label, row }
     }
 
     fn position(&self, _key: &usize) -> <Self::View as FactoryView<Self::Root>>::Position {}
 
     fn view(&self, _key: &usize, widgets: &Self::Widgets) {
         let attrs = widgets.label.attributes().unwrap_or_default();
-        attrs.change(gtk::pango::AttrInt::new_strikethrough(
-            matches!(self.status, TaskStatus::Completed))
-        );
+        attrs.change(gtk::pango::AttrInt::new_strikethrough(matches!(
+            self.status,
+            TaskStatus::Completed
+        )));
         widgets.label.set_attributes(&attrs);
     }
 

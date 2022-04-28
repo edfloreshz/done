@@ -1,11 +1,13 @@
+use crate::adw::gdk::Display;
 use anyhow::{Context, Result};
 use diesel_migrations::{any_pending_migrations, run_pending_migrations};
+use gtk4::{CssProvider, StyleContext};
 use libset::config::Config;
 use libset::fi;
 use std::io::Write;
 use std::process::Command;
-use gtk4::{CssProvider, StyleContext};
-use crate::adw::gdk::Display;
+
+const DEBUG_MODE: bool = cfg!(debug_assertions);
 
 use crate::storage::database::DatabaseConnection;
 
@@ -13,15 +15,29 @@ pub fn set_app() -> Result<()> {
     let config = get_config();
     if !config.is_written() {
         config.write()?;
-        Command::new("diesel").args(["migration", "run"]).output()?;
+        if DEBUG_MODE {
+            Command::new("diesel").args(["migration", "run"]).output()?;
+        }
     }
-    set_dotenv()?;
-    let connection = DatabaseConnection::establish_connection();
-    if any_pending_migrations(&connection)? {
-        run_pending_migrations(&connection)?;
+    if DEBUG_MODE {
+        set_dotenv()?;
+        let connection = DatabaseConnection::establish_connection();
+        if any_pending_migrations(&connection)? {
+            run_pending_migrations(&connection)?;
+        }
     }
     Ok(())
 }
+
+fn set_dotenv() -> Result<()> {
+    let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
+    let data = dirs::data_dir().with_context(|| "")?;
+    let data = data.join("do/do.db");
+    let url = format!("DATABASE_URL={}", data.display().to_string().replace(" ", "\\ "));
+    file.write_all(url.as_bytes())?;
+    Ok(())
+}
+
 
 pub fn load_css() {
     // Load the CSS file and add it to the provider
@@ -34,15 +50,6 @@ pub fn load_css() {
         &provider,
         gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
-}
-
-fn set_dotenv() -> Result<()> {
-    let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
-    let home = dirs::home_dir().with_context(|| "")?;
-    let home = home.display();
-    let url = format!("DATABASE_URL={home}/.local/share/do/do.db");
-    file.write_all(url.as_bytes())?;
-    Ok(())
 }
 
 fn get_config() -> Config {

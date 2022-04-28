@@ -1,12 +1,14 @@
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
-use relm4::{ComponentUpdate, Model, send, Sender, WidgetPlus, Widgets};
 use relm4::factory::FactoryVec;
+use relm4::{send, ComponentUpdate, Model, Sender, WidgetPlus, Widgets};
 
-use crate::AppModel;
 use crate::models::task::{Task, TaskStatus};
-use crate::services::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
+use crate::services::local::tasks::{
+    get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
+};
 use crate::widgets::app::AppMsg;
+use crate::AppModel;
 
 #[derive(Debug)]
 pub struct ContentModel {
@@ -45,12 +47,18 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     .unwrap()
                     .iter()
                     .map(|task| task.to_owned().into())
-                    .collect()
-            )
+                    .collect(),
+            ),
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, _parent_sender: Sender<AppMsg>) {
+    fn update(
+        &mut self,
+        msg: Self::Msg,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
+        _parent_sender: Sender<AppMsg>,
+    ) {
         let id = &self.list_id.to_owned();
         match msg {
             ContentMsg::AddTaskEntry(title) => {
@@ -75,13 +83,13 @@ impl ComponentUpdate<AppModel> for ContentModel {
                     2 => vec![],
                     3 => get_all_tasks().unwrap(),
                     4 => get_favorite_tasks().unwrap(),
-                    _ => get_tasks(list_id).unwrap()
+                    _ => get_tasks(list_id).unwrap(),
                 };
 
                 loop {
                     let task = self.tasks.pop(); // TODO: Fix pop for ListBox
                     if task.is_none() {
-                        break
+                        break;
                     }
                 }
                 for (i, _) in tasks.iter().enumerate() {
