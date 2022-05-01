@@ -1,6 +1,7 @@
+use std::collections::VecDeque;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
-use relm4::factory::FactoryVec;
+use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{send, ComponentUpdate, Model, Sender, WidgetPlus, Widgets};
 
 use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
@@ -14,7 +15,7 @@ pub struct ContentModel {
     pub id_list: String,
     pub index: usize,
     #[no_eq]
-    pub tasks: FactoryVec<Task>,
+    pub tasks: FactoryVecDeque<Task>,
 }
 
 impl Default for ContentModel {
@@ -22,7 +23,7 @@ impl Default for ContentModel {
         Self {
             id_list: "".to_string(),
             index: 0,
-            tasks: FactoryVec::from_vec(vec![]),
+            tasks: FactoryVecDeque::from_vec_deque(VecDeque::new()),
             tracker: 0
         }
     }
@@ -30,9 +31,10 @@ impl Default for ContentModel {
 
 pub enum ContentMsg {
     AddTaskEntry(String),
-    RemoveTask(usize),
-    SetTaskCompleted(usize, bool),
-    SetTaskFavorite(usize, bool),
+    RemoveTask(DynamicIndex),
+    SetTaskCompleted(DynamicIndex, bool),
+    SetTaskFavorite(DynamicIndex, bool),
+    ModifyTaskTitle(DynamicIndex, String),
     UpdateWidgetData(usize, String),
 }
 
@@ -48,7 +50,7 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
         Self {
             id_list: id_list.clone(),
             index,
-            tasks: FactoryVec::from_vec(
+            tasks: FactoryVecDeque::from_vec_deque(
                 get_tasks(id_list)
                     .unwrap()
                     .iter()
@@ -71,17 +73,19 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
         match msg {
             ContentMsg::AddTaskEntry(title) => {
                 post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks.push(Task::new(title, id.to_owned()));
+                self.tasks.push_back(Task::new(title, id.to_owned()));
                 send!(parent_sender, SidebarMsg::UpdateCounters)
             }
             ContentMsg::RemoveTask(index) => {
+                let index = index.current_index();
                 if let Some(task) = self.tasks.get(index) {
                     delete_task(&task.id_task).expect("Failed to update task.");
-                    // TODO: Find a way to delete a task.
+                    self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
                     send!(parent_sender, SidebarMsg::UpdateCounters)
                 }
             }
             ContentMsg::SetTaskCompleted(index, completed) => {
+                let index = index.current_index();
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.status = if completed {
                         TaskStatus::Completed
@@ -104,19 +108,30 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
                 };
 
                 loop {
-                    let task = self.tasks.pop(); // TODO: Fix pop for ListBox
+                    let task = self.tasks.pop_front();
                     if task.is_none() {
                         break;
                     }
                 }
                 for (i, _) in tasks.iter().enumerate() {
-                    self.tasks.push(tasks[i].clone())
+                    self.tasks.push_back(tasks[i].clone())
+                }
+            }
+            ContentMsg::ModifyTaskTitle(index, title) => {
+                let index = index.current_index();
+                if let Some(task) = self.tasks.get_mut(index) {
+                    task.set_title(title);
+                    patch_task(task.into()).expect("Failed to update task.");
                 }
             }
             ContentMsg::SetTaskFavorite(index, favorite) => {
+                let index = index.current_index();
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.set_favorite(favorite);
                     patch_task(task.into()).expect("Failed to update task.");
+                    if self.index == 4 {
+                        self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
+                    }
                     send!(parent_sender, SidebarMsg::UpdateCounters)
                 }
             }

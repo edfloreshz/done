@@ -11,8 +11,8 @@ repository = "https://github.com/edfloreshz/do/"
 readme = "README.md"
 
 [[bin]]
-name = "todo"
-path = "src/main.rs"
+name="todo"
+path="src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

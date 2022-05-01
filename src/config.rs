@@ -1,36 +1,20 @@
-use std::fmt::format;
 use crate::adw::gdk::Display;
 use anyhow::{Context, Result};
-use diesel_migrations::{any_pending_migrations, run_pending_migrations, run_pending_migrations_in_directory};
+
 use gtk4::{CssProvider, StyleContext};
 use libset::config::Config;
 use libset::fi;
 use std::io::Write;
-use std::path::Path;
-
-const DEBUG_MODE: bool = cfg!(debug_assertions);
-
-use crate::storage::database::DatabaseConnection;
 
 pub fn set_debug_options() -> Result<()> {
-    let config = get_config();
-    let user_bd = format!("{}/do/com.devloop.do.db", dirs::data_dir().unwrap().display());
-    let connection = DatabaseConnection::establish_connection();
-    if !config.is_written() || !Path::new(user_bd.as_str()).exists() {
-        config.write()?;
-        std::fs::copy("/usr/share/do/com.devloop.do.db", user_bd)?;
-    }
-    if DEBUG_MODE && any_pending_migrations(&connection)? {
-        set_dotenv()?;
-        run_pending_migrations(&connection)?;
-    }
+    set_dotenv()?;
     Ok(())
 }
 
 fn set_dotenv() -> Result<()> {
     let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
     let data = dirs::data_dir().with_context(|| "")?;
-    let data = data.join("do/com.devloop.do.db");
+    let data = data.join("do/org.devloop.Do.db");
     let url = format!(
         "DATABASE_URL={}",
         data.display().to_string().replace(' ', "\\ ")
@@ -57,5 +41,6 @@ fn get_config() -> Config {
         .about("Do is a To Do app for Linux built with Rust and GTK.")
         .author("Eduardo Flores")
         .version("0.1.0")
-        .add(fi!("com.devloop.do.db"))
+        .add(fi!("org.devloop.Do.db"))
 }
+

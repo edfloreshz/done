@@ -48,7 +48,7 @@ impl Components<SidebarModel> for SidebarComponents {
 }
 
 impl ComponentUpdate<AppModel> for SidebarModel {
-    fn init_model(_parent_model: &AppModel) -> Self {
+    fn init_model(_: &AppModel) -> Self {
         let mut lists = vec![
             List::new_mc("Inbox", "document-save-symbolic", 0),
             List::new_mc("Today", "display-brightness-symbolic", 0),
@@ -58,6 +58,23 @@ impl ComponentUpdate<AppModel> for SidebarModel {
             List::new_mc("Archived", "folder-symbolic", 0),
         ];
         lists.append(&mut get_lists().unwrap());
+        { // TODO: Fix COUNT trigger to remove this code.
+            for (index, list) in lists.iter().enumerate() {
+                let mut model = list.model_mut().unwrap();
+                let id_list = &model.id_list;
+                let count = match index {
+                    0 => 0,
+                    1 => 0,
+                    2 => 0,
+                    3 => get_all_tasks().unwrap().len(),
+                    4 => get_favorite_tasks().unwrap().len(),
+                    _ => get_tasks(id_list.to_owned()).unwrap().len(),
+                };
+                model.set_count(count as i32);
+                drop(model);
+                list.update_view().unwrap();
+            }
+        }
         SidebarModel {
             lists,
             selected_list: Default::default(),

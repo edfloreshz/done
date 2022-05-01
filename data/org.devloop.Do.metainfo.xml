@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Eduardo Flores 2022 <edfloreshz@gmail.com> -->
+<component type="desktop-application">
+  <id>org.devloop.Do</id>
+  <metadata_license>CC0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <name>GNOME Do</name>
+  <summary>Do is a rewrite of Gnome To Do in Rust.</summary>
+  <description>
+    <p>Do is a rewrite of Gnome To Do in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by To Do to provide the ultimate to-do experience.</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://user-images.githubusercontent.com/22224438/166165400-5a523df1-b818-4172-9e05-b62662960c31.png</image>
+      <caption>Main Window</caption>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://do.edfloreshz.dev/</url>
+<!--
+Open Age Rating Service
+https://hughsie.github.io/oars/index.html
+-->
+  <content_rating type="oars-1.0" />
+  <releases>
+    <release version="0.1.2" date="2022-05-04">
+      <description>
+        <p>First release of GNOME Do</p>
+      </description>
+    </release>
+  </releases>
+  <kudos>
+    <!--
+    GNOME Software kudos:
+    https://gitlab.gnome.org/GNOME/gnome-software/blob/master/doc/kudos.md
+    -->
+    <kudo>ModernToolkit</kudo>
+    <kudo>HiDpiIcon</kudo>
+  </kudos>
+  <developer_name>Eduardo Flores</developer_name>
+  <update_contact>edfloreshz@gmail.com</update_contact>
+
+  <launchable type="desktop-id">org.devloop.Do.desktop</launchable>
+</component>

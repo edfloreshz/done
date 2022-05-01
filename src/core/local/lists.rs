@@ -12,7 +12,9 @@ pub fn get_lists() -> Result<Vec<MicroComponent<List>>> {
     let results = lists.load::<QueryableList>(&connection)?;
     let results: Vec<MicroComponent<List>> = results
         .into_iter()
-        .map(|r| MicroComponent::new(r.into(), ()))
+        .map(|ql| MicroComponent::new(
+            ql.into(), ()
+        ))
         .collect();
     Ok(results)
 }

@@ -17,7 +17,7 @@ mod widgets;
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
-        .application_id("org.devloop.do")
+        .application_id("org.devloop.Do")
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
     application.connect_startup(|_| load_css());

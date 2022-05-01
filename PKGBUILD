@@ -1,7 +1,7 @@
 # Maintainer: Eduardo Flores <edfloreshz@gmail.com>
 
 pkgname=do-git
-pkgrel=6
+pkgrel=7
 pkgver=0.1.2
 pkgdesc="Do is a to-do app built for Linux with Rust and GTK."
 arch=('x86_64')
@@ -27,11 +27,11 @@ build() {
 
 package() {
 	cd "$pkgname"
-	install -Dm644 src/resources/desktop/com.devloop.do.desktop "$pkgdir/usr/share/applications/com.devloop.do.desktop"
-	install -Dm644 src/resources/icons/com.devloop.do.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/com.devloop.do.svg"
-	install -Dm644 src/resources/icons/com.devloop.do.svg "$pkgdir/usr/share/icons/hicolor/256x256/apps/com.devloop.do.svg"
-	install -Dm644 src/resources/icons/com.devloop.do.svg "$pkgdir/usr/share/icons/hicolor/256x256/apps/com.devloop.do.svg"
-	install -Dm644 src/resources/database/com.devloop.do.db "$pkgdir/usr/share/do/com.devloop.do.db"
+	install -Dm644 data/org.devloop.Do.desktop "$pkgdir/usr/share/applications/org.devloop.Do.desktop"
+	install -Dm644 data/org.devloop.Do.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.devloop.Do.svg"
+	install -Dm644 data/org.devloop.Do.svg "$pkgdir/usr/share/icons/hicolor/256x256/apps/org.devloop.Do.svg"
+	install -Dm644 data/org.devloop.Do.svg "$pkgdir/usr/share/icons/hicolor/256x256/apps/org.devloop.Do.svg"
+	install -Dm644 data/org.devloop.Do.db "$pkgdir/usr/share/do/org.devloop.Do.db"
 	cp -r migrations "$pkgdir/usr/share/do"
 	install -Dm644 README.md "$pkgdir/usr/share/doc/do/README.md"
 	install -Dm755 target/release/todo "$pkgdir/usr/bin/todo"
