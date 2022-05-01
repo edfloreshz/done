@@ -3,16 +3,17 @@ use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, Widge
 use relm4::factory::FactoryVec;
 use relm4::{send, ComponentUpdate, Model, Sender, WidgetPlus, Widgets};
 
-use crate::core::local::tasks::{
-    get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
-};
+use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
 use crate::widgets::sidebar::{SidebarModel, SidebarMsg};
 use crate::widgets::task::{Task, TaskStatus};
+use tracker::track;
 
+#[track]
 #[derive(Debug)]
 pub struct ContentModel {
     pub id_list: String,
     pub index: usize,
+    #[no_eq]
     pub tasks: FactoryVec<Task>,
 }
 
@@ -22,15 +23,17 @@ impl Default for ContentModel {
             id_list: "".to_string(),
             index: 0,
             tasks: FactoryVec::from_vec(vec![]),
+            tracker: 0
         }
     }
 }
 
 pub enum ContentMsg {
-    UpdateContent((usize, String)),
     AddTaskEntry(String),
-    SetCompleted((usize, bool)),
-    Favorite((usize, bool)),
+    RemoveTask(usize),
+    SetTaskCompleted(usize, bool),
+    SetTaskFavorite(usize, bool),
+    UpdateWidgetData(usize, String),
 }
 
 impl Model for ContentModel {
@@ -52,6 +55,7 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
                     .map(|task| task.to_owned().into())
                     .collect(),
             ),
+            tracker: 0
         }
     }
 
@@ -62,14 +66,22 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
         _sender: Sender<Self::Msg>,
         parent_sender: Sender<SidebarMsg>,
     ) {
+        self.reset();
         let id = &self.id_list;
         match msg {
             ContentMsg::AddTaskEntry(title) => {
                 post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
                 self.tasks.push(Task::new(title, id.to_owned()));
-                send!(parent_sender, SidebarMsg::IncreaseCounter(self.index))
+                send!(parent_sender, SidebarMsg::UpdateCounters)
             }
-            ContentMsg::SetCompleted((index, completed)) => {
+            ContentMsg::RemoveTask(index) => {
+                if let Some(task) = self.tasks.get(index) {
+                    delete_task(&task.id_task).expect("Failed to update task.");
+                    // TODO: Find a way to delete a task.
+                    send!(parent_sender, SidebarMsg::UpdateCounters)
+                }
+            }
+            ContentMsg::SetTaskCompleted(index, completed) => {
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.status = if completed {
                         TaskStatus::Completed
@@ -79,8 +91,9 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
                     patch_task(task.into()).expect("Failed to update task.");
                 }
             }
-            ContentMsg::UpdateContent((index, id_list)) => {
-                self.id_list = id_list.clone();
+            ContentMsg::UpdateWidgetData(index, id_list) => {
+                self.set_id_list(id_list.clone());
+                self.set_index(index);
                 let tasks = match index {
                     0 => vec![],
                     1 => vec![],
@@ -100,10 +113,11 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
                     self.tasks.push(tasks[i].clone())
                 }
             }
-            ContentMsg::Favorite((index, favorite)) => {
+            ContentMsg::SetTaskFavorite(index, favorite) => {
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.set_favorite(favorite);
                     patch_task(task.into()).expect("Failed to update task.");
+                    send!(parent_sender, SidebarMsg::UpdateCounters)
                 }
             }
         }
@@ -133,6 +147,7 @@ impl Widgets<ContentModel, SidebarModel> for ContentWidgets {
                 set_margin_all: 12,
                 append: entry = &gtk::Entry {
                     set_hexpand: true,
+                    set_visible: track!(model.changed(ContentModel::index()), model.index > 5),
                     set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
                     set_placeholder_text: Some("New task..."),
                     set_height_request: 42,

@@ -42,7 +42,6 @@ pub fn post_task(list_id: String, name: String) -> Result<()> {
 
 pub fn patch_task(task: QueryableTask) -> Result<()> {
     let connection = DatabaseConnection::establish_connection();
-    println!("{}", task.status.as_ref().unwrap());
     diesel::update(tasks.filter(id_task.eq(task.id_task)))
         .set((
             id_list.eq(task.id_list),
@@ -59,5 +58,11 @@ pub fn patch_task(task: QueryableTask) -> Result<()> {
             last_modified_date_time.eq(task.last_modified_date_time),
         ))
         .execute(&connection)?;
+    Ok(())
+}
+
+pub fn delete_task(task_id: &String) -> anyhow::Result<()> {
+    let connection = DatabaseConnection::establish_connection();
+    diesel::delete(tasks.filter(id_task.eq(task_id))).execute(&connection)?;
     Ok(())
 }

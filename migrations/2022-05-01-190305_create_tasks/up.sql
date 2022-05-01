@@ -7,16 +7,16 @@ create table tasks
         constraint tasks_lists_fk
             references lists(id_list),
     title                   text    not null,
-    body                    text    not null,
+    body                    text,
     completed_on            text,
     due_date                text,
-    importance              text    default 'normal' not null,
+    importance              text    default 'normal',
     favorite                BOOLEAN default false not null,
     is_reminder_on          BOOLEAN default false not null,
     reminder_date           text,
-    status                  text    default 'notStarted' not null,
-    created_date_time       text    default CURRENT_TIMESTAMP not null,
-    last_modified_date_time text    default CURRENT_TIMESTAMP not null
+    status                  text    default 'notStarted',
+    created_date_time       text    default CURRENT_TIMESTAMP,
+    last_modified_date_time text    default CURRENT_TIMESTAMP
 );
 
 create unique index tasks_id_task_uindex

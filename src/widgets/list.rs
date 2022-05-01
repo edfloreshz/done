@@ -1,9 +1,8 @@
 use crate::models::list::QueryableList;
-use crate::widgets::sidebar::SidebarMsg;
 use glib::Sender;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::{MicroModel, MicroWidgets};
+use relm4::{MicroComponent, MicroModel, MicroWidgets};
 use uuid::Uuid;
 
 #[tracker::track]
@@ -13,19 +12,27 @@ pub struct List {
     pub display_name: String,
     pub is_owner: bool,
     pub count: i32,
-    pub icon_name: String,
+    pub icon_name: Option<String>,
 }
 
 impl List {
     pub fn new(display_name: &str, icon_name: &str, count: i32) -> Self {
+        let icon_name = if icon_name.is_empty() {
+            None
+        } else {
+            Some(icon_name.to_string())
+        };
         Self {
             id_list: Uuid::new_v4().to_string(),
             display_name: display_name.to_string(),
             is_owner: true,
             count,
-            icon_name: icon_name.to_string(),
+            icon_name,
             tracker: 0,
         }
+    }
+    pub fn new_mc(display_name: &str, icon_name: &str, count: i32) -> MicroComponent<List> {
+        MicroComponent::new(List::new(display_name, icon_name, count), ())
     }
 }
 
@@ -56,22 +63,12 @@ impl From<&QueryableList> for List {
 }
 
 impl MicroModel for List {
-    type Msg = SidebarMsg;
+    type Msg = ();
     type Widgets = ListWidgets;
     type Data = ();
 
-    fn update(&mut self, msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
+    fn update(&mut self, _msg: Self::Msg, _data: &Self::Data, _sender: Sender<Self::Msg>) {
         self.reset();
-        match msg {
-            SidebarMsg::Delete(_) => {}
-            SidebarMsg::AddList(_) => {}
-            SidebarMsg::ListSelected(_) => {
-                println!("MicroComponentUpdate")
-            }
-            SidebarMsg::Rename(_, _) => {}
-            SidebarMsg::IncreaseCounter(_) => {}
-            SidebarMsg::DecreaseCounter(_) => {}
-        }
     }
 }
 
@@ -82,7 +79,7 @@ impl MicroWidgets<List> for ListWidgets {
         smart_list_box = &gtk::Box {
             set_orientation: gtk::Orientation::Horizontal,
             append: icon = &gtk::Image {
-                set_from_icon_name: Some(model.icon_name.as_str())
+                set_from_icon_name: Some(&model.icon_name.as_ref().unwrap())
             },
             append: name = &gtk::Label {
                 set_halign: gtk::Align::Start,

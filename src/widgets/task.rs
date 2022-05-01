@@ -129,7 +129,7 @@ impl Display for TaskStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             TaskStatus::NotStarted => write!(f, "notStarted"),
-            TaskStatus::Completed => write!(f, "Completed"),
+            TaskStatus::Completed => write!(f, "completed"),
         }
     }
 }
@@ -139,7 +139,7 @@ impl FromStr for TaskStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "notStarted" => Ok(TaskStatus::NotStarted),
+            "notstarted" => Ok(TaskStatus::NotStarted),
             "completed" => Ok(TaskStatus::Completed),
             _ => Err(())
         }
@@ -175,14 +175,14 @@ impl FactoryPrototype for Task {
                 set_child = Some(&gtk::Box) {
                     set_orientation: gtk::Orientation::Horizontal,
                     set_spacing: 5,
-                    set_margin_top: 5,
-                    set_margin_bottom: 5,
+                    set_margin_top: 10,
+                    set_margin_bottom: 10,
                     set_margin_start: 30,
                     set_margin_end: 30,
                     append = &gtk::CheckButton {
                         set_active: self.status.as_bool(),
                         connect_toggled(sender) => move |checkbox| {
-                            send!(sender, ContentMsg::SetCompleted((index, checkbox.is_active())));
+                            send!(sender, ContentMsg::SetTaskCompleted(index, checkbox.is_active()));
                         }
                     },
                     append = &gtk::Box {
@@ -205,13 +205,16 @@ impl FactoryPrototype for Task {
                                 } else {
                                     button.remove_css_class("favorite");
                                 }
-                                send!(sender, ContentMsg::Favorite((index, button.is_active())));
+                                send!(sender, ContentMsg::SetTaskFavorite(index, button.is_active()));
                             }
                         },
                         append: delete = &gtk::Button {
-                            add_css_class: "opaque",
+                            add_css_class: "destructive-action",
                             add_css_class: "circular",
-                            set_icon_name: "view-more-symbolic"
+                            set_icon_name: "user-trash-symbolic",
+                            connect_clicked(sender) => move |_| {
+                                send!(sender, ContentMsg::RemoveTask(index));
+                            }
                         }
                     }
                 }

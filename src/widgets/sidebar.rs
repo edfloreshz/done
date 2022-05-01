@@ -7,7 +7,7 @@ use relm4::{
     WidgetPlus, Widgets,
 };
 
-use crate::core::local::lists::{get_lists, patch_list, post_list};
+use crate::core::local::lists::{get_lists, post_list};
 use crate::widgets::app::AppMsg;
 use crate::widgets::content::{ContentModel, ContentMsg};
 use crate::widgets::list::List;
@@ -24,8 +24,7 @@ pub enum SidebarMsg {
     AddList(String),
     ListSelected(usize),
     Rename(usize, String),
-    IncreaseCounter(usize),
-    DecreaseCounter(usize),
+    UpdateCounters,
 }
 
 impl Model for SidebarModel {
@@ -51,22 +50,14 @@ impl Components<SidebarModel> for SidebarComponents {
 impl ComponentUpdate<AppModel> for SidebarModel {
     fn init_model(_parent_model: &AppModel) -> Self {
         let mut lists = vec![
-            MicroComponent::new(List::new("Inbox", "document-save-symbolic", 0), ()),
-            MicroComponent::new(List::new("Today", "display-brightness-symbolic", 0), ()),
-            MicroComponent::new(
-                List::new("Next 7 Days", "x-office-calendar-symbolic", 0),
-                (),
-            ),
-            MicroComponent::new(List::new("All", "edit-paste-symbolic", get_all_tasks().unwrap().len() as i32), ()),
-            MicroComponent::new(List::new("Starred", "non-starred-symbolic", get_favorite_tasks().unwrap().len() as i32), ()),
-            MicroComponent::new(List::new("Archived", "folder-symbolic", 0), ()),
+            List::new_mc("Inbox", "document-save-symbolic", 0),
+            List::new_mc("Today", "display-brightness-symbolic", 0),
+            List::new_mc("Next 7 Days", "x-office-calendar-symbolic", 0),
+            List::new_mc("All", "edit-paste-symbolic", get_all_tasks().unwrap().len() as i32),
+            List::new_mc("Starred", "non-starred-symbolic", get_favorite_tasks().unwrap().len() as i32),
+            List::new_mc("Archived", "folder-symbolic", 0),
         ];
-        let list_vec = &mut get_lists()
-            .unwrap()
-            .into_iter()
-            .map(|list| MicroComponent::new(list, ()))
-            .collect();
-        lists.append(list_vec);
+        lists.append(&mut get_lists().unwrap());
         SidebarModel {
             lists,
             selected_list: Default::default(),
@@ -89,35 +80,37 @@ impl ComponentUpdate<AppModel> for SidebarModel {
                 self.lists.push(MicroComponent::new(posted_list, ()))
             }
             SidebarMsg::ListSelected(index) => {
-                let mut list = self.lists.index(index).model_mut().unwrap();
-                list.count = get_tasks(list.id_list.clone()).unwrap().len() as i32;
-                self.selected_list = (index, list.id_list.clone());
+                let model = self.lists.index(index).model_mut().unwrap();
+                self.selected_list = (index, model.id_list.clone());
                 components
                     .content
-                    .send(ContentMsg::UpdateContent((index, list.id_list.clone())))
+                    .send(ContentMsg::UpdateWidgetData(index, model.id_list.clone()))
                     .unwrap();
-                drop(list);
+                drop(model);
                 self.lists.index(index).update_view().unwrap();
             }
             SidebarMsg::Rename(index, name) => {
-                let mut list = self.lists.index(index).model_mut().unwrap();
-                list.display_name = name;
-                drop(list);
+                let mut model = self.lists.index(index).model_mut().unwrap();
+                model.display_name = name;
+                drop(model);
                 self.lists.index(index).update_view().unwrap();
             }
-            SidebarMsg::IncreaseCounter(index) => {
-                let mut list = self.lists.index(index).model_mut().unwrap();
-                list.count += 1;
-                patch_list(&list).expect("Failed to update counter.");
-                drop(list);
-                self.lists.index(index).update_view().unwrap();
-            }
-            SidebarMsg::DecreaseCounter(index) => {
-                let mut list = self.lists.index(index).model_mut().unwrap();
-                list.count -= 1;
-                patch_list(&list).expect("Failed to update counter.");
-                drop(list);
-                self.lists.index(index).update_view().unwrap();
+            SidebarMsg::UpdateCounters => {
+                for (index, list) in self.lists.iter().enumerate() {
+                    let mut model = list.model_mut().unwrap();
+                    let id_list = &model.id_list;
+                    let count = match index {
+                        0 => 0,
+                        1 => 0,
+                        2 => 0,
+                        3 => get_all_tasks().unwrap().len(),
+                        4 => get_favorite_tasks().unwrap().len(),
+                        _ => get_tasks(id_list.to_owned()).unwrap().len(),
+                    };
+                    model.set_count(count as i32);
+                    drop(model);
+                    list.update_view().unwrap();
+                }
             }
         }
     }

@@ -4,7 +4,7 @@ table! {
         display_name -> Text,
         is_owner -> Bool,
         count -> Integer,
-        icon_name -> Text,
+        icon_name -> Nullable<Text>,
     }
 }
 
@@ -28,4 +28,7 @@ table! {
 
 joinable!(tasks -> lists (id_list));
 
-allow_tables_to_appear_in_same_query!(lists, tasks,);
+allow_tables_to_appear_in_same_query!(
+    lists,
+    tasks,
+);
