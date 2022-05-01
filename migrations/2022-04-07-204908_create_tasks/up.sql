@@ -10,15 +10,36 @@ create table tasks
     body                    text    not null,
     completed_on            text,
     due_date                text,
-    importance              text    not null,
-    favorite                BOOLEAN not null,
-    is_reminder_on          BOOLEAN not null,
+    importance              text    default 'normal' not null,
+    favorite                BOOLEAN default false not null,
+    is_reminder_on          BOOLEAN default false not null,
     reminder_date           text,
-    status                  text    not null,
-    created_date_time       text    not null,
-    last_modified_date_time text    not null
+    status                  text    default 'notStarted' not null,
+    created_date_time       text    default CURRENT_TIMESTAMP not null,
+    last_modified_date_time text    default CURRENT_TIMESTAMP not null
 );
 
 create unique index tasks_id_task_uindex
     on tasks (id_task);
 
+CREATE TRIGGER save_task_count_new
+    AFTER INSERT ON tasks
+BEGIN
+    UPDATE lists
+    SET count = (SELECT COUNT(*) FROM tasks WHERE id_list = new.id_list)
+    WHERE id_list = new.id_list;
+end;
+
+CREATE TRIGGER update_task_count
+    BEFORE DELETE ON tasks
+BEGIN
+    UPDATE lists
+    SET count = (SELECT COUNT(*) FROM tasks WHERE id_list = old.id_list)
+    WHERE id_list = old.id_list;
+end;
+
+CREATE TRIGGER remove_tasks_on_list_delete
+    BEFORE DELETE ON lists
+BEGIN
+    DELETE FROM tasks WHERE tasks.id_list = old.id_list;
+end;

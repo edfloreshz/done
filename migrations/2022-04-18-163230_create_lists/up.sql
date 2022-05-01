@@ -1,8 +1,8 @@
-CREATE TABLE lists
+create table lists
 (
-    id_list      TEXT PRIMARY KEY NOT NULL,
-    display_name TEXT             NOT NULL,
-    is_owner     BOOLEAN          NOT NULL,
-    count        INTEGER          NOT NULL,
-    icon_name    TEXT             NOT NULL
-)
+    id_list      TEXT    not null   primary key,
+    display_name TEXT    not null,
+    is_owner     BOOLEAN not null,
+    count        INTEGER not null,
+    icon_name    TEXT default 'view-list-symbolic'
+);
