@@ -15,26 +15,14 @@ use crate::storage::database::DatabaseConnection;
 pub fn set_debug_options() -> Result<()> {
     let config = get_config();
     let user_bd = format!("{}/do/com.devloop.do.db", dirs::data_dir().unwrap().display());
+    let connection = DatabaseConnection::establish_connection();
     if !config.is_written() || !Path::new(user_bd.as_str()).exists() {
         config.write()?;
         std::fs::copy("/usr/share/do/com.devloop.do.db", user_bd)?;
     }
-    if DEBUG_MODE {
+    if DEBUG_MODE && any_pending_migrations(&connection)? {
         set_dotenv()?;
-        let connection = DatabaseConnection::establish_connection();
-        if any_pending_migrations(&connection)? {
-            run_pending_migrations(&connection)?;
-        }
-    } else {
-        let connection = DatabaseConnection::establish_connection();
-        let migrations_dir = Path::new("/usr/share/do/migrations");
-        if any_pending_migrations(&connection)? {
-            run_pending_migrations_in_directory(
-                &connection,
-                migrations_dir,
-                &mut std::io::sink()
-            )?;
-        }
+        run_pending_migrations(&connection)?;
     }
     Ok(())
 }
