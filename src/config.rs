@@ -33,16 +33,18 @@ fn set_dotenv() -> Result<()> {
     let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
     let data = dirs::data_dir().with_context(|| "")?;
     let data = data.join("do/do.db");
-    let url = format!("DATABASE_URL={}", data.display().to_string().replace(" ", "\\ "));
+    let url = format!(
+        "DATABASE_URL={}",
+        data.display().to_string().replace(" ", "\\ ")
+    );
     file.write_all(url.as_bytes())?;
     Ok(())
 }
 
-
 pub fn load_css() {
     // Load the CSS file and add it to the provider
     let provider = CssProvider::new();
-    provider.load_from_data(include_bytes!("resources/style/ui.css"));
+    provider.load_from_data(include_bytes!("themes/Adwaita.css"));
 
     // Add the provider to the default screen
     StyleContext::add_provider_for_display(

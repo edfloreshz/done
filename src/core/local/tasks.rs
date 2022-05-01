@@ -1,9 +1,10 @@
 use anyhow::Result;
 use diesel::prelude::*;
 
-use crate::models::task::{QueryableTask, Task};
+use crate::models::task::QueryableTask;
 use crate::schema::tasks::dsl::*;
 use crate::storage::database::DatabaseConnection;
+use crate::widgets::task::Task;
 
 pub fn get_all_tasks() -> Result<Vec<Task>> {
     let connection = DatabaseConnection::establish_connection();
@@ -39,9 +40,9 @@ pub fn post_task(list_id: String, name: String) -> Result<()> {
     Ok(())
 }
 
-pub fn patch_task(task: &Task) -> Result<()> {
+pub fn patch_task(task: QueryableTask) -> Result<()> {
     let connection = DatabaseConnection::establish_connection();
-    let task: QueryableTask = task.to_owned().into();
+    println!("{}", task.status.as_ref().unwrap());
     diesel::update(tasks.filter(id_task.eq(task.id_task)))
         .set((
             id_list.eq(task.id_list),

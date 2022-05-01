@@ -9,20 +9,20 @@ use widgets::app::AppModel;
 use crate::config::{load_css, set_app};
 
 mod config;
+mod core;
 mod models;
 mod schema;
-mod services;
 mod storage;
 mod widgets;
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
-        .application_id("do.edfloreshz.github")
+        .application_id("org.devloop.do")
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
     application.connect_startup(|_| load_css());
     set_app()?;
-    let model = AppModel::new("");
+    let model = AppModel::new();
     let app = RelmApp::with_app(model, application);
     app.run();
     Ok(())

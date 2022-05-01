@@ -1,16 +1,12 @@
 use crate::schema::lists;
-use crate::widgets::sidebar::SidebarMsg;
+use crate::widgets::list::List;
 use diesel::{Insertable, Queryable};
-use glib::Sender;
-use gtk4 as gtk;
-use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::{send, MicroModel, MicroWidgets};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[table_name = "lists"]
-pub struct List {
+pub struct QueryableList {
     pub id_list: String,
     pub display_name: String,
     pub is_owner: bool,
@@ -18,7 +14,7 @@ pub struct List {
     pub icon_name: String,
 }
 
-impl List {
+impl QueryableList {
     pub fn new(display_name: &str, icon_name: &str) -> Self {
         Self {
             id_list: Uuid::new_v4().to_string(),
@@ -30,49 +26,26 @@ impl List {
     }
 }
 
-impl MicroModel for List {
-    type Msg = SidebarMsg;
-    type Widgets = ListWidgets;
-    type Data = ();
-
-    fn update(&mut self, msg: Self::Msg, _data: &Self::Data, sender: Sender<Self::Msg>) {
-        match msg {
-            SidebarMsg::Delete(index) => {}
-            SidebarMsg::AddList(index) => {}
-            SidebarMsg::SelectList(index) => {}
-            SidebarMsg::Rename(index, name) => {}
-            SidebarMsg::UpdateCounter(index) => {}
+impl From<List> for QueryableList {
+    fn from(list: List) -> Self {
+        Self {
+            id_list: list.id_list,
+            display_name: list.display_name,
+            is_owner: list.is_owner,
+            count: list.count,
+            icon_name: list.icon_name,
         }
     }
 }
 
-#[relm4::micro_widget(pub)]
-#[derive(Debug)]
-impl MicroWidgets<List> for ListWidgets {
-    view! {
-        smart_list_box = &gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            append: icon = &gtk::Image {
-                set_from_icon_name: Some(model.icon_name.as_str())
-            },
-            append: name = &gtk::Label {
-                set_halign: gtk::Align::Start,
-                set_hexpand: true,
-                set_text: model.display_name.as_str(),
-                set_margin_top: 10,
-                set_margin_bottom: 10,
-                set_margin_start: 15,
-                set_margin_end: 15,
-            },
-            append: count = &gtk::Label {
-                set_halign: gtk::Align::End,
-                set_css_classes: &["dim-label", "caption"],
-                set_text: &model.count.to_string(),
-                set_margin_top: 10,
-                set_margin_bottom: 10,
-                set_margin_start: 15,
-                set_margin_end: 15,
-            },
+impl From<&List> for QueryableList {
+    fn from(list: &List) -> Self {
+        Self {
+            id_list: list.id_list.clone(),
+            display_name: list.display_name.clone(),
+            is_owner: list.is_owner,
+            count: list.count,
+            icon_name: list.icon_name.clone(),
         }
     }
 }
