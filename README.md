@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/resources/icons/do.edfloreshz.github.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/src/resources/icons/com.devloop.do.svg" width="150" />
   <h1>Do</h1>
   <a href="https://github.com/edfloreshz/do/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
