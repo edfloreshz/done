@@ -1,10 +1,12 @@
-use std::collections::VecDeque;
 use gtk4 as gtk;
 use gtk4::prelude::{BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{send, ComponentUpdate, Model, Sender, WidgetPlus, Widgets};
+use std::collections::VecDeque;
 
-use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
+use crate::core::local::tasks::{
+    delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
+};
 use crate::widgets::sidebar::{SidebarModel, SidebarMsg};
 use crate::widgets::task::{Task, TaskStatus};
 use tracker::track;
@@ -24,7 +26,7 @@ impl Default for ContentModel {
             id_list: "".to_string(),
             index: 0,
             tasks: FactoryVecDeque::from_vec_deque(VecDeque::new()),
-            tracker: 0
+            tracker: 0,
         }
     }
 }
@@ -52,12 +54,12 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
             index,
             tasks: FactoryVecDeque::from_vec_deque(
                 get_tasks(id_list)
-                    .unwrap()
+                    .unwrap_or_default()
                     .iter()
-                    .map(|task| task.to_owned().into())
+                    .map(|task| task.to_owned())
                     .collect(),
             ),
-            tracker: 0
+            tracker: 0,
         }
     }
 
@@ -102,9 +104,9 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
                     0 => vec![],
                     1 => vec![],
                     2 => vec![],
-                    3 => get_all_tasks().unwrap(),
-                    4 => get_favorite_tasks().unwrap(),
-                    _ => get_tasks(id_list).unwrap(),
+                    3 => get_all_tasks().unwrap_or_default(),
+                    4 => get_favorite_tasks().unwrap_or_default(),
+                    _ => get_tasks(id_list).unwrap_or_default(),
                 };
 
                 loop {

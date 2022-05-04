@@ -1,9 +1,7 @@
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
 use crate::models::task::QueryableTask;
 use crate::widgets::content::ContentMsg;
 use glib::Sender;
-use gtk4::prelude::{EntryExt, ListBoxRowExt, EntryBufferExtManual};
+use gtk4::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
 use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
 use relm4::{
     gtk,
@@ -13,6 +11,8 @@ use relm4::{
     send, WidgetPlus,
 };
 use relm4_macros::view;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 use uuid::Uuid;
 
 #[tracker::track]
@@ -65,7 +65,8 @@ impl From<QueryableTask> for Task {
             body: task.body,
             completed_on: task.completed_on,
             due_date: task.due_date,
-            importance: TaskImportance::from_str(task.importance.unwrap().as_str()).unwrap_or_default(),
+            importance: TaskImportance::from_str(task.importance.unwrap().as_str())
+                .unwrap_or_default(),
             favorite: task.favorite,
             is_reminder_on: task.is_reminder_on,
             reminder_date: task.reminder_date,
@@ -102,7 +103,7 @@ impl FromStr for TaskImportance {
             "low" => Ok(TaskImportance::Low),
             "normal" => Ok(TaskImportance::Normal),
             "high" => Ok(TaskImportance::High),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -141,7 +142,7 @@ impl FromStr for TaskStatus {
         match s.to_lowercase().as_str() {
             "notstarted" => Ok(TaskStatus::NotStarted),
             "completed" => Ok(TaskStatus::Completed),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }

@@ -28,7 +28,4 @@ table! {
 
 joinable!(tasks -> lists (id_list));
 
-allow_tables_to_appear_in_same_query!(
-    lists,
-    tasks,
-);
+allow_tables_to_appear_in_same_query!(lists, tasks,);

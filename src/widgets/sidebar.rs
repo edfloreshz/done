@@ -8,11 +8,11 @@ use relm4::{
 };
 
 use crate::core::local::lists::{get_lists, post_list};
+use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
 use crate::widgets::content::{ContentModel, ContentMsg};
 use crate::widgets::list::List;
 use crate::AppModel;
-use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
@@ -53,12 +53,21 @@ impl ComponentUpdate<AppModel> for SidebarModel {
             List::new_mc("Inbox", "document-save-symbolic", 0),
             List::new_mc("Today", "display-brightness-symbolic", 0),
             List::new_mc("Next 7 Days", "x-office-calendar-symbolic", 0),
-            List::new_mc("All", "edit-paste-symbolic", get_all_tasks().unwrap().len() as i32),
-            List::new_mc("Starred", "non-starred-symbolic", get_favorite_tasks().unwrap().len() as i32),
+            List::new_mc(
+                "All",
+                "edit-paste-symbolic",
+                get_all_tasks().unwrap_or_default().len() as i32,
+            ),
+            List::new_mc(
+                "Starred",
+                "non-starred-symbolic",
+                get_favorite_tasks().unwrap_or_default().len() as i32,
+            ),
             List::new_mc("Archived", "folder-symbolic", 0),
         ];
-        lists.append(&mut get_lists().unwrap());
-        { // TODO: Fix COUNT trigger to remove this code.
+        lists.append(&mut get_lists().unwrap_or_default());
+        {
+            // TODO: Fix COUNT trigger to remove this code.
             for (index, list) in lists.iter().enumerate() {
                 let mut model = list.model_mut().unwrap();
                 let id_list = &model.id_list;
@@ -66,9 +75,9 @@ impl ComponentUpdate<AppModel> for SidebarModel {
                     0 => 0,
                     1 => 0,
                     2 => 0,
-                    3 => get_all_tasks().unwrap().len(),
-                    4 => get_favorite_tasks().unwrap().len(),
-                    _ => get_tasks(id_list.to_owned()).unwrap().len(),
+                    3 => get_all_tasks().unwrap_or_default().len(),
+                    4 => get_favorite_tasks().unwrap_or_default().len(),
+                    _ => get_tasks(id_list.to_owned()).unwrap_or_default().len(),
                 };
                 model.set_count(count as i32);
                 drop(model);
