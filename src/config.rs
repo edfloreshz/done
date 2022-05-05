@@ -1,30 +1,26 @@
 use crate::adw::gdk::Display;
 use crate::storage::database::DatabaseConnection;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use diesel_migrations::{
-    any_pending_migrations, run_pending_migrations, run_pending_migrations_in_directory,
+    any_pending_migrations, run_pending_migrations,
 };
 use gtk4::{CssProvider, StyleContext};
 use libset::config::Config;
 use libset::fi;
 use std::io::Write;
-use std::path::Path;
+use std::path::PathBuf;
 
 const DEBUG_MODE: bool = cfg!(debug_assertions);
 
 pub fn set_debug_options() -> Result<()> {
     let config = get_config();
-    let user_database = format!(
-        "{}/do/org.devloop.Do.db",
-        dirs::data_dir().unwrap().display()
-    );
+    let user_database = dirs::data_dir().unwrap().join("do/org.devloop.Do.db");
     let system_database = if DEBUG_MODE {
-        format!("{}/.local/share/flatpak/app/org.devloop.Do/current/active/files/share/data/org.devloop.Do.db", dirs::home_dir().unwrap().display())
+        dirs::home_dir().unwrap().join(".local/share/flatpak/app/org.devloop.Do/current/active/files/share/data/org.devloop.Do.db")
     } else {
-        "/var/lib/flatpak/app/org.devloop.Do/current/active/files/share/data/org.devloop.Do.db"
-            .to_string()
+        PathBuf::from("/var/lib/flatpak/app/org.devloop.Do/current/active/files/share/data/org.devloop.Do.db")
     };
-    if !config.is_written() || !Path::new(user_database.as_str()).exists() {
+    if !config.is_written() || !user_database.exists() {
         config.write()?;
         std::fs::copy(system_database, user_database)?;
     }
@@ -42,7 +38,7 @@ pub fn set_debug_options() -> Result<()> {
 
 fn set_dotenv() -> Result<()> {
     let mut file = std::fs::OpenOptions::new().write(true).open(".env")?;
-    let data = dirs::data_dir().with_context(|| "")?;
+    let data = dirs::data_dir().unwrap();
     let data = data.join("do/org.devloop.Do.db");
     let url = format!(
         "DATABASE_URL={}",
