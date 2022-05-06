@@ -25,9 +25,8 @@ provided by GNOME To Do to provide the ultimate to do experience.
 ## Install
 | Platform   | Command                                 |
 |------------|-----------------------------------------|
-| Arch Linux | `paru -S doable`                        |
+| Arch Linux | `paru -S doable-git`                    |
 | Cargo      | `cargo instal doable`                   |
-| Flatpak    | `flatpak install dev.edfloreshz.Doable` |
 
 ## To do
 
