@@ -16,8 +16,3 @@ install_data(
     '@0@.svg'.format(application_id),
     install_dir: datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
 )
-
-install_data(
-    '@0@.db'.format(application_id),
-    install_dir: datadir / 'data'
-)

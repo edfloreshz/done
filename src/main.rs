@@ -1,12 +1,7 @@
 #[macro_use]
 extern crate diesel;
-
-use crate::adw::prelude::ApplicationExt;
-use anyhow::Result;
-use relm4::{adw, gtk, RelmApp};
-use widgets::app::AppModel;
-
-use crate::config::{load_css, set_debug_options};
+#[macro_use]
+extern crate diesel_migrations;
 
 mod config;
 mod core;
@@ -14,6 +9,16 @@ mod models;
 mod schema;
 mod storage;
 mod widgets;
+
+use anyhow::Result;
+use relm4::{adw, gtk, RelmApp};
+use widgets::app::AppModel;
+use diesel_migrations::embed_migrations;
+
+use crate::adw::prelude::ApplicationExt;
+use crate::config::{load_css, set_debug_options};
+
+embed_migrations!("migrations");
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
