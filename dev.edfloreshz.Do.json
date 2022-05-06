@@ -27,7 +27,7 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "commit": "26f99cfb488b870fc4ddc0523e006f57f88d3796",
+                    "commit": "e3e5757ae09eaa6ab47c73ca30292bcc3e21ab2c",
                     "url" : "https://github.com/edfloreshz/do.git"
                 },
                 "build-aux/cargo-sources.json"

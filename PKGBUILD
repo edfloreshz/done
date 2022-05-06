@@ -1,17 +1,17 @@
 # Maintainer: Eduardo Flores <edfloreshz@gmail.com>
 
 pkgname=do-git
-pkgrel=8
+pkgrel=9
 pkgver=0.1.3
 pkgdesc="Do is a to-do app built for Linux with Rust and GTK."
 arch=('x86_64')
 url="https://github.com/edfloreshz/do"
 license=('GPL2')
 depends=('gtk4' 'libadwaita' 'pkg-config')
-makedepends=('cargo' 'git' 'diesel-cli')
+makedepends=('cargo' 'git')
 optdepends=()
 provides=('todo')
-conflicts=('todo' 'do')
+conflicts=('todo')
 source=("do-git::git+https://github.com/edfloreshz/do#branch=main")
 md5sums=('SKIP')
 
