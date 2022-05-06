@@ -1,7 +1,7 @@
 <div align="center">
   <br>
   <img src="https://raw.githubusercontent.com/edfloreshz/do/main/data/dev.edfloreshz.ToDo.svg" width="150" />
-  <h1>Do</h1>
+  <h1>Doable</h1>
   <a href="https://github.com/edfloreshz/do/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
   </a>
@@ -14,7 +14,7 @@
 </div>
 <br/>
 
-Do is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust
+Doable is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust
 using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
 provided by To Do to provide the ultimate to-do experience.
 
@@ -26,9 +26,9 @@ provided by To Do to provide the ultimate to-do experience.
 ## Install
 | Platform   | Command                          |
 |------------|----------------------------------|
-| Arch Linux | `paru -S do-git`                 |
-| Cargo      | `cargo instal do`                |
-| Flatpak    | `flatpak install dev.edfloreshz.ToDo` |
+| Arch Linux | `paru -S doable`                 |
+| Cargo      | `cargo instal doable`                |
+| Flatpak    | `flatpak install dev.edfloreshz.Doable` |
 
 ## To do
 
