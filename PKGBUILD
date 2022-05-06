@@ -27,9 +27,9 @@ build() {
 
 package() {
 	cd "$pkgname"
-	install -Dm644 data/dev.edfloreshz.Do.desktop "$pkgdir/usr/share/applications/dev.edfloreshz.Do.desktop"
-	install -Dm644 data/dev.edfloreshz.Do.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.edfloreshz.Do.svg"
-	install -Dm664 data/dev.edfloreshz.Do.metainfo.xml "$pkgdir/usr/share/metainfo/dev.edfloreshz.Do.metainfo.xml"
+	install -Dm644 data/dev.edfloreshz.ToDo.desktop "$pkgdir/usr/share/applications/dev.edfloreshz.ToDo.desktop"
+	install -Dm644 data/dev.edfloreshz.ToDo.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.edfloreshz.ToDo.svg"
+	install -Dm664 data/dev.edfloreshz.ToDo.metainfo.xml "$pkgdir/usr/share/metainfo/dev.edfloreshz.ToDo.metainfo.xml"
 	install -Dm644 README.md "$pkgdir/usr/share/doc/do/README.md"
 	install -Dm755 target/release/todo "$pkgdir/usr/bin/todo"
 }
