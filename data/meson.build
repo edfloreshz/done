@@ -1,6 +1,6 @@
 datadir = get_option('prefix') / get_option('datadir')
 
-application_id = 'dev.edfloreshz.ToDo'
+application_id = 'dev.edfloreshz.Doable'
 
 desktop_file = i18n.merge_file(
   input: '@0@.desktop.in'.format(application_id),

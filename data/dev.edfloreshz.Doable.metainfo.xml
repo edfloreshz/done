@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Eduardo Flores 2022 <edfloreshz@gmail.com> -->
 <component type="desktop-application">
-  <id>dev.edfloreshz.ToDo</id>
+  <id>dev.edfloreshz.Doable</id>
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
-  <name>Do</name>
-  <summary>Do is a simple to do app written in GTK and Rust.</summary>
+  <name>Doable</name>
+  <summary>Doable is a simple to do app written in GTK and Rust.</summary>
   <description>
-    <p>Do is a simple to do app written in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by GNOME To Do to provide the ultimate to do experience.</p>
+    <p>Doable is a simple to do app written in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by GNOME To Do to provide the ultimate to do experience.</p>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -15,16 +15,16 @@
       <caption>Main Window</caption>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://do.edfloreshz.dev/</url>
+  <url type="homepage">https://doable.edfloreshz.dev/</url>
 <!--
 Open Age Rating Service
 https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
-    <release version="0.1.3" date="2022-05-05">
+    <release version="0.1.0" date="2022-05-06">
       <description>
-        <p>First release of Do</p>
+        <p>First release of Doable</p>
       </description>
     </release>
   </releases>
@@ -39,5 +39,5 @@ https://hughsie.github.io/oars/index.html
   <developer_name>Eduardo Flores</developer_name>
   <update_contact>edfloreshz@gmail.com</update_contact>
 
-  <launchable type="desktop-id">dev.edfloreshz.ToDo.desktop</launchable>
+  <launchable type="desktop-id">dev.edfloreshz.Doable.desktop</launchable>
 </component>

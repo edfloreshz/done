@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=0.1.0
+Name=Doable
+Comment=Doable is a simple to do app written in GTK and Rust.
+TryExec=doable
+Exec=doable %u
+Icon=dev.edfloreshz.Doable
+Terminal=false
+Type=Application
+Categories=todo;network;productivity;
+MimeType=x-scheme-handler/doable;
+Keywords=doable;todo;productivity,rust,flatpak;

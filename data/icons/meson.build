@@ -1,4 +1,4 @@
-application_id = 'dev.edfloreshz.ToDo'
+application_id = 'dev.edfloreshz.Doable'
 
 scalable_dir = join_paths('hicolor', 'scalable', 'apps')
 install_data(

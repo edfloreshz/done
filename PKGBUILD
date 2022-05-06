@@ -1,18 +1,18 @@
 # Maintainer: Eduardo Flores <edfloreshz@gmail.com>
 
-pkgname=do-git
-pkgrel=9
-pkgver=0.1.3
-pkgdesc="Do is a to-do app built for Linux with Rust and GTK."
+pkgname=doable-git
+pkgrel=1
+pkgver=0.1.0
+pkgdesc="Doable is a simple to do app written in GTK and Rust."
 arch=('x86_64')
-url="https://github.com/edfloreshz/do"
+url="https://github.com/edfloreshz/doable"
 license=('GPL2')
 depends=('gtk4' 'libadwaita' 'pkg-config')
 makedepends=('cargo' 'git')
 optdepends=()
-provides=('todo')
-conflicts=('todo')
-source=("do-git::git+https://github.com/edfloreshz/do#branch=main")
+provides=('doable')
+conflicts=('doable')
+source=("doable-git::git+https://github.com/edfloreshz/doable#branch=main")
 md5sums=('SKIP')
 
 prepare() {
@@ -27,9 +27,9 @@ build() {
 
 package() {
 	cd "$pkgname"
-	install -Dm644 data/dev.edfloreshz.ToDo.desktop "$pkgdir/usr/share/applications/dev.edfloreshz.ToDo.desktop"
-	install -Dm644 data/dev.edfloreshz.ToDo.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.edfloreshz.ToDo.svg"
-	install -Dm664 data/dev.edfloreshz.ToDo.metainfo.xml "$pkgdir/usr/share/metainfo/dev.edfloreshz.ToDo.metainfo.xml"
-	install -Dm644 README.md "$pkgdir/usr/share/doc/do/README.md"
-	install -Dm755 target/release/todo "$pkgdir/usr/bin/todo"
+	install -Dm644 data/dev.edfloreshz.Doable.desktop "$pkgdir/usr/share/applications/dev.edfloreshz.Doable.desktop"
+	install -Dm644 data/dev.edfloreshz.Doable.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.edfloreshz.Doable.svg"
+	install -Dm664 data/dev.edfloreshz.Doable.metainfo.xml "$pkgdir/usr/share/metainfo/dev.edfloreshz.Doable.metainfo.xml"
+	install -Dm644 README.md "$pkgdir/usr/share/doc/doable/README.md"
+	install -Dm755 target/release/doable "$pkgdir/usr/bin/doable"
 }

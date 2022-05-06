@@ -1,22 +1,21 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/data/dev.edfloreshz.ToDo.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/data/dev.edfloreshz.Doable.svg" width="150" />
   <h1>Doable</h1>
-  <a href="https://github.com/edfloreshz/do/actions/workflows/rust.yml">
+  <a href="https://github.com/edfloreshz/doable/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
   </a>
-  <a href="https://crates.io/crates/do">
-    <img src="https://img.shields.io/crates/v/do?label=Do" alt="crate"/>
+  <a href="https://crates.io/crates/doable">
+    <img src="https://img.shields.io/crates/v/doable?label=Doable" alt="crate"/>
   </a>
-   <a href="https://crates.io/crates/do">
-    <img src="https://img.shields.io/crates/d/do" alt="downloads"/>
+   <a href="https://crates.io/crates/doable">
+    <img src="https://img.shields.io/crates/d/doable" alt="downloads"/>
   </a>
 </div>
 <br/>
 
-Doable is a rewrite of [Gnome To Do](https://flathub.org/apps/details/org.gnome.Todo) in Rust
-using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
-provided by To Do to provide the ultimate to-do experience.
+Doable is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
+provided by GNOME To Do to provide the ultimate to-do experience.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/22224438/166165400-5a523df1-b818-4172-9e05-b62662960c31.png"/>
@@ -24,10 +23,10 @@ provided by To Do to provide the ultimate to-do experience.
 
 
 ## Install
-| Platform   | Command                          |
-|------------|----------------------------------|
-| Arch Linux | `paru -S doable`                 |
-| Cargo      | `cargo instal doable`                |
+| Platform   | Command                                 |
+|------------|-----------------------------------------|
+| Arch Linux | `paru -S doable`                        |
+| Cargo      | `cargo instal doable`                   |
 | Flatpak    | `flatpak install dev.edfloreshz.Doable` |
 
 ## To do
