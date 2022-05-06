@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+	<id>dev.edfloreshz.ToDo.desktop</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license></project_license>
+	<description>
+	  <p>Do is a To Do app for Linux built with Rust and GTK</p>
+	</description>
+</component>

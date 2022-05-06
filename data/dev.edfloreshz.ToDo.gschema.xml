@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="do">
+	<schema id="dev.edfloreshz.ToDo" path="/dev/edfloreshz/ToDo/">
+	</schema>
+</schemalist>
