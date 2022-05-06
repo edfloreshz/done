@@ -25,7 +25,7 @@
             "sources" : [
             	{
                     "type" : "git",
-                    "branch": "main",
+                    "commit": "e4d59554278c1fa07705e6b9e02f51492c905d12",
                     "url" : "https://github.com/edfloreshz/do.git"
                 },
             ]
