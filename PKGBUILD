@@ -1,7 +1,7 @@
 # Maintainer: Eduardo Flores <edfloreshz@gmail.com>
 
 pkgname=do-git
-pkgrel=7
+pkgrel=8
 pkgver=0.1.3
 pkgdesc="Do is a to-do app built for Linux with Rust and GTK."
 arch=('x86_64')
@@ -27,9 +27,9 @@ build() {
 
 package() {
 	cd "$pkgname"
-	install -Dm644 data/org.devloop.Do.desktop "$pkgdir/usr/share/applications/org.devloop.Do.desktop"
-	install -Dm644 data/org.devloop.Do.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.devloop.Do.svg"
-	install -Dm664 data/org.devloop.Do.metainfo.xml "$pkgdir/usr/share/metainfo/org.devloop.Do.metainfo.xml"
+	install -Dm644 data/dev.edfloreshz.Do.desktop "$pkgdir/usr/share/applications/dev.edfloreshz.Do.desktop"
+	install -Dm644 data/dev.edfloreshz.Do.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.edfloreshz.Do.svg"
+	install -Dm664 data/dev.edfloreshz.Do.metainfo.xml "$pkgdir/usr/share/metainfo/dev.edfloreshz.Do.metainfo.xml"
 	install -Dm644 README.md "$pkgdir/usr/share/doc/do/README.md"
 	install -Dm755 target/release/todo "$pkgdir/usr/bin/todo"
 }

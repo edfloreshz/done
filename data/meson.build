@@ -1,6 +1,6 @@
 datadir = get_option('prefix') / get_option('datadir')
 
-application_id = 'org.devloop.Do'
+application_id = 'dev.edfloreshz.Do'
 
 install_data(
     '@0@.desktop'.format(application_id),

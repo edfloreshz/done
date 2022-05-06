@@ -8,7 +8,7 @@ use crate::embedded_migrations;
 
 pub fn set_debug_options() -> Result<()> {
     let config = get_config();
-    let user_database = dirs::data_dir().unwrap().join("do/org.devloop.Do.db");
+    let user_database = dirs::data_dir().unwrap().join("do/dev.edfloreshz.Do.db");
     if !config.is_written() || !user_database.exists() {
         config.write()?;
     }
@@ -35,5 +35,5 @@ fn get_config() -> Config {
         .about("Do is a To Do app for Linux built with Rust and GTK.")
         .author("Eduardo Flores")
         .version("0.1.0")
-        .add(fi!("org.devloop.Do.db"))
+        .add(fi!("dev.edfloreshz.Do.db"))
 }
