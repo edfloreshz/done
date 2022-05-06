@@ -19,8 +19,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-  input: '@0@.xml.in'.format(application_id),
-  output: '@0@.xml'.format(application_id),
+  input: '@0@.appdata.xml.in'.format(application_id),
+  output: '@0@.appdata.xml'.format(application_id),
   po_dir: '../po',
   install: true,
   install_dir: datadir / 'appdata'

@@ -8,6 +8,11 @@ i18n = import('i18n')
 
 gnome = import('gnome')
 
+dependency('glib-2.0')
+dependency('gio-2.0')
+dependency('gtk4', version: '>= 4.6.0')
+dependency('libadwaita-1')
+
 
 cargo_sources = files(
   'Cargo.toml',
