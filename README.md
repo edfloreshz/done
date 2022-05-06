@@ -24,15 +24,11 @@ provided by To Do to provide the ultimate to-do experience.
 
 
 ## Install
-| Platform   | Command          |
-|------------|------------------|
-| Arch Linux | `paru -S do-git` |
-
-## Build
-
-To initialize the database you will need `diesel_cli`, install it with:
-
-`cargo install diesel_cli --no-default-features --features "sqlite"`
+| Platform   | Command                          |
+|------------|----------------------------------|
+| Arch Linux | `paru -S do-git`                 |
+| Cargo      | `cargo instal do`                |
+| Flatpak    | `flatpak install org.devloop.Do` |
 
 ## To do
 
