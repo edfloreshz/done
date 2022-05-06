@@ -1,6 +1,6 @@
 project('todo', 'rust',
-	version:'0.1.2',
-	license: ['GPL-3.0']
+	version:'0.1.3',
+	license: ['GPL-2.0']
 )
 
 dependency('glib-2.0')

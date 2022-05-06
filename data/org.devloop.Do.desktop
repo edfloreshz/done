@@ -1,5 +1,5 @@
 [Desktop Entry]
-Version=0.1.2
+Version=0.1.3
 Name=Do
 Comment=Do is a To Do app for Linux built with Rust and GTK.
 TryExec=todo
