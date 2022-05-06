@@ -15,7 +15,7 @@
 <br/>
 
 Doable is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
-provided by GNOME To Do to provide the ultimate to-do experience.
+provided by GNOME To Do to provide the ultimate to do experience.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/22224438/166165400-5a523df1-b818-4172-9e05-b62662960c31.png"/>
