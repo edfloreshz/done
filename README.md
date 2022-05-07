@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/done/4c8632c3ed21ecf2be72c2f0b1b2dfab428fe15f/data/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg" width="150" />
   <h1>Done</h1>
   <a href="https://github.com/edfloreshz/done/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
