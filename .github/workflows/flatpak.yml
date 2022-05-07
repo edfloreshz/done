@@ -3,13 +3,13 @@ name: Flatpak
 on:
   release:
     types: [published]
-    branches: [main, 'release/**']
+    branches: [main]
     
 jobs:
   publish:
     name: "Publish to Flathub"
     runs-on: ubuntu-latest
-    if: "${{ github.event_name == 'release' && ( matrix.branch != 'stable' || (!contains(github.ref, '-beta') && !contains(github.ref, '-rc')) ) }}"
+    if: "${{ github.event_name == 'release' }}"
     env:
       FLATPAK_BUILD_PATH: flatpak_app/files/share
     container:
@@ -36,14 +36,6 @@ jobs:
       working-directory: ${{ env.FLATPAK_BUILD_PATH }}
       run: |
         appstream-util validate appdata/dev.edfloreshz.Doable.appdata.xml
-        
-    - name: Publish to Flathub Beta
-      uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
-      if: matrix.branch == 'beta'
-      with:
-        flat-manager-url: https://hub.flathub.org/
-        repository: beta
-        token: ${{ secrets.FLATHUB_BETA_TOKEN }}
         
     - name: Publish to Flathub
       uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
