@@ -20,4 +20,6 @@ Cargo.lock
 .vscode
 .flatpak-builder
 _build
+
 bin
+releases
