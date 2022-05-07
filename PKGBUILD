@@ -3,7 +3,7 @@
 pkgname=done-git
 pkgrel=1
 pkgver=0.1.0
-pkgdesc="Done is a simple to do app written in GTK and Rust."
+pkgdesc="Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience."
 arch=('x86_64')
 url="https://github.com/edfloreshz/done"
 license=('GPL2')

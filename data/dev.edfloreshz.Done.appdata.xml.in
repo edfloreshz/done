@@ -5,13 +5,13 @@
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <name>Done</name>
-  <summary>Done is a simple to do app written in GTK and Rust.</summary>
+  <summary>Get things done... done!</summary>
   <description>
-    <p>Done is a simple to do app written in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by GNOME To Do to provide the ultimate to do experience.</p>
+    <p>Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience.</p>
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>./screenshots/main-window.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/ffdcf43a0cd224e38cdfbfcf1f0ecbc30c0f3b8b/data/screenshots/main-window.png</image>
       <caption>Main Window</caption>
     </screenshot>
   </screenshots>
@@ -22,7 +22,7 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
-    <release version="0.1.0" date="2022-05-06">
+    <release version="0.1.0" date="2022-05-07">
       <description>
         <p>First release of Done</p>
       </description>
