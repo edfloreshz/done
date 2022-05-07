@@ -20,8 +20,7 @@ prepare() {
 }
 
 build() {
-    cd "$pkgname"
-	meson --prefix=/usr --buildtype=plain do-git build
+    meson --prefix=/usr --buildtype=plain $pkgname build
     meson compile -C build
 }
 
@@ -32,3 +31,4 @@ check() {
 package() {
 	meson install -C build --destdir "$pkgdir"
 }
+
