@@ -70,3 +70,10 @@ provided by GNOME To Do to provide the ultimate to do experience.
 - gtk4
 - libadwaita
 - pkg-config
+
+Copyright and licensing
+-----------------------
+
+Copyright 2022  Eduardo Flores
+
+Done is released under the terms of the GNU General Public License version 2.0.
