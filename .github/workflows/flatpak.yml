@@ -1,25 +1,54 @@
-# This is a basic workflow to help you get started with Actions
+name: Flatpak
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [published]
+    branches: [main, 'release/**']
+    
 jobs:
-  flatpak:
-    name: "Flatpak"
+  publish:
+    name: "Publish to Flathub"
     runs-on: ubuntu-latest
+    if: "${{ github.event_name == 'release' && ( matrix.branch != 'stable' || (!contains(github.ref, '-beta') && !contains(github.ref, '-rc')) ) }}"
+    env:
+      FLATPAK_BUILD_PATH: flatpak_app/files/share
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-40
+      image: bilelmoussaoui/flatpak-github-actions:gnome-42
       options: --privileged
+    strategy:
+      matrix:
+        branch: [stable, beta]
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - name: Build Flatpak Manifest
     - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
-        bundle: palette.flatpak
+        bundle: doable-${{ steps.setup.outputs.commitHash }}.flatpak
         manifest-path: dev.edfloreshz.Doable.json
-        cache-key: flatpak-builder-${{ github.sha }}
+        cache-key: flatpak-builder-${{ hashFiles('dev.edfloreshz.Doable.json') }}
+        mirror-screenshots-url: https://dl.flathub.org/repo/screenshots
+        branch: ${{ matrix.branch }}
+        
+    - name: Validate AppStream
+      shell: bash
+      working-directory: ${{ env.FLATPAK_BUILD_PATH }}
+      run: |
+        appstream-util validate appdata/dev.edfloreshz.Doable.appdata.xml
+        
+    - name: Publish to Flathub Beta
+      uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
+      if: matrix.branch == 'beta'
+      with:
+        flat-manager-url: https://hub.flathub.org/
+        repository: beta
+        token: ${{ secrets.FLATHUB_BETA_TOKEN }}
+        
+    - name: Publish to Flathub
+      uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
+      if: matrix.branch == 'stable'
+      with:
+        flat-manager-url: https://hub.flathub.org/
+        repository: stable
+        token: ${{ secrets.FLATHUB_TOKEN }}
