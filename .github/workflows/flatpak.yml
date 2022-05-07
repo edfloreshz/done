@@ -28,12 +28,6 @@ jobs:
         mirror-screenshots-url: https://dl.flathub.org/repo/screenshots
         branch: stable
         
-    - name: Validate AppStream
-      shell: bash
-      working-directory: ${{ env.FLATPAK_BUILD_PATH }}
-      run: |
-        appstream-util validate appdata/dev.edfloreshz.Doable.appdata.xml
-        
     - name: Publish to Flathub
       uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
       with:
