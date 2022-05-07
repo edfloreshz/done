@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/do/main/data/icons/hicolor/scalable/dev.edfloreshz.Doable.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/doable/main/data/icons/hicolor/scalable/apps/dev.edfloreshz.Doable.svg" width="150" />
   <h1>Doable</h1>
   <a href="https://github.com/edfloreshz/doable/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
