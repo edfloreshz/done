@@ -1,4 +1,4 @@
-project('doable', 'rust',
+project('done', 'rust',
           version: '0.1.0',
           license: ['GPL-2.0'],
     meson_version: '>= 0.59.0',
@@ -38,7 +38,7 @@ else
   version_suffix = ''
 endif
 
-application_id = 'dev.edfloreshz.Doable@0@'.format(profile)
+application_id = 'dev.edfloreshz.Done@0@'.format(profile)
 
 subdir('data')
 subdir('src')

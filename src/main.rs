@@ -22,7 +22,7 @@ embed_migrations!("migrations");
 
 fn main() -> Result<()> {
     let application = adw::Application::builder()
-        .application_id("dev.edfloreshz.Doable")
+        .application_id("dev.edfloreshz.Done")
         .flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
         .build();
     application.connect_startup(|_| load_css());

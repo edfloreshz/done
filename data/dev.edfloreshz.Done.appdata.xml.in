@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Eduardo Flores 2022 <edfloreshz@gmail.com> -->
 <component type="desktop-application">
-  <id>dev.edfloreshz.Doable</id>
+  <id>dev.edfloreshz.Done</id>
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
-  <name>Doable</name>
-  <summary>Doable is a simple to do app written in GTK and Rust.</summary>
+  <name>Done</name>
+  <summary>Done is a simple to do app written in GTK and Rust.</summary>
   <description>
-    <p>Doable is a simple to do app written in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by GNOME To Do to provide the ultimate to do experience.</p>
+    <p>Done is a simple to do app written in Rust using gtk-rs and Relm4, we aim to improve on the existing set of features provided by GNOME To Do to provide the ultimate to do experience.</p>
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/edfloreshz/doable/main/data/screenshots/main-window.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/main-window.png</image>
       <caption>Main Window</caption>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://doable.edfloreshz.dev/</url>
+  <url type="homepage">https://done.edfloreshz.dev/</url>
 <!--
 Open Age Rating Service
 https://hughsie.github.io/oars/index.html
@@ -24,7 +24,7 @@ https://hughsie.github.io/oars/index.html
   <releases>
     <release version="0.1.0" date="2022-05-06">
       <description>
-        <p>First release of Doable</p>
+        <p>First release of Done</p>
       </description>
     </release>
   </releases>
@@ -39,5 +39,5 @@ https://hughsie.github.io/oars/index.html
   <developer_name>Eduardo Flores</developer_name>
   <update_contact>edfloreshz@gmail.com</update_contact>
 
-  <launchable type="desktop-id">dev.edfloreshz.Doable.desktop</launchable>
+  <launchable type="desktop-id">dev.edfloreshz.Done.desktop</launchable>
 </component>

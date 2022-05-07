@@ -8,7 +8,7 @@ use crate::embedded_migrations;
 
 pub fn set_debug_options() -> Result<()> {
     let config = get_config();
-    let user_database = dirs::data_dir().unwrap().join("doable/dev.edfloreshz.Doable.db");
+    let user_database = dirs::data_dir().unwrap().join("done/dev.edfloreshz.Done.db");
     if !config.is_written() || !user_database.exists() {
         config.write()?;
     }
@@ -31,9 +31,9 @@ pub fn load_css() {
 }
 
 fn get_config() -> Config {
-    Config::new("doable")
+    Config::new("done")
         .about("Do is a To Do app for Linux built with Rust and GTK.")
         .author("Eduardo Flores")
         .version("0.1.0")
-        .add(fi!("dev.edfloreshz.Doable.db"))
+        .add(fi!("dev.edfloreshz.Done.db"))
 }

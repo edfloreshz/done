@@ -22,12 +22,12 @@ jobs:
     - name: Build Flatpak Manifest
       uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
-        bundle: doable-${{ steps.setup.outputs.commitHash }}.flatpak
-        manifest-path: dev.edfloreshz.Doable.json
-        cache-key: flatpak-builder-${{ hashFiles('dev.edfloreshz.Doable.json') }}
+        bundle: done-${{ steps.setup.outputs.commitHash }}.flatpak
+        manifest-path: dev.edfloreshz.Done.json
+        cache-key: flatpak-builder-${{ hashFiles('dev.edfloreshz.Done.json') }}
         mirror-screenshots-url: https://dl.flathub.org/repo/screenshots
         branch: stable
-        
+
     - name: Publish to Flathub
       uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
       with:

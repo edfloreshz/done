@@ -1,13 +1,13 @@
 [package]
-name = "doable"
+name = "done"
 version = "0.1.0"
 edition = "2021"
 authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
 license = "GPL-2.0"
-description = "Doable is a simple to do app written in GTK and Rust"
-homepage = "https://doable.edfloreshz.dev/"
-documentation = "https://docs.rs/doable"
-repository = "https://github.com/edfloreshz/doable/"
+description = "Done is a simple to do app written in GTK and Rust"
+homepage = "https://done.edfloreshz.dev/"
+documentation = "https://docs.rs/done"
+repository = "https://github.com/edfloreshz/done/"
 readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

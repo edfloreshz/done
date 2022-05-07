@@ -2,7 +2,7 @@ pkgdatadir = get_option('prefix') / get_option('datadir') / meson.project_name()
 
 conf = configuration_data()
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('GETTEXT_PACKAGE', 'doable')
+conf.set_quoted('GETTEXT_PACKAGE', 'done')
 conf.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 conf.set_quoted('PKGDATADIR', pkgdatadir)
 conf.set_quoted('APPLICATION_ID', application_id)

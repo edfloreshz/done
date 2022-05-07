@@ -153,7 +153,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                 append: list_header = &adw::HeaderBar {
                     set_show_end_title_buttons: false,
                     set_title_widget = Some(&gtk::Label) {
-                        set_label: "Doable",
+                        set_label: "Done",
                     },
                 },
                 append: list_container = &gtk::Box {

@@ -1,20 +1,20 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/doable/main/data/icons/hicolor/scalable/apps/dev.edfloreshz.Doable.svg" width="150" />
-  <h1>Doable</h1>
-  <a href="https://github.com/edfloreshz/doable/actions/workflows/rust.yml">
+  <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg" width="150" />
+  <h1>Done</h1>
+  <a href="https://github.com/edfloreshz/done/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
   </a>
-  <a href="https://crates.io/crates/doable">
-    <img src="https://img.shields.io/crates/v/doable?label=Doable" alt="crate"/>
+  <a href="https://crates.io/crates/done">
+    <img src="https://img.shields.io/crates/v/done?label=Done" alt="crate"/>
   </a>
-   <a href="https://crates.io/crates/doable">
-    <img src="https://img.shields.io/crates/d/doable" alt="downloads"/>
+   <a href="https://crates.io/crates/done">
+    <img src="https://img.shields.io/crates/d/done" alt="downloads"/>
   </a>
 </div>
 <br/>
 
-Doable is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
+Done is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
 provided by GNOME To Do to provide the ultimate to do experience.
 
 <div align="center">
@@ -25,8 +25,8 @@ provided by GNOME To Do to provide the ultimate to do experience.
 ## Install
 | Platform   | Command                                 |
 |------------|-----------------------------------------|
-| Arch Linux | `paru -S doable-git`                    |
-| Cargo      | `cargo instal doable`                   |
+| Arch Linux | `paru -S done-git`                    |
+| Cargo      | `cargo instal done`                   |
 
 ## To do
 
