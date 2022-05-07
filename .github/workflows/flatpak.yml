@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v2
       
     - name: Build Flatpak Manifest
-    - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
+      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
         bundle: doable-${{ steps.setup.outputs.commitHash }}.flatpak
         manifest-path: dev.edfloreshz.Doable.json
