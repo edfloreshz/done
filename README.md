@@ -18,7 +18,7 @@ Done is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) a
 provided by GNOME To Do to provide the ultimate to do experience.
 
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/22224438/166165400-5a523df1-b818-4172-9e05-b62662960c31.png"/>
+  <img src="https://raw.githubusercontent.com/edfloreshz/done/ffdcf43a0cd224e38cdfbfcf1f0ecbc30c0f3b8b/data/screenshots/main-window.png"/>
 </div>
 
 
