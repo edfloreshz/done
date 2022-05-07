@@ -27,6 +27,9 @@ provided by GNOME To Do to provide the ultimate to do experience.
 |------------|-----------------------------------------|
 | Arch Linux | `paru -S done-git`                    |
 | Cargo      | `cargo instal done`                   |
+| Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
+
+
 
 ## To do
 
