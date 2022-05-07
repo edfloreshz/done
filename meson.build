@@ -44,16 +44,6 @@ subdir('data')
 subdir('src')
 subdir('po')
 
-reuse = find_program('reuse', required: false)
-if reuse.found()
-  test('license',
-    reuse,
-    args:['lint'],
-    workdir: meson.project_source_root(),
-    suite: ['lint'],
-  )
-endif
-
 meson.add_dist_script(
   'build-aux/dist-vendor.sh',
   meson.project_source_root(),
