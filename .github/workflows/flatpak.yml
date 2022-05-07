@@ -15,9 +15,6 @@ jobs:
     container:
       image: bilelmoussaoui/flatpak-github-actions:gnome-42
       options: --privileged
-    strategy:
-      matrix:
-        branch: [stable, beta]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -29,7 +26,7 @@ jobs:
         manifest-path: dev.edfloreshz.Doable.json
         cache-key: flatpak-builder-${{ hashFiles('dev.edfloreshz.Doable.json') }}
         mirror-screenshots-url: https://dl.flathub.org/repo/screenshots
-        branch: ${{ matrix.branch }}
+        branch: stable
         
     - name: Validate AppStream
       shell: bash
@@ -39,7 +36,6 @@ jobs:
         
     - name: Publish to Flathub
       uses: bilelmoussaoui/flatpak-github-actions/flat-manager@v4
-      if: matrix.branch == 'stable'
       with:
         flat-manager-url: https://hub.flathub.org/
         repository: stable
