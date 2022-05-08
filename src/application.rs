@@ -1,6 +1,6 @@
 use glib::clone;
-use gtk4 as gtk;
-use relm4::adw;
+use relm4::gtk as gtk;
+use relm4::adw as adw;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
@@ -85,7 +85,7 @@ impl DoneApplication {
         let dialog = gtk::AboutDialog::builder()
             .transient_for(&window)
             .modal(true)
-            .program_name("test")
+            .program_name("Done")
             .version(VERSION)
             .authors(vec!["Eduardo Flores".into()])
             .build();
