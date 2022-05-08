@@ -1,6 +1,7 @@
 use std::ops::Index;
+use glib::clone;
 
-use gtk4::prelude::*;
+use gtk4::prelude::{BoxExt, OrientableExt, EntryExt, EntryBufferExtManual, WidgetExt, ButtonExt, PopoverExt, ListBoxRowExt, EditableExt};
 use relm4::{
     adw, gtk, send, ComponentUpdate, Components, MicroComponent, Model, RelmComponent, Sender,
     WidgetPlus, Widgets,
@@ -148,7 +149,84 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
             set_can_navigate_back: true,
             append = &gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
-                set_width_request: 270,
+                set_width_request: 280,
+                append = &adw::HeaderBar {
+                    set_show_end_title_buttons: false,
+                    set_title_widget = Some(&gtk::Box) {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        set_spacing: 5,
+                        append = &gtk::Image {
+                            set_icon_name: Some("dev.edfloreshz.Done")
+                        },
+                        append = &gtk::Label {
+                            set_text: "Done"
+                        }
+                    },
+                    pack_end: options_button = &gtk::MenuButton {
+                        set_icon_name: "open-menu-symbolic",
+                        add_css_class: "flat",
+                        set_has_frame: true,
+                        set_direction: gtk::ArrowType::None,
+                        set_popover: open_menu_popover = Some(&gtk::Popover) {
+
+                        }
+                    },
+                    pack_start: new_list_button = &gtk::MenuButton {
+                        set_icon_name: "value-increase-symbolic",
+                        add_css_class: "raised",
+                        set_has_frame: true,
+                        set_direction: gtk::ArrowType::None,
+                        set_popover: new_list_popover = Some(&gtk::Popover) {
+                            set_child = Some(&gtk::Stack) {
+                                add_child = &gtk::Box {
+                                    set_orientation: gtk::Orientation::Vertical,
+                                    set_spacing: 10,
+                                    append: &gtk::Label::new(Some("List Name")),
+                                    append = &gtk::Box {
+                                        set_orientation: gtk::Orientation::Horizontal,
+                                        set_spacing: 10,
+                                        append: new_list_entry = &gtk::Entry {
+                                            connect_activate(sender) => move |entry| {
+                                                let buffer = entry.buffer();
+                                                if !buffer.text().is_empty() {
+                                                    send!(sender, SidebarMsg::AddList(buffer.text()))
+                                                }
+                                            }
+                                        },
+                                        append: providers_button = &gtk::MenuButton {
+                                            set_icon_name: "x-office-address-book-symbolic",
+                                            add_css_class: "raised",
+                                            set_has_frame: true,
+                                            set_direction: gtk::ArrowType::Right,
+                                            set_popover = Some(&gtk::Popover) {
+                                                set_child = Some(&gtk::Stack) {
+
+                                                }
+                                            }
+                                        }
+                                    },
+                                    append: add_button = &gtk::Button {
+                                        set_label: "Create List",
+                                        set_css_classes: &["suggested-action"],
+                                        connect_clicked: clone!(@weak new_list_entry, @strong sender => move |_| {
+                                            let buffer = new_list_entry.buffer();
+                                            if !buffer.text().is_empty() {
+                                                send!(sender, SidebarMsg::AddList(buffer.text()))
+                                            }
+                                        })
+                                    },
+                                    append: cancel_button = &gtk::Button {
+                                        set_label: "Cancel",
+                                        connect_clicked: clone!(@weak new_list_popover, @weak new_list_entry, @strong sender => move |_| {
+                                            new_list_entry.set_text("");
+                                            // new_list_popover.close();
+                                        })
+                                    },
+                                }
+                            }
+                        }
+                    },
+                },
                 append: list_container = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     append: scroll_window = &gtk::ScrolledWindow {
@@ -168,6 +246,15 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                             }
                         },
                     },
+                    append: action_buttons = &gtk::Box {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        set_spacing: 10,
+                        set_margin_top: 10,
+                        set_margin_bottom: 10,
+                        set_margin_start: 10,
+                        set_margin_end: 10,
+                        set_halign: gtk::Align::Fill
+                    },
                 }
             },
             append: &gtk::Separator::default(),
@@ -175,6 +262,10 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                 set_orientation: gtk::Orientation::Vertical,
                 set_hexpand: true,
                 set_vexpand: true,
+                append = &adw::HeaderBar {
+                    set_hexpand: true,
+                    set_show_end_title_buttons: true,
+                },
                 append: &components.content.widgets().unwrap().task_container,
             }
         }

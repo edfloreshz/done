@@ -9,8 +9,8 @@ conf.set_quoted('APPLICATION_ID', application_id)
 conf.set_quoted('PROFILE', get_option('profile'))
 
 configure_file(
-    input: 'const.rs.in',
-    output: 'const.rs',
+    input: 'constants.rs.in',
+    output: 'constants.rs',
     configuration: conf
 )
 

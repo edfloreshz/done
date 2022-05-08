@@ -178,56 +178,59 @@ impl FactoryPrototype for Task {
             row = &gtk::ListBoxRow {
                 set_selectable: false,
                 set_child = Some(&gtk::Box) {
-                    set_orientation: gtk::Orientation::Horizontal,
-                    set_spacing: 5,
-                    set_margin_top: 10,
-                    set_margin_bottom: 10,
-                    set_margin_start: 30,
-                    set_margin_end: 30,
-                    append = &gtk::CheckButton {
-                        set_active: self.status.as_bool(),
-                        connect_toggled(sender) => move |checkbox| {
-                            send!(sender, ContentMsg::SetTaskCompleted(key.clone(), checkbox.is_active()));
-                        }
-                    },
+
                     append = &gtk::Box {
                         set_orientation: gtk::Orientation::Horizontal,
                         set_spacing: 5,
-                        append: label = &gtk::Entry {
-                            add_css_class: "flat",
-                            add_css_class: "no-border",
-                            set_hexpand: true,
-                            set_text: &self.title,
-                            connect_activate(sender) => move |entry| {
-                                let buffer = entry.buffer();
-                                send!(sender, ContentMsg::ModifyTaskTitle(key2.clone(), buffer.text()));
-                            },
-                            connect_changed(sender) => move |entry| {
-                                let buffer = entry.buffer();
-                                send!(sender, ContentMsg::ModifyTaskTitle(key3.clone(), buffer.text()));
+                        set_margin_top: 10,
+                        set_margin_bottom: 10,
+                        set_margin_start: 10,
+                        set_margin_end: 10,
+                        append = &gtk::CheckButton {
+                            set_active: self.status.as_bool(),
+                            connect_toggled(sender) => move |checkbox| {
+                                send!(sender, ContentMsg::SetTaskCompleted(key.clone(), checkbox.is_active()));
                             }
                         },
-                        append: favorite = &gtk::ToggleButton {
-                            add_css_class: "opaque",
-                            add_css_class: "circular",
-                            set_class_active: track!(self.changed(Task::favorite()), "favorite", self.favorite),
-                            set_active: track!(self.changed(Task::favorite()), self.favorite),
-                            set_icon_name: "starred-symbolic",
-                            connect_toggled(sender) => move |button| {
-                                if button.is_active() {
-                                    button.add_css_class("favorite");
-                                } else {
-                                    button.remove_css_class("favorite");
+                        append = &gtk::Box {
+                            set_orientation: gtk::Orientation::Horizontal,
+                            set_spacing: 5,
+                            append: label = &gtk::Entry {
+                                add_css_class: "flat",
+                                add_css_class: "no-border",
+                                set_hexpand: true,
+                                set_text: &self.title,
+                                connect_activate(sender) => move |entry| {
+                                    let buffer = entry.buffer();
+                                    send!(sender, ContentMsg::ModifyTaskTitle(key2.clone(), buffer.text()));
+                                },
+                                connect_changed(sender) => move |entry| {
+                                    let buffer = entry.buffer();
+                                    send!(sender, ContentMsg::ModifyTaskTitle(key3.clone(), buffer.text()));
                                 }
-                                send!(sender, ContentMsg::SetTaskFavorite(key4.clone(), button.is_active()));
-                            }
-                        },
-                        append: delete = &gtk::Button {
-                            add_css_class: "destructive-action",
-                            add_css_class: "circular",
-                            set_icon_name: "user-trash-symbolic",
-                            connect_clicked(sender) => move |_| {
-                                send!(sender, ContentMsg::RemoveTask(key5.clone()));
+                            },
+                            append: favorite = &gtk::ToggleButton {
+                                add_css_class: "opaque",
+                                add_css_class: "circular",
+                                set_class_active: track!(self.changed(Task::favorite()), "favorite", self.favorite),
+                                set_active: track!(self.changed(Task::favorite()), self.favorite),
+                                set_icon_name: "starred-symbolic",
+                                connect_toggled(sender) => move |button| {
+                                    if button.is_active() {
+                                        button.add_css_class("favorite");
+                                    } else {
+                                        button.remove_css_class("favorite");
+                                    }
+                                    send!(sender, ContentMsg::SetTaskFavorite(key4.clone(), button.is_active()));
+                                }
+                            },
+                            append: delete = &gtk::Button {
+                                add_css_class: "destructive-action",
+                                add_css_class: "circular",
+                                set_icon_name: "user-trash-symbolic",
+                                connect_clicked(sender) => move |_| {
+                                    send!(sender, ContentMsg::RemoveTask(key5.clone()));
+                                }
                             }
                         }
                     }
