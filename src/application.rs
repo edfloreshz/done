@@ -85,7 +85,7 @@ impl DoneApplication {
         let dialog = gtk::AboutDialog::builder()
             .transient_for(&window)
             .modal(true)
-            .program_name("Done")
+            .program_name("done")
             .version(VERSION)
             .authors(vec!["Eduardo Flores".into()])
             .build();

@@ -17,6 +17,7 @@ use anyhow::Result;
 use relm4::{adw, gtk, RelmApp};
 use widgets::app::AppModel;
 use diesel_migrations::embed_migrations;
+use glib::Cast;
 
 use crate::adw::prelude::ApplicationExt;
 use crate::application::DoneApplication;
@@ -27,6 +28,7 @@ embed_migrations!("migrations");
 fn main() -> Result<()> {
     let application = DoneApplication::new("dev.edfloreshz.Done", &gtk::gio::ApplicationFlags::HANDLES_OPEN);
     application.connect_startup(|_| load_css());
+    let application = application.upcast();
     set_debug_options()?;
     let app = RelmApp::with_app(AppModel::new(), application);
     app.run();

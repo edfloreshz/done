@@ -8,7 +8,7 @@ use relm4::{
     AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
 };
 
-use crate::widgets::details::DetailsModel;
+// use crate::widgets::details::DetailsModel;
 use crate::widgets::sidebar::SidebarModel;
 
 // static RT: OnceCell<Runtime> = OnceCell::new();
@@ -32,8 +32,8 @@ impl Model for AppModel {
 impl AppUpdate for AppModel {
     fn update(
         &mut self,
-        msg: Self::Msg,
-        components: &Self::Components,
+        _msg: Self::Msg,
+        _components: &Self::Components,
         _sender: Sender<Self::Msg>,
     ) -> bool {
         true
@@ -42,14 +42,14 @@ impl AppUpdate for AppModel {
 
 pub struct AppComponents {
     sidebar: RelmComponent<SidebarModel, AppModel>,
-    details: RelmComponent<DetailsModel, AppModel>,
+    // details: RelmComponent<DetailsModel, AppModel>,
 }
 
 impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
             sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
-            details: RelmComponent::new(parent_model, parent_sender),
+            // details: RelmComponent::new(parent_model, parent_sender),
         }
     }
 
