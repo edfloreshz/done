@@ -71,6 +71,9 @@ provided by GNOME To Do to provide the ultimate to do experience.
 - [ ] Set a due date
 - [ ] Set recurrence for a task
 
+### Backups
+- [ ] Export tasks
+
 ## Dependencies to build
 - gtk4
 - libadwaita
