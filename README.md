@@ -61,6 +61,7 @@ provided by GNOME To Do to provide the ultimate to do experience.
 - [ ] Delete a task
 - [ ] Rename a task
 - [ ] Add steps
+- [ ] Add tags
 - [ ] Add to My Day
 - [x] Mark as Favorite
 - [ ] Add notes
