@@ -63,7 +63,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
             set_default_width: 800,
             set_default_height: 700,
             set_width_request: 460,
-            set_height_request: 700,
+            set_height_request: 400,
 
             set_content: overlay = Some(&gtk::Overlay) {
                 set_child: stack = Some(&gtk::Stack) {

@@ -1,6 +1,6 @@
 pub mod app;
-pub mod content;
 pub mod details;
 pub mod list;
 pub mod sidebar;
-pub mod task;
+pub mod task_list;
+pub mod task_container;

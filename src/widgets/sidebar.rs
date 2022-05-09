@@ -10,9 +10,9 @@ use relm4::{
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
-use crate::widgets::content::{ContentModel, ContentMsg};
 use crate::widgets::list::List;
 use crate::AppModel;
+use crate::widgets::task_container::{TaskListModel, TaskMsg};
 
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
@@ -34,13 +34,13 @@ impl Model for SidebarModel {
 }
 
 pub struct SidebarComponents {
-    content: RelmComponent<ContentModel, SidebarModel>,
+    task_list: RelmComponent<TaskListModel, SidebarModel>,
 }
 
 impl Components<SidebarModel> for SidebarComponents {
     fn init_components(parent_model: &SidebarModel, parent_sender: Sender<SidebarMsg>) -> Self {
         SidebarComponents {
-            content: RelmComponent::new(parent_model, parent_sender),
+            task_list: RelmComponent::new(parent_model, parent_sender),
         }
     }
 
@@ -109,8 +109,8 @@ impl ComponentUpdate<AppModel> for SidebarModel {
                 let model = self.lists.index(index).model_mut().unwrap();
                 self.selected_list = (index, model.id_list.clone());
                 components
-                    .content
-                    .send(ContentMsg::UpdateWidgetData(index, model.id_list.clone()))
+                    .task_list
+                    .send(TaskMsg::OnUpdate(index, model.id_list.clone()))
                     .unwrap();
                 drop(model);
                 self.lists.index(index).update_view().unwrap();
@@ -213,6 +213,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                                             if !buffer.text().is_empty() {
                                                 send!(sender, SidebarMsg::AddList(buffer.text()))
                                             }
+                                            new_list_entry.set_text("");
                                         })
                                     },
                                     append: cancel_button = &gtk::Button {
@@ -266,7 +267,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                     set_hexpand: true,
                     set_show_end_title_buttons: true,
                 },
-                append: &components.content.widgets().unwrap().task_container,
+                append: &components.task_list.widgets().unwrap().task_container,
             }
         }
     }

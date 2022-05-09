@@ -3,7 +3,7 @@ use diesel::{Insertable, Queryable};
 use uuid::Uuid;
 
 use crate::schema::tasks;
-use crate::widgets::task::Task;
+use crate::widgets::task_list::Task;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
 #[table_name = "tasks"]
