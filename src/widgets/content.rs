@@ -74,9 +74,11 @@ impl ComponentUpdate<SidebarModel> for ContentModel {
         let id = &self.id_list;
         match msg {
             ContentMsg::AddTaskEntry(title) => {
-                post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks.push_back(Task::new(title, id.to_owned()));
-                send!(parent_sender, SidebarMsg::UpdateCounters)
+                if !title.is_empty() {
+                    post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
+                    self.tasks.push_back(Task::new(title, id.to_owned()));
+                    send!(parent_sender, SidebarMsg::UpdateCounters)
+                }
             }
             ContentMsg::RemoveTask(index) => {
                 let index = index.current_index();
