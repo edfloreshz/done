@@ -3,9 +3,9 @@
 use relm4::{
     adw,
     adw::prelude::AdwApplicationWindowExt,
-    gtk,
-    gtk::prelude::{GtkWindowExt, WidgetExt},
-    AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
+    AppUpdate,
+    Components,
+    gtk, gtk::prelude::{GtkWindowExt, WidgetExt}, Model, RelmComponent, Sender, Widgets,
 };
 
 // use crate::widgets::details::DetailsModel;
@@ -62,8 +62,8 @@ impl Widgets<AppModel, ()> for AppWidgets {
         window = adw::ApplicationWindow {
             set_default_width: 800,
             set_default_height: 700,
-            set_width_request: 460,
-            set_height_request: 400,
+            set_width_request: 300,
+            set_height_request: 300,
 
             set_content: overlay = Some(&gtk::Overlay) {
                 set_child: stack = Some(&gtk::Stack) {

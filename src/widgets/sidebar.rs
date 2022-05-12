@@ -1,17 +1,17 @@
 use std::ops::Index;
-use glib::clone;
 
-use gtk4::prelude::{BoxExt, OrientableExt, EntryExt, EntryBufferExtManual, WidgetExt, ButtonExt, PopoverExt, ListBoxRowExt, EditableExt};
+use glib::clone;
+use gtk4::prelude::{BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, ListBoxRowExt, OrientableExt, PopoverExt, WidgetExt};
 use relm4::{
-    adw, gtk, send, ComponentUpdate, Components, MicroComponent, Model, RelmComponent, Sender,
+    adw, Components, ComponentUpdate, gtk, MicroComponent, Model, RelmComponent, send, Sender,
     WidgetPlus, Widgets,
 };
 
+use crate::AppModel;
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
 use crate::widgets::list::List;
-use crate::AppModel;
 use crate::widgets::task_container::{TaskListModel, TaskMsg};
 
 pub struct SidebarModel {
@@ -246,15 +246,6 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                                 }).collect::<Vec<&gtk::Box>>()
                             }
                         },
-                    },
-                    append: action_buttons = &gtk::Box {
-                        set_orientation: gtk::Orientation::Horizontal,
-                        set_spacing: 10,
-                        set_margin_top: 10,
-                        set_margin_bottom: 10,
-                        set_margin_start: 10,
-                        set_margin_end: 10,
-                        set_halign: gtk::Align::Fill
                     },
                 }
             },
