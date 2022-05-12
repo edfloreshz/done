@@ -17,13 +17,13 @@ configure_file(
 # Copy the const.rs output to the source directory.
 run_command(
   'cp',
-  join_paths(meson.project_build_root(), 'src', 'const.rs'),
-  join_paths(meson.project_source_root(), 'src', 'const.rs'),
+  join_paths(meson.project_build_root(), 'src', 'constants.rs'),
+  join_paths(meson.project_source_root(), 'src', 'constants.rs'),
   check: true
 )
 
 rust_sources = files(
-  'const.rs',
+  'constants.rs',
   'config.rs',
   'main.rs',
   'schema.rs',
@@ -37,12 +37,12 @@ rust_sources = files(
   'storage/database.rs',
   'storage/mod.rs',
   'widgets/app.rs',
-  'widgets/content.rs',
+  'widgets/task_container.rs',
   'widgets/details.rs',
   'widgets/list.rs',
   'widgets/mod.rs',
   'widgets/sidebar.rs',
-  'widgets/task.rs',
+  'widgets/task_list.rs',
 )
 
 sources = [cargo_sources, rust_sources]
