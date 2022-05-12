@@ -1,4 +1,5 @@
 use crate::models::task::QueryableTask;
+use crate::widgets::task_container::TaskMsg;
 use glib::Sender;
 use gtk4::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
 use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
@@ -13,7 +14,6 @@ use relm4_macros::view;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use uuid::Uuid;
-use crate::widgets::task_container::TaskMsg;
 
 #[tracker::track]
 #[derive(Debug, Clone)]

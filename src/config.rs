@@ -1,14 +1,16 @@
 use crate::adw::gdk::Display;
+use crate::embedded_migrations;
 use crate::storage::database::DatabaseConnection;
 use anyhow::Result;
 use gtk4::{CssProvider, StyleContext};
 use libset::config::Config;
 use libset::fi;
-use crate::embedded_migrations;
 
 pub fn set_debug_options() -> Result<()> {
     let config = get_config();
-    let user_database = dirs::data_dir().unwrap().join("done/dev.edfloreshz.Done.db");
+    let user_database = dirs::data_dir()
+        .unwrap()
+        .join("done/dev.edfloreshz.Done.db");
     if !config.is_written() || !user_database.exists() {
         config.write()?;
     }

@@ -1,13 +1,17 @@
-use std::collections::VecDeque;
-use glib::Sender;
-use relm4::factory::{DynamicIndex, FactoryVecDeque};
-use relm4::{ComponentUpdate, Model, send, Widgets, WidgetPlus};
-use relm4::gtk::gio::File;
-use relm4::gtk;
-use relm4::gtk::prelude::{OrientableExt, WidgetExt, BoxExt, EntryExt, EntryBufferExtManual, ButtonExt};
-use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
+use crate::core::local::tasks::{
+    delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
+};
 use crate::widgets::sidebar::{SidebarModel, SidebarMsg};
 use crate::widgets::task_list::{Task, TaskStatus};
+use glib::Sender;
+use relm4::factory::{DynamicIndex, FactoryVecDeque};
+use relm4::gtk;
+use relm4::gtk::gio::File;
+use relm4::gtk::prelude::{
+    BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
+};
+use relm4::{send, ComponentUpdate, Model, WidgetPlus, Widgets};
+use std::collections::VecDeque;
 
 #[tracker::track]
 #[derive(Debug)]
@@ -16,7 +20,7 @@ pub struct TaskListModel {
     pub index: usize,
     pub show_tasks: bool,
     #[no_eq]
-    pub tasks: FactoryVecDeque<Task>
+    pub tasks: FactoryVecDeque<Task>,
 }
 
 pub enum TaskMsg {
@@ -47,11 +51,17 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
             index,
             show_tasks: tasks.clone().is_empty(),
             tasks: FactoryVecDeque::from_vec_deque(tasks),
-            tracker: 0
+            tracker: 0,
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, components: &Self::Components, sender: Sender<Self::Msg>, parent_sender: Sender<SidebarMsg>) {
+    fn update(
+        &mut self,
+        msg: Self::Msg,
+        components: &Self::Components,
+        sender: Sender<Self::Msg>,
+        parent_sender: Sender<SidebarMsg>,
+    ) {
         self.reset();
         let id = &self.parent_list;
         match msg {
@@ -124,10 +134,8 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
     }
 }
 
-
 #[relm4_macros::widget(pub)]
 impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
-
     view! {
         task_container = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
@@ -196,4 +204,3 @@ impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
         }
     }
 }
-

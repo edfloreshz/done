@@ -1,6 +1,6 @@
-use gtk4 as gtk;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
+use gtk4 as gtk;
 
 mod imp {
     use super::*;
@@ -29,7 +29,6 @@ glib::wrapper! {
 
 impl DoneWindow {
     pub fn new<P: glib::IsA<gtk::Application>>(application: &P) -> Self {
-        glib::Object::new(&[("application", application)])
-            .expect("Failed to create DoneWindow")
+        glib::Object::new(&[("application", application)]).expect("Failed to create DoneWindow")
     }
 }

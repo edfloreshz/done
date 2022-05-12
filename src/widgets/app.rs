@@ -3,9 +3,9 @@
 use relm4::{
     adw,
     adw::prelude::AdwApplicationWindowExt,
-    AppUpdate,
-    Components,
-    gtk, gtk::prelude::{GtkWindowExt, WidgetExt}, Model, RelmComponent, Sender, Widgets,
+    gtk,
+    gtk::prelude::{GtkWindowExt, WidgetExt},
+    AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
 };
 
 // use crate::widgets::details::DetailsModel;

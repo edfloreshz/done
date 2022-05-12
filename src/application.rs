@@ -1,10 +1,10 @@
+use adw::subclass::prelude::*;
 use glib::clone;
-use relm4::gtk as gtk;
-use relm4::adw as adw;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
-use adw::subclass::prelude::*;
+use relm4::adw;
+use relm4::gtk;
 
 use crate::constants::VERSION;
 use crate::window::DoneWindow;
