@@ -3,15 +3,12 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-mod application;
-mod config;
-mod constants;
+mod app;
 mod core;
 mod models;
 mod schema;
 mod storage;
 mod widgets;
-mod window;
 
 use anyhow::Result;
 use diesel_migrations::embed_migrations;
@@ -20,8 +17,8 @@ use relm4::{adw, gtk, RelmApp};
 use widgets::app::AppModel;
 
 use crate::adw::prelude::ApplicationExt;
-use crate::application::DoneApplication;
-use crate::config::{load_css, set_debug_options};
+use app::application::DoneApplication;
+use app::config::{load_css, set_debug_options};
 
 embed_migrations!("migrations");
 

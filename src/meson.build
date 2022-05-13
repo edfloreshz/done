@@ -8,25 +8,13 @@ conf.set_quoted('PKGDATADIR', pkgdatadir)
 conf.set_quoted('APPLICATION_ID', application_id)
 conf.set_quoted('PROFILE', get_option('profile'))
 
-configure_file(
-    input: 'constants.rs.in',
-    output: 'constants.rs',
-    configuration: conf
-)
-
-# Copy the const.rs output to the source directory.
-run_command(
-  'cp',
-  join_paths(meson.project_build_root(), 'src', 'constants.rs'),
-  join_paths(meson.project_source_root(), 'src', 'constants.rs'),
-  check: true
-)
-
 rust_sources = files(
-  'constants.rs',
-  'config.rs',
   'main.rs',
   'schema.rs',
+  'app/constants.rs',
+  'app/config.rs',
+  'app/application.rs',
+  'app/window.rs',
   'core/local/lists.rs',
   'core/local/tasks.rs',
   'core/local/mod.rs',
@@ -65,3 +53,5 @@ cargo_release = custom_target(
     meson.project_name(),
   ]
 )
+
+subdir('app')

@@ -22,7 +22,7 @@ pub fn set_debug_options() -> Result<()> {
 pub fn load_css() {
     // Load the CSS file and add it to the provider
     let provider = CssProvider::new();
-    provider.load_from_data(include_bytes!("themes/Adwaita.css"));
+    provider.load_from_data(include_bytes!("../themes/Adwaita.css"));
 
     // Add the provider to the default screen
     StyleContext::add_provider_for_display(

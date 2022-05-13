@@ -6,8 +6,8 @@ use gtk::{gio, glib};
 use relm4::adw;
 use relm4::gtk;
 
-use crate::constants::VERSION;
-use crate::window::DoneWindow;
+use crate::app::constants::VERSION;
+use crate::app::window::DoneWindow;
 
 mod imp {
     use super::*;

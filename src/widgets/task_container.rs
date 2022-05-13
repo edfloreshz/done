@@ -30,6 +30,7 @@ pub enum TaskMsg {
     SetFavorite(DynamicIndex, bool),
     ModifyTitle(DynamicIndex, String),
     OnUpdate(usize, String),
+    RemoveWelcomeScreen,
 }
 
 impl Model for TaskListModel {
@@ -58,8 +59,8 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
     fn update(
         &mut self,
         msg: Self::Msg,
-        components: &Self::Components,
-        sender: Sender<Self::Msg>,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
         parent_sender: Sender<SidebarMsg>,
     ) {
         self.reset();
@@ -130,6 +131,9 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
                 }
                 self.set_show_tasks(!self.tasks.is_empty());
             }
+            TaskMsg::RemoveWelcomeScreen => {
+                self.set_show_tasks(true);
+            }
         }
     }
 }
@@ -137,39 +141,35 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
 #[relm4_macros::widget(pub)]
 impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
     view! {
-        task_container = &gtk::Box {
-            set_orientation: gtk::Orientation::Vertical,
-            append = &gtk::Box {
+        task_container = &gtk::Stack {
+            set_vexpand: true,
+            add_child = &gtk::CenterBox {
                 set_orientation: gtk::Orientation::Vertical,
                 set_visible: track!(model.changed(TaskListModel::show_tasks()), !model.show_tasks),
-                append = &gtk::CenterBox {
+                set_halign: gtk::Align::Center,
+                set_valign: gtk::Align::Center,
+                set_center_widget = Some(&gtk::Box) {
                     set_orientation: gtk::Orientation::Vertical,
-                    set_start_widget = Some(&gtk::Box) {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_margin_all: 24,
-                        set_spacing: 50,
-
-                        set_halign: gtk::Align::Center,
-                        set_valign: gtk::Align::Center,
-                        set_vexpand: true,
-                        append = &gtk::Picture {
-                            set_file: Some(&File::for_uri("https://cdn-icons-png.flaticon.com/512/7235/7235469.png")),
-                            set_margin_all: 50
-                        },
-                        append = &gtk::Label {
-                            add_css_class: "title",
-                            set_text: "Tasks Will Appear Here"
-                        },
-                        append = &gtk::Button {
-                            set_hexpand: false,
-                            add_css_class: "suggested-action",
-                            set_width_request: 400,
-                            set_label: "Add Tasks..."
-                        },
+                    set_margin_all: 24,
+                    set_spacing: 24,
+                    append = &gtk::Picture {
+                        set_file: Some(&File::for_uri("https://raw.githubusercontent.com/edfloreshz/done/4a5e22c118e58c6de1758c76daf164bd6ad6ce38/src/widgets/assets/all-done.svg")),
+                    },
+                    append = &gtk::Label {
+                        add_css_class: "title",
+                        set_text: "Tasks Will Appear Here"
+                    },
+                    append = &gtk::Button {
+                        set_visible: track!(model.changed(TaskListModel::index()), model.index > 5),
+                        add_css_class: "suggested-action",
+                        set_label: "Add Tasks...",
+                        connect_clicked(sender) => move |_| {
+                            send!(sender, TaskMsg::RemoveWelcomeScreen)
+                        }
                     }
-                },
+                }
             },
-            append = &gtk::Box {
+            add_child = &gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_visible: track!(model.changed(TaskListModel::show_tasks()), model.show_tasks),
                 append = &gtk::Box {

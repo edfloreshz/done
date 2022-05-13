@@ -6,17 +6,17 @@ use gtk4::prelude::{
     PopoverExt, WidgetExt,
 };
 use relm4::{
-    adw, Components, ComponentUpdate, gtk, MicroComponent, Model, RelmComponent, send, Sender,
+    adw, gtk, send, ComponentUpdate, Components, MicroComponent, Model, RelmComponent, Sender,
     WidgetPlus, Widgets,
 };
 
-use crate::AppModel;
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
 use crate::widgets::list::List;
 use crate::widgets::task_container::{TaskListModel, TaskMsg};
 use crate::widgets::theme_selector::ThemeSelector;
+use crate::AppModel;
 
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
