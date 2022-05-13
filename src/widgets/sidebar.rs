@@ -6,16 +6,17 @@ use gtk4::prelude::{
     PopoverExt, WidgetExt,
 };
 use relm4::{
-    adw, gtk, send, ComponentUpdate, Components, MicroComponent, Model, RelmComponent, Sender,
+    adw, Components, ComponentUpdate, gtk, MicroComponent, Model, RelmComponent, send, Sender,
     WidgetPlus, Widgets,
 };
 
+use crate::AppModel;
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
 use crate::widgets::list::List;
 use crate::widgets::task_container::{TaskListModel, TaskMsg};
-use crate::AppModel;
+use crate::widgets::theme_selector::ThemeSelector;
 
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
@@ -38,12 +39,14 @@ impl Model for SidebarModel {
 
 pub struct SidebarComponents {
     task_list: RelmComponent<TaskListModel, SidebarModel>,
+    theme_selector: RelmComponent<ThemeSelector, SidebarModel>,
 }
 
 impl Components<SidebarModel> for SidebarComponents {
     fn init_components(parent_model: &SidebarModel, parent_sender: Sender<SidebarMsg>) -> Self {
         SidebarComponents {
-            task_list: RelmComponent::new(parent_model, parent_sender),
+            task_list: RelmComponent::new(parent_model, parent_sender.clone()),
+            theme_selector: RelmComponent::new(parent_model, parent_sender),
         }
     }
 
@@ -171,7 +174,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                         set_has_frame: true,
                         set_direction: gtk::ArrowType::None,
                         set_popover: open_menu_popover = Some(&gtk::Popover) {
-
+                            set_child: Some(&components.theme_selector.widgets().unwrap().popover),
                         }
                     },
                     pack_start: new_list_button = &gtk::MenuButton {
