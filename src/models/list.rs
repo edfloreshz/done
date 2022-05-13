@@ -1,5 +1,5 @@
 use crate::schema::lists;
-use crate::widgets::list::List;
+use crate::widgets::panel::list::List;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

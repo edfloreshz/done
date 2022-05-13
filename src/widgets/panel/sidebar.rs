@@ -13,9 +13,9 @@ use relm4::{
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
 use crate::widgets::app::AppMsg;
-use crate::widgets::list::List;
-use crate::widgets::task_container::{TaskListModel, TaskMsg};
-use crate::widgets::theme_selector::ThemeSelector;
+use crate::widgets::panel::list::List;
+use crate::widgets::content::task_container::{TaskListModel, TaskMsg};
+use crate::widgets::panel::theme_selector::ThemeSelector;
 use crate::AppModel;
 
 pub struct SidebarModel {
@@ -200,13 +200,16 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                                             }
                                         },
                                         append: providers_button = &gtk::MenuButton {
+                                            set_visible: false,
                                             set_icon_name: "x-office-address-book-symbolic",
                                             add_css_class: "raised",
                                             set_has_frame: true,
                                             set_direction: gtk::ArrowType::Right,
                                             set_popover = Some(&gtk::Popover) {
                                                 set_child = Some(&gtk::Stack) {
-
+                                                    add_child = &gtk::Label {
+                                                        set_text: "Providers"
+                                                    }
                                                 }
                                             }
                                         }
@@ -226,7 +229,7 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                                         set_label: "Cancel",
                                         connect_clicked: clone!(@weak new_list_popover, @weak new_list_entry, @strong sender => move |_| {
                                             new_list_entry.set_text("");
-                                            // new_list_popover.close();
+                                            new_list_popover.popdown();
                                         })
                                     },
                                 }

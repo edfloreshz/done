@@ -9,14 +9,10 @@ use relm4::{
     gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt},
     send, ComponentUpdate, Model, Widgets,
 };
-use relm4::adw::ColorScheme;
 
-use crate::widgets::sidebar::{SidebarModel, SidebarMsg};
+use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
 
-#[tracker::track]
-pub struct ThemeSelector {
-    color_scheme: ColorScheme
-}
+pub struct ThemeSelector;
 
 impl Model for ThemeSelector {
     type Msg = ThemeSelectorMsg;
@@ -32,10 +28,7 @@ pub enum ThemeSelectorMsg {
 
 impl ComponentUpdate<SidebarModel> for ThemeSelector {
     fn init_model(_parent_model: &SidebarModel) -> Self {
-        Self {
-            color_scheme: ColorScheme::Default,
-            tracker: 0
-        }
+        Self
     }
 
     fn update(
@@ -49,15 +42,12 @@ impl ComponentUpdate<SidebarModel> for ThemeSelector {
             let style_manager = get_style_manager();
             match msg {
                 ThemeSelectorMsg::ForceLight => {
-                    self.set_color_scheme(ColorScheme::ForceLight);
                     set_color_scheme(style_manager, ForceLight);
                 }
                 ThemeSelectorMsg::ForceDark => {
-                    self.set_color_scheme(ColorScheme::ForceDark);
                     set_color_scheme(style_manager, ForceDark);
                 }
                 ThemeSelectorMsg::FollowSystem => {
-                    self.set_color_scheme(ColorScheme::Default);
                     set_color_scheme(style_manager, Default);
                 }
             }

@@ -9,7 +9,7 @@ use relm4::{
 };
 
 // use crate::widgets::details::DetailsModel;
-use crate::widgets::sidebar::SidebarModel;
+use crate::widgets::panel::sidebar::SidebarModel;
 
 // static RT: OnceCell<Runtime> = OnceCell::new();
 

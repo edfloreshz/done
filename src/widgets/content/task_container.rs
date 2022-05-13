@@ -1,8 +1,8 @@
 use crate::core::local::tasks::{
     delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
 };
-use crate::widgets::sidebar::{SidebarModel, SidebarMsg};
-use crate::widgets::task_list::{Task, TaskStatus};
+use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
+use crate::widgets::content::task_list::{Task, TaskStatus};
 use glib::Sender;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::gtk;
