@@ -87,6 +87,8 @@ impl DoneApplication {
             .modal(true)
             .program_name("done")
             .version(VERSION)
+            .website_label("Done Website")
+            .website("https://done.edfloreshz.dev/")
             .authors(vec!["Eduardo Flores".into()])
             .build();
 

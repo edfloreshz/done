@@ -21,6 +21,7 @@ use crate::AppModel;
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
     pub selected_list: (usize, String),
+    message: Option<SidebarMsg>,
 }
 
 pub enum SidebarMsg {
@@ -29,6 +30,10 @@ pub enum SidebarMsg {
     ListSelected(usize),
     Rename(usize, String),
     UpdateCounters,
+    Folded,
+    Unfolded,
+    GoBack,
+    GoNext
 }
 
 impl Model for SidebarModel {
@@ -93,6 +98,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
         SidebarModel {
             lists,
             selected_list: Default::default(),
+            message: None
         }
     }
 
@@ -144,6 +150,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
                     list.update_view().unwrap();
                 }
             }
+            _ => self.message = Some(msg)
         }
     }
 }
@@ -153,10 +160,10 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
     view! {
         leaflet = &adw::Leaflet {
             set_can_navigate_back: true,
-            append = &gtk::Box {
+            append: sidebar = &gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_width_request: 280,
-                append = &adw::HeaderBar {
+                append: sidebar_header = &adw::HeaderBar {
                     set_show_end_title_buttons: false,
                     set_title_widget = Some(&gtk::Box) {
                         set_orientation: gtk::Orientation::Horizontal,
@@ -173,9 +180,15 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                         add_css_class: "flat",
                         set_has_frame: true,
                         set_direction: gtk::ArrowType::None,
-                        set_popover: open_menu_popover = Some(&gtk::Popover) {
-                            set_child: Some(&components.theme_selector.widgets().unwrap().popover),
-                        }
+                        set_popover = Some(&gtk::Popover) {
+                             set_child = Some(&gtk::Box) {
+                                set_orientation: gtk::Orientation::Vertical,
+                                append: &components.theme_selector.widgets().unwrap().theme_selector,
+                                append = &gtk::Button {
+                                    set_label: "About"
+                                }
+                            },
+                        },
                     },
                     pack_start: new_list_button = &gtk::MenuButton {
                         set_icon_name: "value-increase-symbolic",
@@ -247,13 +260,14 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                             set_css_classes: &["navigation-sidebar"],
                             connect_row_activated(sender) => move |listbox, _| {
                                 let index = listbox.selected_row().unwrap().index() as usize;
-                                send!(sender, SidebarMsg::ListSelected(index))
+                                send!(sender, SidebarMsg::ListSelected(index));
+                                send!(sender, SidebarMsg::GoNext)
                             },
                             append: iterate! {
                                 model.lists.iter().map(|list| {
                                     list.root_widget() as &gtk::Box
                                 }).collect::<Vec<&gtk::Box>>()
-                            }
+                            },
                         },
                     },
                 }
@@ -266,8 +280,43 @@ impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
                 append = &adw::HeaderBar {
                     set_hexpand: true,
                     set_show_end_title_buttons: true,
+                    pack_start: go_back_button = &gtk::Button {
+                        set_icon_name: "go-previous-symbolic",
+                        set_visible: false,
+                        connect_clicked(sender) => move |_| {
+                            send!(sender, SidebarMsg::GoBack);
+                        }
+                    },
                 },
                 append: &components.task_list.widgets().unwrap().task_container,
+            },
+            connect_folded_notify(sender) => move |leaflet| {
+                if leaflet.is_folded() {
+                    send!(sender, SidebarMsg::Folded);
+                } else {
+                    send!(sender, SidebarMsg::Unfolded);
+                }
+            },
+        }
+    }
+
+    fn pre_view() {
+        if let Some(msg) = &model.message {
+            match msg {
+                SidebarMsg::Folded => {
+                    self.leaflet.set_visible_child(&self.content_box);
+                    self.go_back_button.set_visible(true);
+                    sidebar_header.set_show_start_title_buttons(true);
+                    sidebar_header.set_show_end_title_buttons(true);
+                }
+                SidebarMsg::Unfolded => {
+                    self.go_back_button.set_visible(false);
+                    sidebar_header.set_show_start_title_buttons(false);
+                    sidebar_header.set_show_end_title_buttons(false);
+                }
+                SidebarMsg::GoNext => self.leaflet.set_visible_child(&self.content_box),
+                SidebarMsg::GoBack => self.leaflet.set_visible_child(&self.sidebar),
+                _ => {}
             }
         }
     }

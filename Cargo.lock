@@ -136,6 +136,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dirs",
+ "gio",
  "glib",
  "gtk4",
  "libset",

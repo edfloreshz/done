@@ -79,7 +79,7 @@ impl MicroWidgets<List> for ListWidgets {
         smart_list_box = &gtk::Box {
             set_orientation: gtk::Orientation::Horizontal,
             append: icon = &gtk::Image {
-                set_from_icon_name: Some(&model.icon_name.as_ref().unwrap())
+                set_from_icon_name: Some(model.icon_name.as_ref().unwrap())
             },
             append: name = &gtk::Label {
                 set_halign: gtk::Align::Start,

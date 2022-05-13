@@ -58,7 +58,7 @@ impl ComponentUpdate<SidebarModel> for ThemeSelector {
 #[relm4_macros::widget(pub)]
 impl Widgets<ThemeSelector, SidebarModel> for ThemeSelectorWidgets {
     view! {
-        popover = &gtk::Box {
+        theme_selector = &gtk::Box {
             add_css_class: "theme-container",
             set_spacing: 12,
             append: follow = &gtk::ToggleButton {

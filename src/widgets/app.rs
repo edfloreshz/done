@@ -1,5 +1,3 @@
-// use once_cell::sync::OnceCell;
-// use tokio::runtime::Runtime;
 use relm4::{
     adw,
     adw::prelude::AdwApplicationWindowExt,
@@ -8,16 +6,13 @@ use relm4::{
     AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
 };
 
-// use crate::widgets::details::DetailsModel;
 use crate::widgets::panel::sidebar::SidebarModel;
-
-// static RT: OnceCell<Runtime> = OnceCell::new();
 
 pub struct AppModel;
 
 impl AppModel {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
 }
 
@@ -42,14 +37,12 @@ impl AppUpdate for AppModel {
 
 pub struct AppComponents {
     sidebar: RelmComponent<SidebarModel, AppModel>,
-    // details: RelmComponent<DetailsModel, AppModel>,
 }
 
 impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
             sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
-            // details: RelmComponent::new(parent_model, parent_sender),
         }
     }
 

@@ -15,6 +15,7 @@ readme = "README.md"
 [dependencies]
 gtk4 = "0.4.7"
 glib = "0.15.10"
+gio = "0.15.11"
 relm4 = {version = "0.4.4", features = ["libadwaita", "macros", "tokio-rt"] }
 relm4-components = "0.4.4"
 relm4-macros = "0.4.4"
