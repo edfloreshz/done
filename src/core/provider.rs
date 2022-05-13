@@ -1,5 +1,5 @@
 use crate::widgets::list::List;
-use crate::widgets::task::Task;
+use crate::widgets::task_list::Task;
 use anyhow::Result;
 use gtk4::gio::ffi::GIcon;
 
