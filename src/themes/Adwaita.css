@@ -55,6 +55,7 @@
     padding: 2px;
 }
 .toggle.theme-selector radio:checked {
+    /*noinspection CssInvalidFunction*/
     -gtk-icon-source: -gtk-icontheme("object-select-symbolic");
     background-color: @theme_selected_bg_color;
     color: @theme_selected_fg_color;

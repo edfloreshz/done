@@ -1,15 +1,16 @@
 use glib::Sender;
-use relm4::adw::ffi::{
-    adw_style_manager_get_default as get_style_manager,
-    adw_style_manager_set_color_scheme as set_color_scheme, ADW_COLOR_SCHEME_DEFAULT as Default,
-    ADW_COLOR_SCHEME_FORCE_DARK as ForceDark, ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
-};
 use relm4::{
+    ComponentUpdate,
     gtk,
-    gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt},
-    send, ComponentUpdate, Model, Widgets,
+    gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt}, Model, send, Widgets,
 };
-use crate::widgets::global::state::{StateModel, StateMsg};
+use relm4::adw::ffi::{
+    ADW_COLOR_SCHEME_DEFAULT as Default,
+    ADW_COLOR_SCHEME_FORCE_DARK as ForceDark, ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
+    adw_style_manager_get_default as get_style_manager, adw_style_manager_set_color_scheme as set_color_scheme,
+};
+
+use crate::widgets::app::{AppModel, AppMsg};
 
 pub struct ThemeSelector;
 
@@ -25,8 +26,8 @@ pub enum ThemeSelectorMsg {
     FollowSystem,
 }
 
-impl ComponentUpdate<StateModel> for ThemeSelector {
-    fn init_model(_parent_model: &StateModel) -> Self {
+impl ComponentUpdate<AppModel> for ThemeSelector {
+    fn init_model(_parent_model: &AppModel) -> Self {
         Self
     }
 
@@ -35,7 +36,7 @@ impl ComponentUpdate<StateModel> for ThemeSelector {
         msg: Self::Msg,
         _components: &Self::Components,
         _sender: Sender<Self::Msg>,
-        _parent_sender: Sender<StateMsg>,
+        _parent_sender: Sender<AppMsg>,
     ) {
         unsafe {
             let style_manager = get_style_manager();
@@ -55,7 +56,7 @@ impl ComponentUpdate<StateModel> for ThemeSelector {
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<ThemeSelector, StateModel> for ThemeSelectorWidgets {
+impl Widgets<ThemeSelector, AppModel> for ThemeSelectorWidgets {
     view! {
         theme_selector = &gtk::Box {
             add_css_class: "theme-container",

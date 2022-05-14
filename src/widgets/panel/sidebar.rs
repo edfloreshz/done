@@ -1,18 +1,13 @@
 use std::ops::Index;
 
-use gtk4::prelude::{
-    BoxExt, ListBoxRowExt, OrientableExt, WidgetExt,
-};
-use relm4::{
-    gtk, send, ComponentUpdate, MicroComponent, Model, Sender,
-    WidgetPlus, Widgets,
-};
+use gtk4::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt};
+use relm4::{gtk, send, ComponentUpdate, MicroComponent, Model, Sender, WidgetPlus, Widgets};
 
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
+use crate::widgets::contents::content::ContentMsg;
+use crate::widgets::app::{AppModel, AppMsg};
 use crate::widgets::panel::list::List;
-use crate::widgets::contents::content::{ContentMsg};
-use crate::widgets::global::state::{StateModel, StateMsg};
 
 pub struct SidebarModel {
     lists: Vec<MicroComponent<List>>,
@@ -25,7 +20,7 @@ pub enum SidebarMsg {
     ListSelected(usize),
     Rename(usize, String),
     UpdateCounters,
-    Forward
+    Forward,
 }
 
 impl Model for SidebarModel {
@@ -34,8 +29,8 @@ impl Model for SidebarModel {
     type Components = ();
 }
 
-impl ComponentUpdate<StateModel> for SidebarModel {
-    fn init_model(_: &StateModel) -> Self {
+impl ComponentUpdate<AppModel> for SidebarModel {
+    fn init_model(_: &AppModel) -> Self {
         let mut lists = vec![
             List::new_mc("Inbox", "document-save-symbolic", 0),
             List::new_mc("Today", "display-brightness-symbolic", 0),
@@ -82,7 +77,7 @@ impl ComponentUpdate<StateModel> for SidebarModel {
         msg: Self::Msg,
         _components: &Self::Components,
         _sender: Sender<Self::Msg>,
-        parent_sender: Sender<StateMsg>,
+        parent_sender: Sender<AppMsg>,
     ) {
         match msg {
             SidebarMsg::Delete(index) => {
@@ -95,7 +90,10 @@ impl ComponentUpdate<StateModel> for SidebarModel {
             SidebarMsg::ListSelected(index) => {
                 let model = self.lists.index(index).model_mut().unwrap();
                 self.selected_list = (index, model.id_list.clone());
-                send!(parent_sender, StateMsg::UpdateContent(ContentMsg::OnUpdate(index, model.id_list.clone())));
+                send!(
+                    parent_sender,
+                    AppMsg::UpdateContent(ContentMsg::OnUpdate(index, model.id_list.clone()))
+                );
                 drop(model);
                 self.lists.index(index).update_view().unwrap();
             }
@@ -123,14 +121,14 @@ impl ComponentUpdate<StateModel> for SidebarModel {
                 }
             }
             SidebarMsg::Forward => {
-                send!(parent_sender, StateMsg::Forward)
+                send!(parent_sender, AppMsg::Forward)
             }
         }
     }
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<SidebarModel, StateModel> for SidebarWidgets {
+impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
     view! {
         sidebar = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,

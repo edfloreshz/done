@@ -1,8 +1,8 @@
-use crate::models::task::QueryableTask;
-use crate::widgets::contents::content::ContentMsg;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
 use glib::Sender;
 use gtk4::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
-use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
 use relm4::{
     gtk,
     gtk::prelude::{
@@ -10,10 +10,12 @@ use relm4::{
     },
     send, WidgetPlus,
 };
+use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
 use relm4_macros::view;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
 use uuid::Uuid;
+
+use crate::models::task::QueryableTask;
+use crate::widgets::contents::content::ContentMsg;
 
 #[tracker::track]
 #[derive(Debug, Clone, Default)]
@@ -194,7 +196,7 @@ impl FactoryPrototype for Task {
                         },
                         append = &gtk::Box {
                             set_orientation: gtk::Orientation::Horizontal,
-                            set_spacing: 5,
+                            set_spacing: 15,
                             append: label = &gtk::Entry {
                                 add_css_class: "flat",
                                 add_css_class: "no-border",

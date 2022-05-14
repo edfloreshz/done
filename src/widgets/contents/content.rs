@@ -1,17 +1,17 @@
 use crate::core::local::tasks::{
     delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
 };
-use crate::widgets::panel::sidebar::{SidebarMsg};
 use crate::widgets::contents::task_list::{Task, TaskStatus};
+use crate::widgets::app::{AppModel, AppMsg};
+use crate::widgets::panel::sidebar::SidebarMsg;
 use glib::Sender;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
-use relm4::{gtk};
+use relm4::gtk;
 use relm4::gtk::gio::File;
 use relm4::gtk::prelude::{
     BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 };
 use relm4::{send, ComponentUpdate, Model, WidgetPlus, Widgets};
-use crate::widgets::global::state::{StateModel, StateMsg};
 
 #[tracker::track]
 #[derive(Debug)]
@@ -40,8 +40,8 @@ impl Model for ContentModel {
     type Components = ();
 }
 
-impl ComponentUpdate<StateModel> for ContentModel {
-    fn init_model(_: &StateModel) -> Self {
+impl ComponentUpdate<AppModel> for ContentModel {
+    fn init_model(_: &AppModel) -> Self {
         Self {
             parent_list: None,
             index: 0,
@@ -56,22 +56,30 @@ impl ComponentUpdate<StateModel> for ContentModel {
         msg: Self::Msg,
         _components: &Self::Components,
         _sender: Sender<Self::Msg>,
-        parent_sender: Sender<StateMsg>,
+        parent_sender: Sender<AppMsg>,
     ) {
         self.reset();
         let id = &self.parent_list;
         match msg {
             ContentMsg::Add(title) => {
-                post_task(id.as_ref().unwrap().to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks.push_back(Task::new(title, id.as_ref().unwrap().to_owned()));
-                send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
+                post_task(id.as_ref().unwrap().to_owned(), title.clone())
+                    .expect("Failed to post task.");
+                self.tasks
+                    .push_back(Task::new(title, id.as_ref().unwrap().to_owned()));
+                send!(
+                    parent_sender,
+                    AppMsg::UpdateSidebar(SidebarMsg::UpdateCounters)
+                )
             }
             ContentMsg::Remove(index) => {
                 let index = index.current_index();
                 if let Some(task) = self.tasks.get(index) {
                     delete_task(&task.id_task).expect("Failed to remove task.");
                     self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
-                    send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
+                    send!(
+                        parent_sender,
+                        AppMsg::UpdateSidebar(SidebarMsg::UpdateCounters)
+                    )
                 }
             }
             ContentMsg::SetCompleted(index, completed) => {
@@ -93,7 +101,10 @@ impl ComponentUpdate<StateModel> for ContentModel {
                     if self.index == 4 {
                         self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
                     }
-                    send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
+                    send!(
+                        parent_sender,
+                        AppMsg::UpdateSidebar(SidebarMsg::UpdateCounters)
+                    )
                 }
             }
             ContentMsg::ModifyTitle(index, title) => {
@@ -128,13 +139,13 @@ impl ComponentUpdate<StateModel> for ContentModel {
             }
             ContentMsg::RemoveWelcomeScreen => {
                 self.set_show_tasks(true);
-            },
+            }
         }
     }
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<ContentModel, StateModel> for ContentWidgets {
+impl Widgets<ContentModel, AppModel> for ContentWidgets {
     view! {
         tasks = &gtk::Stack {
             set_vexpand: true,

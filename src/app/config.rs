@@ -1,12 +1,12 @@
 use crate::adw::gdk::Display;
 use crate::embedded_migrations;
-use crate::storage::database::DatabaseConnection;
+use crate::storage::DatabaseConnection;
 use anyhow::Result;
 use gtk4::{CssProvider, StyleContext};
 use libset::config::Config;
 use libset::fi;
 
-pub fn set_debug_options() -> Result<()> {
+pub fn verify_data_integrity() -> Result<()> {
     let config = get_config();
     let user_database = dirs::data_dir()
         .unwrap()

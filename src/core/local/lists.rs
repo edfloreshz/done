@@ -4,7 +4,7 @@ use relm4::MicroComponent;
 
 use crate::models::list::QueryableList;
 use crate::schema::lists::dsl::*;
-use crate::storage::database::DatabaseConnection;
+use crate::storage::DatabaseConnection;
 use crate::widgets::panel::list::List;
 
 pub fn get_lists() -> Result<Vec<MicroComponent<List>>> {

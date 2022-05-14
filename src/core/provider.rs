@@ -1,5 +1,5 @@
-use crate::widgets::list::List;
-use crate::widgets::task_list::Task;
+use crate::widgets::contents::task_list::Task;
+use crate::widgets::panel::list::List;
 use anyhow::Result;
 use gtk4::gio::ffi::GIcon;
 
@@ -59,5 +59,5 @@ pub enum ProviderType {
     Todoist,
     Essential,
     Welcome,
-    Sidebar
+    Sidebar,
 }

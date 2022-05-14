@@ -1,8 +1,8 @@
 use adw::subclass::prelude::*;
 use glib::clone;
+use gtk::{gio, glib};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{gio, glib};
 use relm4::adw;
 use relm4::gtk;
 
@@ -51,6 +51,7 @@ mod imp {
     }
 
     impl GtkApplicationImpl for DoneApplication {}
+
     impl AdwApplicationImpl for DoneApplication {}
 }
 
@@ -80,14 +81,16 @@ impl DoneApplication {
         self.add_action(&about_action);
     }
 
-    fn show_about(&self) {
+    pub fn show_about(&self) {
         let window = self.active_window().unwrap();
         let dialog = gtk::AboutDialog::builder()
+            .comments("Comments")
+            .icon_name("dev.edfloreshz.Done")
             .transient_for(&window)
             .modal(true)
-            .program_name("done")
+            .program_name("Done")
             .version(VERSION)
-            .website_label("Done Website")
+            .website_label("Website")
             .website("https://done.edfloreshz.dev/")
             .authors(vec!["Eduardo Flores".into()])
             .build();

@@ -1,16 +1,17 @@
-use glib::{Sender, clone};
-use relm4::{send, gtk, ComponentUpdate, Model, Widgets};
-use crate::widgets::global::state::{StateModel, StateMsg};
+use glib::{clone, Sender};
 use gtk4::prelude::{
-    BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, OrientableExt,
-    PopoverExt, WidgetExt,
+    BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, OrientableExt, PopoverExt,
+    WidgetExt,
 };
+use relm4::{ComponentUpdate, gtk, Model, send, Widgets};
+
+use crate::widgets::app::{AppModel, AppMsg};
 use crate::widgets::panel::sidebar::SidebarMsg;
 
 pub struct NewListModel;
 
 pub enum NewListMsg {
-    AddList(String)
+    AddList(String),
 }
 
 impl Model for NewListModel {
@@ -19,20 +20,29 @@ impl Model for NewListModel {
     type Components = ();
 }
 
-impl ComponentUpdate<StateModel> for NewListModel {
-    fn init_model(_: &StateModel) -> Self {
+impl ComponentUpdate<AppModel> for NewListModel {
+    fn init_model(_: &AppModel) -> Self {
         Self
     }
 
-    fn update(&mut self, msg: Self::Msg, _components: &Self::Components, _sender: Sender<Self::Msg>, parent_sender: Sender<StateMsg>) {
+    fn update(
+        &mut self,
+        msg: Self::Msg,
+        _components: &Self::Components,
+        _sender: Sender<Self::Msg>,
+        parent_sender: Sender<AppMsg>,
+    ) {
         match msg {
-            NewListMsg::AddList(title) => send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::AddList(title)))
+            NewListMsg::AddList(title) => send!(
+                parent_sender,
+                AppMsg::UpdateSidebar(SidebarMsg::AddList(title))
+            ),
         }
     }
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<NewListModel, StateModel> for NewListWidgets {
+impl Widgets<NewListModel, AppModel> for NewListWidgets {
     view! {
         new_list_popover = Some(&gtk::Popover) {
             set_child = Some(&gtk::Stack) {

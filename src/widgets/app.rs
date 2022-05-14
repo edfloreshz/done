@@ -1,21 +1,37 @@
-use relm4::{
-    adw,
-    adw::prelude::AdwApplicationWindowExt,
-    gtk,
-    gtk::prelude::{GtkWindowExt, WidgetExt},
-    AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
-};
-use crate::widgets::global::state::StateModel;
+use glib::{Cast, clone};
+use glib::Sender;
+use gtk4::prelude::GtkWindowExt;
+use relm4::{AppUpdate, Components, ComponentUpdate, Model, RelmComponent, send, Widgets};
+use relm4::actions::{AccelsPlus, RelmAction, RelmActionGroup};
+use relm4::adw::ApplicationWindow;
+use relm4_macros::menu;
 
-pub struct AppModel;
+use crate::{adw, adw::prelude::AdwApplicationWindowExt, DoneApplication, gtk, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt}};
+use crate::widgets::contents::content::{ContentModel, ContentMsg};
+use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
+use crate::widgets::panel::theme_selector::ThemeSelector;
+use crate::widgets::popovers::new_list::NewListModel;
+
+pub struct AppModel {
+    message: Option<AppMsg>,
+}
 
 impl AppModel {
     pub fn new() -> Self {
-        Self
+        Self {
+            message: None
+        }
     }
 }
 
-pub enum AppMsg {}
+pub enum AppMsg {
+    UpdateContent(ContentMsg),
+    UpdateSidebar(SidebarMsg),
+    Folded,
+    Unfolded,
+    Forward,
+    Back,
+}
 
 impl Model for AppModel {
     type Msg = AppMsg;
@@ -26,22 +42,33 @@ impl Model for AppModel {
 impl AppUpdate for AppModel {
     fn update(
         &mut self,
-        _msg: Self::Msg,
-        _components: &Self::Components,
+        msg: Self::Msg,
+        components: &Self::Components,
         _sender: Sender<Self::Msg>,
     ) -> bool {
+        match msg {
+            AppMsg::UpdateContent(msg) => components.content.send(msg).unwrap(),
+            AppMsg::UpdateSidebar(msg) => components.sidebar.send(msg).unwrap(),
+            _ => self.message = Some(msg),
+        }
         true
     }
 }
 
 pub struct AppComponents {
-    state: RelmComponent<StateModel, AppModel>,
+    sidebar: RelmComponent<SidebarModel, AppModel>,
+    content: RelmComponent<ContentModel, AppModel>,
+    new_list: RelmComponent<NewListModel, AppModel>,
+    theme_selector: RelmComponent<ThemeSelector, AppModel>,
 }
 
 impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
-            state: RelmComponent::new(parent_model, parent_sender.clone()),
+            sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
+            content: RelmComponent::new(parent_model, parent_sender.clone()),
+            new_list: RelmComponent::new(parent_model, parent_sender.clone()),
+            theme_selector: RelmComponent::new(parent_model, parent_sender),
         }
     }
 
@@ -63,9 +90,112 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     set_vexpand: true,
                     set_transition_duration: 250,
                     set_transition_type: gtk::StackTransitionType::Crossfade,
-                    add_child: &components.state.widgets().unwrap().leaflet
+                    add_child: leaflet = &adw::Leaflet {
+                        set_can_navigate_back: true,
+                        append: sidebar = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_width_request: 280,
+                            append: sidebar_header = &adw::HeaderBar {
+                                set_show_end_title_buttons: false,
+                                set_title_widget = Some(&gtk::Box) {
+                                    set_orientation: gtk::Orientation::Horizontal,
+                                    set_spacing: 5,
+                                    append = &gtk::Image {
+                                        set_icon_name: Some("dev.edfloreshz.Done")
+                                    },
+                                    append = &gtk::Label {
+                                        set_text: "Done"
+                                    }
+                                },
+                                pack_end: options_button = &gtk::MenuButton {
+                                    set_icon_name: "open-menu-symbolic",
+                                    add_css_class: "flat",
+                                    set_has_frame: true,
+                                    set_direction: gtk::ArrowType::None,
+                                    set_popover: ppp = Some(&gtk::PopoverMenu::from_model(Some(&main_menu))) {
+                                        add_child: args!(components.theme_selector.root_widget(), "theme"),
+                                    },
+                                },
+                                pack_start: new_list_button = &gtk::MenuButton {
+                                    set_icon_name: "value-increase-symbolic",
+                                    add_css_class: "raised",
+                                    set_has_frame: true,
+                                    set_direction: gtk::ArrowType::None,
+                                    set_popover: Some(components.new_list.root_widget()),
+                                },
+                            },
+                            append: components.sidebar.root_widget()
+                        },
+                        append: &gtk::Separator::default(),
+                        append: content = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_hexpand: true,
+                            set_vexpand: true,
+                            append = &adw::HeaderBar {
+                                set_hexpand: true,
+                                set_show_end_title_buttons: true,
+                                pack_start: go_back_button = &gtk::Button {
+                                    set_icon_name: "go-previous-symbolic",
+                                    set_visible: false,
+                                    connect_clicked(sender) => move |_| {
+                                        send!(sender, AppMsg::Back);
+                                    }
+                                },
+                            },
+                            append: components.content.root_widget()
+                        },
+                        connect_folded_notify: clone!(@weak content, @strong sender => move |leaflet| {
+                            if leaflet.is_folded() {
+                                leaflet.set_visible_child(&content);
+                                send!(sender, AppMsg::Folded);
+                            } else {
+                                send!(sender, AppMsg::Unfolded);
+                            }
+                        })
+                    }
                 }
             },
         }
     }
+    menu! {
+        main_menu: {
+            "About" => About,
+        }
+    }
+
+    fn post_init() {
+        let app = relm4::gtk_application().downcast::<DoneApplication>().unwrap();
+        app.set_accelerators_for_action::<About>(&["<primary>I"]);
+        let group = RelmActionGroup::<WindowActionGroup>::new();
+        let action: RelmAction<About> = RelmAction::new_stateless(clone!(@weak app => move |_| {
+            app.show_about()
+        }));
+        group.add_action(action);
+        let actions = group.into_action_group();
+        window.insert_action_group("win", Some(&actions));
+    }
+
+    fn post_view() {
+        if let Some(msg) = &model.message {
+            match msg {
+                AppMsg::Folded => {
+                    self.leaflet.set_visible_child(&self.content);
+                    self.go_back_button.set_visible(true);
+                    sidebar_header.set_show_start_title_buttons(true);
+                    sidebar_header.set_show_end_title_buttons(true);
+                }
+                AppMsg::Unfolded => {
+                    self.go_back_button.set_visible(false);
+                    sidebar_header.set_show_start_title_buttons(false);
+                    sidebar_header.set_show_end_title_buttons(false);
+                }
+                AppMsg::Forward => self.leaflet.set_visible_child(&self.content),
+                AppMsg::Back => self.leaflet.set_visible_child(&self.sidebar),
+                _ => {}
+            }
+        }
+    }
 }
+
+relm4::new_action_group!(WindowActionGroup, "win");
+relm4::new_stateless_action!(About, WindowActionGroup, "About");
