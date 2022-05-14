@@ -1,29 +1,30 @@
 use crate::core::local::tasks::{
     delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
 };
-use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
-use crate::widgets::content::task_list::{Task, TaskStatus};
+use crate::widgets::panel::sidebar::{SidebarMsg};
+use crate::widgets::contents::task_list::{Task, TaskStatus};
 use glib::Sender;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
-use relm4::gtk;
+use relm4::{gtk};
 use relm4::gtk::gio::File;
 use relm4::gtk::prelude::{
     BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 };
 use relm4::{send, ComponentUpdate, Model, WidgetPlus, Widgets};
-use std::collections::VecDeque;
+use crate::widgets::global::state::{StateModel, StateMsg};
 
 #[tracker::track]
 #[derive(Debug)]
-pub struct TaskListModel {
-    pub parent_list: String,
+pub struct ContentModel {
+    pub parent_list: Option<String>,
     pub index: usize,
     pub show_tasks: bool,
     #[no_eq]
     pub tasks: FactoryVecDeque<Task>,
 }
 
-pub enum TaskMsg {
+#[derive(Debug)]
+pub enum ContentMsg {
     Add(String),
     Remove(DynamicIndex),
     SetCompleted(DynamicIndex, bool),
@@ -33,25 +34,19 @@ pub enum TaskMsg {
     RemoveWelcomeScreen,
 }
 
-impl Model for TaskListModel {
-    type Msg = TaskMsg;
-    type Widgets = TaskListWidgets;
+impl Model for ContentModel {
+    type Msg = ContentMsg;
+    type Widgets = ContentWidgets;
     type Components = ();
 }
 
-impl ComponentUpdate<SidebarModel> for TaskListModel {
-    fn init_model(parent_model: &SidebarModel) -> Self {
-        let (index, parent_list) = parent_model.selected_list.clone();
-        let tasks: VecDeque<Task> = get_tasks(parent_list.clone())
-            .unwrap_or_default()
-            .iter()
-            .map(|task| task.to_owned())
-            .collect();
+impl ComponentUpdate<StateModel> for ContentModel {
+    fn init_model(_: &StateModel) -> Self {
         Self {
-            parent_list: parent_list.clone(),
-            index,
-            show_tasks: tasks.clone().is_empty(),
-            tasks: FactoryVecDeque::from_vec_deque(tasks),
+            parent_list: None,
+            index: 0,
+            show_tasks: false,
+            tasks: FactoryVecDeque::default(),
             tracker: 0,
         }
     }
@@ -61,25 +56,25 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
         msg: Self::Msg,
         _components: &Self::Components,
         _sender: Sender<Self::Msg>,
-        parent_sender: Sender<SidebarMsg>,
+        parent_sender: Sender<StateMsg>,
     ) {
         self.reset();
         let id = &self.parent_list;
         match msg {
-            TaskMsg::Add(title) => {
-                post_task(id.to_owned(), title.clone()).expect("Failed to post task.");
-                self.tasks.push_back(Task::new(title, id.to_owned()));
-                send!(parent_sender, SidebarMsg::UpdateCounters)
+            ContentMsg::Add(title) => {
+                post_task(id.as_ref().unwrap().to_owned(), title.clone()).expect("Failed to post task.");
+                self.tasks.push_back(Task::new(title, id.as_ref().unwrap().to_owned()));
+                send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
             }
-            TaskMsg::Remove(index) => {
+            ContentMsg::Remove(index) => {
                 let index = index.current_index();
                 if let Some(task) = self.tasks.get(index) {
                     delete_task(&task.id_task).expect("Failed to remove task.");
                     self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
-                    send!(parent_sender, SidebarMsg::UpdateCounters)
+                    send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
                 }
             }
-            TaskMsg::SetCompleted(index, completed) => {
+            ContentMsg::SetCompleted(index, completed) => {
                 let index = index.current_index();
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.status = if completed {
@@ -90,7 +85,7 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
                     patch_task(task.into()).expect("Failed to update task.");
                 }
             }
-            TaskMsg::SetFavorite(index, favorite) => {
+            ContentMsg::SetFavorite(index, favorite) => {
                 let index = index.current_index();
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.set_favorite(favorite);
@@ -98,18 +93,18 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
                     if self.index == 4 {
                         self.tasks.remove(index); // TODO: Fix warning: Gtk-CRITICAL **: 16:15:04.865: gtk_list_box_row_grab_focus: assertion 'box != NULL' failed
                     }
-                    send!(parent_sender, SidebarMsg::UpdateCounters)
+                    send!(parent_sender, StateMsg::UpdateSidebar(SidebarMsg::UpdateCounters))
                 }
             }
-            TaskMsg::ModifyTitle(index, title) => {
+            ContentMsg::ModifyTitle(index, title) => {
                 let index = index.current_index();
                 if let Some(task) = self.tasks.get_mut(index) {
                     task.set_title(title);
                     patch_task(task.into()).expect("Failed to update task.");
                 }
             }
-            TaskMsg::OnUpdate(index, id_list) => {
-                self.set_parent_list(id_list.clone());
+            ContentMsg::OnUpdate(index, id_list) => {
+                self.set_parent_list(Some(id_list.clone()));
                 self.set_index(index);
                 let tasks = match index {
                     0 => vec![],
@@ -131,21 +126,21 @@ impl ComponentUpdate<SidebarModel> for TaskListModel {
                 }
                 self.set_show_tasks(!self.tasks.is_empty());
             }
-            TaskMsg::RemoveWelcomeScreen => {
+            ContentMsg::RemoveWelcomeScreen => {
                 self.set_show_tasks(true);
-            }
+            },
         }
     }
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
+impl Widgets<ContentModel, StateModel> for ContentWidgets {
     view! {
-        task_container = &gtk::Stack {
+        tasks = &gtk::Stack {
             set_vexpand: true,
             add_child = &gtk::CenterBox {
                 set_orientation: gtk::Orientation::Vertical,
-                set_visible: track!(model.changed(TaskListModel::show_tasks()), !model.show_tasks),
+                set_visible: track!(model.changed(ContentModel::show_tasks()), !model.show_tasks),
                 set_halign: gtk::Align::Center,
                 set_valign: gtk::Align::Center,
                 set_center_widget = Some(&gtk::Box) {
@@ -160,18 +155,18 @@ impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
                         set_text: "Tasks Will Appear Here"
                     },
                     append = &gtk::Button {
-                        set_visible: track!(model.changed(TaskListModel::index()), model.index > 5),
+                        set_visible: track!(model.changed(ContentModel::index()), model.index > 5),
                         add_css_class: "suggested-action",
                         set_label: "Add Tasks...",
                         connect_clicked(sender) => move |_| {
-                            send!(sender, TaskMsg::RemoveWelcomeScreen)
+                            send!(sender, ContentMsg::RemoveWelcomeScreen)
                         }
                     }
                 }
             },
             add_child = &gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
-                set_visible: track!(model.changed(TaskListModel::show_tasks()), model.show_tasks),
+                set_visible: track!(model.changed(ContentModel::show_tasks()), model.show_tasks),
                 append = &gtk::Box {
                     append: main_stack = &gtk::Stack {
                         add_child = &gtk::ScrolledWindow {
@@ -189,13 +184,13 @@ impl Widgets<TaskListModel, SidebarModel> for TaskListWidgets {
                     set_margin_all: 12,
                     append: entry = &gtk::Entry {
                         set_hexpand: true,
-                        set_visible: track!(model.changed(TaskListModel::index()), model.index > 5),
+                        set_visible: track!(model.changed(ContentModel::index()), model.index > 5),
                         set_icon_from_icon_name: args!(gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
                         set_placeholder_text: Some("New task..."),
                         set_height_request: 42,
                         connect_activate(sender) => move |entry| {
                             let buffer = entry.buffer();
-                            send!(sender, TaskMsg::Add(buffer.text()));
+                            send!(sender, ContentMsg::Add(buffer.text()));
                             buffer.delete_text(0, None);
                         }
                     }

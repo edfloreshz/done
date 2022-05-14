@@ -5,8 +5,7 @@ use relm4::{
     gtk::prelude::{GtkWindowExt, WidgetExt},
     AppUpdate, Components, Model, RelmComponent, Sender, Widgets,
 };
-
-use crate::widgets::panel::sidebar::SidebarModel;
+use crate::widgets::global::state::StateModel;
 
 pub struct AppModel;
 
@@ -36,13 +35,13 @@ impl AppUpdate for AppModel {
 }
 
 pub struct AppComponents {
-    sidebar: RelmComponent<SidebarModel, AppModel>,
+    state: RelmComponent<StateModel, AppModel>,
 }
 
 impl Components<AppModel> for AppComponents {
     fn init_components(parent_model: &AppModel, parent_sender: Sender<AppMsg>) -> Self {
         AppComponents {
-            sidebar: RelmComponent::new(parent_model, parent_sender.clone()),
+            state: RelmComponent::new(parent_model, parent_sender.clone()),
         }
     }
 
@@ -64,7 +63,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     set_vexpand: true,
                     set_transition_duration: 250,
                     set_transition_type: gtk::StackTransitionType::Crossfade,
-                    add_child: &components.sidebar.widgets().unwrap().leaflet
+                    add_child: &components.state.widgets().unwrap().leaflet
                 }
             },
         }

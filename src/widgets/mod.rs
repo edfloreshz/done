@@ -1,4 +1,5 @@
 pub mod app;
 pub mod panel;
-pub mod content;
+pub mod contents;
 pub mod global;
+pub mod popovers;

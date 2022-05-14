@@ -9,8 +9,7 @@ use relm4::{
     gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt},
     send, ComponentUpdate, Model, Widgets,
 };
-
-use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
+use crate::widgets::global::state::{StateModel, StateMsg};
 
 pub struct ThemeSelector;
 
@@ -26,8 +25,8 @@ pub enum ThemeSelectorMsg {
     FollowSystem,
 }
 
-impl ComponentUpdate<SidebarModel> for ThemeSelector {
-    fn init_model(_parent_model: &SidebarModel) -> Self {
+impl ComponentUpdate<StateModel> for ThemeSelector {
+    fn init_model(_parent_model: &StateModel) -> Self {
         Self
     }
 
@@ -36,7 +35,7 @@ impl ComponentUpdate<SidebarModel> for ThemeSelector {
         msg: Self::Msg,
         _components: &Self::Components,
         _sender: Sender<Self::Msg>,
-        _parent_sender: Sender<SidebarMsg>,
+        _parent_sender: Sender<StateMsg>,
     ) {
         unsafe {
             let style_manager = get_style_manager();
@@ -56,7 +55,7 @@ impl ComponentUpdate<SidebarModel> for ThemeSelector {
 }
 
 #[relm4_macros::widget(pub)]
-impl Widgets<ThemeSelector, SidebarModel> for ThemeSelectorWidgets {
+impl Widgets<ThemeSelector, StateModel> for ThemeSelectorWidgets {
     view! {
         theme_selector = &gtk::Box {
             add_css_class: "theme-container",

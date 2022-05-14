@@ -1,3 +1,3 @@
 pub mod details;
-pub mod task_container;
+pub mod content;
 pub mod task_list;

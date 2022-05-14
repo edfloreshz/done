@@ -1,5 +1,5 @@
 use crate::models::task::QueryableTask;
-use crate::widgets::content::task_container::TaskMsg;
+use crate::widgets::contents::content::ContentMsg;
 use glib::Sender;
 use gtk4::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
 use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
@@ -16,7 +16,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 #[tracker::track]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Task {
     pub id_task: String,
     pub id_list: String,
@@ -155,7 +155,7 @@ impl TaskStatus {
 
 // Relm4
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TaskWidgets {
     label: gtk::Entry,
     row: gtk::ListBoxRow,
@@ -166,7 +166,7 @@ impl FactoryPrototype for Task {
     type Widgets = TaskWidgets;
     type Root = gtk::ListBoxRow;
     type View = gtk::Box;
-    type Msg = TaskMsg;
+    type Msg = ContentMsg;
 
     fn init_view(&self, key: &DynamicIndex, sender: Sender<Self::Msg>) -> Self::Widgets {
         let key = key.clone();
@@ -189,7 +189,7 @@ impl FactoryPrototype for Task {
                         append = &gtk::CheckButton {
                             set_active: self.status.as_bool(),
                             connect_toggled(sender) => move |checkbox| {
-                                send!(sender, TaskMsg::SetCompleted(key.clone(), checkbox.is_active()));
+                                send!(sender, ContentMsg::SetCompleted(key.clone(), checkbox.is_active()));
                             }
                         },
                         append = &gtk::Box {
@@ -202,11 +202,11 @@ impl FactoryPrototype for Task {
                                 set_text: &self.title,
                                 connect_activate(sender) => move |entry| {
                                     let buffer = entry.buffer();
-                                    send!(sender, TaskMsg::ModifyTitle(key2.clone(), buffer.text()));
+                                    send!(sender, ContentMsg::ModifyTitle(key2.clone(), buffer.text()));
                                 },
                                 connect_changed(sender) => move |entry| {
                                     let buffer = entry.buffer();
-                                    send!(sender, TaskMsg::ModifyTitle(key3.clone(), buffer.text()));
+                                    send!(sender, ContentMsg::ModifyTitle(key3.clone(), buffer.text()));
                                 }
                             },
                             append: favorite = &gtk::ToggleButton {
@@ -221,7 +221,7 @@ impl FactoryPrototype for Task {
                                     } else {
                                         button.remove_css_class("favorite");
                                     }
-                                    send!(sender, TaskMsg::SetFavorite(key4.clone(), button.is_active()));
+                                    send!(sender, ContentMsg::SetFavorite(key4.clone(), button.is_active()));
                                 }
                             },
                             append: delete = &gtk::Button {
@@ -229,7 +229,7 @@ impl FactoryPrototype for Task {
                                 add_css_class: "circular",
                                 set_icon_name: "user-trash-symbolic",
                                 connect_clicked(sender) => move |_| {
-                                    send!(sender, TaskMsg::Remove(key5.clone()));
+                                    send!(sender, ContentMsg::Remove(key5.clone()));
                                 }
                             }
                         }

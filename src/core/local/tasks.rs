@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use crate::models::task::QueryableTask;
 use crate::schema::tasks::dsl::*;
 use crate::storage::database::DatabaseConnection;
-use crate::widgets::content::task_list::Task;
+use crate::widgets::contents::task_list::Task;
 
 pub fn get_all_tasks() -> Result<Vec<Task>> {
     let connection = DatabaseConnection::establish_connection();
