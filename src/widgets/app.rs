@@ -1,12 +1,9 @@
-use glib::{Cast, clone};
+use glib::clone;
 use glib::Sender;
 use gtk4::prelude::GtkWindowExt;
-use relm4::{AppUpdate, Components, ComponentUpdate, Model, RelmComponent, send, Widgets};
-use relm4::actions::{AccelsPlus, RelmAction, RelmActionGroup};
-use relm4::adw::ApplicationWindow;
-use relm4_macros::menu;
+use relm4::{AppUpdate, Components, Model, RelmComponent, send, Widgets};
 
-use crate::{adw, adw::prelude::AdwApplicationWindowExt, DoneApplication, gtk, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt}};
+use crate::{adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt}};
 use crate::widgets::contents::content::{ContentModel, ContentMsg};
 use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
 use crate::widgets::panel::theme_selector::ThemeSelector;
@@ -112,8 +109,13 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                     add_css_class: "flat",
                                     set_has_frame: true,
                                     set_direction: gtk::ArrowType::None,
-                                    set_popover: ppp = Some(&gtk::PopoverMenu::from_model(Some(&main_menu))) {
-                                        add_child: args!(components.theme_selector.root_widget(), "theme"),
+                                    set_popover: popover = Some(&gtk::PopoverMenu::from_model(None::<&gio::MenuModel>)) {
+                                        // TODO: Figure out a way to include the theme selector in the menu.
+                                        // add_child: args!(components.theme_selector.root_widget(), ""),
+                                        set_menu_model = Some(&gio::Menu) {
+                                            append: args!(Some("About"), Some("app.about")),
+                                            append: args!(Some("Quit"), Some("app.quit"))
+                                        },
                                     },
                                 },
                                 pack_start: new_list_button = &gtk::MenuButton {
@@ -157,23 +159,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
             },
         }
     }
-    menu! {
-        main_menu: {
-            "About" => About,
-        }
-    }
-
-    fn post_init() {
-        let app = relm4::gtk_application().downcast::<DoneApplication>().unwrap();
-        app.set_accelerators_for_action::<About>(&["<primary>I"]);
-        let group = RelmActionGroup::<WindowActionGroup>::new();
-        let action: RelmAction<About> = RelmAction::new_stateless(clone!(@weak app => move |_| {
-            app.show_about()
-        }));
-        group.add_action(action);
-        let actions = group.into_action_group();
-        window.insert_action_group("win", Some(&actions));
-    }
 
     fn post_view() {
         if let Some(msg) = &model.message {
@@ -196,6 +181,3 @@ impl Widgets<AppModel, ()> for AppWidgets {
         }
     }
 }
-
-relm4::new_action_group!(WindowActionGroup, "win");
-relm4::new_stateless_action!(About, WindowActionGroup, "About");

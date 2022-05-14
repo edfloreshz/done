@@ -28,6 +28,7 @@ mod imp {
 
             obj.setup_gactions();
             obj.set_accels_for_action("app.quit", &["<primary>q"]);
+            obj.set_accels_for_action("app.about", &["<primary>I"]);
         }
     }
 
@@ -81,7 +82,7 @@ impl DoneApplication {
         self.add_action(&about_action);
     }
 
-    pub fn show_about(&self) {
+    fn show_about(&self) {
         let window = self.active_window().unwrap();
         let dialog = gtk::AboutDialog::builder()
             .comments("Comments")
