@@ -1,5 +1,5 @@
+use gtk::{gio, glib, glib::object_subclass};
 use gtk::subclass::prelude::*;
-use gtk::{gio, glib};
 use relm4::gtk;
 
 mod imp {
@@ -8,7 +8,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct DoneWindow;
 
-    #[glib::object_subclass]
+    #[object_subclass]
     impl ObjectSubclass for DoneWindow {
         const NAME: &'static str = "DoneWindow";
         type Type = super::DoneWindow;
@@ -16,8 +16,11 @@ mod imp {
     }
 
     impl ObjectImpl for DoneWindow {}
+
     impl WidgetImpl for DoneWindow {}
+
     impl WindowImpl for DoneWindow {}
+
     impl ApplicationWindowImpl for DoneWindow {}
 }
 

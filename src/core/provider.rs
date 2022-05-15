@@ -1,7 +1,6 @@
-use crate::widgets::contents::task_list::Task;
-use crate::widgets::panel::list::List;
 use anyhow::Result;
 use relm4::gtk::gio::ffi::GIcon;
+use crate::models::list::List;
 
 pub trait ToDoProvider {
     // Information
@@ -32,11 +31,11 @@ pub trait ToDoProvider {
     // Tasks
 
     /// Creates the given task in `self`.
-    fn create_task(&self, list: List, task: Task) -> Result<Task>;
-    /// Updates the given task in `self`.
-    fn update_task(&self, task: Task) -> Result<()>;
-    /// Removes the given task in `self`.
-    fn remove_task(&self, task: Task) -> Result<()>;
+    // fn create_task(&self, list: List, task: Task) -> Result<Task>;
+    // /// Updates the given task in `self`.
+    // fn update_task(&self, task: Task) -> Result<()>;
+    // /// Removes the given task in `self`.
+    // fn remove_task(&self, task: Task) -> Result<()>;
 
     // Task Lists
 
