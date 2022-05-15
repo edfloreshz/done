@@ -1,9 +1,11 @@
-use crate::models::list::QueryableList;
 use glib::Sender;
-use gtk4 as gtk;
-use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
 use relm4::{MicroComponent, MicroModel, MicroWidgets};
+use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
 use uuid::Uuid;
+
+use relm4::gtk;
+
+use crate::models::list::QueryableList;
 
 #[tracker::track]
 #[derive(Default)]

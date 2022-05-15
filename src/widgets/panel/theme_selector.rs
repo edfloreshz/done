@@ -55,7 +55,7 @@ impl ComponentUpdate<AppModel> for ThemeSelector {
     }
 }
 
-#[relm4_macros::widget(pub)]
+#[relm4::widget(pub)]
 impl Widgets<ThemeSelector, AppModel> for ThemeSelectorWidgets {
     view! {
         theme_selector = &gtk::Box {

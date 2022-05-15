@@ -13,13 +13,9 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gtk4 = "0.4.7"
-glib = "0.15.10"
-gio = "0.15.11"
-relm4 = {version = "0.4.4", features = ["libadwaita", "macros", "tokio-rt"] }
-relm4-components = "0.4.4"
-relm4-macros = "0.4.4"
-serde = { version = "1.0.136", features = ["derive"]}
+glib = "0.15.11"
+relm4 = { version = "0.4.4", features = ["libadwaita", "macros", "tokio-rt"] }
+serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0.56"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }

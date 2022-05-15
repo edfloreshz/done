@@ -136,13 +136,9 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dirs",
- "gio",
  "glib",
- "gtk4",
  "libset",
  "relm4",
- "relm4-components",
- "relm4-macros",
  "serde",
  "serde_json",
  "tracker",
@@ -756,18 +752,6 @@ dependencies = [
  "once_cell",
  "relm4-macros",
  "tokio",
-]
-
-[[package]]
-name = "relm4-components"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "199327aa9f98c6e3147a304eaeafd82adeb1ceedac6ec9fc0694f0003e2d3f66"
-dependencies = [
- "log",
- "once_cell",
- "relm4",
- "tracker",
 ]
 
 [[package]]

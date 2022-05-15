@@ -2,16 +2,11 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use glib::Sender;
-use gtk4::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
-use relm4::{
-    gtk,
-    gtk::prelude::{
-        BoxExt, ButtonExt, CheckButtonExt, EditableExt, OrientableExt, ToggleButtonExt, WidgetExt,
-    },
-    send, WidgetPlus,
-};
+use relm4::{gtk, gtk::prelude::{
+    BoxExt, ButtonExt, CheckButtonExt, EditableExt, OrientableExt, ToggleButtonExt, WidgetExt,
+}, send, view, WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryPrototype, FactoryVecDeque, FactoryView};
-use relm4_macros::view;
+use relm4::gtk::prelude::{EntryBufferExtManual, EntryExt, ListBoxRowExt};
 use uuid::Uuid;
 
 use crate::models::task::QueryableTask;

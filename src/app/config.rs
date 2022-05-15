@@ -1,10 +1,11 @@
+use anyhow::Result;
+use libset::config::Config;
+use libset::fi;
+use relm4::gtk::{CssProvider, StyleContext};
+
 use crate::adw::gdk::Display;
 use crate::embedded_migrations;
 use crate::storage::DatabaseConnection;
-use anyhow::Result;
-use gtk4::{CssProvider, StyleContext};
-use libset::config::Config;
-use libset::fi;
 
 pub fn verify_data_integrity() -> Result<()> {
     let config = get_config();
@@ -28,7 +29,7 @@ pub fn load_css() {
     StyleContext::add_provider_for_display(
         &Display::default().expect("Could not connect to a display."),
         &provider,
-        gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        relm4::gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 }
 

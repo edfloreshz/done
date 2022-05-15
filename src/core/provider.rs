@@ -1,7 +1,7 @@
 use crate::widgets::contents::task_list::Task;
 use crate::widgets::panel::list::List;
 use anyhow::Result;
-use gtk4::gio::ffi::GIcon;
+use relm4::gtk::gio::ffi::GIcon;
 
 pub trait ToDoProvider {
     // Information
