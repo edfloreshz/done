@@ -2,9 +2,11 @@ use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ButtonE
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::gtk::gio::File;
 
-use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, post_task};
+use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
 use crate::models::list::List;
 use crate::models::task::Task;
+use crate::widgets::factory::list::ListType;
+use crate::widgets::factory::list::ListType::{All, Other, Starred};
 
 #[tracker::track]
 pub struct ContentModel {
@@ -16,14 +18,16 @@ pub struct ContentModel {
 }
 
 pub enum ContentInput {
-    Add(String),
-    Remove(DynamicIndex),
+    AddTask(String),
+    RemoveTask(DynamicIndex),
     RemoveWelcomeScreen,
     SetTaskList(usize, List),
+    UpdateCounters(Vec<ListType>),
+    FavoriteTask(DynamicIndex, bool)
 }
 
 pub enum ContentOutput {
-    UpdateCounters(usize, usize)
+    UpdateCounters(Vec<ListType>)
 }
 
 #[relm4::component(pub)]
@@ -85,7 +89,7 @@ impl SimpleComponent for ContentModel {
                         set_height_request: 42,
                         connect_activate(sender) => move |entry| {
                             let buffer = entry.buffer();
-                            sender.input.send(ContentInput::Add(buffer.text()));
+                            sender.input.send(ContentInput::AddTask(buffer.text()));
                             buffer.delete_text(0, None);
                         }
                     }
@@ -117,22 +121,36 @@ impl SimpleComponent for ContentModel {
     fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
         self.reset();
         match message {
-            ContentInput::Add(title) => {
+            ContentInput::AddTask(title) => {
                 let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
                 post_task(id_list.clone().to_owned(), title.clone())
                     .expect("Failed to post task.");
                 self.tasks
                     .push_back(Task::new(title, id_list.to_owned()));
 
-                sender.output.send(ContentOutput::UpdateCounters(self.parent_list.0, self.tasks.len()))
+                sender.output.send(ContentOutput::UpdateCounters(vec![
+                    All(1),
+                    Other(self.parent_list.0, 1),
+                ]));
             }
-            ContentInput::Remove(index) => {
+            ContentInput::RemoveTask(index) => {
+                if self.tasks.get(index.current_index()).favorite {
+                    sender.output.send(ContentOutput::UpdateCounters(vec![
+                        All(-1),
+                        Starred(-1),
+                        Other(self.parent_list.0, -1),
+                    ]));
+                } else {
+                    sender.output.send(ContentOutput::UpdateCounters(vec![
+                        All(-1),
+                        Other(self.parent_list.0, -1),
+                    ]));
+                }
                 {
                     let task = self.tasks.get(index.current_index());
                     delete_task(&task.id_task).expect("Failed to remove task.");
                 }
                 self.tasks.remove(index.current_index());
-                sender.output.send(ContentOutput::UpdateCounters(self.parent_list.0, self.tasks.len()))
             }
             ContentInput::RemoveWelcomeScreen => self.set_show_tasks(true),
             ContentInput::SetTaskList(index, list) => {
@@ -155,6 +173,17 @@ impl SimpleComponent for ContentModel {
                     self.tasks.push_back(task.clone());
                 }
                 self.set_show_tasks(!self.tasks.is_empty());
+            }
+            ContentInput::UpdateCounters(lists) => sender.output.send(ContentOutput::UpdateCounters(lists)),
+            ContentInput::FavoriteTask(index, favorite) => {
+                if self.parent_list.0 == 4 {
+                    self.tasks.remove(index.current_index());
+                }
+                sender.output.send(ContentOutput::UpdateCounters(
+                    vec![
+                        Starred(if favorite { 1 } else { -1 })
+                    ]
+                ))
             }
         }
         self.tasks.render_changes();

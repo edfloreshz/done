@@ -1,10 +1,20 @@
+use relm4::{Sender, view};
 use relm4::factory::{DynamicIndex, FactoryComponent};
-use relm4::{view, Sender};
 
 use crate::gtk;
 use crate::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
 use crate::models::list::List;
 use crate::widgets::component::sidebar::SidebarInput;
+
+pub enum ListType {
+    Inbox(i8),
+    Today(i8),
+    Next7Days(i8),
+    All(i8),
+    Starred(i8),
+    Archived(i8),
+    Other(usize, i8),
+}
 
 #[derive(Debug)]
 pub enum ListInput {
