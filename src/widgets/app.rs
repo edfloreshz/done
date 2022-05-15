@@ -113,20 +113,19 @@ impl SimpleComponent for AppModel {
                                     set_icon_name: "go-previous-symbolic",
                                     set_visible: false,
                                     connect_clicked(sender) => move |_| {
-                                        // sender.send(Input::Back);
+                                        sender.input.send(Input::Back);
                                     }
                                 },
                             },
                             append: model.content.widget()
                         },
-                        // connect_folded_notify: clone!(@weak content, @strong sender => move |leaflet| {
-                        //     if leaflet.is_folded() {
-                        //         leaflet.set_visible_child(&content);
-                        //         send!(sender, Input::Folded);
-                        //     } else {
-                        //         send!(sender, Input::Unfolded);
-                        //     }
-                        // })
+                        connect_folded_notify(sender) => move |leaflet| {
+                            if leaflet.is_folded() {
+                                sender.input.send(Input::Folded);
+                            } else {
+                                sender.input.send(Input::Unfolded);
+                            }
+                        }
                     }
                 }
             },
@@ -135,27 +134,27 @@ impl SimpleComponent for AppModel {
 
     fn post_view() {
         if let Some(msg) = &model.message {
-            // match msg {
-            //     AppMsg::Folded => {
-            //         self.leaflet.set_visible_child(&self.content);
-            //         self.go_back_button.set_visible(true);
-            //         sidebar_header.set_show_start_title_buttons(true);
-            //         sidebar_header.set_show_end_title_buttons(true);
-            //     }
-            //     AppMsg::Unfolded => {
-            //         self.go_back_button.set_visible(false);
-            //         sidebar_header.set_show_start_title_buttons(false);
-            //         sidebar_header.set_show_end_title_buttons(false);
-            //     }
-            //     AppMsg::Forward => self.leaflet.set_visible_child(&self.content),
-            //     AppMsg::Back => self.leaflet.set_visible_child(&self.sidebar),
-            //     _ => {}
-            // }
+            match msg {
+                Input::Folded => {
+                    leaflet.set_visible_child(content);
+                    go_back_button.set_visible(true);
+                    sidebar_header.set_show_start_title_buttons(true);
+                    sidebar_header.set_show_end_title_buttons(true);
+                }
+                Input::Unfolded => {
+                    go_back_button.set_visible(false);
+                    sidebar_header.set_show_start_title_buttons(false);
+                    sidebar_header.set_show_end_title_buttons(false);
+                }
+                Input::Forward => leaflet.set_visible_child(content),
+                Input::Back => leaflet.set_visible_child(sidebar),
+                _ => {}
+            }
         }
     }
 
     fn init(
-        params: Self::InitParams,
+        _params: Self::InitParams,
         root: &Self::Root,
         sender: &ComponentSender<Self>,
     ) -> ComponentParts<Self> {
@@ -164,6 +163,7 @@ impl SimpleComponent for AppModel {
                 .launch(None)
                 .forward(&sender.input, |message| match message {
                     SidebarOutput::ListSelected(index, list) => Input::ListSelected(index, list),
+                    SidebarOutput::Forward => Input::Forward
                 }),
             ContentModel::builder()
                 .launch(None)
@@ -183,7 +183,7 @@ impl SimpleComponent for AppModel {
                 .sender()
                 .send(ContentInput::SetTaskList(index, list)),
             Input::UpdateSidebarCounters(lists) => self.sidebar.sender().send(SidebarInput::UpdateCounters(lists)),
-            _ => {}
+            _ => self.message = Some(message)
         }
     }
 }

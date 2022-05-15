@@ -1,9 +1,8 @@
-use std::ops::Add;
-use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, view, WidgetPlus};
+use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 
 use crate::core::local::lists::get_lists;
-use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
+use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks};
 use crate::models::list::List;
 use crate::widgets::factory::list::ListType;
 
@@ -20,6 +19,7 @@ pub enum SidebarInput {
 
 pub enum SidebarOutput {
     ListSelected(usize, List),
+    Forward,
 }
 
 #[relm4::component(pub)]
@@ -40,8 +40,8 @@ impl SimpleComponent for SidebarModel {
                     set_css_classes: &["navigation-sidebar"],
                     connect_row_activated(sender) => move |listbox, _| {
                         let index = listbox.selected_row().unwrap().index() as usize;
-                        sender.input.send(SidebarInput::ListSelected(index))
-                        // send!(sender, SidebarMsg::Forward)
+                        sender.input.send(SidebarInput::ListSelected(index));
+                        sender.output.send(SidebarOutput::Forward)
                     },
                 },
             },
@@ -49,7 +49,7 @@ impl SimpleComponent for SidebarModel {
     }
 
     fn init(
-        params: Self::InitParams,
+        _params: Self::InitParams,
         root: &Self::Root,
         sender: &ComponentSender<Self>,
     ) -> ComponentParts<Self> {
