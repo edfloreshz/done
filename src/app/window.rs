@@ -1,6 +1,6 @@
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
-use gtk4 as gtk;
+use relm4::gtk;
 
 mod imp {
     use super::*;

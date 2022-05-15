@@ -1,10 +1,11 @@
-use crate::widgets::app::AppMsg;
-use crate::AppModel;
-use gtk4 as gtk;
 use relm4::{
-    gtk::prelude::{OrientableExt, WidgetExt},
-    view, ComponentUpdate, Model, Sender, Widgets,
+    ComponentUpdate,
+    gtk::prelude::{OrientableExt, WidgetExt}, Model, Sender, view, Widgets,
 };
+use relm4::gtk;
+
+use crate::AppModel;
+use crate::widgets::app::AppMsg;
 
 pub struct DetailsModel {}
 
@@ -57,7 +58,7 @@ impl DetailsWidgets {
         }
         navigation_box
     }
-    fn create_revealer(navigation_box: &gtk4::Box) -> gtk::Revealer {
+    fn create_revealer(navigation_box: &relm4::gtk::Box) -> gtk::Revealer {
         view! {
             revealer = gtk::Revealer {
                 set_child: Some(navigation_box),

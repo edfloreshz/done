@@ -1,9 +1,9 @@
 use glib::clone;
 use glib::Sender;
-use gtk4::prelude::GtkWindowExt;
 use relm4::{AppUpdate, Components, Model, RelmComponent, send, Widgets};
+use relm4::gtk::prelude::GtkWindowExt;
 
-use crate::{adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt}};
+use crate::{adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::gio, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt}};
 use crate::widgets::contents::content::{ContentModel, ContentMsg};
 use crate::widgets::panel::sidebar::{SidebarModel, SidebarMsg};
 use crate::widgets::panel::theme_selector::ThemeSelector;
@@ -72,7 +72,7 @@ impl Components<AppModel> for AppComponents {
     fn connect_parent(&mut self, _parent_widgets: &AppWidgets) {}
 }
 
-#[relm4_macros::widget(pub)]
+#[relm4::widget(pub)]
 impl Widgets<AppModel, ()> for AppWidgets {
     view! {
         window = adw::ApplicationWindow {

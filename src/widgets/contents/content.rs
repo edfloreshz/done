@@ -1,17 +1,18 @@
-use crate::core::local::tasks::{
-    delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
-};
-use crate::widgets::contents::task_list::{Task, TaskStatus};
-use crate::widgets::app::{AppModel, AppMsg};
-use crate::widgets::panel::sidebar::SidebarMsg;
 use glib::Sender;
+use relm4::{ComponentUpdate, Model, send, WidgetPlus, Widgets};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::gtk;
 use relm4::gtk::gio::File;
 use relm4::gtk::prelude::{
     BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 };
-use relm4::{send, ComponentUpdate, Model, WidgetPlus, Widgets};
+
+use crate::core::local::tasks::{
+    delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task,
+};
+use crate::widgets::app::{AppModel, AppMsg};
+use crate::widgets::contents::task_list::{Task, TaskStatus};
+use crate::widgets::panel::sidebar::SidebarMsg;
 
 #[tracker::track]
 #[derive(Debug)]
@@ -144,7 +145,7 @@ impl ComponentUpdate<AppModel> for ContentModel {
     }
 }
 
-#[relm4_macros::widget(pub)]
+#[relm4::widget(pub)]
 impl Widgets<ContentModel, AppModel> for ContentWidgets {
     view! {
         tasks = &gtk::Stack {

@@ -1,12 +1,12 @@
 use std::ops::Index;
 
-use gtk4::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt};
-use relm4::{gtk, send, ComponentUpdate, MicroComponent, Model, Sender, WidgetPlus, Widgets};
+use relm4::{ComponentUpdate, gtk, MicroComponent, Model, send, Sender, WidgetPlus, Widgets};
+use relm4::gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt};
 
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks, get_tasks};
-use crate::widgets::contents::content::ContentMsg;
 use crate::widgets::app::{AppModel, AppMsg};
+use crate::widgets::contents::content::ContentMsg;
 use crate::widgets::panel::list::List;
 
 pub struct SidebarModel {
@@ -127,7 +127,7 @@ impl ComponentUpdate<AppModel> for SidebarModel {
     }
 }
 
-#[relm4_macros::widget(pub)]
+#[relm4::widget(pub)]
 impl Widgets<SidebarModel, AppModel> for SidebarWidgets {
     view! {
         sidebar = &gtk::Box {

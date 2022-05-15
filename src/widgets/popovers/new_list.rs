@@ -1,9 +1,9 @@
 use glib::{clone, Sender};
-use gtk4::prelude::{
+use relm4::{ComponentUpdate, gtk, Model, send, Widgets};
+use relm4::gtk::prelude::{
     BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, OrientableExt, PopoverExt,
     WidgetExt,
 };
-use relm4::{ComponentUpdate, gtk, Model, send, Widgets};
 
 use crate::widgets::app::{AppModel, AppMsg};
 use crate::widgets::panel::sidebar::SidebarMsg;
@@ -41,7 +41,7 @@ impl ComponentUpdate<AppModel> for NewListModel {
     }
 }
 
-#[relm4_macros::widget(pub)]
+#[relm4::widget(pub)]
 impl Widgets<NewListModel, AppModel> for NewListWidgets {
     view! {
         new_list_popover = Some(&gtk::Popover) {
