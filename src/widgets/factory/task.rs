@@ -1,4 +1,4 @@
-use relm4::{CommandFuture, gtk, ShutdownReceiver};
+use relm4::gtk;
 use relm4::{Sender, view, WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryComponent};
 use relm4::gtk::prelude::{
@@ -10,7 +10,6 @@ use crate::core::local::tasks::patch_task;
 use crate::models::task::{Task, TaskStatus};
 use crate::widgets::component::content::ContentInput;
 use crate::widgets::factory::list::ListType;
-use crate::widgets::factory::list::ListType::Starred;
 
 pub enum TaskInput {
     SetCompleted(bool),
@@ -47,9 +46,9 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 
     fn init_model(
         params: Self::InitParams,
-        index: &DynamicIndex,
-        input: &Sender<Self::Input>,
-        output: &Sender<Self::Output>,
+        _index: &DynamicIndex,
+        _input: &Sender<Self::Input>,
+        _output: &Sender<Self::Output>,
     ) -> Self {
         params
     }

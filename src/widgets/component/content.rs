@@ -1,8 +1,16 @@
-use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt}, SimpleComponent, view, WidgetPlus};
+use relm4::{ComponentParts, ComponentSender, SimpleComponent, view, WidgetPlus, gtk,
+            gtk::prelude::{
+                BoxExt,
+                ButtonExt,
+                EntryBufferExtManual,
+                EntryExt,
+                OrientableExt,
+                WidgetExt
+            }};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::gtk::gio::File;
 
-use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, patch_task, post_task};
+use crate::core::local::tasks::{delete_task, get_all_tasks, get_favorite_tasks, get_tasks, post_task};
 use crate::models::list::List;
 use crate::models::task::Task;
 use crate::widgets::factory::list::ListType;
@@ -23,7 +31,7 @@ pub enum ContentInput {
     RemoveWelcomeScreen,
     SetTaskList(usize, List),
     UpdateCounters(Vec<ListType>),
-    FavoriteTask(DynamicIndex, bool)
+    FavoriteTask(DynamicIndex, bool),
 }
 
 pub enum ContentOutput {
@@ -99,7 +107,7 @@ impl SimpleComponent for ContentModel {
     }
 
     fn init(
-        params: Self::InitParams,
+        _params: Self::InitParams,
         root: &Self::Root,
         sender: &ComponentSender<Self>,
     ) -> ComponentParts<Self> {
