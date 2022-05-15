@@ -1,7 +1,7 @@
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, glib::object_subclass};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
+use gtk::{gio, glib, glib::object_subclass};
 use relm4::adw;
 use relm4::gtk;
 use relm4::gtk::glib::clone;

@@ -1,5 +1,5 @@
-use gtk::{gio, glib, glib::object_subclass};
 use gtk::subclass::prelude::*;
+use gtk::{gio, glib, glib::object_subclass};
 use relm4::gtk;
 
 mod imp {

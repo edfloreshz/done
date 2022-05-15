@@ -1,14 +1,10 @@
-use relm4::{Sender, view};
 use relm4::factory::{DynamicIndex, FactoryComponent};
+use relm4::{view, Sender};
 
 use crate::gtk;
-use crate::gtk::prelude::{
-    BoxExt,
-    OrientableExt,
-    WidgetExt,
-};
+use crate::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
 use crate::models::list::List;
-use crate::widgets::sidebar::SidebarInput;
+use crate::widgets::component::sidebar::SidebarInput;
 
 #[derive(Debug)]
 pub enum ListInput {
@@ -38,11 +34,16 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for List {
 
     fn output_to_parent_msg(output: Self::Output) -> Option<SidebarInput> {
         Some(match output {
-            ListOutput::RemoveList(index) => SidebarInput::RemoveList(index)
+            ListOutput::RemoveList(index) => SidebarInput::RemoveList(index),
         })
     }
 
-    fn init_model(params: Self::InitParams, index: &DynamicIndex, input: &Sender<Self::Input>, output: &Sender<Self::Output>) -> Self {
+    fn init_model(
+        params: Self::InitParams,
+        index: &DynamicIndex,
+        input: &Sender<Self::Input>,
+        output: &Sender<Self::Output>,
+    ) -> Self {
         params
     }
 
@@ -55,7 +56,14 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for List {
         list_box
     }
 
-    fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, _returned_widget: &gtk::ListBoxRow, input: &Sender<Self::Input>, output: &Sender<Self::Output>) -> Self::Widgets {
+    fn init_widgets(
+        &mut self,
+        index: &DynamicIndex,
+        root: &Self::Root,
+        _returned_widget: &gtk::ListBoxRow,
+        input: &Sender<Self::Input>,
+        output: &Sender<Self::Output>,
+    ) -> Self::Widgets {
         view! {
             icon = &gtk::Image {
                 set_from_icon_name: Some(self.icon_name.as_ref().unwrap())
@@ -86,14 +94,15 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for List {
         root.append(&icon);
         root.append(&name);
         root.append(&count);
-        ListWidgets {
-            icon,
-            name,
-            count,
-        }
+        ListWidgets { icon, name, count }
     }
 
-    fn update(&mut self, message: Self::Input, input: &Sender<Self::Input>, output: &Sender<Self::Output>) -> Option<Self::Command> {
+    fn update(
+        &mut self,
+        message: Self::Input,
+        input: &Sender<Self::Input>,
+        output: &Sender<Self::Output>,
+    ) -> Option<Self::Command> {
         match message {
             ListInput::Rename(name) => self.display_name = name,
             ListInput::UpdateCount(count) => self.count = count,
@@ -108,7 +117,12 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for List {
         None
     }
 
-    fn update_view(&self, widgets: &mut Self::Widgets, input: &Sender<Self::Input>, output: &Sender<Self::Output>) {
+    fn update_view(
+        &self,
+        widgets: &mut Self::Widgets,
+        input: &Sender<Self::Input>,
+        output: &Sender<Self::Output>,
+    ) {
         widgets.name.set_text(self.display_name.as_str());
         if let Some(icon) = &self.icon_name {
             widgets.icon.set_from_icon_name(Some(icon.as_str()));

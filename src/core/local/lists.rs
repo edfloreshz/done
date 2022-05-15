@@ -1,7 +1,7 @@
-use anyhow::Result;
-use diesel::prelude::*;
 use crate::models::list::List;
 use crate::models::queryable::list::QueryableList;
+use anyhow::Result;
+use diesel::prelude::*;
 
 use crate::schema::lists::dsl::*;
 use crate::storage::DatabaseConnection;
@@ -9,10 +9,7 @@ use crate::storage::DatabaseConnection;
 pub fn get_lists() -> Result<Vec<List>> {
     let connection = DatabaseConnection::establish_connection();
     let results = lists.load::<QueryableList>(&connection)?;
-    let results: Vec<List> = results
-        .into_iter()
-        .map(|ql| ql.into())
-        .collect();
+    let results: Vec<List> = results.into_iter().map(|ql| ql.into()).collect();
     Ok(results)
 }
 

@@ -1,6 +1,6 @@
+use crate::models::task::Task;
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
-use crate::models::task::Task;
 
 use crate::schema::tasks;
 

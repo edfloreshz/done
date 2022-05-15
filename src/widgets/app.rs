@@ -1,29 +1,39 @@
-use relm4::{Component, ComponentController, ComponentParts, ComponentSender, Controller, SimpleComponent};
+use relm4::{
+    Component, ComponentController, ComponentParts, ComponentSender, Controller, SimpleComponent,
+};
 use relm4::gtk::prelude::GtkWindowExt;
 
-use crate::{adw, adw::prelude::AdwApplicationWindowExt, gtk, gtk::gio, gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt}};
-use crate::widgets::sidebar::{SidebarInput, SidebarModel, SidebarOutput};
+use crate::{
+    adw,
+    adw::prelude::AdwApplicationWindowExt,
+    gtk,
+    gtk::gio,
+    gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
+};
+use crate::models::list::List;
+use crate::widgets::component::content::{ContentInput, ContentModel, ContentOutput};
+use crate::widgets::component::sidebar::{SidebarInput, SidebarModel, SidebarOutput};
 
 pub struct AppModel {
     message: Option<Input>,
     sidebar: Controller<SidebarModel>,
+    content: Controller<ContentModel>,
 }
 
 impl AppModel {
-    pub(crate) fn new() -> Self {
+    pub fn new(sidebar: Controller<SidebarModel>, content: Controller<ContentModel>) -> Self {
         Self {
             message: None,
-            sidebar: SidebarModel::builder()
-                .launch(None)
-                .connect_receiver(move |sender, message| match message {
-                    SidebarOutput::ListSelected(index) => println!("Current index: {}", index)
-                }),
+            sidebar,
+            content,
         }
     }
 }
 
 pub enum Input {
     AddList(String),
+    ListSelected(usize, List),
+    UpdateSidebarCounters(usize, usize),
     Folded,
     Unfolded,
     Forward,
@@ -74,7 +84,7 @@ impl SimpleComponent for AppModel {
                                     set_direction: gtk::ArrowType::None,
                                     set_popover: popover = Some(&gtk::PopoverMenu::from_model(None::<&gio::MenuModel>)) {
                                         // TODO: Figure out a way to include the theme selector in the menu.
-                                        // add_child: args!(components.theme_selector.root_widget(), ""),
+                                        // add_child: args!(component.theme_selector.root_widget(), ""),
                                         set_menu_model = Some(&gio::Menu) {
                                             append: args!(Some("About"), Some("app.about")),
                                             append: args!(Some("Quit"), Some("app.quit"))
@@ -108,7 +118,7 @@ impl SimpleComponent for AppModel {
                                     }
                                 },
                             },
-                            // append: components.content.root_widget()
+                            append: model.content.widget()
                         },
                         // connect_folded_notify: clone!(@weak content, @strong sender => move |leaflet| {
                         //     if leaflet.is_folded() {
@@ -125,7 +135,6 @@ impl SimpleComponent for AppModel {
     }
 
     fn post_view() {
-        println!("Test");
         if let Some(msg) = &model.message {
             // match msg {
             //     AppMsg::Folded => {
@@ -146,8 +155,23 @@ impl SimpleComponent for AppModel {
         }
     }
 
-    fn init(params: Self::InitParams, root: &Self::Root, sender: &ComponentSender<Self>) -> ComponentParts<Self> {
-        let model = AppModel::new();
+    fn init(
+        params: Self::InitParams,
+        root: &Self::Root,
+        sender: &ComponentSender<Self>,
+    ) -> ComponentParts<Self> {
+        let model = AppModel::new(
+            SidebarModel::builder()
+                .launch(None)
+                .forward(&sender.input, |message| match message {
+                    SidebarOutput::ListSelected(index, list) => Input::ListSelected(index, list),
+                }),
+            ContentModel::builder()
+                .launch(None)
+                .forward(&sender.input, |message| match message {
+                    ContentOutput::UpdateCounters(index, count) => Input::UpdateSidebarCounters(index, count)
+                }),
+        );
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }
@@ -155,7 +179,12 @@ impl SimpleComponent for AppModel {
     fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
         match message {
             Input::AddList(title) => self.sidebar.sender().send(SidebarInput::AddList(title)),
-            _ => self.message = Some(message),
+            Input::ListSelected(index, list) => self
+                .content
+                .sender()
+                .send(ContentInput::SetTaskList(index, list)),
+            Input::UpdateSidebarCounters(index, count) => self.sidebar.sender().send(SidebarInput::UpdateCounters(index, count)),
+            _ => {}
         }
     }
 }
