@@ -31,13 +31,13 @@ pub fn get_favorite_tasks() -> Result<Vec<Task>> {
     Ok(results)
 }
 
-pub fn post_task(list_id: String, name: String) -> Result<()> {
+pub fn post_task(list_id: String, name: String) -> Result<Task> {
     let connection = DatabaseConnection::establish_connection();
     let new_task = QueryableTask::new(name, list_id);
     diesel::insert_into(tasks)
         .values(&new_task)
         .execute(&connection)?;
-    Ok(())
+    Ok(new_task.into())
 }
 
 pub fn patch_task(task: QueryableTask) -> Result<()> {

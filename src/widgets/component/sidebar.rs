@@ -1,7 +1,7 @@
 use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 
-use crate::core::local::lists::get_lists;
+use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks};
 use crate::models::list::List;
 use crate::widgets::factory::list::ListType;
@@ -84,7 +84,8 @@ impl SimpleComponent for SidebarModel {
     fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
         match message {
             SidebarInput::AddList(name) => {
-                self.lists.push_front(List::new(name.as_str(), "test", 0))
+                let posted_list = post_list(name.clone()).unwrap();
+                self.lists.push_back(posted_list)
             }
             SidebarInput::RemoveList(index) => {
                 let index = index.current_index();
