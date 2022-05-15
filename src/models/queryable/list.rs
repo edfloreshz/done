@@ -1,7 +1,7 @@
+use crate::models::list::List;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::list::List;
 
 use crate::schema::lists;
 

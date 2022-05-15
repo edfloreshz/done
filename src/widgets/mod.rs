@@ -1,3 +1,3 @@
 pub mod app;
-mod sidebar;
-mod list;
+mod component;
+mod factory;

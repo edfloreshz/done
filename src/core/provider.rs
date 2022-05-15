@@ -1,6 +1,6 @@
+use crate::models::list::List;
 use anyhow::Result;
 use relm4::gtk::gio::ffi::GIcon;
-use crate::models::list::List;
 
 pub trait ToDoProvider {
     // Information

@@ -2,13 +2,14 @@ use uuid::Uuid;
 
 use crate::models::queryable::list::QueryableList;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct List {
     pub id_list: String,
     pub display_name: String,
     pub is_owner: bool,
     pub count: i32,
     pub icon_name: Option<String>,
+    pub is_smart: bool,
 }
 
 impl List {
@@ -24,6 +25,7 @@ impl List {
             is_owner: true,
             count,
             icon_name,
+            is_smart: false,
         }
     }
 }
@@ -36,6 +38,7 @@ impl From<QueryableList> for List {
             is_owner: list.is_owner,
             count: list.count,
             icon_name: list.icon_name,
+            is_smart: false,
         }
     }
 }
@@ -48,6 +51,7 @@ impl From<&QueryableList> for List {
             is_owner: list.is_owner,
             count: list.count,
             icon_name: list.icon_name.clone(),
+            is_smart: false,
         }
     }
 }

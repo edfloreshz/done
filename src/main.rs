@@ -10,11 +10,11 @@ use relm4::{adw, gtk, RelmApp};
 use widgets::app::AppModel;
 
 mod app;
+mod core;
 mod models;
 mod schema;
 mod storage;
 mod widgets;
-mod core;
 
 embed_migrations!("migrations");
 

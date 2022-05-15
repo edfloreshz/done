@@ -1,7 +1,7 @@
+use crate::models::queryable::task::QueryableTask;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use uuid::Uuid;
-use crate::models::queryable::task::QueryableTask;
 
 #[tracker::track]
 #[derive(Debug, Clone, Default)]

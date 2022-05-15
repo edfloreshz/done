@@ -1,6 +1,6 @@
+use crate::models::queryable::task::QueryableTask;
 use anyhow::Result;
 use diesel::prelude::*;
-use crate::models::queryable::task::QueryableTask;
 
 use crate::models::task::Task;
 use crate::schema::tasks::dsl::*;
