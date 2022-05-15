@@ -14,19 +14,22 @@ use crate::models::list::List;
 use crate::widgets::component::content::{ContentInput, ContentModel, ContentOutput};
 use crate::widgets::component::sidebar::{SidebarInput, SidebarModel, SidebarOutput};
 use crate::widgets::factory::list::ListType;
+use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 
 pub struct AppModel {
     message: Option<Input>,
     sidebar: Controller<SidebarModel>,
     content: Controller<ContentModel>,
+    new_list_popover: Controller<NewListModel>,
 }
 
 impl AppModel {
-    pub fn new(sidebar: Controller<SidebarModel>, content: Controller<ContentModel>) -> Self {
+    pub fn new(sidebar: Controller<SidebarModel>, content: Controller<ContentModel>, new_list_popover: Controller<NewListModel>) -> Self {
         Self {
             message: None,
             sidebar,
             content,
+            new_list_popover,
         }
     }
 }
@@ -96,7 +99,7 @@ impl SimpleComponent for AppModel {
                                     set_icon_name: "value-increase-symbolic",
                                     add_css_class: "raised",
                                     set_has_frame: true,
-
+                                    set_popover: Some(model.new_list_popover.widget())
                                 },
                             },
                             append: model.sidebar.widget()
@@ -169,6 +172,11 @@ impl SimpleComponent for AppModel {
                 .launch(None)
                 .forward(&sender.input, |message| match message {
                     ContentOutput::UpdateCounters(lists) => Input::UpdateSidebarCounters(lists)
+                }),
+            NewListModel::builder()
+                .launch(())
+                .forward(&sender.input, |message| match message {
+                    NewListOutput::AddNewList(name) => Input::AddList(name)
                 }),
         );
         let widgets = view_output!();

@@ -32,7 +32,7 @@ impl Task {
             body: None,
             completed_on: None,
             due_date: None,
-            importance: Default::default(),
+            importance: TaskImportance::default(),
             favorite: false,
             is_reminder_on: false,
             reminder_date: None,

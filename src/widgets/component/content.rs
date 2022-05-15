@@ -1,12 +1,12 @@
-use relm4::{ComponentParts, ComponentSender, SimpleComponent, view, WidgetPlus, gtk,
-            gtk::prelude::{
-                BoxExt,
-                ButtonExt,
-                EntryBufferExtManual,
-                EntryExt,
-                OrientableExt,
-                WidgetExt
-            }};
+use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{
+    BoxExt,
+    ButtonExt,
+    EntryBufferExtManual,
+    EntryExt,
+    OrientableExt,
+    WidgetExt,
+            }, SimpleComponent, view,
+            WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::gtk::gio::File;
 
@@ -131,10 +131,9 @@ impl SimpleComponent for ContentModel {
         match message {
             ContentInput::AddTask(title) => {
                 let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
-                post_task(id_list.clone().to_owned(), title.clone())
+                let task = post_task(id_list.clone().to_owned(), title.clone())
                     .expect("Failed to post task.");
-                self.tasks
-                    .push_back(Task::new(title, id_list.to_owned()));
+                self.tasks.push_back(task);
 
                 sender.output.send(ContentOutput::UpdateCounters(vec![
                     All(1),

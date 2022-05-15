@@ -31,11 +31,11 @@ impl QueryableTask {
             body: None,
             completed_on: None,
             due_date: None,
-            importance: None,
+            importance: Some("normal".to_string()),
             favorite: false,
             is_reminder_on: false,
             reminder_date: None,
-            status: None,
+            status: Some("notStarted".to_string()),
             created_date_time: None,
             last_modified_date_time: None,
         }
