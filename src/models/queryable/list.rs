@@ -1,9 +1,13 @@
+use diesel::{Insertable, Queryable};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::list::List;
 
-use crate::models::queryable::list::QueryableList;
+use crate::schema::lists;
 
-#[derive(Default, Debug)]
-pub struct List {
+#[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
+#[table_name = "lists"]
+pub struct QueryableList {
     pub id_list: String,
     pub display_name: String,
     pub is_owner: bool,
@@ -11,25 +15,20 @@ pub struct List {
     pub icon_name: Option<String>,
 }
 
-impl List {
-    pub fn new(display_name: &str, icon_name: &str, count: i32) -> Self {
-        let icon_name = if icon_name.is_empty() {
-            None
-        } else {
-            Some(icon_name.to_string())
-        };
+impl QueryableList {
+    pub fn new(display_name: &str, icon_name: Option<String>) -> Self {
         Self {
             id_list: Uuid::new_v4().to_string(),
             display_name: display_name.to_string(),
             is_owner: true,
-            count,
+            count: 0,
             icon_name,
         }
     }
 }
 
-impl From<QueryableList> for List {
-    fn from(list: QueryableList) -> Self {
+impl From<List> for QueryableList {
+    fn from(list: List) -> Self {
         Self {
             id_list: list.id_list,
             display_name: list.display_name,
@@ -40,8 +39,8 @@ impl From<QueryableList> for List {
     }
 }
 
-impl From<&QueryableList> for List {
-    fn from(list: &QueryableList) -> Self {
+impl From<&List> for QueryableList {
+    fn from(list: &List) -> Self {
         Self {
             id_list: list.id_list.clone(),
             display_name: list.display_name.clone(),

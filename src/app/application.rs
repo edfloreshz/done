@@ -1,10 +1,10 @@
 use adw::subclass::prelude::*;
-use glib::clone;
-use gtk::{gio, glib};
+use gtk::{gio, glib, glib::object_subclass};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use relm4::adw;
 use relm4::gtk;
+use relm4::gtk::glib::clone;
 
 use crate::app::constants::VERSION;
 use crate::app::window::DoneWindow;
@@ -15,7 +15,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct DoneApplication {}
 
-    #[glib::object_subclass]
+    #[object_subclass]
     impl ObjectSubclass for DoneApplication {
         const NAME: &'static str = "DoneApplication";
         type Type = super::DoneApplication;

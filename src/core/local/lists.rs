@@ -1,18 +1,17 @@
 use anyhow::Result;
 use diesel::prelude::*;
-use relm4::MicroComponent;
+use crate::models::list::List;
+use crate::models::queryable::list::QueryableList;
 
-use crate::models::list::QueryableList;
 use crate::schema::lists::dsl::*;
 use crate::storage::DatabaseConnection;
-use crate::widgets::panel::list::List;
 
-pub fn get_lists() -> Result<Vec<MicroComponent<List>>> {
+pub fn get_lists() -> Result<Vec<List>> {
     let connection = DatabaseConnection::establish_connection();
     let results = lists.load::<QueryableList>(&connection)?;
-    let results: Vec<MicroComponent<List>> = results
+    let results: Vec<List> = results
         .into_iter()
-        .map(|ql| MicroComponent::new(ql.into(), ()))
+        .map(|ql| ql.into())
         .collect();
     Ok(results)
 }
