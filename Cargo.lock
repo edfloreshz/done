@@ -932,7 +932,7 @@ dependencies = [
 [[package]]
 name = "relm4"
 version = "0.5.0-beta.1"
-source = "git+https://github.com/Relm4/Relm4?branch=next#3bddd1f07e245fab0cba773eb2cbfc3ffecf688c"
+source = "git+https://github.com/Relm4/Relm4?branch=next#39e2c6c94663688d537ed5a808ef425513f45aa9"
 dependencies = [
  "async-broadcast",
  "async-oneshot",
@@ -949,7 +949,7 @@ dependencies = [
 [[package]]
 name = "relm4-macros"
 version = "0.5.0-beta.1"
-source = "git+https://github.com/Relm4/Relm4?branch=next#3bddd1f07e245fab0cba773eb2cbfc3ffecf688c"
+source = "git+https://github.com/Relm4/Relm4?branch=next#39e2c6c94663688d537ed5a808ef425513f45aa9"
 dependencies = [
  "proc-macro2",
  "quote",

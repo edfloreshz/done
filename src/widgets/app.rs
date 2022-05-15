@@ -13,6 +13,7 @@ use crate::{
 use crate::models::list::List;
 use crate::widgets::component::content::{ContentInput, ContentModel, ContentOutput};
 use crate::widgets::component::sidebar::{SidebarInput, SidebarModel, SidebarOutput};
+use crate::widgets::factory::list::ListType;
 
 pub struct AppModel {
     message: Option<Input>,
@@ -33,7 +34,7 @@ impl AppModel {
 pub enum Input {
     AddList(String),
     ListSelected(usize, List),
-    UpdateSidebarCounters(usize, usize),
+    UpdateSidebarCounters(Vec<ListType>),
     Folded,
     Unfolded,
     Forward,
@@ -91,13 +92,11 @@ impl SimpleComponent for AppModel {
                                         },
                                     },
                                 },
-                                pack_start: new_list_button = &gtk::Button {
+                                pack_start: new_list_button = &gtk::MenuButton {
                                     set_icon_name: "value-increase-symbolic",
                                     add_css_class: "raised",
                                     set_has_frame: true,
-                                    connect_clicked(sender) => move |_| {
-                                        sender.input(Input::AddList("Test".to_string()));
-                                    }
+
                                 },
                             },
                             append: model.sidebar.widget()
@@ -169,7 +168,7 @@ impl SimpleComponent for AppModel {
             ContentModel::builder()
                 .launch(None)
                 .forward(&sender.input, |message| match message {
-                    ContentOutput::UpdateCounters(index, count) => Input::UpdateSidebarCounters(index, count)
+                    ContentOutput::UpdateCounters(lists) => Input::UpdateSidebarCounters(lists)
                 }),
         );
         let widgets = view_output!();
@@ -183,7 +182,7 @@ impl SimpleComponent for AppModel {
                 .content
                 .sender()
                 .send(ContentInput::SetTaskList(index, list)),
-            Input::UpdateSidebarCounters(index, count) => self.sidebar.sender().send(SidebarInput::UpdateCounters(index, count)),
+            Input::UpdateSidebarCounters(lists) => self.sidebar.sender().send(SidebarInput::UpdateCounters(lists)),
             _ => {}
         }
     }
