@@ -1,5 +1,9 @@
-use relm4::{ComponentParts, ComponentSender, gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, WidgetPlus};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
+use relm4::{
+    gtk,
+    gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
+    ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
+};
 
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks};
@@ -38,10 +42,10 @@ impl SimpleComponent for SidebarModel {
                     set_vexpand: true,
                     set_margin_all: 2,
                     set_css_classes: &["navigation-sidebar"],
-                    connect_row_activated(sender) => move |listbox, _| {
+                    connect_row_activated[sender] => move |listbox, _| {
                         let index = listbox.selected_row().unwrap().index() as usize;
-                        sender.input.send(SidebarInput::ListSelected(index));
-                        sender.output.send(SidebarOutput::Forward)
+                        sender.input(SidebarInput::ListSelected(index));
+                        sender.output(SidebarOutput::Forward)
                     },
                 },
             },
@@ -93,7 +97,7 @@ impl SimpleComponent for SidebarModel {
             }
             SidebarInput::ListSelected(index) => {
                 let list = self.lists.get(index);
-                sender.output.send(SidebarOutput::ListSelected(index, list.clone()));
+                sender.output(SidebarOutput::ListSelected(index, list.clone()));
             }
             SidebarInput::UpdateCounters(lists) => {
                 for list in lists {
@@ -104,7 +108,7 @@ impl SimpleComponent for SidebarModel {
                         ListType::All(i) => self.lists.get_mut(3).count += i as i32,
                         ListType::Starred(i) => self.lists.get_mut(4).count += i as i32,
                         ListType::Archived(i) => self.lists.get_mut(5).count += i as i32,
-                        ListType::Other(index, i) => self.lists.get_mut(index).count += i as i32
+                        ListType::Other(index, i) => self.lists.get_mut(index).count += i as i32,
                     }
                 }
             }

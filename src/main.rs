@@ -5,9 +5,9 @@ extern crate diesel_migrations;
 
 use anyhow::Result;
 use diesel_migrations::embed_migrations;
-use relm4::{adw, gtk, gtk::gio, RelmApp};
 use relm4::adw::prelude::ApplicationExt;
 use relm4::gtk::prelude::Cast;
+use relm4::{adw, gtk, gtk::gio, RelmApp};
 
 use widgets::app::AppModel;
 

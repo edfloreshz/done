@@ -1,9 +1,10 @@
-use crate::models::queryable::task::QueryableTask;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
 use uuid::Uuid;
 
-#[tracker::track]
+use crate::models::queryable::task::QueryableTask;
+
 #[derive(Debug, Clone, Default)]
 pub struct Task {
     pub id_task: String,
@@ -12,12 +13,10 @@ pub struct Task {
     pub body: Option<String>,
     pub completed_on: Option<String>,
     pub due_date: Option<String>,
-    #[tracker::no_eq]
     pub importance: TaskImportance,
     pub favorite: bool,
     pub is_reminder_on: bool,
     pub reminder_date: Option<String>,
-    #[tracker::no_eq]
     pub status: TaskStatus,
     pub created_date_time: Option<String>,
     pub last_modified_date_time: Option<String>,
@@ -39,7 +38,6 @@ impl Task {
             status: Default::default(),
             created_date_time: None,
             last_modified_date_time: None,
-            tracker: 0,
         }
     }
 }
@@ -61,7 +59,6 @@ impl From<QueryableTask> for Task {
             status: TaskStatus::from_str(task.status.unwrap().as_str()).unwrap_or_default(),
             created_date_time: task.created_date_time,
             last_modified_date_time: task.last_modified_date_time,
-            tracker: 0,
         }
     }
 }
