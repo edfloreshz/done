@@ -37,7 +37,8 @@ impl SimpleComponent for SidebarModel {
         sidebar = &gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
             append: scroll_window = &gtk::ScrolledWindow {
-                set_child: list = Some(&gtk::ListBox) {
+                #[wrap(Some)]
+                set_child: list = &gtk::ListBox {
                     set_selection_mode: gtk::SelectionMode::Single,
                     set_vexpand: true,
                     set_margin_all: 2,
