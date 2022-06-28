@@ -52,7 +52,8 @@ impl SimpleComponent for ContentModel {
                 set_visible: !model.show_tasks,
                 set_halign: gtk::Align::Center,
                 set_valign: gtk::Align::Center,
-                set_center_widget = Some(&gtk::Box) {
+                #[wrap(Some)]
+                set_center_widget = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     set_margin_all: 24,
                     set_spacing: 24,
@@ -116,7 +117,7 @@ impl SimpleComponent for ContentModel {
         sender: &ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         view! {
-            list_box = Some(&gtk::Box) {
+            list_box = &gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
             }
         }

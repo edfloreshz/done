@@ -10,6 +10,7 @@ use relm4::gtk::prelude::Cast;
 use relm4::{adw, gtk, gtk::gio, RelmApp};
 
 use widgets::app::AppModel;
+use crate::adw::Application;
 
 use crate::app::application::DoneApplication;
 use crate::app::config::{load_css, verify_data_integrity};
@@ -28,7 +29,7 @@ fn main() -> Result<()> {
         DoneApplication::new("dev.edfloreshz.Done", &gio::ApplicationFlags::HANDLES_OPEN);
     application.connect_startup(|_| load_css());
     verify_data_integrity()?;
-    let app: RelmApp<AppModel> = RelmApp::with_app(application.upcast());
+    let app: RelmApp<AppModel> = RelmApp::with_app(application.upcast::<Application>());
     app.run(None);
     Ok(())
 }

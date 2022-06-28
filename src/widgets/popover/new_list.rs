@@ -21,7 +21,8 @@ impl SimpleComponent for NewListModel {
     view! {
         #[root]
         gtk::Popover {
-            set_child = Some(&gtk::Stack) {
+            #[wrap(Some)]
+            set_child = &gtk::Stack {
                 add_child = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     set_spacing: 10,
@@ -45,8 +46,10 @@ impl SimpleComponent for NewListModel {
                             add_css_class: "raised",
                             set_has_frame: true,
                             set_direction: gtk::ArrowType::Right,
-                            set_popover = Some(&gtk::Popover) {
-                                set_child = Some(&gtk::Stack) {
+                            #[wrap(Some)]
+                            set_popover = &gtk::Popover {
+                                #[wrap(Some)]
+                                set_child = &gtk::Stack {
                                     add_child = &gtk::Label {
                                         set_text: "Providers"
                                     }

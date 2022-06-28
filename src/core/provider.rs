@@ -47,6 +47,7 @@ pub trait ToDoProvider {
     fn remove_task_list(&self, task: List) -> Result<()>;
 }
 
+#[allow(dead_code)]
 pub enum ProviderType {
     AllTasks,
     Inbox,

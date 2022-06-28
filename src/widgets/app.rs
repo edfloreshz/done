@@ -66,7 +66,8 @@ impl SimpleComponent for AppModel {
             set_height_request: 300,
             #[name = "overlay"]
             gtk::Overlay {
-                set_child: stack = Some(&gtk::Stack) {
+                #[wrap(Some)]
+                set_child: stack = &gtk::Stack {
                     set_hexpand: true,
                     set_vexpand: true,
                     set_transition_duration: 250,
@@ -79,7 +80,8 @@ impl SimpleComponent for AppModel {
                             #[name = "sidebar_header"]
                             adw::HeaderBar {
                                 set_show_end_title_buttons: false,
-                                set_title_widget = Some(&gtk::Box) {
+                                #[wrap(Some)]
+                                set_title_widget = &gtk::Box {
                                     set_orientation: gtk::Orientation::Horizontal,
                                     set_spacing: 5,
                                     gtk::Image {
