@@ -1,3 +1,5 @@
+use std::env;
+use std::path::Path;
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
 use relm4::adw::ffi::{
 	adw_style_manager_get_default as get_style_manager,
@@ -6,9 +8,11 @@ use relm4::adw::ffi::{
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
 };
-use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
-
-pub struct MainMenuModel;
+use relm4::{gtk, adw::gio, ComponentSender, SimpleComponent, ComponentParts, view};
+use relm4::adw::glib::subclass::types::FromObject;
+use relm4::adw::glib::value::FromValue;
+use crate::gio::MenuModel;
+use crate::gtk::Builder;
 
 pub enum MainMenuInput {
 	ForceLight,
@@ -17,7 +21,7 @@ pub enum MainMenuInput {
 }
 
 #[relm4::component(pub)]
-impl SimpleComponent for MainMenuModel {
+impl SimpleComponent for MainMenuInput {
 	type Input = MainMenuInput;
 	type Output = ();
 	type InitParams = ();
@@ -25,7 +29,18 @@ impl SimpleComponent for MainMenuModel {
 
 	view! {
 		#[root]
-		gtk::Popover {
+		gtk::PopoverMenu::from_model(None::<&gio::MenuModel>) {
+			set_menu_model: Some(&menu),
+			add_child: (&theme_selector, "theme_selector")
+		}
+	}
+
+	fn init(
+		_params: Self::InitParams,
+		root: &Self::Root,
+		sender: &ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		view! {
 			#[name = "theme_selector"]
 			gtk::Box {
 				add_css_class: "theme-container",
@@ -53,24 +68,17 @@ impl SimpleComponent for MainMenuModel {
 						sender.input(MainMenuInput::ForceDark)
 					}
 				}
-			},
-			// TODO: Figure out a way to include these options in the menu.
-			// gio::Menu {
-			// 	append: (Some("About"), Some("app.about")),
-			// 	append: (Some("Quit"), Some("app.quit"))
-			// }
+			}
 		}
-	}
-
-	fn init(
-		_params: Self::InitParams,
-		root: &Self::Root,
-		sender: &ComponentSender<Self>,
-	) -> ComponentParts<Self> {
+		let mut resource = env::current_dir().unwrap();
+		resource.push("src/widgets/popover/main_menu.xml");
+		let builder = Builder::from_file(resource);
+		let menu: MenuModel = builder.object("app-menu").unwrap();
 		let widgets = view_output!();
-		let model = MainMenuModel;
+		let model = MainMenuInput::FollowSystem;
 		ComponentParts { model, widgets }
 	}
+
 
 	fn update(&mut self, message: Self::Input, _sender: &ComponentSender<Self>) {
 		unsafe {
