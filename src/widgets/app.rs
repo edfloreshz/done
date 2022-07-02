@@ -12,19 +12,19 @@ use crate::widgets::component::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
 use crate::widgets::factory::list::ListType;
-use crate::widgets::popover::main_menu::MainMenuModel;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 use crate::{
 	adw, gtk,
 	gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
 };
+use crate::widgets::popover::main_menu::MainMenuInput;
 
 pub struct AppModel {
 	message: Option<Input>,
 	sidebar: Controller<SidebarModel>,
 	content: Controller<ContentModel>,
 	new_list_popover: Controller<NewListModel>,
-	main_menu_popover: Controller<MainMenuModel>,
+	main_menu_popover: Controller<MainMenuInput>,
 }
 
 impl AppModel {
@@ -32,7 +32,7 @@ impl AppModel {
 		sidebar: Controller<SidebarModel>,
 		content: Controller<ContentModel>,
 		new_list_popover: Controller<NewListModel>,
-		main_menu_popover: Controller<MainMenuModel>,
+		main_menu_popover: Controller<MainMenuInput>,
 	) -> Self {
 		Self {
 			message: None,
@@ -189,7 +189,7 @@ impl SimpleComponent for AppModel {
 				.forward(&sender.input, |message| match message {
 					NewListOutput::AddNewList(name) => Input::AddList(name),
 				}),
-			MainMenuModel::builder().launch(()).detach(),
+			MainMenuInput::builder().launch(()).detach(),
 		);
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
