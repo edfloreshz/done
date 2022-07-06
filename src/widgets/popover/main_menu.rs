@@ -1,5 +1,4 @@
 use std::env;
-use std::path::Path;
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
 use relm4::adw::ffi::{
 	adw_style_manager_get_default as get_style_manager,
@@ -9,8 +8,6 @@ use relm4::adw::ffi::{
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
 };
 use relm4::{gtk, adw::gio, ComponentSender, SimpleComponent, ComponentParts, view};
-use relm4::adw::glib::subclass::types::FromObject;
-use relm4::adw::glib::value::FromValue;
 use crate::gio::MenuModel;
 use crate::gtk::Builder;
 
