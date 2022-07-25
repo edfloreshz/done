@@ -1,4 +1,3 @@
-use std::env;
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
 use relm4::adw::ffi::{
 	adw_style_manager_get_default as get_style_manager,
@@ -7,6 +6,7 @@ use relm4::adw::ffi::{
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
 };
+use relm4::gtk::gio::ResourceLookupFlags;
 use relm4::{gtk, adw::gio, ComponentSender, SimpleComponent, ComponentParts, view};
 use crate::gio::MenuModel;
 use crate::gtk::Builder;
@@ -67,9 +67,10 @@ impl SimpleComponent for MainMenuInput {
 				}
 			}
 		}
-		let mut resource = env::current_dir().unwrap();
-		resource.push("src/widgets/popover/main_menu.xml");
-		let builder = Builder::from_file(resource);
+
+		let res = gio::resources_open_stream("dev/edfloreshz/Done/main_menu.ui", ResourceLookupFlags::all())?;
+		let builder = Builder::from_resource("dev/edfloreshz/Done/main_menu.ui");
+
 		let menu: MenuModel = builder.object("app-menu").unwrap();
 		let widgets = view_output!();
 		let model = MainMenuInput::FollowSystem;
