@@ -8,7 +8,7 @@ use relm4::gtk;
 use relm4::gtk::gio::File;
 use relm4::gtk::glib::clone;
 
-use crate::app::constants::VERSION;
+use crate::app::constants::{VERSION, APPLICATION_ID};
 use crate::app::window::DoneWindow;
 
 mod imp {
@@ -64,10 +64,20 @@ glib::wrapper! {
 				@implements gio::ActionGroup, gio::ActionMap;
 }
 
+impl Default for DoneApplication {
+    fn default() -> Self {
+        glib::Object::new(&[
+			("application-id", &APPLICATION_ID),
+			("flags", &gio::ApplicationFlags::HANDLES_OPEN),
+			("resource-base-path", &"/dev/edfloreshz/Done")
+		])
+		.expect("Failed to create Application.")
+    }
+}
+
 impl DoneApplication {
-	pub fn new(application_id: &str, flags: &gio::ApplicationFlags) -> Self {
-		glib::Object::new(&[("application-id", &application_id), ("flags", flags)])
-			.expect("Failed to create DoneApplication")
+	pub fn new() -> Self {
+		Self::default()
 	}
 
 	fn setup_gactions(&self) {
@@ -88,7 +98,7 @@ impl DoneApplication {
 		let window = self.active_window().unwrap();
 		let dialog = gtk::AboutDialog::builder()
 			.comments(" To-do lists reimagined.")
-			.icon_name("dev.edfloreshz.Done")
+			.icon_name(APPLICATION_ID)
 			.logo(&gtk::IconPaintable::for_file(
 				&File::for_path(home().join(".local/share/flatpak/exports/share/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg").to_str().unwrap()),
 				100,
