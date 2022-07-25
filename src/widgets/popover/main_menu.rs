@@ -6,7 +6,6 @@ use relm4::adw::ffi::{
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
 };
-use relm4::gtk::gio::ResourceLookupFlags;
 use relm4::{gtk, adw::gio, ComponentSender, SimpleComponent, ComponentParts, view};
 use crate::gio::MenuModel;
 use crate::gtk::Builder;
@@ -67,10 +66,7 @@ impl SimpleComponent for MainMenuInput {
 				}
 			}
 		}
-
-		let res = gio::resources_open_stream("dev/edfloreshz/Done/main_menu.ui", ResourceLookupFlags::all())?;
-		let builder = Builder::from_resource("dev/edfloreshz/Done/main_menu.ui");
-
+		let builder = Builder::from_file("/dev/edfloreshz/Done/main_menu.ui");
 		let menu: MenuModel = builder.object("app-menu").unwrap();
 		let widgets = view_output!();
 		let model = MainMenuInput::FollowSystem;

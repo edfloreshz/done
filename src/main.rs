@@ -25,10 +25,7 @@ mod widgets;
 embed_migrations!("migrations");
 
 fn main() -> Result<()> {
-	let application = DoneApplication::new(
-		"dev.edfloreshz.Done",
-		&gio::ApplicationFlags::HANDLES_OPEN,
-	);
+	let application = DoneApplication::new();
 	application.connect_startup(|_| load_css());
 	verify_data_integrity()?;
 	let app: RelmApp<AppModel> =
