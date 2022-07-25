@@ -79,6 +79,15 @@ provided by GNOME To Do to provide the ultimate to do experience.
 - libadwaita
 - pkg-config
 
+Ubuntu 22.04:
+```bash
+sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev
+```
+Arch Linux:
+```bash
+sudo pacman -S libadwaita gtk4 sqlite
+```
+
 Copyright and licensing
 -----------------------
 
