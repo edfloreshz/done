@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/dev/edfloreshz/Done/icons/scalable/actions/">
+  </gresource>
+  <gresource prefix="/dev/edfloreshz/Done">
+    <file alias="main_menu.ui" preprocess="xml-stripblanks">widgets/popover/main_menu.ui</file>
+  </gresource>
+</gresources>
+
