@@ -87,7 +87,7 @@ impl DoneApplication {
 	fn show_about(&self) {
 		let window = self.active_window().unwrap();
 		let dialog = gtk::AboutDialog::builder()
-			.comments("Comments")
+			.comments(" To-do lists reimagined.")
 			.icon_name("dev.edfloreshz.Done")
 			.logo(&gtk::IconPaintable::for_file(
 				&File::for_path(home().join(".local/share/flatpak/exports/share/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg").to_str().unwrap()),
@@ -99,6 +99,8 @@ impl DoneApplication {
 			.program_name("Done")
 			.version(VERSION)
 			.website_label("Website")
+			.copyright("© 2022 Eduardo Flores")
+			.license_type(gtk::License::Gpl20Only)
 			.website("https://done.edfloreshz.dev/")
 			.authors(vec!["Eduardo Flores".into()])
 			.build();
