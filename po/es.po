@@ -40,10 +40,6 @@ msgstr "Listas de tareas reinventadas"
 msgid "Done is a simple to do app that lets you combine your existing set of task providers into one database, easily."
 msgstr "Done es una app de tareas simple que te permite combinar a tus proveedores de tareas existentes en una sola base de datos, facilmente."
 
-#: src/app/application.rs:105
-msgid "Website"
-msgstr "Sitio web"
-
 #: data/dev.edfloreshz.Done.appdata.xml.in.in:11
 #: data/dev.edfloreshz.Done.metainfo.xml.in.in:11
 msgid "Current features:"
@@ -93,63 +89,3 @@ msgstr "Lista todas las tareas"
 #: data/dev.edfloreshz.Done.metainfo.xml.in.in:26
 msgid "Main Window"
 msgstr "Pantalla principal"
-
-#: src/widgets/component/sidebar.rs:66
-msgid "Inbox"
-msgstr "Entrada"
-
-#: src/widgets/component/sidebar.rs:67
-msgid "Today"
-msgstr "Hoy"
-
-#: src/widgets/component/sidebar.rs:68
-msgid "Next 7 Days"
-msgstr "7 Dias Proximos"
-
-#: src/widgets/component/sidebar.rs:70
-msgid "All"
-msgstr "Todo"
-
-#: src/widgets/component/sidebar.rs:70
-msgid "Starred"
-msgstr "Favoritas"
-
-#: src/widgets/component/sidebar.rs:70
-msgid "Archived"
-msgstr "Archivado"
-
-#: src/widgets/component/content.rs:64
-msgid "Tasks Will Appear Here"
-msgstr "Las tareas apareceran aqui"
-
-#: src/widgets/component/content.rs:70
-msgid "Add Tasks..."
-msgstr "Añade tareas..."
-
-#: src/widgets/component/content.rs:100
-msgid "New task..."
-msgstr "Nueva tarea..."
-
-#: src/widgets/popover/new_list.rs:29
-msgid "List Name"
-msgstr "Nombre de la lista"
-
-#: src/widgets/popover/new_list.rs:54
-msgid "Providers"
-msgstr "Proveedores"
-
-#: src/widgets/popover/new_list.rs:65
-msgid "Create List"
-msgstr "Crear Lista"
-
-#: src/widgets/popover/new_list.rs:74
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: src/widgets/popover/main_menu.ui:11
-msgid "_About Done"
-msgstr "Acerca _de Done"
-
-#: src/widgets/popover/main_menu.ui:15
-msgid "_Quit"
-msgstr "_Salir"

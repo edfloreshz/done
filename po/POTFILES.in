@@ -1,7 +1,3 @@
 data/dev.edfloreshz.Done.desktop.in.in
 data/dev.edfloreshz.Done.appdata.xml.in.in
 data/dev.edfloreshz.Done.metainfo.xml.in.in
-src/widgets/component/sidebar.rs
-src/widgets/component/content.rs
-src/widgets/popover/new_list.rs
-src/widgets/popover/main_menu.ui
