@@ -64,8 +64,8 @@ impl SimpleComponent for SidebarModel {
 		};
 		let mut lists = vec![
 			List::new("Inbox", "document-save-symbolic", 0),
-			List::new("Today", "display-brightness-symbolic", 0),
-			List::new("Next 7 Days", "x-office-calendar-symbolic", 0),
+			List::new("Today", "sun-alt-symbolic", 0),
+			List::new("Next 7 Days", "org.gnome.Calendar.Devel-symbolic", 0),
 			List::new(
 				"All",
 				"edit-paste-symbolic",
@@ -73,7 +73,7 @@ impl SimpleComponent for SidebarModel {
 			),
 			List::new(
 				"Starred",
-				"non-starred-symbolic",
+				"star-outline-rounded-symbolic",
 				get_favorite_tasks().unwrap_or_default().len() as i32,
 			),
 			List::new("Archived", "folder-symbolic", 0),

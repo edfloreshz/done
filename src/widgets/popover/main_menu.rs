@@ -66,7 +66,7 @@ impl SimpleComponent for MainMenuInput {
 				}
 			}
 		}
-		let builder = Builder::from_file("/dev/edfloreshz/Done/main_menu.ui");
+		let builder = Builder::from_resource("/dev/edfloreshz/Done/ui/main_menu.ui");
 		let menu: MenuModel = builder.object("app-menu").unwrap();
 		let widgets = view_output!();
 		let model = MainMenuInput::FollowSystem;

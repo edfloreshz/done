@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/dev/edfloreshz/Done/icons/scalable/actions/">
+  <gresource prefix="/dev/edfloreshz/Done/icons/scalable/actions">
+    <file alias="star-outline-rounded-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/star-outline-rounded-symbolic.svg</file>
+    <file alias="star-filled-rounded-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/star-filled-rounded-symbolic.svg</file>
+    <file alias="user-trash-full-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/user-trash-full-symbolic.svg</file>
+    <file alias="user-trash-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/user-trash-symbolic.svg</file>
+    <file alias="all-done.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/all-done.svg</file>
+    <file alias="document-save-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/document-save-symbolic.svg</file>
+    <file alias="sun-alt-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/sun-alt-symbolic.svg</file>
+    <file alias="org.gnome.Calendar.Devel-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/org.gnome.Calendar.Devel-symbolic.svg</file>
+    <file alias="edit-paste-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/edit-paste-symbolic.svg</file>
+    <file alias="folder-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/folder-symbolic.svg</file>
+    <file alias="list-compact-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/list-compact-symbolic.svg</file>
+    <file alias="open-menu-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/open-menu-symbolic.svg</file>
+    <file alias="value-increase-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/value-increase-symbolic.svg</file>
+    <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/go-previous-symbolic.svg</file>
   </gresource>
-  <gresource prefix="/dev/edfloreshz/Done">
+  <gresource prefix="/dev/edfloreshz/Done/ui">
     <file alias="main_menu.ui" preprocess="xml-stripblanks">widgets/popover/main_menu.ui</file>
   </gresource>
 </gresources>
-

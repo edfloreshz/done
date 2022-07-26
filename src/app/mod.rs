@@ -1,4 +1,5 @@
 pub mod application;
 pub mod config;
 pub mod constants;
-mod window;
+pub mod window;
+pub mod resources;

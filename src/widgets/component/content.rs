@@ -1,5 +1,4 @@
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
-use relm4::gtk::gio::File;
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -59,9 +58,7 @@ impl SimpleComponent for ContentModel {
 					set_orientation: gtk::Orientation::Vertical,
 					set_margin_all: 24,
 					set_spacing: 24,
-					append = &gtk::Picture {
-						set_file: Some(&File::for_uri("https://raw.githubusercontent.com/edfloreshz/done/4a5e22c118e58c6de1758c76daf164bd6ad6ce38/src/widgets/assets/all-done.svg")),
-					},
+					append = &gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
 					append = &gtk::Label {
 						add_css_class: "title",
 						set_text: "Tasks Will Appear Here"

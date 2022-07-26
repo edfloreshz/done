@@ -15,7 +15,7 @@ pub fn get_lists() -> Result<Vec<List>> {
 
 pub fn post_list(name: String) -> Result<List> {
 	let connection = DatabaseConnection::establish_connection();
-	let new_list = QueryableList::new(&*name, Some("view-list-symbolic".into()));
+	let new_list = QueryableList::new(&*name, Some("list-compact-symbolic".into()));
 	diesel::insert_into(lists)
 		.values(&new_list)
 		.execute(&connection)?;
