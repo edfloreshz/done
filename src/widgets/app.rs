@@ -4,6 +4,7 @@ use relm4::{
 	SimpleComponent,
 };
 
+use crate::app::constants::APPLICATION_ID;
 use crate::models::list::List;
 use crate::widgets::component::content::{
 	ContentInput, ContentModel, ContentOutput,
@@ -89,7 +90,7 @@ impl SimpleComponent for AppModel {
 									set_orientation: gtk::Orientation::Horizontal,
 									set_spacing: 5,
 									gtk::Image {
-										set_icon_name: Some("dev.edfloreshz.Done"),
+										set_icon_name: Some(APPLICATION_ID),
 									},
 									gtk::Label {
 										set_text: "Done"

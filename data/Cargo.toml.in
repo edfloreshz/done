@@ -1,6 +1,6 @@
 [package]
-name = "done"
-version = "0.1.0"
+name = @GETTEXT_PACKAGE@
+version = @VERSION@
 edition = "2021"
 authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
 license = "GPL-2.0"

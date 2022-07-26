@@ -4,7 +4,7 @@ configure_file(
     configuration: conf
 )
 
-# Copy the const.rs output to the source directory.
+# Copy the constants.rs output to the source directory.
 run_command(
   'cp',
   join_paths(meson.project_build_root(), 'src/app', 'constants.rs'),

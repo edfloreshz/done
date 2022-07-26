@@ -2,10 +2,8 @@ use adw::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib, glib::object_subclass};
-use libset::routes::home;
 use relm4::adw;
 use relm4::gtk;
-use relm4::gtk::gio::File;
 use relm4::gtk::glib::clone;
 
 use crate::app::constants::{VERSION, APPLICATION_ID};
@@ -99,11 +97,7 @@ impl DoneApplication {
 		let dialog = gtk::AboutDialog::builder()
 			.comments(" To-do lists reimagined.")
 			.icon_name(APPLICATION_ID)
-			.logo(&gtk::IconPaintable::for_file(
-				&File::for_path(home().join(".local/share/flatpak/exports/share/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg").to_str().unwrap()),
-				100,
-				1)
-			)
+			.logo_icon_name(APPLICATION_ID)
 			.transient_for(&window)
 			.modal(true)
 			.program_name("Done")

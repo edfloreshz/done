@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Eduardo Flores 2022 <edfloreshz@gmail.com> -->
 <component type="desktop-application">
-  <id>dev.edfloreshz.Done</id>
+  <id>@APPLICATION_ID@</id>
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <name>Done</name>

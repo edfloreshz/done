@@ -75,7 +75,7 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 							add_css_class: "circular",
 							#[watch]
 							set_class_active: ("favorite", self.favorite),
-							set_icon_name: "starred-symbolic",
+							set_icon_name: "star-filled-rounded-symbolic",
 							connect_toggled[input, index] => move |_| {
 								input.send(TaskInput::Favorite(index.clone()));
 							}
@@ -152,3 +152,4 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 		None
 	}
 }
+

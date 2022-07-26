@@ -19,8 +19,8 @@
             "--share=network"
         ],
         "env" : {
-	    "CARGO_HOME" : "/run/build/done/cargo"
-	}
+            "CARGO_HOME" : "/run/build/done/cargo"
+        }
     },
     "cleanup" : [
         "/include",
@@ -42,11 +42,11 @@
                 "-Dprofile=development"
             ],
             "sources" : [
-            	{
+                {
                     "type" : "git",
-                    "branch": "main",
+                    "branch" : "main",
                     "url" : "https://github.com/edfloreshz/do.git"
-                },
+                }
             ]
         }
     ]
