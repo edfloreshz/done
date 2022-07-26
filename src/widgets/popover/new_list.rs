@@ -4,6 +4,7 @@ use gtk::prelude::{
 	OrientableExt, PopoverExt, WidgetExt,
 };
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use crate::app::i18n::i18n;
 
 pub struct NewListModel;
 
@@ -26,7 +27,7 @@ impl SimpleComponent for NewListModel {
 				add_child = &gtk::Box {
 					set_orientation: gtk::Orientation::Vertical,
 					set_spacing: 10,
-					gtk::Label::new(Some("List Name")),
+					gtk::Label::new(Some(&i18n("List Name"))),
 					gtk::Box {
 						set_orientation: gtk::Orientation::Horizontal,
 						set_spacing: 10,
@@ -51,7 +52,7 @@ impl SimpleComponent for NewListModel {
 								#[wrap(Some)]
 								set_child = &gtk::Stack {
 									add_child = &gtk::Label {
-										set_text: "Providers"
+										set_text: &i18n("Providers")
 									}
 								}
 							}
@@ -59,7 +60,7 @@ impl SimpleComponent for NewListModel {
 					},
 					#[name = "add_button"]
 					gtk::Button {
-						set_label: "Create List",
+						set_label: &i18n("Create List"),
 						set_css_classes: &["suggested-action"],
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
@@ -71,7 +72,7 @@ impl SimpleComponent for NewListModel {
 					},
 					#[name = "cancel_button"]
 					gtk::Button {
-						set_label: "Cancel",
+						set_label: &i18n("Cancel"),
 						connect_clicked: clone!(@strong root, @strong new_list_entry, @strong sender => move |_| {
 							new_list_entry.set_text("");
 							root.popdown();
