@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Done
 GenericName=To Do App
-Comment=Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience.
+Comment=Done is a simple to do app that lets you combine your existing set of task providers into one database, easily.
 TryExec=done
 Exec=done %u
 Icon=@APPLICATION_ID@

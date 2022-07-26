@@ -95,7 +95,7 @@ impl DoneApplication {
 	fn show_about(&self) {
 		let window = self.active_window().unwrap();
 		let dialog = gtk::AboutDialog::builder()
-			.comments(" To-do lists reimagined.")
+			.comments("To-do lists reimagined")
 			.icon_name(APPLICATION_ID)
 			.logo_icon_name(APPLICATION_ID)
 			.transient_for(&window)

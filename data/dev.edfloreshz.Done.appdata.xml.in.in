@@ -5,18 +5,18 @@
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <name>Done</name>
-  <summary>Get things done... done!</summary>
+  <summary>To-do lists reimagined</summary>
   <description>
-    <p>Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience.</p>
+    <p>Done is a simple to do app that lets you combine your existing set of task providers into one database, easily.</p>
     <p>Current features:</p>
     <ul>
-      <li>Add lists to sidebar</li>
-      <li>Add tasks to lists</li>
+      <li>Add lists to the sidebar</li>
+      <li>Add tasks to your lists</li>
       <li>Mark tasks as completed</li>
-      <li>Edit title of task</li>
-      <li>Mark task as favorite</li>
-      <li>Delete task</li>
-      <li>List starred tasks</li>
+      <li>Edit title of your tasks</li>
+      <li>Mark tasks as favorite</li>
+      <li>Delete tasks</li>
+      <li>List your starred tasks</li>
       <li>List all tasks</li>
     </ul>
   </description>

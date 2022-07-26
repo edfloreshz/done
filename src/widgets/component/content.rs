@@ -14,6 +14,7 @@ use crate::models::list::List;
 use crate::models::task::Task;
 use crate::widgets::factory::list::ListType;
 use crate::widgets::factory::list::ListType::{All, Other, Starred};
+use crate::app::i18n::i18n;
 
 pub struct ContentModel {
 	parent_list: (usize, Option<List>),
@@ -61,13 +62,13 @@ impl SimpleComponent for ContentModel {
 					append = &gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
 					append = &gtk::Label {
 						add_css_class: "title",
-						set_text: "Tasks Will Appear Here"
+						set_text: &i18n("Tasks Will Appear Here")
 					},
 					append = &gtk::Button {
 						#[watch]
 						set_visible: model.parent_list.0 > 5,
 						add_css_class: "suggested-action",
-						set_label: "Add Tasks...",
+						set_label: &i18n("Add Tasks..."),
 						connect_clicked[sender] => move |_| {
 								sender.input(ContentInput::RemoveWelcomeScreen)
 						}
@@ -97,7 +98,7 @@ impl SimpleComponent for ContentModel {
 						#[watch]
 						set_visible: model.parent_list.0 > 5,
 						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
-						set_placeholder_text: Some("New task..."),
+						set_placeholder_text: Some(&i18n("New task...")),
 						set_height_request: 42,
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.buffer();
