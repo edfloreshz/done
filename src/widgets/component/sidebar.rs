@@ -7,9 +7,9 @@ use relm4::{
 
 use crate::core::local::lists::{get_lists, post_list};
 use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks};
+use crate::fl;
 use crate::models::list::List;
 use crate::widgets::factory::list::ListType;
-use crate::app::i18n::i18n;
 
 pub struct SidebarModel {
 	lists: FactoryVecDeque<gtk::ListBox, List, SidebarInput>,
@@ -64,20 +64,20 @@ impl SimpleComponent for SidebarModel {
 			lists: FactoryVecDeque::new(widgets.list.clone(), &sender.input),
 		};
 		let mut lists = vec![
-			List::new(&i18n("Inbox"), "document-save-symbolic", 0),
-			List::new(&i18n("Today"), "sun-alt-symbolic", 0),
-			List::new(&i18n("Next 7 Days"), "org.gnome.Calendar.Devel-symbolic", 0),
+			List::new(fl!("inbox"), "document-save-symbolic", 0),
+			List::new(fl!("today"), "sun-alt-symbolic", 0),
+			List::new(fl!("next-7-days"), "org.gnome.Calendar.Devel-symbolic", 0),
 			List::new(
-				&i18n("All"),
+				fl!("all"),
 				"edit-paste-symbolic",
 				get_all_tasks().unwrap_or_default().len() as i32,
 			),
 			List::new(
-				&i18n("Starred"),
+				fl!("starred"),
 				"star-outline-rounded-symbolic",
 				get_favorite_tasks().unwrap_or_default().len() as i32,
 			),
-			List::new(&i18n("Archived"), "folder-symbolic", 0),
+			List::new(fl!("archived"), "folder-symbolic", 0),
 		];
 		lists.append(&mut get_lists().unwrap_or_default());
 		for list in lists {

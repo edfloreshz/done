@@ -11,9 +11,9 @@ use diesel_migrations::embed_migrations;
 use relm4::adw::prelude::ApplicationExt;
 use relm4::gtk::prelude::Cast;
 use relm4::{adw, gtk, gtk::gio, RelmApp};
-use gettextrs::{bind_textdomain_codeset, bindtextdomain, setlocale, textdomain, LocaleCategory};
 
-use crate::app::constants::{GETTEXT_PACKAGE, LOCALEDIR};
+use crate::app::localize::localize;
+// use crate::app::constants::{GETTEXT_PACKAGE, LOCALEDIR};
 use crate::app::resources::load_resources;
 use crate::adw::Application;
 use widgets::app::AppModel;
@@ -35,12 +35,7 @@ fn main() -> Result<()> {
 
 	// Set up gettext translations
     debug!("Setting up locale data");
-    setlocale(LocaleCategory::LcAll, "");
-
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR).expect("Unable to bind the text domain");
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8")
-        .expect("Unable to set the text domain encoding");
-    textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");
+	localize();
 
 	load_resources()?;
 	let application = DoneApplication::new();
