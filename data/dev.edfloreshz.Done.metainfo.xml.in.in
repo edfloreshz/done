@@ -35,6 +35,27 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.1" date="2022-07-26">
+      <description>
+        <p>Lots of changes!</p>
+        <ul>
+            <li>Tasks now delete correctly</li>
+            <li>Added localization to the app</li>
+            <li>Added translation to mexican spanish</li>
+            <li>New list button moved to the header bar</li>
+            <li>New app icons</li>
+            <li>Added a main menu</li>
+            <li>Added about dialog to the menu</li>
+            <li>Added quit menu option</li>
+            <li>Added a theme switcher</li>
+            <li>Added quit menu option</li>
+            <li>Added symbolic icons</li>
+            <li>App icon now adapts to the selected profile</li>
+            <li>App now adapts to different screen sizes</li>
+            <li>Minimum size of the app reduced</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.0" date="2022-05-07">
       <description>
         <p>Initial release for Done! </p>

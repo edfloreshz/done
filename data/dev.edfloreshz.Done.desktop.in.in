@@ -7,5 +7,6 @@ Exec=done %u
 Icon=@APPLICATION_ID@
 Terminal=false
 Type=Application
-Categories=GNOME;GTK;
+Categories=GNOME;GTK;Office;Database;
+Keywords=todo;task;organization;productivity;
 MimeType=x-scheme-handler/done;
