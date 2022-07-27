@@ -15,8 +15,7 @@
 </div>
 <br/>
 
-Done is a simple to do app written in Rust using [gtk-rs](https://gtk-rs.org/) and [Relm4](https://relm4.org/), we aim to improve on the existing set of features
-provided by GNOME To Do to provide the ultimate to do experience.
+Done is a simple to do app that lets you combine your existing set of task providers into one database, easily.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/edfloreshz/done/ffdcf43a0cd224e38cdfbfcf1f0ecbc30c0f3b8b/data/screenshots/main-window.png"/>
@@ -27,7 +26,6 @@ provided by GNOME To Do to provide the ultimate to do experience.
 | Platform   | Command                                 |
 |------------|-----------------------------------------|
 | Arch Linux | `paru -S done-git`                    |
-| Cargo      | `cargo instal done`                   |
 | Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
 
 
