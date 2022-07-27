@@ -22,20 +22,16 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/edfloreshz/done/blob/main/data/screenshots/tasks.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/tasks.png</image>
       <caption>Tasks</caption>
     </screenshot>
     <screenshot>
-      <image>https://github.com/edfloreshz/done/blob/main/data/screenshots/blank.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/blank.png</image>
       <caption>Main Window</caption>
     </screenshot>
     <screenshot>
-      <image>https://github.com/edfloreshz/done/blob/main/data/screenshots/dark.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/dark.png</image>
       <caption>Dark Mode</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://github.com/edfloreshz/done/blob/main/data/screenshots/about.png</image>
-      <caption>About</caption>
     </screenshot>
   </screenshots>
   <url type="homepage">https://done.edfloreshz.dev/</url>
