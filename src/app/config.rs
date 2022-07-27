@@ -7,6 +7,8 @@ use crate::adw::gdk::Display;
 use crate::embedded_migrations;
 use crate::storage::DatabaseConnection;
 
+use super::constants::VERSION;
+
 pub fn verify_data_integrity() -> Result<()> {
 	let config = get_config();
 	let user_database = dirs::data_dir()
@@ -37,6 +39,6 @@ fn get_config() -> Config {
 	Config::new("done")
 		.about("Do is a To Do app for Linux built with Rust and GTK.")
 		.author("Eduardo Flores")
-		.version("0.1.0")
+		.version(VERSION)
 		.add(fi!("dev.edfloreshz.Done.db"))
 }
