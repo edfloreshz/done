@@ -21,17 +21,14 @@
     </ul>
   </description>
   <screenshots>
-    <screenshot type="default">
+    <screenshot>
       <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/tasks.png</image>
-      <caption>Tasks</caption>
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/blank.png</image>
-      <caption>Main Window</caption>
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/dark.png</image>
-      <caption>Dark Mode</caption>
     </screenshot>
   </screenshots>
   <url type="homepage">https://done.edfloreshz.dev/</url>
