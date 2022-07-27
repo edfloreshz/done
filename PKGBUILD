@@ -2,8 +2,8 @@
 
 pkgname=done-git
 pkgrel=1
-pkgver=0.1.0
-pkgdesc="Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience."
+pkgver=0.1.1
+pkgdesc="Done is a simple to do app that lets you combine your existing set of task providers into one database, easily."
 arch=('x86_64')
 url="https://github.com/edfloreshz/done"
 license=('GPL2')
