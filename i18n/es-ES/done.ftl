@@ -1,6 +1,6 @@
 done = Done
 
-create-list = Crear Lista
+create-list = Crear lista
 cancel = Cancelar
 
 list-name = Nombre de la lista
