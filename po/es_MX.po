@@ -104,7 +104,7 @@ msgstr "Hoy"
 
 #: src/widgets/component/sidebar.rs:68
 msgid "Next 7 Days"
-msgstr "7 Dias Proximos"
+msgstr "Próximos 7 días"
 
 #: src/widgets/component/sidebar.rs:70
 msgid "All"
@@ -120,7 +120,7 @@ msgstr "Archivado"
 
 #: src/widgets/component/content.rs:64
 msgid "Tasks Will Appear Here"
-msgstr "Las tareas apareceran aqui"
+msgstr "Las tareas aparecerán aquí"
 
 #: src/widgets/component/content.rs:70
 msgid "Add Tasks..."
