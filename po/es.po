@@ -84,8 +84,3 @@ msgstr "Lista tus tareas favoritas"
 #: data/dev.edfloreshz.Done.metainfo.xml.in.in:20
 msgid "List all tasks"
 msgstr "Lista todas las tareas"
-
-#: data/dev.edfloreshz.Done.appdata.xml.in.in:26
-#: data/dev.edfloreshz.Done.metainfo.xml.in.in:26
-msgid "Main Window"
-msgstr "Pantalla principal"
