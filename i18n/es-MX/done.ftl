@@ -12,7 +12,7 @@ providers = Proveedores
 
 inbox = Entrada
 today = Hoy
-next-7-days = Próximos 7 d
+next-7-days = Próximos 7 días
 all = Todo
 starred = Favoritas
 archived = Archivadas
