@@ -32,7 +32,7 @@ msgstr "App de tareas"
 #: data/dev.edfloreshz.Done.appdata.xml.in.in:8
 #: data/dev.edfloreshz.Done.metainfo.xml.in.in:8 src/app/application.rs:98
 msgid "To-do lists reimagined"
-msgstr "Listas de tareas reinventadas"
+msgstr "Listas de tareas reinventada"
 
 #: data/dev.edfloreshz.Done.desktop.in.in:4
 #: data/dev.edfloreshz.Done.appdata.xml.in.in:10
@@ -42,7 +42,7 @@ msgid ""
 "providers into one database, easily."
 msgstr ""
 "Done es una app de tareas simple que te permite combinar a tus proveedores "
-"de tareas existentes en una sola base de datos, facilmente."
+"de tareas existentes en una sola base de datos, de manera sencilla."
 
 #: src/app/application.rs:105
 msgid "Website"
