@@ -134,8 +134,8 @@ impl SimpleComponent for ContentModel {
 		match message {
 			ContentInput::AddTask(title) => {
 				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
-				let task = post_task(id_list.to_owned(), title)
-					.expect("Failed to post task.");
+				let task =
+					post_task(id_list.to_owned(), title).expect("Failed to post task.");
 				self.tasks.push_back(task);
 
 				sender.output(ContentOutput::UpdateCounters(vec![
