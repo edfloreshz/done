@@ -16,10 +16,11 @@ use crate::widgets::factory::list::ListType::{All, Other, Starred};
 
 pub struct ContentModel {
 	parent_list: (usize, Option<GenericList>),
-	tasks: FactoryVecDeque<gtk::Box, GenericTask, ContentInput>,
+	tasks: FactoryVecDeque<GenericTask>,
 	show_tasks: bool,
 }
 
+#[derive(Debug)]
 pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
@@ -29,6 +30,7 @@ pub enum ContentInput {
 	FavoriteTask(DynamicIndex, bool),
 }
 
+#[derive(Debug)]
 pub enum ContentOutput {
 	UpdateCounters(Vec<ListType>),
 }
@@ -129,6 +131,7 @@ impl SimpleComponent for ContentModel {
 	}
 
 	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
+		let mut guard = self.tasks.guard();
 		match message {
 			ContentInput::AddTask(title) => {
 				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
@@ -142,7 +145,7 @@ impl SimpleComponent for ContentModel {
 				]));
 			},
 			ContentInput::RemoveTask(index) => {
-				if self.tasks.get(index.current_index()).favorite {
+				if guard.get(index.current_index()).unwrap().favorite {
 					sender.output(ContentOutput::UpdateCounters(vec![
 						All(-1),
 						Starred(-1),
@@ -155,10 +158,10 @@ impl SimpleComponent for ContentModel {
 					]));
 				}
 				{
-					let task = self.tasks.get(index.current_index());
+					let task = guard.get(index.current_index());
 					// delete_task(&task.id_task).expect("Failed to remove task.");
 				}
-				self.tasks.remove(index.current_index());
+				guard.remove(index.current_index());
 			},
 			ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
 			ContentInput::SetTaskList(index, list) => {
@@ -172,27 +175,26 @@ impl SimpleComponent for ContentModel {
 					_ => todo!("Get specific task list."),
 				};
 				loop {
-					let task = self.tasks.pop_front();
+					let task = guard.pop_front();
 					if task.is_none() {
 						break;
 					}
 				}
 				// for task in tasks {
-				// 	self.tasks.push_back(task.clone());
+				// 	guard.push_back(task.clone());
 				// }
-				self.show_tasks = !self.tasks.is_empty();
+				self.show_tasks = !guard.is_empty();
 			},
 			ContentInput::UpdateCounters(lists) => {
 				sender.output(ContentOutput::UpdateCounters(lists))
 			},
 			ContentInput::FavoriteTask(index, favorite) => {
 				if self.parent_list.0 == 4 {
-					self.tasks.remove(index.current_index());
+					guard.remove(index.current_index());
 				}
 				let value = if favorite { 1 } else { -1 };
 				sender.output(ContentOutput::UpdateCounters(vec![Starred(value)]))
 			},
 		}
-		self.tasks.render_changes();
 	}
 }

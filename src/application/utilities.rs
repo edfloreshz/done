@@ -1,6 +1,6 @@
 use anyhow::Result;
 use libset::config::Config;
-use libset::{directory, fi};
+use libset::{new_dir, new_file};
 use relm4::gtk::{CssProvider, StyleContext};
 
 use crate::adw::gdk::Display;
@@ -13,7 +13,9 @@ pub fn verify_data_integrity() -> Result<()> {
 	let user_database = dirs::data_dir()
 		.unwrap()
 		.join("done/dev.edfloreshz.Done.db");
-	if !config.is_written() || !user_database.exists() {
+	if
+		// !config.is_written() ||
+		!user_database.exists() {
 		config.write()?;
 	}
 	// let connection = DatabaseConnection::establish_connection();
@@ -39,6 +41,6 @@ fn get_config() -> Config {
 		.about("Do is a To Do app for Linux built with Rust and GTK.")
 		.author("Eduardo Flores")
 		.version(VERSION)
-		.add(fi!("dev.edfloreshz.Done.db"))
-		.add(directory!("providers"))
+		.add(new_file!("dev.edfloreshz.Done.db"))
+		.add(new_dir!("providers"))
 }

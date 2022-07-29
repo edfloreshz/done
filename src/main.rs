@@ -35,8 +35,8 @@ fn main() -> Result<()> {
 	let application = DoneApplication::new();
 	application.connect_startup(|_| load_css());
 	verify_data_integrity()?;
-	let app: RelmApp<AppModel> =
+	let app: RelmApp =
 		RelmApp::with_app(application.upcast::<Application>());
-	app.run(None);
+	app.run::<AppModel>(None);
 	Ok(())
 }

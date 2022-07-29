@@ -1,4 +1,4 @@
-use relm4::factory::{DynamicIndex, FactoryComponent};
+use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView};
 use relm4::Sender;
 use crate::core::models::generic::lists::GenericList;
 
@@ -6,6 +6,7 @@ use crate::gtk;
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
 use crate::widgets::component::sidebar::SidebarInput;
 
+#[derive(Debug)]
 pub enum ListType {
 	Inbox(i8),
 	Today(i8),
@@ -23,13 +24,15 @@ pub enum ListInput {
 	ChangeIcon(String),
 }
 
+#[derive(Debug)]
 pub enum ListOutput {
 	RemoveList(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent<gtk::ListBox, SidebarInput> for GenericList {
-	type Command = ();
+impl FactoryComponent for GenericList {
+	type ParentMsg = SidebarInput;
+	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
@@ -73,33 +76,16 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for GenericList {
 		})
 	}
 
-	fn init_model(
-		params: Self::InitParams,
-		_index: &DynamicIndex,
-		_input: &Sender<Self::Input>,
-		_output: &Sender<Self::Output>,
-	) -> Self {
+	fn init_model(params: Self::InitParams, index: &DynamicIndex, sender: &FactoryComponentSender<Self>) -> Self {
 		params
 	}
 
-	fn init_widgets(
-		&mut self,
-		_index: &DynamicIndex,
-		root: &Self::Root,
-		_returned_widget: &gtk::ListBoxRow,
-		_input: &Sender<Self::Input>,
-		_output: &Sender<Self::Output>,
-	) -> Self::Widgets {
+	fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: &FactoryComponentSender<Self>) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
 	}
 
-	fn update(
-		&mut self,
-		message: Self::Input,
-		_input: &Sender<Self::Input>,
-		_output: &Sender<Self::Output>,
-	) -> Option<Self::Command> {
+	fn update(&mut self, message: Self::Input, sender: &FactoryComponentSender<Self>) {
 		match message {
 			ListInput::Rename(name) => self.display_name = name,
 			ListInput::UpdateCount(count) => self.count = count,
@@ -111,6 +97,5 @@ impl FactoryComponent<gtk::ListBox, SidebarInput> for GenericList {
 				}
 			},
 		}
-		None
 	}
 }

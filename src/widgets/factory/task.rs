@@ -1,4 +1,4 @@
-use relm4::factory::{DynamicIndex, FactoryComponent};
+use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::{
 	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
@@ -11,12 +11,14 @@ use crate::core::models::generic::tasks::GenericTask;
 use crate::widgets::component::content::ContentInput;
 use crate::widgets::factory::list::ListType;
 
+#[derive(Debug)]
 pub enum TaskInput {
 	SetCompleted(bool),
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
 }
 
+#[derive(Debug)]
 pub enum TaskOutput {
 	Remove(DynamicIndex),
 	Favorite(DynamicIndex, bool),
@@ -24,8 +26,9 @@ pub enum TaskOutput {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
-	type Command = ();
+impl FactoryComponent for GenericTask {
+	type ParentMsg = ContentInput;
+	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
@@ -47,8 +50,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 					#[name = "check_button"]
 					gtk::CheckButton {
 						set_active: self.status.as_bool(),
-						connect_toggled[input] => move |checkbox| {
-							input.send(TaskInput::SetCompleted(checkbox.is_active()));
+						connect_toggled[sender] => move |checkbox| {
+							sender.input.send(TaskInput::SetCompleted(checkbox.is_active()));
 						}
 					},
 					gtk::Box {
@@ -60,13 +63,13 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 							add_css_class: "no-border",
 							set_hexpand: true,
 							set_text: &self.title,
-							connect_activate[input] => move |entry| {
+							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
-								input.send(TaskInput::ModifyTitle(buffer.text()));
+								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
 							},
-							connect_changed[input] => move |entry| {
+							connect_changed[sender] => move |entry| {
 								let buffer = entry.buffer();
-								input.send(TaskInput::ModifyTitle(buffer.text()));
+								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
 							}
 						},
 						#[name = "favorite"]
@@ -76,8 +79,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 							#[watch]
 							set_class_active: ("favorite", self.favorite),
 							set_icon_name: "star-filled-rounded-symbolic",
-							connect_toggled[input, index] => move |_| {
-								input.send(TaskInput::Favorite(index.clone()));
+							connect_toggled[sender, index] => move |_| {
+								sender.input.send(TaskInput::Favorite(index.clone()));
 							}
 						},
 						#[name = "delete"]
@@ -85,8 +88,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 							add_css_class: "destructive-action",
 							add_css_class: "circular",
 							set_icon_name: "user-trash-full-symbolic",
-							connect_clicked[output, index] => move |_| {
-								output.send(TaskOutput::Remove(index.clone()))
+							connect_clicked[sender, index] => move |_| {
+								sender.output.send(TaskOutput::Remove(index.clone()))
 							}
 						}
 					}
@@ -105,33 +108,12 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 		})
 	}
 
-	fn init_model(
-		params: Self::InitParams,
-		_index: &DynamicIndex,
-		_input: &Sender<Self::Input>,
-		_output: &Sender<Self::Output>,
-	) -> Self {
-		params
-	}
-
-	fn init_widgets(
-		&mut self,
-		index: &DynamicIndex,
-		root: &Self::Root,
-		_returned_widget: &gtk::Widget,
-		input: &Sender<Self::Input>,
-		output: &Sender<Self::Output>,
-	) -> Self::Widgets {
+	fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: &FactoryComponentSender<Self>) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
 	}
 
-	fn update(
-		&mut self,
-		message: Self::Input,
-		_input: &Sender<Self::Input>,
-		output: &Sender<Self::Output>,
-	) -> Option<Self::Command> {
+	fn update(&mut self, message: Self::Input, sender: &FactoryComponentSender<Self>) {
 		match message {
 			TaskInput::SetCompleted(completed) => {
 				self.status = if completed {
@@ -142,13 +124,16 @@ impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 			},
 			TaskInput::Favorite(index) => {
 				self.favorite = !self.favorite;
-				output.send(TaskOutput::Favorite(index, self.favorite));
+				sender.output.send(TaskOutput::Favorite(index, self.favorite));
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.title = title;
 			},
 		}
 		// patch_task(self.into()).expect("Failed to update task.");
-		None
+	}
+
+	fn init_model(params: Self::InitParams, index: &DynamicIndex, sender: &FactoryComponentSender<Self>) -> Self {
+		params
 	}
 }

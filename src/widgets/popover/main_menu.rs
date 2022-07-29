@@ -12,6 +12,7 @@ use relm4::{
 	adw::gio, gtk, view, ComponentParts, ComponentSender, SimpleComponent,
 };
 
+#[derive(Debug)]
 pub enum MainMenuInput {
 	ForceLight,
 	ForceDark,

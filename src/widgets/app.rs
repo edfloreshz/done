@@ -44,6 +44,7 @@ impl AppModel {
 	}
 }
 
+#[derive(Debug)]
 pub enum Input {
 	AddList(String, String),
 	ListSelected(usize, GenericList),

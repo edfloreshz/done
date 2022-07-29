@@ -10,10 +10,12 @@ use crate::core::models::generic::lists::GenericList;
 use crate::fl;
 use crate::widgets::factory::list::ListType;
 
+#[derive(Debug)]
 pub struct SidebarModel {
-	lists: FactoryVecDeque<gtk::ListBox, GenericList, SidebarInput>,
+	lists: FactoryVecDeque<GenericList>,
 }
 
+#[derive(Debug)]
 pub enum SidebarInput {
 	AddList(String, String),
 	RemoveList(DynamicIndex),
@@ -21,6 +23,7 @@ pub enum SidebarInput {
 	UpdateCounters(Vec<ListType>),
 }
 
+#[derive(Debug)]
 pub enum SidebarOutput {
 	ListSelected(usize, GenericList),
 	Forward,
@@ -82,45 +85,45 @@ impl SimpleComponent for SidebarModel {
 			),
 			GenericList::new(fl!("archived"), "folder-symbolic", 0, "archived"),
 		];
-		todo!("For each provider, retrieve the list of task lists.");
+		// TODO: For each provider, retrieve the list of task lists.
 		// lists.append(&mut get_lists().unwrap_or_default());
-		for list in lists {
-			model.lists.push_back(list);
-		}
-		model.lists.render_changes();
+		// let mut guard = &mut model.lists.clone().guard();
+		// for list in lists {
+		// 	guard.push_back(list);
+		// }
 		ComponentParts { model, widgets }
 	}
 
 	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
+		let mut guard = self.lists.guard();
 		match message {
 			SidebarInput::AddList(provider, name) => {
 				// let posted_list = post_list(name).unwrap();
-				// self.lists.push_back(posted_list)
+				// guard.push_back(posted_list)
 			},
 			SidebarInput::RemoveList(index) => {
 				let index = index.current_index();
-				self.lists.remove(index);
+				guard.remove(index);
 			},
 			SidebarInput::ListSelected(index) => {
-				let list = self.lists.get(index);
-				sender.output(SidebarOutput::ListSelected(index, list.clone()));
+				let list = guard.get(index);
+				sender.output(SidebarOutput::ListSelected(index, list.unwrap().clone()));
 			},
 			SidebarInput::UpdateCounters(lists) => {
 				for list in lists {
 					match list {
-						ListType::Inbox(i) => self.lists.get_mut(0).count += i as i32,
-						ListType::Today(i) => self.lists.get_mut(1).count += i as i32,
-						ListType::Next7Days(i) => self.lists.get_mut(2).count += i as i32,
-						ListType::All(i) => self.lists.get_mut(3).count += i as i32,
-						ListType::Starred(i) => self.lists.get_mut(4).count += i as i32,
-						ListType::Archived(i) => self.lists.get_mut(5).count += i as i32,
+						ListType::Inbox(i) => guard.get_mut(0).unwrap().count += i as i32,
+						ListType::Today(i) => guard.get_mut(1).unwrap().count += i as i32,
+						ListType::Next7Days(i) => guard.get_mut(2).unwrap().count += i as i32,
+						ListType::All(i) => guard.get_mut(3).unwrap().count += i as i32,
+						ListType::Starred(i) => guard.get_mut(4).unwrap().count += i as i32,
+						ListType::Archived(i) => guard.get_mut(5).unwrap().count += i as i32,
 						ListType::Other(index, i) => {
-							self.lists.get_mut(index).count += i as i32
+							guard.get_mut(index).unwrap().count += i as i32
 						},
 					}
 				}
 			},
 		}
-		self.lists.render_changes()
 	}
 }

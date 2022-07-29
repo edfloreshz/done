@@ -9,6 +9,7 @@ use crate::fl;
 
 pub struct NewListModel;
 
+#[derive(Debug)]
 pub enum NewListOutput {
 	AddNewList(String, String),
 }
