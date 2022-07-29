@@ -13,8 +13,8 @@ use relm4::adw::prelude::ApplicationExt;
 use relm4::gtk::prelude::Cast;
 use relm4::{adw, gtk, gtk::gio, RelmApp};
 
-use crate::app::resources::load_resources;
 use crate::adw::Application;
+use crate::app::resources::load_resources;
 use widgets::app::AppModel;
 
 use crate::app::application::DoneApplication;

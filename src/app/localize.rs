@@ -1,21 +1,23 @@
+use i18n_embed::DesktopLanguageRequester;
 use i18n_embed::{
-    fluent::{fluent_language_loader, FluentLanguageLoader},
-    DefaultLocalizer, LanguageLoader, Localizer,
+	fluent::{fluent_language_loader, FluentLanguageLoader},
+	DefaultLocalizer, LanguageLoader, Localizer,
 };
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
-use i18n_embed::DesktopLanguageRequester;
 
 #[derive(RustEmbed)]
 #[folder = "i18n/"]
 struct Localizations;
 
 pub static LANGUAGE_LOADER: Lazy<FluentLanguageLoader> = Lazy::new(|| {
-    let loader: FluentLanguageLoader = fluent_language_loader!();
+	let loader: FluentLanguageLoader = fluent_language_loader!();
 
-    loader.load_fallback_language(&Localizations).expect("Error while loading fallback language");
+	loader
+		.load_fallback_language(&Localizations)
+		.expect("Error while loading fallback language");
 
-    loader
+	loader
 });
 
 #[macro_export]
@@ -31,14 +33,17 @@ macro_rules! fl {
 
 // Get the `Localizer` to be used for localizing this library.
 pub fn localizer() -> Box<dyn Localizer> {
-    Box::new(DefaultLocalizer::new(&*LANGUAGE_LOADER, &Localizations))
+	Box::new(DefaultLocalizer::new(&*LANGUAGE_LOADER, &Localizations))
 }
 
 pub fn load_localization() {
-    let localizer = crate::app::localize::localizer();
-    let requested_languages = DesktopLanguageRequester::requested_languages();
+	let localizer = crate::app::localize::localizer();
+	let requested_languages = DesktopLanguageRequester::requested_languages();
 
-    if let Err(error) = localizer.select(&requested_languages) {
-        eprintln!("Error while loading language for pop-desktop-widget {}", error);
-    }
+	if let Err(error) = localizer.select(&requested_languages) {
+		eprintln!(
+			"Error while loading language for pop-desktop-widget {}",
+			error
+		);
+	}
 }

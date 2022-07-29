@@ -13,12 +13,12 @@ use crate::widgets::component::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
 use crate::widgets::factory::list::ListType;
+use crate::widgets::popover::main_menu::MainMenuInput;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 use crate::{
 	adw, gtk,
 	gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
 };
-use crate::widgets::popover::main_menu::MainMenuInput;
 
 pub struct AppModel {
 	message: Option<Input>,

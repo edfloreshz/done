@@ -134,7 +134,7 @@ impl SimpleComponent for ContentModel {
 		match message {
 			ContentInput::AddTask(title) => {
 				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
-				let task = post_task(id_list.clone().to_owned(), title.clone())
+				let task = post_task(id_list.to_owned(), title)
 					.expect("Failed to post task.");
 				self.tasks.push_back(task);
 
@@ -171,7 +171,7 @@ impl SimpleComponent for ContentModel {
 					2 => vec![],
 					3 => get_all_tasks().unwrap_or_default(),
 					4 => get_favorite_tasks().unwrap_or_default(),
-					_ => get_tasks(list.id_list.clone()).unwrap_or_default(),
+					_ => get_tasks(list.id_list).unwrap_or_default(),
 				};
 				loop {
 					let task = self.tasks.pop_front();

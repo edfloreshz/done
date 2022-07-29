@@ -90,7 +90,7 @@ impl SimpleComponent for SidebarModel {
 	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
 		match message {
 			SidebarInput::AddList(name) => {
-				let posted_list = post_list(name.clone()).unwrap();
+				let posted_list = post_list(name).unwrap();
 				self.lists.push_back(posted_list)
 			},
 			SidebarInput::RemoveList(index) => {

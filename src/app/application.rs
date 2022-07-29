@@ -6,7 +6,7 @@ use relm4::adw;
 use relm4::gtk;
 use relm4::gtk::glib::clone;
 
-use crate::app::constants::{VERSION, APPLICATION_ID};
+use crate::app::constants::{APPLICATION_ID, VERSION};
 use crate::app::window::DoneWindow;
 
 mod imp {
@@ -63,14 +63,14 @@ glib::wrapper! {
 }
 
 impl Default for DoneApplication {
-    fn default() -> Self {
-        glib::Object::new(&[
+	fn default() -> Self {
+		glib::Object::new(&[
 			("application-id", &APPLICATION_ID),
 			("flags", &gio::ApplicationFlags::HANDLES_OPEN),
-			("resource-base-path", &"/dev/edfloreshz/Done")
+			("resource-base-path", &"/dev/edfloreshz/Done"),
 		])
 		.expect("Failed to create Application.")
-    }
+	}
 }
 
 impl DoneApplication {

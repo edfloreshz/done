@@ -15,7 +15,8 @@ pub fn get_lists() -> Result<Vec<List>> {
 
 pub fn post_list(name: String) -> Result<List> {
 	let connection = DatabaseConnection::establish_connection();
-	let new_list = QueryableList::new(&*name, Some("list-compact-symbolic".into()));
+	let new_list =
+		QueryableList::new(&*name, Some("list-compact-symbolic".into()));
 	diesel::insert_into(lists)
 		.values(&new_list)
 		.execute(&connection)?;
@@ -36,7 +37,7 @@ pub fn _patch_list(list: &List) -> Result<()> {
 			display_name.eq(list.display_name.clone()),
 			is_owner.eq(list.is_owner),
 			count.eq(list.count),
-			icon_name.eq(list.icon_name.clone()),
+			icon_name.eq(list.icon_name),
 		))
 		.execute(&connection)?;
 	Ok(())

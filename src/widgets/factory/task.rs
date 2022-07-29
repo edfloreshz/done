@@ -152,4 +152,3 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 		None
 	}
 }
-

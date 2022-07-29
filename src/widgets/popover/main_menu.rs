@@ -1,3 +1,5 @@
+use crate::gio::MenuModel;
+use crate::gtk::Builder;
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
 use relm4::adw::ffi::{
 	adw_style_manager_get_default as get_style_manager,
@@ -6,9 +8,9 @@ use relm4::adw::ffi::{
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
 };
-use relm4::{gtk, adw::gio, ComponentSender, SimpleComponent, ComponentParts, view};
-use crate::gio::MenuModel;
-use crate::gtk::Builder;
+use relm4::{
+	adw::gio, gtk, view, ComponentParts, ComponentSender, SimpleComponent,
+};
 
 pub enum MainMenuInput {
 	ForceLight,
@@ -66,13 +68,13 @@ impl SimpleComponent for MainMenuInput {
 				}
 			}
 		}
-		let builder = Builder::from_resource("/dev/edfloreshz/Done/ui/main_menu.ui");
+		let builder =
+			Builder::from_resource("/dev/edfloreshz/Done/ui/main_menu.ui");
 		let menu: MenuModel = builder.object("app-menu").unwrap();
 		let widgets = view_output!();
 		let model = MainMenuInput::FollowSystem;
 		ComponentParts { model, widgets }
 	}
-
 
 	fn update(&mut self, message: Self::Input, _sender: &ComponentSender<Self>) {
 		unsafe {
