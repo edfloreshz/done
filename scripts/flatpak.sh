@@ -4,5 +4,5 @@ rm -rf ../_build/
 cd ..
 meson setup _build .
 meson dist -C _build/
-cd _build/meson-dist/
+cd _build/meson-dist/ || exit
 nautilus .
