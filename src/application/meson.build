@@ -1,13 +1,13 @@
 configure_file(
-    input: 'constants.rs.in',
-    output: 'constants.rs',
+    input: 'config.rs.in',
+    output: 'config.rs',
     configuration: conf
 )
 
-# Copy the constants.rs output to the source directory.
+# Copy the config.rs output to the source directory.
 run_command(
   'cp',
-  join_paths(meson.project_build_root(), 'src/app', 'constants.rs'),
-  join_paths(meson.project_source_root(), 'src/app', 'constants.rs'),
+  join_paths(meson.project_build_root(), 'src/app', 'config.rs'),
+  join_paths(meson.project_source_root(), 'src/app', 'config.rs'),
   check: true
 )

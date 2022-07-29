@@ -6,7 +6,7 @@ use relm4::adw;
 use relm4::gtk;
 use relm4::gtk::glib::clone;
 
-use crate::application::constants::{APPLICATION_ID, VERSION};
+use crate::application::config::{APPLICATION_ID, VERSION};
 use crate::application::window::DoneWindow;
 
 mod imp {

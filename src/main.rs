@@ -18,7 +18,7 @@ use crate::application::resources::load_resources;
 use widgets::app::AppModel;
 
 use crate::application::application::DoneApplication;
-use crate::application::config::{load_css, verify_data_integrity};
+use crate::application::utilities::{load_css, verify_data_integrity};
 
 mod application;
 mod core;
