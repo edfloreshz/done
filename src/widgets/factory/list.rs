@@ -1,9 +1,9 @@
 use relm4::factory::{DynamicIndex, FactoryComponent};
 use relm4::Sender;
+use crate::core::models::generic::lists::GenericList;
 
 use crate::gtk;
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
-use crate::models::list::List;
 use crate::widgets::component::sidebar::SidebarInput;
 
 pub enum ListType {
@@ -28,12 +28,12 @@ pub enum ListOutput {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent<gtk::ListBox, SidebarInput> for List {
+impl FactoryComponent<gtk::ListBox, SidebarInput> for GenericList {
 	type Command = ();
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-	type InitParams = List;
+	type InitParams = GenericList;
 	type Widgets = ListWidgets;
 
 	view! {

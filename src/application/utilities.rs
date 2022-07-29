@@ -1,11 +1,10 @@
 use anyhow::Result;
 use libset::config::Config;
-use libset::fi;
+use libset::{directory, fi};
 use relm4::gtk::{CssProvider, StyleContext};
 
 use crate::adw::gdk::Display;
 use crate::embedded_migrations;
-use crate::storage::DatabaseConnection;
 
 use super::config::VERSION;
 
@@ -17,15 +16,15 @@ pub fn verify_data_integrity() -> Result<()> {
 	if !config.is_written() || !user_database.exists() {
 		config.write()?;
 	}
-	let connection = DatabaseConnection::establish_connection();
-	embedded_migrations::run(&connection)?;
+	// let connection = DatabaseConnection::establish_connection();
+	// embedded_migrations::run(&connection)?;
 	Ok(())
 }
 
 pub fn load_css() {
 	// Load the CSS file and add it to the provider
 	let provider = CssProvider::new();
-	provider.load_from_data(include_bytes!("../themes/Adwaita.css"));
+	provider.load_from_data(include_bytes!("../assets/themes/Adwaita.css"));
 
 	// Add the provider to the default screen
 	StyleContext::add_provider_for_display(
@@ -41,4 +40,5 @@ fn get_config() -> Config {
 		.author("Eduardo Flores")
 		.version(VERSION)
 		.add(fi!("dev.edfloreshz.Done.db"))
+		.add(directory!("providers"))
 }

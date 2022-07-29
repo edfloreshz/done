@@ -30,6 +30,7 @@ i18n-embed-fl = "0.6.4"
 rust-embed = { version = "6.4.0", features = ["debug-embed"] }
 once_cell = "1.13.0"
 libsqlite3-sys = { version = "^0", features = ["bundled"] }
+acid-store = "0.11.2"
 
 [build-dependencies]
 glib-build-tools = { git = "https://github.com/gtk-rs/gtk-rs-core" }

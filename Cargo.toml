@@ -19,7 +19,7 @@ serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0.56"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
-diesel = { version = "1.4.8", features = ["sqlite"] }
+diesel = { version = "1.4.8", features = ["sqlite", "r2d2"] }
 diesel_migrations = "1.4.0"
 dirs = "4.0.0"
 libset = "0.1.1"

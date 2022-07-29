@@ -1,6 +1,6 @@
-use crate::models::task::Task;
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
+use crate::core::models::generic::tasks::GenericTask;
 
 use crate::schema::tasks;
 
@@ -42,8 +42,8 @@ impl QueryableTask {
 	}
 }
 
-impl From<Task> for QueryableTask {
-	fn from(task: Task) -> Self {
+impl From<GenericTask> for QueryableTask {
+	fn from(task: GenericTask) -> Self {
 		Self {
 			id_task: task.id_task,
 			id_list: task.id_list,
@@ -57,28 +57,7 @@ impl From<Task> for QueryableTask {
 			reminder_date: task.reminder_date,
 			status: Some(task.status.to_string()),
 			created_date_time: task.created_date_time,
-			last_modified_date_time: task.last_modified_date_time,
-		}
-	}
-}
-
-impl From<&mut Task> for QueryableTask {
-	fn from(task: &mut Task) -> Self {
-		let task = task.to_owned();
-		Self {
-			id_task: task.id_task,
-			id_list: task.id_list,
-			title: task.title,
-			body: task.body,
-			completed_on: task.completed_on,
-			due_date: task.due_date,
-			importance: Some(task.importance.to_string()),
-			favorite: task.favorite,
-			is_reminder_on: task.is_reminder_on,
-			reminder_date: task.reminder_date,
-			status: Some(task.status.to_string()),
-			created_date_time: task.created_date_time,
-			last_modified_date_time: task.last_modified_date_time,
+			last_modified_date_time: task.last_modified_date_time
 		}
 	}
 }

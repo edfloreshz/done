@@ -4,26 +4,25 @@ use relm4::{
 	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
 	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
+use crate::core::models::generic::lists::GenericList;
 
-use crate::core::local::lists::{get_lists, post_list};
-use crate::core::local::tasks::{get_all_tasks, get_favorite_tasks};
+// use crate::plugins::local::lists::{get_lists, post_list};
 use crate::fl;
-use crate::models::list::List;
 use crate::widgets::factory::list::ListType;
 
 pub struct SidebarModel {
-	lists: FactoryVecDeque<gtk::ListBox, List, SidebarInput>,
+	lists: FactoryVecDeque<gtk::ListBox, GenericList, SidebarInput>,
 }
 
 pub enum SidebarInput {
-	AddList(String),
+	AddList(String, String),
 	RemoveList(DynamicIndex),
 	ListSelected(usize),
 	UpdateCounters(Vec<ListType>),
 }
 
 pub enum SidebarOutput {
-	ListSelected(usize, List),
+	ListSelected(usize, GenericList),
 	Forward,
 }
 
@@ -31,7 +30,7 @@ pub enum SidebarOutput {
 impl SimpleComponent for SidebarModel {
 	type Input = SidebarInput;
 	type Output = SidebarOutput;
-	type InitParams = Option<List>;
+	type InitParams = Option<GenericList>;
 	type Widgets = SidebarWidgets;
 
 	view! {
@@ -64,22 +63,27 @@ impl SimpleComponent for SidebarModel {
 			lists: FactoryVecDeque::new(widgets.list.clone(), &sender.input),
 		};
 		let mut lists = vec![
-			List::new(fl!("inbox"), "document-save-symbolic", 0),
-			List::new(fl!("today"), "sun-alt-symbolic", 0),
-			List::new(fl!("next-7-days"), "org.gnome.Calendar.Devel-symbolic", 0),
-			List::new(
+			GenericList::new(fl!("inbox"), "document-save-symbolic", 0, "inbox"),
+			GenericList::new(fl!("today"), "sun-alt-symbolic", 0, "today"),
+			GenericList::new(fl!("next-7-days"), "org.gnome.Calendar.Devel-symbolic", 0, "next-7-days"),
+			GenericList::new(
 				fl!("all"),
 				"edit-paste-symbolic",
-				get_all_tasks().unwrap_or_default().len() as i32,
+				// get_all_tasks().unwrap_or_default().len() as i32,
+				0,
+				"all"
 			),
-			List::new(
+			GenericList::new(
 				fl!("starred"),
 				"star-outline-rounded-symbolic",
-				get_favorite_tasks().unwrap_or_default().len() as i32,
+				// get_favorite_tasks().unwrap_or_default().len() as i32,
+				0,
+				"starred"
 			),
-			List::new(fl!("archived"), "folder-symbolic", 0),
+			GenericList::new(fl!("archived"), "folder-symbolic", 0, "archived"),
 		];
-		lists.append(&mut get_lists().unwrap_or_default());
+		todo!("For each provider, retrieve the list of task lists.");
+		// lists.append(&mut get_lists().unwrap_or_default());
 		for list in lists {
 			model.lists.push_back(list);
 		}
@@ -89,9 +93,9 @@ impl SimpleComponent for SidebarModel {
 
 	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
 		match message {
-			SidebarInput::AddList(name) => {
-				let posted_list = post_list(name).unwrap();
-				self.lists.push_back(posted_list)
+			SidebarInput::AddList(provider, name) => {
+				// let posted_list = post_list(name).unwrap();
+				// self.lists.push_back(posted_list)
 			},
 			SidebarInput::RemoveList(index) => {
 				let index = index.current_index();

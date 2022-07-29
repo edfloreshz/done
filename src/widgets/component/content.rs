@@ -6,19 +6,17 @@ use relm4::{
 	},
 	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
+use crate::core::models::generic::lists::GenericList;
+use crate::core::models::generic::tasks::GenericTask;
 
-use crate::core::local::tasks::{
-	delete_task, get_all_tasks, get_favorite_tasks, get_tasks, post_task,
-};
+
 use crate::fl;
-use crate::models::list::List;
-use crate::models::task::Task;
 use crate::widgets::factory::list::ListType;
 use crate::widgets::factory::list::ListType::{All, Other, Starred};
 
 pub struct ContentModel {
-	parent_list: (usize, Option<List>),
-	tasks: FactoryVecDeque<gtk::Box, Task, ContentInput>,
+	parent_list: (usize, Option<GenericList>),
+	tasks: FactoryVecDeque<gtk::Box, GenericTask, ContentInput>,
 	show_tasks: bool,
 }
 
@@ -26,7 +24,7 @@ pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
 	RemoveWelcomeScreen,
-	SetTaskList(usize, List),
+	SetTaskList(usize, GenericList),
 	UpdateCounters(Vec<ListType>),
 	FavoriteTask(DynamicIndex, bool),
 }
@@ -39,7 +37,7 @@ pub enum ContentOutput {
 impl SimpleComponent for ContentModel {
 	type Input = ContentInput;
 	type Output = ContentOutput;
-	type InitParams = Option<Task>;
+	type InitParams = Option<GenericTask>;
 	type Widgets = ContentWidgets;
 
 	view! {
@@ -135,8 +133,8 @@ impl SimpleComponent for ContentModel {
 			ContentInput::AddTask(title) => {
 				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
 				let task =
-					post_task(id_list.to_owned(), title).expect("Failed to post task.");
-				self.tasks.push_back(task);
+					// post_task(id_list.to_owned(), title).expect("Failed to post task.");
+				// self.tasks.push_back(task);
 
 				sender.output(ContentOutput::UpdateCounters(vec![
 					All(1),
@@ -158,7 +156,7 @@ impl SimpleComponent for ContentModel {
 				}
 				{
 					let task = self.tasks.get(index.current_index());
-					delete_task(&task.id_task).expect("Failed to remove task.");
+					// delete_task(&task.id_task).expect("Failed to remove task.");
 				}
 				self.tasks.remove(index.current_index());
 			},
@@ -166,12 +164,12 @@ impl SimpleComponent for ContentModel {
 			ContentInput::SetTaskList(index, list) => {
 				self.parent_list = (index, Some(list.clone()));
 				let tasks = match index {
-					0 => vec![],
-					1 => vec![],
-					2 => vec![],
-					3 => get_all_tasks().unwrap_or_default(),
-					4 => get_favorite_tasks().unwrap_or_default(),
-					_ => get_tasks(list.id_list).unwrap_or_default(),
+					0 => todo!("Get tasks from `Inbox` provider."),
+					1 => todo!("Get tasks from `Today` provider."),
+					2 => todo!("Get tasks from `Next7Days` provider."),
+					3 => todo!("Get tasks from `All` provider."),
+					4 => todo!("Get tasks from `Favorites` provider."),
+					_ => todo!("Get specific task list."),
 				};
 				loop {
 					let task = self.tasks.pop_front();
@@ -179,9 +177,9 @@ impl SimpleComponent for ContentModel {
 						break;
 					}
 				}
-				for task in tasks {
-					self.tasks.push_back(task.clone());
-				}
+				// for task in tasks {
+				// 	self.tasks.push_back(task.clone());
+				// }
 				self.show_tasks = !self.tasks.is_empty();
 			},
 			ContentInput::UpdateCounters(lists) => {

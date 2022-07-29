@@ -10,7 +10,7 @@ use crate::fl;
 pub struct NewListModel;
 
 pub enum NewListOutput {
-	AddNewList(String),
+	AddNewList(String, String),
 }
 
 #[relm4::component(pub)]
@@ -37,7 +37,8 @@ impl SimpleComponent for NewListModel {
 							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
 								if !buffer.text().is_empty() {
-									sender.output(NewListOutput::AddNewList(buffer.text()))
+									todo!("Send list provider and name")
+									// sender.output(NewListOutput::AddNewList(buffer.text()))
 								}
 							}
 						},
@@ -66,7 +67,8 @@ impl SimpleComponent for NewListModel {
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
 							if !buffer.text().is_empty() {
-								sender.output(NewListOutput::AddNewList(buffer.text()))
+								todo!("Send list provider and name")
+								// sender.output(NewListOutput::AddNewList(buffer.text()))
 							}
 							new_list_entry.set_text("");
 						})

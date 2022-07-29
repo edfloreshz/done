@@ -9,6 +9,7 @@ extern crate pretty_env_logger;
 use anyhow::Result;
 use application::localize::load_localization;
 use diesel_migrations::embed_migrations;
+use once_cell::sync::Lazy;
 use relm4::adw::prelude::ApplicationExt;
 use relm4::gtk::prelude::Cast;
 use relm4::{adw, gtk, gtk::gio, RelmApp};
@@ -21,11 +22,9 @@ use crate::application::application::DoneApplication;
 use crate::application::utilities::{load_css, verify_data_integrity};
 
 mod application;
-mod core;
-mod models;
 mod schema;
-mod storage;
 mod widgets;
+mod core;
 
 embed_migrations!("migrations");
 

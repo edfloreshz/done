@@ -4,7 +4,6 @@ use relm4::{
 	SimpleComponent,
 };
 
-use crate::models::list::List;
 use crate::widgets::component::content::{
 	ContentInput, ContentModel, ContentOutput,
 };
@@ -18,6 +17,7 @@ use crate::{
 	adw, gtk,
 	gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
 };
+use crate::core::models::generic::lists::GenericList;
 
 pub struct AppModel {
 	message: Option<Input>,
@@ -45,8 +45,8 @@ impl AppModel {
 }
 
 pub enum Input {
-	AddList(String),
-	ListSelected(usize, List),
+	AddList(String, String),
+	ListSelected(usize, GenericList),
 	UpdateSidebarCounters(Vec<ListType>),
 	Folded,
 	Unfolded,
@@ -187,7 +187,7 @@ impl SimpleComponent for AppModel {
 			NewListModel::builder()
 				.launch(())
 				.forward(&sender.input, |message| match message {
-					NewListOutput::AddNewList(name) => Input::AddList(name),
+					NewListOutput::AddNewList(provider, name) => Input::AddList(provider, name),
 				}),
 			MainMenuInput::builder().launch(()).detach(),
 		);
@@ -197,8 +197,8 @@ impl SimpleComponent for AppModel {
 
 	fn update(&mut self, message: Self::Input, _sender: &ComponentSender<Self>) {
 		match message {
-			Input::AddList(title) => {
-				self.sidebar.sender().send(SidebarInput::AddList(title))
+			Input::AddList(provider, title) => {
+				self.sidebar.sender().send(SidebarInput::AddList(provider, title))
 			},
 			Input::ListSelected(index, list) => self
 				.content

@@ -5,9 +5,9 @@ use relm4::gtk::prelude::{
 	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
 };
 use relm4::{Sender, WidgetPlus};
+use crate::core::models::generic::task_status::TaskStatus;
+use crate::core::models::generic::tasks::GenericTask;
 
-use crate::core::local::tasks::patch_task;
-use crate::models::task::{Task, TaskStatus};
 use crate::widgets::component::content::ContentInput;
 use crate::widgets::factory::list::ListType;
 
@@ -24,12 +24,12 @@ pub enum TaskOutput {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent<gtk::Box, ContentInput> for Task {
+impl FactoryComponent<gtk::Box, ContentInput> for GenericTask {
 	type Command = ();
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type InitParams = Task;
+	type InitParams = GenericTask;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -148,7 +148,7 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 				self.title = title;
 			},
 		}
-		patch_task(self.into()).expect("Failed to update task.");
+		// patch_task(self.into()).expect("Failed to update task.");
 		None
 	}
 }
