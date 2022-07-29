@@ -16,6 +16,12 @@
     <file alias="value-increase-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/value-increase-symbolic.svg</file>
     <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/go-previous-symbolic.svg</file>
   </gresource>
+  <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
+    <file alias="app-icon.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg</file>
+    <file alias="app-icon-devel.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/apps/dev.edfloreshz.Done.Devel.svg</file>
+    <file alias="app-icon-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/symbolic/apps/dev.edfloreshz.Done-symbolic.svg</file>
+    <file alias="app-icon-symbolic-devel.svg" preprocess="xml-stripblanks">assets/icons/hicolor/symbolic/apps/dev.edfloreshz.Done-symbolic.svg</file>
+  </gresource>
   <gresource prefix="/dev/edfloreshz/Done/ui">
     <file alias="main_menu.ui" preprocess="xml-stripblanks">widgets/popover/main_menu.ui</file>
   </gresource>

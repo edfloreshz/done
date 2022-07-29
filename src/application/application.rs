@@ -96,6 +96,13 @@ impl DoneApplication {
 		let window = self.active_window().unwrap();
 		let dialog = gtk::AboutDialog::builder()
 			.comments("To-do lists reimagined")
+			.logo(
+				&gtk::Picture::for_resource(
+					"/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg",
+				)
+				.paintable()
+				.unwrap(),
+			)
 			.icon_name(APPLICATION_ID)
 			.logo_icon_name(APPLICATION_ID)
 			.transient_for(&window)

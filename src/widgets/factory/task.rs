@@ -84,7 +84,7 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 						gtk::Button {
 							add_css_class: "destructive-action",
 							add_css_class: "circular",
-							set_icon_name: "user-trash-symbolic",
+							set_icon_name: "user-trash-full-symbolic",
 							connect_clicked[output, index] => move |_| {
 								output.send(TaskOutput::Remove(index.clone()))
 							}
