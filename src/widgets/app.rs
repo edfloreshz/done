@@ -4,7 +4,7 @@ use relm4::{
 	SimpleComponent,
 };
 
-use crate::app::constants::APPLICATION_ID;
+use crate::application::constants::APPLICATION_ID;
 use crate::models::list::List;
 use crate::widgets::component::content::{
 	ContentInput, ContentModel, ContentOutput,

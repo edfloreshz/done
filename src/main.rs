@@ -7,20 +7,20 @@ extern crate log;
 extern crate pretty_env_logger;
 
 use anyhow::Result;
-use app::localize::load_localization;
+use application::localize::load_localization;
 use diesel_migrations::embed_migrations;
 use relm4::adw::prelude::ApplicationExt;
 use relm4::gtk::prelude::Cast;
 use relm4::{adw, gtk, gtk::gio, RelmApp};
 
 use crate::adw::Application;
-use crate::app::resources::load_resources;
+use crate::application::resources::load_resources;
 use widgets::app::AppModel;
 
-use crate::app::application::DoneApplication;
-use crate::app::config::{load_css, verify_data_integrity};
+use crate::application::application::DoneApplication;
+use crate::application::config::{load_css, verify_data_integrity};
 
-mod app;
+mod application;
 mod core;
 mod models;
 mod schema;

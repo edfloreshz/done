@@ -23,11 +23,11 @@ pub static LANGUAGE_LOADER: Lazy<FluentLanguageLoader> = Lazy::new(|| {
 #[macro_export]
 macro_rules! fl {
     ($message_id:literal) => {{
-        &i18n_embed_fl::fl!($crate::app::localize::LANGUAGE_LOADER, $message_id)
+        &i18n_embed_fl::fl!($crate::application::localize::LANGUAGE_LOADER, $message_id)
     }};
 
     ($message_id:literal, $($args:expr),*) => {{
-        &i18n_embed_fl::fl!($crate::app::localize::LANGUAGE_LOADER, $message_id, $($args), *)
+        &i18n_embed_fl::fl!($crate::application::localize::LANGUAGE_LOADER, $message_id, $($args), *)
     }};
 }
 
@@ -37,7 +37,7 @@ pub fn localizer() -> Box<dyn Localizer> {
 }
 
 pub fn load_localization() {
-	let localizer = crate::app::localize::localizer();
+	let localizer = crate::application::localize::localizer();
 	let requested_languages = DesktopLanguageRequester::requested_languages();
 
 	if let Err(error) = localizer.select(&requested_languages) {
