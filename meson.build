@@ -52,6 +52,7 @@ conf.set_quoted('PROFILE', get_option('profile'))
 
 subdir('data')
 subdir('src')
+subdir('local/po')
 
 meson.add_dist_script(
   'build-aux/dist-vendor.sh',

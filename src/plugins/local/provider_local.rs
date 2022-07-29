@@ -12,7 +12,7 @@ pub struct ProviderLocal {
 
 impl ToDoProvider for ProviderLocal {
     fn get_id(&self) -> &str {
-        "local"
+        "locale"
     }
 
     fn get_name(&self) -> &str {
