@@ -1,3 +1,3 @@
 pub mod models;
-mod plugins;
-mod traits;
+pub mod plugins;
+pub(crate) mod traits;

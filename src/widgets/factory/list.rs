@@ -40,32 +40,37 @@ impl FactoryComponent for GenericList {
 	type Widgets = ListWidgets;
 
 	view! {
-		list_box = gtk::Box {
-			set_orientation: gtk::Orientation::Horizontal,
-			#[name = "icon"]
-			gtk::Image {
-				set_from_icon_name: Some(self.icon_name.as_ref().unwrap())
-			},
-			#[name = "name"]
-			gtk::Label {
-				set_halign: gtk::Align::Start,
-				set_hexpand: true,
-				set_text: self.display_name.as_str(),
-				set_margin_top: 10,
-				set_margin_bottom: 10,
-				set_margin_start: 15,
-				set_margin_end: 15,
-			},
-			#[name = "count"]
-			gtk::Label {
-				set_halign: gtk::Align::End,
-				set_css_classes: &["dim-label", "caption"],
-				#[watch]
-				set_text: self.count.to_string().as_str(),
-				set_margin_top: 10,
-				set_margin_bottom: 10,
-				set_margin_start: 15,
-				set_margin_end: 15,
+		#[root]
+		gtk::Expander {
+			set_label: Some(self.display_name.as_str()),
+			#[wrap(Some)]
+			set_child: list_box = &gtk::Box {
+				set_orientation: gtk::Orientation::Horizontal,
+				#[name = "icon"]
+				gtk::Image {
+					set_from_icon_name: Some(self.icon_name.as_ref().unwrap())
+				},
+				#[name = "name"]
+				gtk::Label {
+					set_halign: gtk::Align::Start,
+					set_hexpand: true,
+					set_text: self.display_name.as_str(),
+					set_margin_top: 10,
+					set_margin_bottom: 10,
+					set_margin_start: 15,
+					set_margin_end: 15,
+				},
+				#[name = "count"]
+				gtk::Label {
+					set_halign: gtk::Align::End,
+					set_css_classes: &["dim-label", "caption"],
+					#[watch]
+					set_text: self.count.to_string().as_str(),
+					set_margin_top: 10,
+					set_margin_bottom: 10,
+					set_margin_start: 15,
+					set_margin_end: 15,
+				}
 			}
 		}
 	}

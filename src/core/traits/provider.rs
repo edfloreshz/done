@@ -1,4 +1,5 @@
 use anyhow::Result;
+use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use crate::core::models::generic::lists::GenericList;
 use crate::core::models::generic::tasks::GenericTask;
@@ -25,7 +26,7 @@ pub trait TaskProvider: Default {
 	fn get_icon(&self) -> gtk::Image;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProviderType {
 	Inbox,
 	Today,
@@ -38,8 +39,7 @@ pub trait ProviderService {
 	type ConnectionType;
 
 	fn init() -> Self;
-	fn establish_connection(&mut self) -> Result<()>;
-	fn get_connection(&self) -> Result<Self::ConnectionType>;
+	fn establish_connection(&self) -> Result<Self::ConnectionType>;
 	// Fetch tasks from the provider and save them to local storage.
 	fn refresh_tasks(&mut self) -> Result<()>;
 	fn refresh_lists(&mut self) -> Result<()>;

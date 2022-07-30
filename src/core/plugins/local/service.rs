@@ -17,40 +17,32 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sqlite::SqliteConnection;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct LocalService {
 	pub provider: LocalProvider,
-	#[serde(skip)]
-	pub pool: Option<Pool<ConnectionManager<SqliteConnection>>>,
 	pub lists: VecDeque<LocalList>,
 	pub tasks: VecDeque<LocalTask>,
 }
 
 impl ProviderService for LocalService {
-	type ConnectionType = PooledConnection<ConnectionManager<SqliteConnection>>;
+	type ConnectionType = SqliteConnection;
 
 	fn init() -> Self {
 		Self {
 			provider: Default::default(),
-			pool: None,
 			lists: Default::default(),
 			tasks: Default::default(),
 		}
 	}
 
-	fn establish_connection(&mut self) -> Result<()> {
+	fn establish_connection(&self) -> Result<Self::ConnectionType> {
 		let database_path = dirs::data_dir()
 			.with_context(|| "Failed to get data directory.")?
 			.join("done/dev.edfloreshz.Done.db");
 		let database_url = database_path
 			.to_str()
 			.with_context(|| "Failed to convert path to string")?;
-		self.pool = Some(Pool::new(ConnectionManager::new(database_url))?);
-		Ok(())
-	}
-
-	fn get_connection(&self) -> Result<Self::ConnectionType> {
-		self.pool.as_ref().unwrap().get().with_context(|| "")
+		SqliteConnection::establish(database_url).with_context(|| "Error connecting to database")
 	}
 
 	fn refresh_tasks(&mut self) -> Result<()> {
@@ -66,7 +58,7 @@ impl ProviderService for LocalService {
 
 		let results = tasks
 			.filter(id_list.eq(id))
-			.load::<QueryableTask>(self.get_connection()?.deref())?;
+			.load::<QueryableTask>(&self.establish_connection()?)?;
 		let results: Vec<GenericTask> =
 			results.iter().map(|task| task.to_owned().into()).collect();
 		Ok(results)
@@ -89,7 +81,7 @@ impl ProviderService for LocalService {
 		let inserted_task = QueryableTask::new(task.title, list.id_list);
 		diesel::insert_into(tasks)
 			.values(&inserted_task)
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(inserted_task.into())
 	}
 
@@ -112,14 +104,14 @@ impl ProviderService for LocalService {
 				created_date_time.eq(task.created_date_time),
 				last_modified_date_time.eq(task.last_modified_date_time),
 			))
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(())
 	}
 
 	fn remove_task(&self, task_id: &str) -> anyhow::Result<()> {
 		use crate::schema::tasks::dsl::*;
 		diesel::delete(tasks.filter(id_task.eq(task_id)))
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(())
 	}
 
@@ -128,7 +120,7 @@ impl ProviderService for LocalService {
 
 		let results = lists
 			.filter(provider.eq(self.provider.get_id()))
-			.load::<QueryableList>(self.get_connection()?.deref())?;
+			.load::<QueryableList>(&self.establish_connection()?)?;
 		let results: Vec<GenericList> =
 			results.into_iter().map(|ql| ql.into()).collect();
 		Ok(results)
@@ -148,7 +140,7 @@ impl ProviderService for LocalService {
 		);
 		diesel::insert_into(lists)
 			.values(&new_list)
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(new_list.into())
 	}
 
@@ -171,7 +163,7 @@ impl ProviderService for LocalService {
 				count.eq(queryable_list.count),
 				icon_name.eq(queryable_list.icon_name),
 			))
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(())
 	}
 
@@ -179,7 +171,7 @@ impl ProviderService for LocalService {
 		use crate::schema::lists::dsl::*;
 		let list = list.into();
 		diesel::delete(lists.filter(id_list.eq(list.id_list)))
-			.execute(self.get_connection()?.deref())?;
+			.execute(&self.establish_connection()?)?;
 		Ok(())
 	}
 }

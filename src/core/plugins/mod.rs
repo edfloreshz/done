@@ -7,27 +7,25 @@ use anyhow::Result;
 use diesel::r2d2::{ConnectionManager, Pool};
 use crate::core::traits::provider::{ProviderService, TaskProvider};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Plugins {
-    local: LocalService
+    pub(crate) local: LocalService
 }
 
 impl Plugins {
-    pub fn new() -> Self {
-        Self {
+    pub fn init() -> Self {
+        let mut plugins = Self {
             local: Default::default()
-        }
-    }
-    pub fn init(&mut self) -> Result<()> {
+        };
         debug!("Initializing services...");
-        self.local = LocalService::init();
-        match self.local.establish_connection() {
+        plugins.local = LocalService::init();
+        match plugins.local.establish_connection() {
             Ok(_) => {
-                self.local.provider.set_enabled();
+                plugins.local.provider.set_enabled();
             },
             Err(err) => debug!("Error: {}", err)
         }
         debug!("Services initialized...");
-        Ok(())
+        plugins
     }
 }

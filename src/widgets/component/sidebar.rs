@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+use std::ops::Deref;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
@@ -5,9 +7,11 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
 use crate::core::models::generic::lists::GenericList;
+use crate::core::plugins::local::service::LocalService;
+use crate::core::traits::provider::ProviderService;
 
 // use crate::plugins::local::lists::{get_lists, post_list};
-use crate::fl;
+use crate::{fl, PLUGINS};
 use crate::widgets::factory::list::ListType;
 
 #[derive(Debug)]
@@ -42,15 +46,14 @@ impl SimpleComponent for SidebarModel {
 			append: scroll_window = &gtk::ScrolledWindow {
 				#[wrap(Some)]
 				set_child: list = &gtk::ListBox {
-					set_selection_mode: gtk::SelectionMode::Single,
 					set_vexpand: true,
 					set_margin_all: 2,
 					set_css_classes: &["navigation-sidebar"],
-					connect_row_activated[sender] => move |listbox, _| {
-						let index = listbox.selected_row().unwrap().index() as usize;
-						sender.input(SidebarInput::ListSelected(index));
-						sender.output(SidebarOutput::Forward)
-					},
+					// connect_row_activated[sender] => move |listbox, _| {
+					// 	let index = listbox.selected_row().unwrap().index() as usize;
+					// 	sender.input(SidebarInput::ListSelected(index));
+					// 	sender.output(SidebarOutput::Forward)
+					// },
 				},
 			},
 		}
@@ -86,11 +89,10 @@ impl SimpleComponent for SidebarModel {
 			GenericList::new(fl!("archived"), "folder-symbolic", 0, "archived"),
 		];
 		// TODO: For each provider, retrieve the list of task lists.
-		// lists.append(&mut get_lists().unwrap_or_default());
-		// let mut guard = &mut model.lists.clone().guard();
-		// for list in lists {
-		// 	guard.push_back(list);
-		// }
+		lists.append(&mut PLUGINS.get().unwrap().local.read_task_lists().unwrap_or_default());
+		for list in lists {
+			model.lists.guard().push_back(list);
+		}
 		ComponentParts { model, widgets }
 	}
 
