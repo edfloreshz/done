@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use anyhow::Result;
 use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use crate::core::models::generic::tasks::GenericTask;
 
 use crate::gtk;
 
-pub trait TaskProvider: Default {
+pub trait TaskProvider: Debug {
 	/// The unique identifier of the `TaskProvider`.
 	fn get_id(&self) -> &str;
 	/// The user-visible name of the `TaskProvider`.
@@ -23,6 +24,7 @@ pub trait TaskProvider: Default {
 	/// synchronize tasks and task lists, credentials, etc, when this
 	/// is called.
 	fn refresh(&self);
+	fn get_icon_name(&self) -> String;
 	fn get_icon(&self) -> gtk::Image;
 }
 
@@ -35,14 +37,16 @@ pub enum ProviderType {
 	Local
 }
 
-pub trait ProviderService {
-	type ConnectionType;
-
-	fn init() -> Self;
-	fn establish_connection(&self) -> Result<Self::ConnectionType>;
+pub trait ProviderService: Debug {
+	fn init() -> Self where Self: Sized;
+	fn establish_connection(&self) -> Result<SqliteConnection>;
 	// Fetch tasks from the provider and save them to local storage.
 	fn refresh_tasks(&mut self) -> Result<()>;
 	fn refresh_lists(&mut self) -> Result<()>;
+
+	fn get_provider(&self) -> Box<dyn TaskProvider>;
+	fn get_tasks(&self) -> Vec<GenericTask>;
+	fn get_task_lists(&self) -> Vec<GenericList>;
 
 	// Tasks
 	/// This method should return the list of tasks in a list.
@@ -50,9 +54,9 @@ pub trait ProviderService {
 	/// This method should return the information about a task.
 	fn read_task(&self, id: &str) -> Result<GenericTask>;
 	/// This method should create a new task and insert it to its respective list.
-	fn create_task(&self, list: impl Into<GenericList>, task: impl Into<GenericTask>) -> Result<GenericTask>;
+	fn create_task(&self, list: GenericList, task: GenericTask) -> Result<GenericTask>;
 	/// This method should update an existing task.
-	fn update_task(&self, task: impl Into<GenericTask>) -> Result<()>;
+	fn update_task(&self, task: GenericTask) -> Result<()>;
 	/// This method should remove an existing task.
 	fn remove_task(&self, task_id: &str) -> Result<()>;
 
@@ -60,9 +64,9 @@ pub trait ProviderService {
 	/// This method should return the lists from a provider.
 	fn read_task_lists(&self) -> Result<Vec<GenericList>>;
 	/// This method should create a new list for a provider.
-	fn create_task_list(&self, list: impl Into<GenericList>) -> Result<GenericList>;
+	fn create_task_list(&self, list: GenericList) -> Result<GenericList>;
 	/// This method should update an existing list for a provider.
-	fn update_task_list(&self, list: impl Into<GenericList>) -> Result<()>;
+	fn update_task_list(&self, list: GenericList) -> Result<()>;
 	/// This method should remove a list from a provider.
-	fn remove_task_list(&self, list: impl Into<GenericList>) -> Result<()>;
+	fn remove_task_list(&self, list: GenericList) -> Result<()>;
 }

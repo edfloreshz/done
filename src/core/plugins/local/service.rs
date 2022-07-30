@@ -17,7 +17,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sqlite::SqliteConnection;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct LocalService {
 	pub provider: LocalProvider,
 	pub lists: VecDeque<LocalList>,
@@ -25,17 +25,18 @@ pub struct LocalService {
 }
 
 impl ProviderService for LocalService {
-	type ConnectionType = SqliteConnection;
-
 	fn init() -> Self {
-		Self {
+		let mut local = Self {
 			provider: Default::default(),
 			lists: Default::default(),
 			tasks: Default::default(),
-		}
+		};
+		local.refresh_lists().unwrap();
+		local.refresh_tasks().unwrap();
+		local
 	}
 
-	fn establish_connection(&self) -> Result<Self::ConnectionType> {
+	fn establish_connection(&self) -> Result<SqliteConnection> {
 		let database_path = dirs::data_dir()
 			.with_context(|| "Failed to get data directory.")?
 			.join("done/dev.edfloreshz.Done.db");
@@ -46,11 +47,29 @@ impl ProviderService for LocalService {
 	}
 
 	fn refresh_tasks(&mut self) -> Result<()> {
-		todo!()
+		for list in &self.lists {
+			for task in self.read_tasks_from_list(&*list.id_list)? {
+				self.tasks.push_back(task.into())
+			}
+		}
+		Ok(())
 	}
 
 	fn refresh_lists(&mut self) -> Result<()> {
-		todo!()
+		self.lists = self.read_task_lists()?.iter().map(|list| list.to_owned().into()).collect();
+		Ok(())
+	}
+
+	fn get_provider(&self) -> Box<dyn TaskProvider> {
+		Box::new(self.clone().provider)
+	}
+
+	fn get_tasks(&self) -> Vec<GenericTask> {
+		self.tasks.iter().map(|task| task.to_owned().into()).collect()
+	}
+
+	fn get_task_lists(&self) -> Vec<GenericList> {
+		self.lists.iter().map(|list| list.to_owned().into()).collect()
 	}
 
 	fn read_tasks_from_list(&self, id: &str) -> anyhow::Result<Vec<GenericTask>> {
@@ -70,8 +89,8 @@ impl ProviderService for LocalService {
 
 	fn create_task(
 		&self,
-		list: impl Into<GenericList>,
-		task: impl Into<GenericTask>,
+		list: GenericList,
+		task: GenericTask,
 	) -> Result<GenericTask> {
 		use crate::schema::tasks::dsl::*;
 
@@ -85,10 +104,10 @@ impl ProviderService for LocalService {
 		Ok(inserted_task.into())
 	}
 
-	fn update_task(&self, task: impl Into<GenericTask>) -> Result<()> {
+	fn update_task(&self, task: GenericTask) -> Result<()> {
 		use crate::schema::tasks::dsl::*;
 
-		let task: QueryableTask = task.into().into();
+		let task: QueryableTask = task.into();
 		diesel::update(tasks.filter(id_task.eq(task.id_task)))
 			.set((
 				id_list.eq(task.id_list),
@@ -128,11 +147,10 @@ impl ProviderService for LocalService {
 
 	fn create_task_list(
 		&self,
-		list: impl Into<GenericList>,
+		list: GenericList,
 	) -> Result<GenericList> {
 		use crate::schema::lists::dsl::*;
 
-		let list = list.into();
 		let new_list = QueryableList::new(
 			&*list.display_name,
 			Some("list-compact-symbolic".into()),
@@ -144,10 +162,9 @@ impl ProviderService for LocalService {
 		Ok(new_list.into())
 	}
 
-	fn update_task_list(&self, list: impl Into<GenericList>) -> Result<()> {
+	fn update_task_list(&self, list: GenericList) -> Result<()> {
 		use crate::schema::lists::dsl::*;
 
-		let list = list.into();
 		let queryable_list = QueryableList {
 			id_list: list.id_list.clone(),
 			display_name: list.display_name.clone(),
@@ -167,9 +184,8 @@ impl ProviderService for LocalService {
 		Ok(())
 	}
 
-	fn remove_task_list(&self, list: impl Into<GenericList>) -> Result<()> {
+	fn remove_task_list(&self, list: GenericList) -> Result<()> {
 		use crate::schema::lists::dsl::*;
-		let list = list.into();
 		diesel::delete(lists.filter(id_list.eq(list.id_list)))
 			.execute(&self.establish_connection()?)?;
 		Ok(())

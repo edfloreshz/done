@@ -47,7 +47,7 @@ impl AppModel {
 #[derive(Debug)]
 pub enum Input {
 	AddList(String, String),
-	ListSelected(usize, GenericList),
+	ListSelected(usize, String, GenericList),
 	UpdateSidebarCounters(Vec<ListType>),
 	Folded,
 	Unfolded,
@@ -173,8 +173,8 @@ impl SimpleComponent for AppModel {
 			SidebarModel::builder()
 				.launch(None)
 				.forward(&sender.input, |message| match message {
-					SidebarOutput::ListSelected(index, list) => {
-						Input::ListSelected(index, list)
+					SidebarOutput::ListSelected(index, provider,  list) => {
+						Input::ListSelected(index, provider, list)
 					},
 					SidebarOutput::Forward => Input::Forward,
 				}),
@@ -201,10 +201,10 @@ impl SimpleComponent for AppModel {
 			Input::AddList(provider, title) => {
 				self.sidebar.sender().send(SidebarInput::AddList(provider, title))
 			},
-			Input::ListSelected(index, list) => self
+			Input::ListSelected(index, provider, list) => self
 				.content
 				.sender()
-				.send(ContentInput::SetTaskList(index, list)),
+				.send(ContentInput::SetTaskList(index, provider,list)),
 			Input::UpdateSidebarCounters(lists) => self
 				.sidebar
 				.sender()

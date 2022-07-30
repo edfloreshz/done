@@ -25,7 +25,7 @@ pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
 	RemoveWelcomeScreen,
-	SetTaskList(usize, GenericList),
+	SetTaskList(usize, String, GenericList),
 	UpdateCounters(Vec<ListType>),
 	FavoriteTask(DynamicIndex, bool),
 }
@@ -164,7 +164,7 @@ impl SimpleComponent for ContentModel {
 				guard.remove(index.current_index());
 			},
 			ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
-			ContentInput::SetTaskList(index, list) => {
+			ContentInput::SetTaskList(index, provider, list) => {
 				self.parent_list = (index, Some(list.clone()));
 				let tasks = match index {
 					0 => todo!("Get tasks from `Inbox` provider."),

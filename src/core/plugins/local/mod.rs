@@ -6,7 +6,7 @@ use crate::core::traits::provider::{ProviderType, TaskProvider};
 pub mod service;
 pub mod models;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocalProvider {
     id: String,
     name: String,
@@ -56,6 +56,10 @@ impl TaskProvider for LocalProvider {
 
     fn refresh(&self) {
         todo!()
+    }
+
+    fn get_icon_name(&self) -> String {
+        self.icon.clone()
     }
 
     fn get_icon(&self) -> Image {

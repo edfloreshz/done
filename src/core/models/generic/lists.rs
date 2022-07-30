@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use crate::core::models::queryable::list::QueryableList;
+use crate::core::plugins::local::models::lists::LocalList;
 use crate::schema::lists::provider;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -42,6 +43,20 @@ impl From<QueryableList> for GenericList {
             count: queryable_list.count,
             icon_name: queryable_list.icon_name,
             provider: queryable_list.provider,
+            is_smart: false
+        }
+    }
+}
+
+impl From<LocalList> for GenericList {
+    fn from(local_list: LocalList) -> Self {
+        Self {
+            id_list: local_list.id_list,
+            display_name: local_list.display_name,
+            is_owner: local_list.is_owner,
+            count: local_list.count,
+            icon_name: local_list.icon_name,
+            provider: local_list.provider,
             is_smart: false
         }
     }

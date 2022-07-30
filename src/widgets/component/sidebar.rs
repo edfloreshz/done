@@ -1,22 +1,23 @@
-use std::collections::VecDeque;
-use std::ops::Deref;
+use crate::core::models::generic::lists::GenericList;
+use crate::core::plugins::local::service::LocalService;
+use crate::core::traits::provider::{ProviderService, TaskProvider};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
 	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
-use crate::core::models::generic::lists::GenericList;
-use crate::core::plugins::local::service::LocalService;
-use crate::core::traits::provider::ProviderService;
+use std::collections::VecDeque;
+use std::ops::Deref;
+use diesel::SqliteConnection;
 
 // use crate::plugins::local::lists::{get_lists, post_list};
-use crate::{fl, PLUGINS};
 use crate::widgets::factory::list::ListType;
+use crate::{fl, PLUGINS};
 
 #[derive(Debug)]
 pub struct SidebarModel {
-	lists: FactoryVecDeque<GenericList>,
+	services: FactoryVecDeque<Box<dyn ProviderService>>,
 }
 
 #[derive(Debug)]
@@ -29,7 +30,7 @@ pub enum SidebarInput {
 
 #[derive(Debug)]
 pub enum SidebarOutput {
-	ListSelected(usize, GenericList),
+	ListSelected(usize, String, GenericList),
 	Forward,
 }
 
@@ -45,9 +46,12 @@ impl SimpleComponent for SidebarModel {
 			set_orientation: gtk::Orientation::Vertical,
 			append: scroll_window = &gtk::ScrolledWindow {
 				#[wrap(Some)]
-				set_child: list = &gtk::ListBox {
+				set_child: providers_container = &gtk::Box {
+					set_margin_top: 5,
+					set_margin_start: 10,
+					set_margin_end: 10,
+					set_orientation: gtk::Orientation::Vertical,
 					set_vexpand: true,
-					set_margin_all: 2,
 					set_css_classes: &["navigation-sidebar"],
 					// connect_row_activated[sender] => move |listbox, _| {
 					// 	let index = listbox.selected_row().unwrap().index() as usize;
@@ -65,39 +69,23 @@ impl SimpleComponent for SidebarModel {
 		sender: &ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
+		let plugins = PLUGINS.get().unwrap();
 		let mut model = SidebarModel {
-			lists: FactoryVecDeque::new(widgets.list.clone(), &sender.input),
+			services: FactoryVecDeque::new(
+				widgets.providers_container.clone(),
+				&sender.input,
+			),
 		};
-		let mut lists = vec![
-			GenericList::new(fl!("inbox"), "document-save-symbolic", 0, "inbox"),
-			GenericList::new(fl!("today"), "sun-alt-symbolic", 0, "today"),
-			GenericList::new(fl!("next-7-days"), "org.gnome.Calendar.Devel-symbolic", 0, "next-7-days"),
-			GenericList::new(
-				fl!("all"),
-				"edit-paste-symbolic",
-				// get_all_tasks().unwrap_or_default().len() as i32,
-				0,
-				"all"
-			),
-			GenericList::new(
-				fl!("starred"),
-				"star-outline-rounded-symbolic",
-				// get_favorite_tasks().unwrap_or_default().len() as i32,
-				0,
-				"starred"
-			),
-			GenericList::new(fl!("archived"), "folder-symbolic", 0, "archived"),
-		];
-		// TODO: For each provider, retrieve the list of task lists.
-		lists.append(&mut PLUGINS.get().unwrap().local.read_task_lists().unwrap_or_default());
-		for list in lists {
-			model.lists.guard().push_back(list);
+		if plugins.local.provider.get_enabled() {
+			model.services.guard()
+				.push_back(Box::new(plugins.local.clone()));
+			// TODO: For each provider, retrieve the list of task lists.
 		}
 		ComponentParts { model, widgets }
 	}
 
 	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
-		let mut guard = self.lists.guard();
+		let mut guard = self.services.guard();
 		match message {
 			SidebarInput::AddList(provider, name) => {
 				// let posted_list = post_list(name).unwrap();
@@ -108,22 +96,24 @@ impl SimpleComponent for SidebarModel {
 				guard.remove(index);
 			},
 			SidebarInput::ListSelected(index) => {
-				let list = guard.get(index);
-				sender.output(SidebarOutput::ListSelected(index, list.unwrap().clone()));
+				let service = guard.get(index).unwrap();
+				sender.output(SidebarOutput::ListSelected(
+					index,
+					service.get_provider().get_name().to_string(),
+					service.get_task_lists().get(index).unwrap().clone(),
+				));
 			},
 			SidebarInput::UpdateCounters(lists) => {
 				for list in lists {
 					match list {
-						ListType::Inbox(i) => guard.get_mut(0).unwrap().count += i as i32,
-						ListType::Today(i) => guard.get_mut(1).unwrap().count += i as i32,
-						ListType::Next7Days(i) => guard.get_mut(2).unwrap().count += i as i32,
-						ListType::All(i) => guard.get_mut(3).unwrap().count += i as i32,
-						ListType::Starred(i) => guard.get_mut(4).unwrap().count += i as i32,
-						ListType::Archived(i) => guard.get_mut(5).unwrap().count += i as i32,
-						ListType::Other(index, i) => {
-							guard.get_mut(index).unwrap().count += i as i32
-						},
-					}
+						ListType::Inbox(i) => 0,
+						ListType::Today(i) => 0,
+						ListType::Next7Days(i) => 0,
+						ListType::All(i) => 0,
+						ListType::Starred(i) => 0,
+						ListType::Archived(i) => 0,
+						ListType::Other(index, i) => 0,
+					};
 				}
 			},
 		}
