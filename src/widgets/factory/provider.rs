@@ -1,27 +1,24 @@
+use adw::prelude::ExpanderRowExt;
+use adw::prelude::PreferencesGroupExt;
+use adw::prelude::PreferencesRowExt;
+use diesel::SqliteConnection;
+use gtk::prelude::BoxExt;
+use gtk::prelude::ListBoxRowExt;
+use gtk::prelude::OrientableExt;
+use gtk::prelude::WidgetExt;
 use relm4::{gtk, Sender};
 use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView};
-use crate::core::traits::provider::{ProviderService, TaskProvider};
-use adw::prelude::PreferencesGroupExt;
-use diesel::SqliteConnection;
-use crate::widgets::component::sidebar::SidebarInput;
-use gtk::prelude::OrientableExt;
-use gtk::prelude::WidgetExt;
-use adw::prelude::PreferencesRowExt;
-use gtk::prelude::ListBoxRowExt;
-use gtk::prelude::BoxExt;
-use adw::prelude::ExpanderRowExt;
 use relm4::WidgetPlus;
 
-#[derive(Debug)]
-pub enum ProviderInput {
-
-}
+use crate::core::traits::provider::{ProviderService, TaskProvider};
+use crate::widgets::component::sidebar::SidebarInput;
 
 #[derive(Debug)]
-pub enum ProviderOutput {
+pub enum ProviderInput {}
 
-}
+#[derive(Debug)]
+pub enum ProviderOutput {}
 
 #[relm4::factory(pub)]
 impl FactoryComponent for Box<dyn ProviderService> {
@@ -45,17 +42,15 @@ impl FactoryComponent for Box<dyn ProviderService> {
         }
     }
 
-    fn init_model(params: Self::InitParams, index: &DynamicIndex, sender: &FactoryComponentSender<Self>) -> Self {
+    fn init_model(params: Self::InitParams, index: &DynamicIndex, sender: FactoryComponentSender<Self>) -> Self {
         params
     }
 
-    fn update(&mut self, message: Self::Input, sender: &FactoryComponentSender<Self>) {
-        match message {
-
-        }
+    fn update(&mut self, message: Self::Input, sender: FactoryComponentSender<Self>) {
+        match message {}
     }
 
-    fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: &FactoryComponentSender<Self>) -> Self::Widgets {
+    fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: FactoryComponentSender<Self>) -> Self::Widgets {
         let widgets = view_output!();
 
         for list in self.get_task_lists() {

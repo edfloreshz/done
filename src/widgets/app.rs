@@ -1,9 +1,14 @@
-use relm4::gtk::prelude::GtkWindowExt;
 use relm4::{
 	Component, ComponentController, ComponentParts, ComponentSender, Controller,
 	SimpleComponent,
 };
+use relm4::gtk::prelude::GtkWindowExt;
 
+use crate::{
+	adw, gtk,
+	gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
+};
+use crate::core::models::generic::lists::GenericList;
 use crate::widgets::component::content::{
 	ContentInput, ContentModel, ContentOutput,
 };
@@ -13,11 +18,6 @@ use crate::widgets::component::sidebar::{
 use crate::widgets::factory::list::ListType;
 use crate::widgets::popover::main_menu::MainMenuInput;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
-use crate::{
-	adw, gtk,
-	gtk::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
-};
-use crate::core::models::generic::lists::GenericList;
 
 pub struct AppModel {
 	message: Option<Input>,
@@ -167,7 +167,7 @@ impl SimpleComponent for AppModel {
 	fn init(
 		_params: Self::InitParams,
 		root: &Self::Root,
-		sender: &ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let model = AppModel::new(
 			SidebarModel::builder()
@@ -196,7 +196,7 @@ impl SimpleComponent for AppModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: &ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			Input::AddList(provider, title) => {
 				self.sidebar.sender().send(SidebarInput::AddList(provider, title))
@@ -204,7 +204,7 @@ impl SimpleComponent for AppModel {
 			Input::ListSelected(index, provider, list) => self
 				.content
 				.sender()
-				.send(ContentInput::SetTaskList(index, provider,list)),
+				.send(ContentInput::SetTaskList(index, provider, list)),
 			Input::UpdateSidebarCounters(lists) => self
 				.sidebar
 				.sender()

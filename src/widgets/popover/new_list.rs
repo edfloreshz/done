@@ -3,7 +3,7 @@ use gtk::prelude::{
 	BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt,
 	OrientableExt, PopoverExt, WidgetExt,
 };
-use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use relm4::{ComponentParts, ComponentSender, gtk, SimpleComponent};
 
 use crate::fl;
 
@@ -90,13 +90,12 @@ impl SimpleComponent for NewListModel {
 	fn init(
 		_params: Self::InitParams,
 		root: &Self::Root,
-		sender: &ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
 		let model = NewListModel;
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, _message: Self::Input, _sender: &ComponentSender<Self>) {
-	}
+	fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>) {}
 }

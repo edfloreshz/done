@@ -1,20 +1,21 @@
+use std::collections::VecDeque;
+use std::ops::Deref;
+
+use diesel::SqliteConnection;
+use relm4::{
+	ComponentParts,
+	ComponentSender,
+	gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, WidgetPlus,
+};
+use relm4::adw;
+use relm4::factory::{DynamicIndex, FactoryVecDeque};
+
+use crate::{fl, PLUGINS};
 use crate::core::models::generic::lists::GenericList;
 use crate::core::plugins::local::service::LocalService;
 use crate::core::traits::provider::{ProviderService, TaskProvider};
-use relm4::factory::{DynamicIndex, FactoryVecDeque};
-use relm4::{
-	gtk,
-	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
-	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
-};
-use std::collections::VecDeque;
-use std::ops::Deref;
-use diesel::SqliteConnection;
-
 // use crate::plugins::local::lists::{get_lists, post_list};
 use crate::widgets::factory::list::ListType;
-use crate::{fl, PLUGINS};
-use relm4::adw;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -71,7 +72,7 @@ impl SimpleComponent for SidebarModel {
 	fn init(
 		_params: Self::InitParams,
 		root: &Self::Root,
-		sender: &ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
 		let plugins = PLUGINS.get().unwrap();
@@ -89,7 +90,7 @@ impl SimpleComponent for SidebarModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		let mut guard = self.services.guard();
 		match message {
 			SidebarInput::AddList(provider, name) => {

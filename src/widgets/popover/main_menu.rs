@@ -1,16 +1,17 @@
-use crate::gio::MenuModel;
-use crate::gtk::Builder;
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
+use relm4::{
+	adw::gio, ComponentParts, ComponentSender, gtk, SimpleComponent, view,
+};
 use relm4::adw::ffi::{
-	adw_style_manager_get_default as get_style_manager,
-	adw_style_manager_set_color_scheme as set_color_scheme,
 	ADW_COLOR_SCHEME_DEFAULT as Default,
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
+	adw_style_manager_get_default as get_style_manager,
+	adw_style_manager_set_color_scheme as set_color_scheme,
 };
-use relm4::{
-	adw::gio, gtk, view, ComponentParts, ComponentSender, SimpleComponent,
-};
+
+use crate::gio::MenuModel;
+use crate::gtk::Builder;
 
 #[derive(Debug)]
 pub enum MainMenuInput {
@@ -37,7 +38,7 @@ impl SimpleComponent for MainMenuInput {
 	fn init(
 		_params: Self::InitParams,
 		root: &Self::Root,
-		sender: &ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		view! {
 			#[name = "theme_selector"]
@@ -77,7 +78,7 @@ impl SimpleComponent for MainMenuInput {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: &ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		unsafe {
 			let style_manager = get_style_manager();
 			match message {

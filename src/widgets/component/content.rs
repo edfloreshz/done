@@ -1,15 +1,14 @@
-use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
-	gtk,
-	gtk::prelude::{
+	ComponentParts,
+	ComponentSender,
+	gtk, gtk::prelude::{
 		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
-	},
-	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
+	}, SimpleComponent, view, WidgetPlus,
 };
+use relm4::factory::{DynamicIndex, FactoryVecDeque};
+
 use crate::core::models::generic::lists::GenericList;
 use crate::core::models::generic::tasks::GenericTask;
-
-
 use crate::fl;
 use crate::widgets::factory::list::ListType;
 use crate::widgets::factory::list::ListType::{All, Other, Starred};
@@ -114,7 +113,7 @@ impl SimpleComponent for ContentModel {
 	fn init(
 		_params: Self::InitParams,
 		root: &Self::Root,
-		sender: &ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		view! {
 				list_box = &gtk::Box {
@@ -130,19 +129,19 @@ impl SimpleComponent for ContentModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, sender: &ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		let mut guard = self.tasks.guard();
 		match message {
 			ContentInput::AddTask(title) => {
 				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
 				let task =
 					// post_task(id_list.to_owned(), title).expect("Failed to post task.");
-				// self.tasks.push_back(task);
+					// self.tasks.push_back(task);
 
-				sender.output(ContentOutput::UpdateCounters(vec![
-					All(1),
-					Other(self.parent_list.0, 1),
-				]));
+					sender.output(ContentOutput::UpdateCounters(vec![
+						All(1),
+						Other(self.parent_list.0, 1),
+					]));
 			},
 			ContentInput::RemoveTask(index) => {
 				if guard.get(index.current_index()).unwrap().favorite {
