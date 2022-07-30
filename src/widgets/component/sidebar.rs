@@ -14,6 +14,7 @@ use diesel::SqliteConnection;
 // use crate::plugins::local::lists::{get_lists, post_list};
 use crate::widgets::factory::list::ListType;
 use crate::{fl, PLUGINS};
+use relm4::adw;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -46,19 +47,23 @@ impl SimpleComponent for SidebarModel {
 			set_orientation: gtk::Orientation::Vertical,
 			append: scroll_window = &gtk::ScrolledWindow {
 				#[wrap(Some)]
-				set_child: providers_container = &gtk::Box {
-					set_margin_top: 5,
-					set_margin_start: 10,
-					set_margin_end: 10,
-					set_orientation: gtk::Orientation::Vertical,
-					set_vexpand: true,
-					set_css_classes: &["navigation-sidebar"],
-					// connect_row_activated[sender] => move |listbox, _| {
-					// 	let index = listbox.selected_row().unwrap().index() as usize;
-					// 	sender.input(SidebarInput::ListSelected(index));
-					// 	sender.output(SidebarOutput::Forward)
-					// },
-				},
+				set_child: clamp = &adw::Clamp {
+					#[wrap(Some)]
+						set_child: providers_container = &gtk::Box {
+							set_margin_top: 5,
+							set_margin_start: 10,
+							set_margin_end: 10,
+							set_orientation: gtk::Orientation::Vertical,
+							set_spacing: 12,
+							set_vexpand: true,
+							set_css_classes: &["navigation-sidebar"],
+							// connect_row_activated[sender] => move |listbox, _| {
+							// 	let index = listbox.selected_row().unwrap().index() as usize;
+							// 	sender.input(SidebarInput::ListSelected(index));
+							// 	sender.output(SidebarOutput::Forward)
+							// },
+						},
+					}
 			},
 		}
 	}

@@ -34,9 +34,14 @@ impl FactoryComponent for Box<dyn ProviderService> {
     type Widgets = ProviderWidgets;
 
     view! {
-        #[root]
-        group = adw::PreferencesGroup {
-            set_description: Some(self.get_provider().get_name()),
+        #[name = "list_box"]
+        adw::PreferencesGroup {
+            #[name = "expander"]
+            add = &adw::ExpanderRow {
+                set_title: self.get_provider().get_name(),
+                add_prefix: &self.get_provider().get_icon(),
+                add_action: &gtk::Button::from_icon_name("accessories-text-editor-symbolic")
+            }
         }
     }
 
@@ -52,33 +57,15 @@ impl FactoryComponent for Box<dyn ProviderService> {
 
     fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: &FactoryComponentSender<Self>) -> Self::Widgets {
         let widgets = view_output!();
+
         for list in self.get_task_lists() {
             relm4::view! {
-                #[name = "list_box"]
-                gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-                    append = &gtk::ListBox {
-                        append = &adw::ExpanderRow {
-                            set_show_enable_switch: true,
-                            set_enable_expansion: true,
-                            set_title: "Local",
-                            #[wrap(Some)]
-                            set_child = &gtk::Box {
-                                set_margin_all: 10,
-                                append = &gtk::ListBox {
-                                    append = &adw::ActionRow {
-                                        #[wrap(Some)]
-                                        set_child = &gtk::Box {
-                                            append: &gtk::Label::new(Some("Testing"))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                #[name = "nested"]
+                &adw::ActionRow {
+                    set_title: &list.display_name
                 }
             }
-            widgets.group.add(&list_box)
+            widgets.expander.add_row(&nested)
         }
         widgets
     }

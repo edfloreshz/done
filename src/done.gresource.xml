@@ -15,6 +15,7 @@
     <file alias="open-menu-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/open-menu-symbolic.svg</file>
     <file alias="value-increase-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/value-increase-symbolic.svg</file>
     <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/go-previous-symbolic.svg</file>
+    <file alias="accessories-text-editor-symbolic.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/actions/accessories-text-editor-symbolic.svg</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
     <file alias="app-icon.svg" preprocess="xml-stripblanks">assets/icons/hicolor/scalable/apps/dev.edfloreshz.Done.svg</file>
