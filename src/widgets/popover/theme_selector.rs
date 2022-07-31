@@ -1,13 +1,13 @@
 use gtk::prelude::{BoxExt, ToggleButtonExt, WidgetExt};
-use relm4::{
-	adw::gio, ComponentParts, ComponentSender, gtk, SimpleComponent, view,
-};
 use relm4::adw::ffi::{
+	adw_style_manager_get_default as get_style_manager,
+	adw_style_manager_set_color_scheme as set_color_scheme,
 	ADW_COLOR_SCHEME_DEFAULT as Default,
 	ADW_COLOR_SCHEME_FORCE_DARK as ForceDark,
 	ADW_COLOR_SCHEME_FORCE_LIGHT as ForceLight,
-	adw_style_manager_get_default as get_style_manager,
-	adw_style_manager_set_color_scheme as set_color_scheme,
+};
+use relm4::{
+	adw::gio, gtk, view, ComponentParts, ComponentSender, SimpleComponent,
 };
 
 #[derive(Debug)]

@@ -2,18 +2,18 @@ use std::collections::VecDeque;
 use std::ops::Deref;
 
 use diesel::SqliteConnection;
-use relm4::{
-	ComponentParts,
-	ComponentSender,
-	gtk, gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt}, SimpleComponent, WidgetPlus,
-};
 use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
+use relm4::{
+	gtk,
+	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
+	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
+};
 
-use crate::{fl, PLUGINS};
 use crate::data::models::generic::lists::GenericList;
 use crate::data::plugins::local::service::LocalService;
 use crate::data::traits::provider::{ProviderService, TaskProvider};
+use crate::{fl, PLUGINS};
 // use crate::plugins::local::lists::{get_lists, post_list};
 use crate::widgets::factory::list::ListType;
 

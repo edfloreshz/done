@@ -12,9 +12,9 @@ use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
-use crate::data::plugins::local::LocalProvider;
 use crate::data::plugins::local::models::lists::LocalList;
 use crate::data::plugins::local::models::tasks::LocalTask;
+use crate::data::plugins::local::LocalProvider;
 use crate::data::traits::provider::{ProviderService, TaskProvider};
 use crate::embedded_migrations;
 

@@ -1,7 +1,7 @@
 use gettextrs::gettext;
 use gtk::prelude::GtkWindowExt;
 use relm4::{
-	component::EmptyRoot, ComponentParts, ComponentSender, gtk, SimpleComponent,
+	component::EmptyRoot, gtk, ComponentParts, ComponentSender, SimpleComponent,
 };
 
 use crate::config::{APP_ID, VERSION};

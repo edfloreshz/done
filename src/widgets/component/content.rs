@@ -1,11 +1,11 @@
-use relm4::{
-	ComponentParts,
-	ComponentSender,
-	gtk, gtk::prelude::{
-		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
-	}, SimpleComponent, view, WidgetPlus,
-};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
+use relm4::{
+	gtk,
+	gtk::prelude::{
+		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
+	},
+	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
+};
 
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;

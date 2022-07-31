@@ -1,10 +1,13 @@
 use gtk::prelude::*;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
-	adw, Component, ComponentBuilder, ComponentController, ComponentParts, ComponentSender,
-	Controller, gtk, SimpleComponent,
+	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
+	ComponentSender, Controller, SimpleComponent,
 };
 
+use crate::data::models::generic::lists::GenericList;
+use crate::main_app;
+use crate::widgets::modals::about::AboutDialog;
 use crate::{
 	config::PROFILE,
 	widgets::{
@@ -19,9 +22,6 @@ use crate::{
 		},
 	},
 };
-use crate::data::models::generic::lists::GenericList;
-use crate::main_app;
-use crate::widgets::modals::about::AboutDialog;
 
 pub(super) struct App {
 	message: Option<AppMsg>,

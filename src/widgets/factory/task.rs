@@ -1,4 +1,3 @@
-use relm4::{Sender, WidgetPlus};
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
@@ -7,6 +6,7 @@ use relm4::gtk::prelude::{
 	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
 	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
 };
+use relm4::{Sender, WidgetPlus};
 
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::generic::tasks::GenericTask;

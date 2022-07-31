@@ -3,7 +3,7 @@ use gtk::prelude::{
 	BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt,
 	OrientableExt, PopoverExt, WidgetExt,
 };
-use relm4::{ComponentParts, ComponentSender, gtk, SimpleComponent};
+use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::fl;
 

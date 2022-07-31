@@ -40,8 +40,8 @@ pub enum ProviderType {
 
 pub trait ProviderService: Debug {
 	fn init() -> Self
-		where
-			Self: Sized;
+	where
+		Self: Sized;
 	fn establish_connection(&self) -> Result<SqliteConnection>;
 	// Fetch tasks from the provider and save them to local storage.
 	fn refresh_tasks(&mut self) -> Result<()>;

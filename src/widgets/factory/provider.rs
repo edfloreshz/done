@@ -6,12 +6,12 @@ use gtk::prelude::BoxExt;
 use gtk::prelude::ListBoxRowExt;
 use gtk::prelude::OrientableExt;
 use gtk::prelude::WidgetExt;
-use relm4::{gtk, Sender};
 use relm4::adw;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
 use relm4::WidgetPlus;
+use relm4::{gtk, Sender};
 
 use crate::data::traits::provider::{ProviderService, TaskProvider};
 use crate::widgets::component::sidebar::SidebarInput;
