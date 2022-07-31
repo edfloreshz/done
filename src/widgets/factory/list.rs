@@ -4,9 +4,10 @@ use relm4::factory::{
 use relm4::Sender;
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk;
+use crate::{adw, gtk};
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
 use crate::widgets::component::sidebar::SidebarInput;
+use crate::widgets::factory::service::ServiceInput;
 
 #[derive(Debug)]
 pub enum ListType {
@@ -28,13 +29,12 @@ pub enum ListInput {
 
 #[derive(Debug)]
 pub enum ListOutput {
-	RemoveList(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
-	type ParentMsg = SidebarInput;
-	type ParentWidget = gtk::ListBox;
+	type ParentMsg = ServiceInput;
+	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
@@ -84,12 +84,6 @@ impl FactoryComponent for GenericList {
 		widgets
 	}
 
-	fn output_to_parent_msg(output: Self::Output) -> Option<SidebarInput> {
-		Some(match output {
-			ListOutput::RemoveList(index) => SidebarInput::RemoveList(index),
-		})
-	}
-
 	fn init_model(
 		params: Self::InitParams,
 		index: &DynamicIndex,
@@ -114,5 +108,10 @@ impl FactoryComponent for GenericList {
 				}
 			},
 		}
+	}
+
+	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
+		Some(match output {
+		})
 	}
 }

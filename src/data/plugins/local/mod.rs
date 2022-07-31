@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::data::traits::provider::{ProviderType, TaskProvider};
+use crate::data::traits::provider::{Provider, ProviderType};
 use crate::gtk;
 use crate::gtk::Image;
 
@@ -31,7 +31,7 @@ impl Default for LocalProvider {
 	}
 }
 
-impl TaskProvider for LocalProvider {
+impl Provider for LocalProvider {
 	fn get_id(&self) -> &str {
 		&*self.id
 	}

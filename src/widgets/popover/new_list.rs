@@ -1,24 +1,37 @@
+use crate::data::traits::provider::Provider;
 use glib::clone;
 use gtk::prelude::{
 	BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt,
-	OrientableExt, PopoverExt, WidgetExt,
+	ListBoxRowExt, OrientableExt, PopoverExt, WidgetExt,
 };
+use relm4::factory::FactoryVecDeque;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use serde::Serialize;
 
-use crate::fl;
+use crate::app::AppMsg;
+use crate::{fl, PLUGINS};
 
-pub struct NewListModel;
+pub struct NewListModel {
+	selected_provider: Option<String>,
+	providers: FactoryVecDeque<Box<dyn Provider>>,
+}
+
+#[derive(Debug)]
+pub enum NewListInput {
+	SelectProvider(usize),
+	AddTaskList(String),
+}
 
 #[derive(Debug)]
 pub enum NewListOutput {
-	AddNewList(String, String),
+	AddTaskList(String, String),
 }
 
 #[relm4::component(pub)]
 impl SimpleComponent for NewListModel {
-	type Input = ();
+	type Input = NewListInput;
 	type Output = NewListOutput;
-	type InitParams = ();
+	type InitParams = Option<String>;
 	type Widgets = NewListWidgets;
 
 	view! {
@@ -38,14 +51,13 @@ impl SimpleComponent for NewListModel {
 							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
 								if !buffer.text().is_empty() {
-									todo!("Send list provider and name")
-									// sender.output(NewListOutput::AddNewList(buffer.text()))
+									sender.input.send(NewListInput::AddTaskList(buffer.text()))
 								}
 							}
 						},
 						#[name = "providers_button"]
 						gtk::MenuButton {
-							set_visible: false,
+							set_visible: true,
 							set_icon_name: "x-office-address-book-symbolic",
 							add_css_class: "raised",
 							set_has_frame: true,
@@ -53,9 +65,14 @@ impl SimpleComponent for NewListModel {
 							#[wrap(Some)]
 							set_popover = &gtk::Popover {
 								#[wrap(Some)]
-								set_child = &gtk::Stack {
-									add_child = &gtk::Label {
-										set_text: fl!("providers")
+								set_child = &gtk::Box {
+									#[name = "providers_list"]
+									append = &gtk::ListBox {
+										set_width_request: 100,
+										connect_row_activated[sender] => move |list, _| {
+											let row = list.selected_row().unwrap().index() as usize;
+											sender.input.send(NewListInput::SelectProvider(row));
+										}
 									}
 								}
 							}
@@ -68,8 +85,7 @@ impl SimpleComponent for NewListModel {
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
 							if !buffer.text().is_empty() {
-								todo!("Send list provider and name")
-								// sender.output(NewListOutput::AddNewList(buffer.text()))
+								sender.input(NewListInput::AddTaskList(buffer.text()))
 							}
 							new_list_entry.set_text("");
 						})
@@ -88,14 +104,36 @@ impl SimpleComponent for NewListModel {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		params: Self::InitParams,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
-		let model = NewListModel;
+		let mut model = NewListModel {
+			selected_provider: params,
+			providers: FactoryVecDeque::new(
+				widgets.providers_list.clone(),
+				&sender.output,
+			),
+		};
+		let local = unsafe { PLUGINS.lock().unwrap().local.provider.clone() };
+		model.providers.guard().push_back(Box::new(local));
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>) {}
+	fn update(&mut self, _message: Self::Input, sender: ComponentSender<Self>) {
+		match _message {
+			NewListInput::SelectProvider(index) => {
+				print!("Provider selected");
+				self.selected_provider =
+					Some(self.providers.get(index).unwrap().get_id().to_string())
+			},
+			NewListInput::AddTaskList(name) => {
+				sender.output.send(NewListOutput::AddTaskList(
+					self.selected_provider.clone().unwrap(),
+					name,
+				))
+			},
+		}
+	}
 }

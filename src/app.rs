@@ -8,6 +8,7 @@ use relm4::{
 use crate::data::models::generic::lists::GenericList;
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
+use crate::widgets::popover::new_list::{NewListInput, NewListOutput};
 use crate::{
 	config::PROFILE,
 	widgets::{
@@ -16,10 +17,7 @@ use crate::{
 			sidebar::{SidebarInput, SidebarModel, SidebarOutput},
 		},
 		factory::list::ListType,
-		popover::{
-			new_list::{NewListModel, NewListOutput},
-			theme_selector::MainMenuInput,
-		},
+		popover::{new_list::NewListModel, theme_selector::MainMenuInput},
 	},
 };
 
@@ -50,7 +48,7 @@ impl App {
 
 #[derive(Debug)]
 pub(super) enum AppMsg {
-	AddList(String, String),
+	AddTaskList(String, String),
 	ListSelected(usize, String, GenericList),
 	UpdateSidebarCounters(Vec<ListType>),
 	Folded,
@@ -230,14 +228,13 @@ impl SimpleComponent for App {
 						AppMsg::UpdateSidebarCounters(lists)
 					},
 				});
-		let new_list_controller =
-			NewListModel::builder()
-				.launch(())
-				.forward(&sender.input, |message| match message {
-					NewListOutput::AddNewList(provider, name) => {
-						AppMsg::AddList(provider, name)
-					},
-				});
+		let new_list_controller = NewListModel::builder()
+			.launch(Some("local".to_string()))
+			.forward(&sender.input, |message| match message {
+				NewListOutput::AddTaskList(provider, name) => {
+					AppMsg::AddTaskList(provider, name)
+				},
+			});
 
 		let widgets = view_output!();
 
@@ -289,7 +286,7 @@ impl SimpleComponent for App {
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
-			AppMsg::AddList(provider, title) => self
+			AppMsg::AddTaskList(provider, title) => self
 				.sidebar
 				.sender()
 				.send(SidebarInput::AddList(provider, title)),

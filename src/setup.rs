@@ -31,7 +31,6 @@ pub fn setup() -> Result<()> {
 
 	gtk::Window::set_default_icon_name(APP_ID);
 
-	PLUGINS.set(Plugins::init()).unwrap();
 	Ok(())
 }
 

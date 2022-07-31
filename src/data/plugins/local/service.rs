@@ -4,8 +4,10 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use diesel::prelude::*;
+use diesel::query_builder::QueryFragment;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sqlite::SqliteConnection;
+use relm4::factory::DynamicIndex;
 use serde::{Deserialize, Serialize};
 
 use crate::data::models::generic::lists::GenericList;
@@ -15,7 +17,7 @@ use crate::data::models::queryable::task::QueryableTask;
 use crate::data::plugins::local::models::lists::LocalList;
 use crate::data::plugins::local::models::tasks::LocalTask;
 use crate::data::plugins::local::LocalProvider;
-use crate::data::traits::provider::{ProviderService, TaskProvider};
+use crate::data::traits::provider::{Provider, Service};
 use crate::embedded_migrations;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -25,7 +27,7 @@ pub struct LocalService {
 	pub tasks: VecDeque<LocalTask>,
 }
 
-impl ProviderService for LocalService {
+impl Service for LocalService {
 	fn init() -> Self {
 		let mut local = Self {
 			provider: Default::default(),
@@ -69,7 +71,7 @@ impl ProviderService for LocalService {
 		Ok(())
 	}
 
-	fn get_provider(&self) -> Box<dyn TaskProvider> {
+	fn get_provider(&self) -> Box<dyn Provider> {
 		Box::new(self.clone().provider)
 	}
 
@@ -105,7 +107,7 @@ impl ProviderService for LocalService {
 	}
 
 	fn create_task(
-		&self,
+		&mut self,
 		list: GenericList,
 		task: GenericTask,
 	) -> Result<GenericTask> {
@@ -121,7 +123,7 @@ impl ProviderService for LocalService {
 		Ok(inserted_task.into())
 	}
 
-	fn update_task(&self, task: GenericTask) -> Result<()> {
+	fn update_task(&mut self, task: GenericTask) -> Result<()> {
 		use crate::schema::tasks::dsl::*;
 
 		let task: QueryableTask = task.into();
@@ -144,7 +146,7 @@ impl ProviderService for LocalService {
 		Ok(())
 	}
 
-	fn remove_task(&self, task_id: &str) -> anyhow::Result<()> {
+	fn remove_task(&mut self, task_id: &str) -> anyhow::Result<()> {
 		use crate::schema::tasks::dsl::*;
 		diesel::delete(tasks.filter(id_task.eq(task_id)))
 			.execute(&self.establish_connection()?)?;
@@ -162,26 +164,39 @@ impl ProviderService for LocalService {
 		Ok(results)
 	}
 
-	fn create_task_list(&self, list: GenericList) -> Result<GenericList> {
+	fn create_task_list(
+		&mut self,
+		list_provider: &str,
+		name: &str,
+		icon: &str,
+	) -> Result<GenericList> {
 		use crate::schema::lists::dsl::*;
 
-		let new_list = QueryableList::new(
-			&*list.display_name,
-			Some("list-compact-symbolic".into()),
-			list.provider.clone(),
-		);
+		let new_list =
+			QueryableList::new(name, Some(icon.into()), list_provider.into());
 		diesel::insert_into(lists)
 			.values(&new_list)
 			.execute(&self.establish_connection()?)?;
-		Ok(new_list.into())
+		let list: GenericList = new_list.into();
+		self.lists.push_back(list.clone().into());
+		Ok(list)
 	}
 
-	fn update_task_list(&self, list: GenericList) -> Result<()> {
+	fn update_task_list(
+		&mut self,
+		index: DynamicIndex,
+		name: &str,
+	) -> Result<()> {
 		use crate::schema::lists::dsl::*;
+
+		let list = self
+			.lists
+			.get(index.current_index())
+			.with_context(|| "Failed to get list.")?;
 
 		let queryable_list = QueryableList {
 			id_list: list.id_list.clone(),
-			display_name: list.display_name.clone(),
+			display_name: name.to_string(),
 			is_owner: list.is_owner,
 			count: list.count,
 			icon_name: list.icon_name.clone(),
@@ -198,9 +213,14 @@ impl ProviderService for LocalService {
 		Ok(())
 	}
 
-	fn remove_task_list(&self, list: GenericList) -> Result<()> {
+	fn remove_task_list(&mut self, index: DynamicIndex) -> Result<()> {
 		use crate::schema::lists::dsl::*;
-		diesel::delete(lists.filter(id_list.eq(list.id_list)))
+
+		let list = self
+			.lists
+			.get(index.current_index())
+			.with_context(|| "Failed to get list")?;
+		diesel::delete(lists.filter(id_list.eq(list.clone().id_list)))
 			.execute(&self.establish_connection()?)?;
 		Ok(())
 	}

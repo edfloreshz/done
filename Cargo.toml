@@ -13,7 +13,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-relm4 = { git = "https://github.com/Relm4/Relm4", branch = "next", version = "0.5.0-beta.1", features = ["all"] }
+relm4 = { git = "https://github.com/edfloreshz/Relm4", branch = "next", version = "0.5.0-beta.1", features = ["all"] }
 serde = { version = "1.0.136", features = ["derive"] }
 glib = "0.15.11"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
