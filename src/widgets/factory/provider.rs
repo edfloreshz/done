@@ -1,25 +1,11 @@
-use adw::prelude::ExpanderRowExt;
-use adw::prelude::PreferencesGroupExt;
-use adw::prelude::PreferencesRowExt;
-use diesel::SqliteConnection;
-use glib::clone;
 use gtk::prelude::BoxExt;
 use gtk::prelude::ListBoxRowExt;
-use gtk::prelude::OrientableExt;
-use gtk::prelude::WidgetExt;
-use relm4::adw;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
-use relm4::gtk::prelude::PopoverExt;
-use relm4::WidgetPlus;
-use relm4::{gtk, Sender};
+use relm4::gtk;
 
-use crate::data::plugins::local::LocalProvider;
-use crate::data::traits::provider::{Provider, ProviderType, Service};
-use crate::gtk::prelude::Cast;
-use crate::gtk::Image;
-use crate::widgets::component::sidebar::SidebarInput;
+use crate::data::traits::provider::Provider;
 use crate::widgets::popover::new_list::NewListOutput;
 
 #[derive(Debug)]
@@ -68,10 +54,10 @@ impl FactoryComponent for Box<dyn Provider> {
 
 	fn init_widgets(
 		&mut self,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		root: &Self::Root,
-		returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: FactoryComponentSender<Self>,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets

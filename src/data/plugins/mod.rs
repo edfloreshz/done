@@ -1,7 +1,3 @@
-use std::sync::{Arc, Mutex};
-
-use anyhow::Result;
-use diesel::r2d2::{ConnectionManager, Pool};
 use serde::{Deserialize, Serialize};
 
 use crate::data::plugins::local::service::LocalService;

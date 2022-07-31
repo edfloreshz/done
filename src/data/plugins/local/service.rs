@@ -1,11 +1,7 @@
 use std::collections::VecDeque;
-use std::ops::Deref;
-use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use diesel::prelude::*;
-use diesel::query_builder::QueryFragment;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sqlite::SqliteConnection;
 use relm4::factory::DynamicIndex;
 use serde::{Deserialize, Serialize};
@@ -102,7 +98,7 @@ impl Service for LocalService {
 		Ok(results)
 	}
 
-	fn read_task(&self, id: &str) -> anyhow::Result<GenericTask> {
+	fn read_task(&self, _id: &str) -> anyhow::Result<GenericTask> {
 		todo!()
 	}
 

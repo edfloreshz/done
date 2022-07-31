@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use crate::data::traits::provider::{Provider, ProviderType};
-use crate::gtk;
 use crate::gtk::Image;
 
 pub mod models;

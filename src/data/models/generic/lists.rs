@@ -3,7 +3,6 @@ use uuid::Uuid;
 
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::plugins::local::models::lists::LocalList;
-use crate::schema::lists::provider;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct GenericList {

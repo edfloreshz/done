@@ -8,7 +8,7 @@ use relm4::{
 use crate::data::models::generic::lists::GenericList;
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
-use crate::widgets::popover::new_list::{NewListInput, NewListOutput};
+use crate::widgets::popover::new_list::NewListOutput;
 use crate::{
 	config::PROFILE,
 	widgets::{
@@ -17,7 +17,7 @@ use crate::{
 			sidebar::{SidebarInput, SidebarModel, SidebarOutput},
 		},
 		factory::list::ListType,
-		popover::{new_list::NewListModel, theme_selector::MainMenuInput},
+		popover::new_list::NewListModel,
 	},
 };
 
@@ -25,7 +25,7 @@ pub(super) struct App {
 	message: Option<AppMsg>,
 	sidebar: Controller<SidebarModel>,
 	content: Controller<ContentModel>,
-	new_list_popover: Controller<NewListModel>,
+	_new_list_popover: Controller<NewListModel>,
 	about_dialog: Controller<AboutDialog>,
 }
 
@@ -40,7 +40,7 @@ impl App {
 			message: None,
 			sidebar,
 			content,
-			new_list_popover,
+			_new_list_popover: new_list_popover,
 			about_dialog,
 		}
 	}

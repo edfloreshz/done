@@ -1,22 +1,17 @@
 use adw::prelude::ExpanderRowExt;
 use adw::prelude::PreferencesGroupExt;
 use adw::prelude::PreferencesRowExt;
-use diesel::SqliteConnection;
-use gtk::prelude::BoxExt;
-use gtk::prelude::ListBoxRowExt;
-use gtk::prelude::OrientableExt;
-use gtk::prelude::WidgetExt;
 use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque, FactoryView};
-use relm4::WidgetPlus;
-use relm4::{gtk, Sender};
+use relm4::gtk;
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::plugins::local::LocalProvider;
 
-use crate::data::traits::provider::{Provider, Service};
+use crate::data::traits::provider::Provider;
 use crate::widgets::component::sidebar::SidebarInput;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ServiceModel {
 	pub provider: LocalProvider,
@@ -57,8 +52,8 @@ impl FactoryComponent for ServiceModel {
 
 	fn init_model(
 		params: Self::InitParams,
-		index: &DynamicIndex,
-		sender: FactoryComponentSender<Self>,
+		_index: &DynamicIndex,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self {
 		params
 	}
@@ -66,7 +61,7 @@ impl FactoryComponent for ServiceModel {
 	fn update(
 		&mut self,
 		message: Self::Input,
-		sender: FactoryComponentSender<Self>,
+		_sender: FactoryComponentSender<Self>,
 	) {
 		match message {
 			ServiceInput::UpdateService => {
@@ -78,9 +73,9 @@ impl FactoryComponent for ServiceModel {
 
 	fn init_widgets(
 		&mut self,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		root: &Self::Root,
-		returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
@@ -89,7 +84,7 @@ impl FactoryComponent for ServiceModel {
 			&sender.input,
 		);
 		self.lists = Some(fac);
-		todo!("Iter list and create row.");
+		//TODO: Iter list of task lists and create rows for each.
 		// for list in self.lists.unwrap() {
 		// 	relm4::view! {
 		// 			#[name = "nested"]

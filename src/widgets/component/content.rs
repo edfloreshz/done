@@ -132,9 +132,9 @@ impl SimpleComponent for ContentModel {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		let mut guard = self.tasks.guard();
 		match message {
-			ContentInput::AddTask(title) => {
-				let id_list = &self.parent_list.1.as_ref().unwrap().id_list;
-				let task =
+			ContentInput::AddTask(_title) => {
+				let _id_list = &self.parent_list.1.as_ref().unwrap().id_list;
+				let _task =
 					// post_task(id_list.to_owned(), title).expect("Failed to post task.");
 					// self.tasks.push_back(task);
 
@@ -157,21 +157,21 @@ impl SimpleComponent for ContentModel {
 					]));
 				}
 				{
-					let task = guard.get(index.current_index());
+					let _task = guard.get(index.current_index());
 					// delete_task(&task.id_task).expect("Failed to remove task.");
 				}
 				guard.remove(index.current_index());
 			},
 			ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
-			ContentInput::SetTaskList(index, provider, list) => {
+			ContentInput::SetTaskList(index, _provider, list) => {
 				self.parent_list = (index, Some(list.clone()));
-				let tasks = match index {
-					0 => todo!("Get tasks from `Inbox` provider."),
-					1 => todo!("Get tasks from `Today` provider."),
-					2 => todo!("Get tasks from `Next7Days` provider."),
-					3 => todo!("Get tasks from `All` provider."),
-					4 => todo!("Get tasks from `Favorites` provider."),
-					_ => todo!("Get specific task list."),
+				let tasks: Vec<GenericTask> = match index {
+					0 => vec![],  //TODO: Get tasks from `Inbox` provide
+					1 => vec![],  //TODO: Get tasks from `Today` provider."),
+					2 => vec![],  //TODO: Get tasks from `Next7Days` provider."),
+					3 => vec![],  //TODO: Get tasks from `All` provider."),
+					4 => vec![],  //TODO: Get tasks from `Favorites` provider."),
+					_ => vec![],  //TODO: Get specific task list."),
 				};
 				loop {
 					let task = guard.pop_front();
@@ -179,9 +179,9 @@ impl SimpleComponent for ContentModel {
 						break;
 					}
 				}
-				// for task in tasks {
-				// 	guard.push_back(task.clone());
-				// }
+				for task in tasks {
+					guard.push_back(task.clone());
+				}
 				self.show_tasks = !guard.is_empty();
 			},
 			ContentInput::UpdateCounters(lists) => {

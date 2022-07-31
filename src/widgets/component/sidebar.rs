@@ -1,28 +1,24 @@
-use std::collections::VecDeque;
-use std::ops::Deref;
-
-use diesel::SqliteConnection;
 use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
-	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
-	ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
+	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
+	ComponentParts, ComponentSender, SimpleComponent,
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::data::plugins::local::service::LocalService;
-use crate::data::traits::provider::{Provider, Service};
-use crate::{fl, PLUGINS};
+use crate::data::traits::provider::Provider;
+use crate::PLUGINS;
 // use crate::plugins::local::lists::{get_lists, post_list};
 use crate::widgets::factory::list::ListType;
-use crate::widgets::factory::service::{ServiceInput, ServiceModel};
+use crate::widgets::factory::service::ServiceModel;
 
 #[derive(Debug)]
 pub struct SidebarModel {
 	services: FactoryVecDeque<ServiceModel>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddList(String, String),
@@ -32,6 +28,7 @@ pub enum SidebarInput {
 	UpdateCounters(Vec<ListType>),
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarOutput {
 	ListSelected(usize, String, GenericList),
@@ -97,17 +94,17 @@ impl SimpleComponent for SidebarModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
-		let mut service = self.services.guard();
-		todo!("Move these to ServiceModel");
+	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+		let _service = self.services.guard();
+		//TODO: Move these to ServiceModel
 		match message {
-			SidebarInput::AddList(provider, name) => {
+			SidebarInput::AddList(_provider, _name) => {
 				// service.get_mut(0).unwrap().create_task_list(&*provider, &*name, "").unwrap();
 			},
-			SidebarInput::RemoveList(index) => {
+			SidebarInput::RemoveList(_index) => {
 				// service.get_mut(0).unwrap().remove_task_list(index).unwrap();
 			},
-			SidebarInput::ListSelected(index) => {
+			SidebarInput::ListSelected(_index) => {
 				// let service = guard.get(index).unwrap();
 				// sender.output(SidebarOutput::ListSelected(
 				// 	index,
@@ -118,17 +115,17 @@ impl SimpleComponent for SidebarModel {
 			SidebarInput::UpdateCounters(lists) => {
 				for list in lists {
 					match list {
-						ListType::Inbox(i) => 0,
-						ListType::Today(i) => 0,
-						ListType::Next7Days(i) => 0,
-						ListType::All(i) => 0,
-						ListType::Starred(i) => 0,
-						ListType::Archived(i) => 0,
-						ListType::Other(index, i) => 0,
+						ListType::Inbox(_i) => 0,
+						ListType::Today(_i) => 0,
+						ListType::Next7Days(_i) => 0,
+						ListType::All(_i) => 0,
+						ListType::Starred(_i) => 0,
+						ListType::Archived(_i) => 0,
+						ListType::Other(_index, _i) => 0,
 					};
 				}
 			},
-			SidebarInput::RenameList(index, name) => {},
+			SidebarInput::RenameList(_index, _name) => {},
 		}
 	}
 }

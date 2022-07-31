@@ -1,12 +1,10 @@
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
-use relm4::Sender;
 
 use crate::data::models::generic::lists::GenericList;
 use crate::{adw, gtk};
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
-use crate::widgets::component::sidebar::SidebarInput;
 use crate::widgets::factory::service::ServiceInput;
 
 #[derive(Debug)]
@@ -75,10 +73,10 @@ impl FactoryComponent for GenericList {
 
 	fn init_widgets(
 		&mut self,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		root: &Self::Root,
-		returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: FactoryComponentSender<Self>,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -86,8 +84,8 @@ impl FactoryComponent for GenericList {
 
 	fn init_model(
 		params: Self::InitParams,
-		index: &DynamicIndex,
-		sender: FactoryComponentSender<Self>,
+		_index: &DynamicIndex,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self {
 		params
 	}
@@ -95,7 +93,7 @@ impl FactoryComponent for GenericList {
 	fn update(
 		&mut self,
 		message: Self::Input,
-		sender: FactoryComponentSender<Self>,
+		_sender: FactoryComponentSender<Self>,
 	) {
 		match message {
 			ListInput::Rename(name) => self.display_name = name,
@@ -110,8 +108,7 @@ impl FactoryComponent for GenericList {
 		}
 	}
 
-	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
-		Some(match output {
-		})
+	fn output_to_parent_msg(_output: Self::Output) -> Option<Self::ParentMsg> {
+		None
 	}
 }

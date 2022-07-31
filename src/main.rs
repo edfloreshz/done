@@ -8,7 +8,7 @@ extern crate log;
 use anyhow::Result;
 use gtk::gio;
 use gtk::prelude::ApplicationExt;
-use once_cell::{sync::Lazy as LazySync, sync::OnceCell, unsync::Lazy};
+use once_cell::{sync::Lazy as LazySync, unsync::Lazy};
 use relm4::{
 	actions::{AccelsPlus, RelmAction, RelmActionGroup},
 	adw, gtk, RelmApp,

@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};

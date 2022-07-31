@@ -8,8 +8,7 @@ use relm4::gtk;
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
-	data::plugins::Plugins,
-	embedded_migrations, PLUGINS,
+	embedded_migrations,
 };
 
 pub fn setup() -> Result<()> {

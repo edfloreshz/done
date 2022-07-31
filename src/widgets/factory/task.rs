@@ -6,7 +6,7 @@ use relm4::gtk::prelude::{
 	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
 	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
 };
-use relm4::{Sender, WidgetPlus};
+use relm4::WidgetPlus;
 
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::generic::tasks::GenericTask;
@@ -114,7 +114,7 @@ impl FactoryComponent for GenericTask {
 		&mut self,
 		index: &DynamicIndex,
 		root: &Self::Root,
-		returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
@@ -149,8 +149,8 @@ impl FactoryComponent for GenericTask {
 
 	fn init_model(
 		params: Self::InitParams,
-		index: &DynamicIndex,
-		sender: FactoryComponentSender<Self>,
+		_index: &DynamicIndex,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self {
 		params
 	}

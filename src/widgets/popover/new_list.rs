@@ -6,9 +6,7 @@ use gtk::prelude::{
 };
 use relm4::factory::FactoryVecDeque;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
-use serde::Serialize;
 
-use crate::app::AppMsg;
 use crate::{fl, PLUGINS};
 
 pub struct NewListModel {
