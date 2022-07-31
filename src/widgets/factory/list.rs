@@ -3,7 +3,7 @@ use relm4::factory::{
 };
 use relm4::Sender;
 
-use crate::core::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericList;
 use crate::gtk;
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
 use crate::widgets::component::sidebar::SidebarInput;

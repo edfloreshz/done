@@ -1,46 +1,73 @@
+#[rustfmt::skip]
+mod config;
+mod app;
+mod widgets;
+mod setup;
+mod application;
+mod data;
+mod schema;
+
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
-extern crate pretty_env_logger;
 
+use data::plugins::Plugins;
+
+use gtk::gio;
+use gtk::prelude::ApplicationExt;
+use once_cell::{unsync::Lazy, sync::OnceCell};
+use relm4::{
+    actions::{AccelsPlus, RelmAction, RelmActionGroup},
+    gtk, RelmApp,
+    adw
+};
 use anyhow::Result;
-use application::localize::load_localization;
-use diesel_migrations::embed_migrations;
-use once_cell::sync::{Lazy, OnceCell};
-use relm4::adw::prelude::ApplicationExt;
-use relm4::gtk::prelude::Cast;
-use relm4::{adw, gtk, gtk::gio, RelmApp};
 
-use crate::adw::Application;
-use crate::application::resources::load_resources;
-use widgets::app::AppModel;
+use app::App;
+use setup::setup;
 
-use crate::application::application::DoneApplication;
-use crate::application::utilities::{load_css, verify_data_integrity};
-use crate::core::plugins::Plugins;
+use crate::config::APP_ID;
 
-mod application;
-mod schema;
-mod widgets;
-mod core;
-
-embed_migrations!("migrations");
+relm4::new_action_group!(AppActionGroup, "app");
+relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 
 static PLUGINS: OnceCell<Plugins> = OnceCell::new();
 
+thread_local! {
+    static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
+}
+
+embed_migrations!("migrations");
+
+fn main_app() -> adw::Application {
+    APP.with(|app| (*app).clone())
+}
+
 fn main() -> Result<()> {
-	pretty_env_logger::init();
-	load_localization();
-	load_resources()?;
-	PLUGINS.set(Plugins::init()).unwrap();
-	let application = DoneApplication::new();
-	application.connect_startup(|_| load_css());
-	verify_data_integrity()?;
-	let app: RelmApp =
-		RelmApp::with_app(application.upcast::<Application>());
-	app.run::<AppModel>(None);
-	Ok(())
+    setup()?;
+
+    let app = main_app();
+    app.set_resource_base_path(Some("/dev/edfloreshz/Done/"));
+
+    let actions = RelmActionGroup::<AppActionGroup>::new();
+
+    let quit_action = {
+        let app = app.clone();
+        RelmAction::<QuitAction>::new_stateless(move |_| {
+            app.quit();
+        })
+    };
+
+    actions.add_action(quit_action);
+
+    app.set_accelerators_for_action::<QuitAction>(&["<Control>q"]);
+
+    app.set_action_group(Some(&actions.into_action_group()));
+    let app = RelmApp::with_app(app);
+
+    app.run::<App>(None);
+    Ok(())
 }

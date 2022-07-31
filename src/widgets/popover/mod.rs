@@ -1,2 +1,2 @@
-pub mod main_menu;
+pub mod theme_selector;
 pub mod new_list;

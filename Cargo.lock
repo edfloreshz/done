@@ -222,6 +222,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dirs",
+ "gettext-rs",
  "glib 0.15.12",
  "glib-build-tools",
  "i18n-embed",
@@ -522,6 +523,26 @@ dependencies = [
  "libc",
  "wasi",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "gettext-rs"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e49ea8a8fad198aaa1f9655a2524b64b70eb06b2f3ff37da407566c93054f364"
+dependencies = [
+ "gettext-sys",
+ "locale_config",
+]
+
+[[package]]
+name = "gettext-sys"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c63ce2e00f56a206778276704bbe38564c8695249fdc8f354b4ef71c57c3839d"
+dependencies = [
+ "cc",
+ "temp-dir",
 ]
 
 [[package]]
@@ -1560,6 +1581,12 @@ dependencies = [
  "toml",
  "version-compare",
 ]
+
+[[package]]
+name = "temp-dir"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af547b166dd1ea4b472165569fc456cfb6818116f854690b0ff205e636523dab"
 
 [[package]]
 name = "termcolor"

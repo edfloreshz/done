@@ -7,8 +7,8 @@ use relm4::{
 };
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 
-use crate::core::models::generic::lists::GenericList;
-use crate::core::models::generic::tasks::GenericTask;
+use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::tasks::GenericTask;
 use crate::fl;
 use crate::widgets::factory::list::ListType;
 use crate::widgets::factory::list::ListType::{All, Other, Starred};

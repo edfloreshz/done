@@ -11,7 +11,7 @@ use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView};
 use relm4::WidgetPlus;
 
-use crate::core::traits::provider::{ProviderService, TaskProvider};
+use crate::data::traits::provider::{ProviderService, TaskProvider};
 use crate::widgets::component::sidebar::SidebarInput;
 
 #[derive(Debug)]

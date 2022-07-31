@@ -11,9 +11,9 @@ use relm4::adw;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 
 use crate::{fl, PLUGINS};
-use crate::core::models::generic::lists::GenericList;
-use crate::core::plugins::local::service::LocalService;
-use crate::core::traits::provider::{ProviderService, TaskProvider};
+use crate::data::models::generic::lists::GenericList;
+use crate::data::plugins::local::service::LocalService;
+use crate::data::traits::provider::{ProviderService, TaskProvider};
 // use crate::plugins::local::lists::{get_lists, post_list};
 use crate::widgets::factory::list::ListType;
 

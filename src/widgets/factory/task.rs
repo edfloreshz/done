@@ -6,8 +6,8 @@ use relm4::gtk::prelude::{
 	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
 };
 
-use crate::core::models::generic::task_status::TaskStatus;
-use crate::core::models::generic::tasks::GenericTask;
+use crate::data::models::generic::task_status::TaskStatus;
+use crate::data::models::generic::tasks::GenericTask;
 use crate::widgets::component::content::ContentInput;
 use crate::widgets::factory::list::ListType;
 
