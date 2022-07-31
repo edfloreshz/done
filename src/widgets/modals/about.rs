@@ -1,54 +1,60 @@
-use gtk::prelude::GtkWindowExt;
-use relm4::{component::EmptyRoot, gtk, ComponentParts, ComponentSender, SimpleComponent};
-
 use gettextrs::gettext;
+use gtk::prelude::GtkWindowExt;
+use relm4::{
+	component::EmptyRoot, ComponentParts, ComponentSender, gtk, SimpleComponent,
+};
 
 use crate::config::{APP_ID, VERSION};
 
 pub struct AboutDialog {}
+
 pub struct AboutDialogWidgets {
-    main_window: gtk::Window,
+	main_window: gtk::Window,
 }
 
 impl SimpleComponent for AboutDialog {
-    type InitParams = gtk::Window;
-    type Widgets = AboutDialogWidgets;
-    type Input = ();
-    type Output = ();
-    type Root = EmptyRoot;
+	type InitParams = gtk::Window;
+	type Widgets = AboutDialogWidgets;
+	type Input = ();
+	type Output = ();
+	type Root = EmptyRoot;
 
-    fn init_root() -> Self::Root {
-        EmptyRoot::default()
-    }
+	fn init_root() -> Self::Root {
+		EmptyRoot::default()
+	}
 
-    fn init(
-        main_window: Self::InitParams,
-        _root: &Self::Root,
-        _sender: ComponentSender<Self>,
-    ) -> ComponentParts<Self> {
-        let model = Self {};
+	fn init(
+		main_window: Self::InitParams,
+		_root: &Self::Root,
+		_sender: ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		let model = Self {};
 
-        let widgets = AboutDialogWidgets { main_window };
+		let widgets = AboutDialogWidgets { main_window };
 
-        ComponentParts { model, widgets }
-    }
+		ComponentParts { model, widgets }
+	}
 
-    fn update_view(&self, widgets: &mut Self::Widgets, _sender: ComponentSender<Self>) {
-        let dialog = gtk::AboutDialog::builder()
-            .logo_icon_name(APP_ID)
+	fn update_view(
+		&self,
+		widgets: &mut Self::Widgets,
+		_sender: ComponentSender<Self>,
+	) {
+		let dialog = gtk::AboutDialog::builder()
+			.logo_icon_name(APP_ID)
 			.program_name("Done")
 			.website_label("Website")
 			.copyright("© 2022 Eduardo Flores")
 			.license_type(gtk::License::Gpl20Only)
 			.website("https://done.edfloreshz.dev/")
-            .version(VERSION)
-            .translator_credits(&gettext("translator-credits"))
-            .modal(true)
-            .transient_for(&widgets.main_window)
-            .authors(vec!["Eduardo Flores".into()])
-            .artists(vec!["Eduardo Flores".into()])
-            .comments("To-do lists reimagined")
-            .build();
-        dialog.present();
-    }
+			.version(VERSION)
+			.translator_credits(&gettext("translator-credits"))
+			.modal(true)
+			.transient_for(&widgets.main_window)
+			.authors(vec!["Eduardo Flores".into()])
+			.artists(vec!["Eduardo Flores".into()])
+			.comments("To-do lists reimagined")
+			.build();
+		dialog.present();
+	}
 }

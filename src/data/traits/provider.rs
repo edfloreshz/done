@@ -1,10 +1,11 @@
 use std::fmt::Debug;
+
 use anyhow::Result;
 use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
+
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
-
 use crate::gtk;
 
 pub trait TaskProvider: Debug {
@@ -34,11 +35,13 @@ pub enum ProviderType {
 	Today,
 	Next7Days,
 	All,
-	Local
+	Local,
 }
 
 pub trait ProviderService: Debug {
-	fn init() -> Self where Self: Sized;
+	fn init() -> Self
+		where
+			Self: Sized;
 	fn establish_connection(&self) -> Result<SqliteConnection>;
 	// Fetch tasks from the provider and save them to local storage.
 	fn refresh_tasks(&mut self) -> Result<()>;
@@ -54,7 +57,11 @@ pub trait ProviderService: Debug {
 	/// This method should return the information about a task.
 	fn read_task(&self, id: &str) -> Result<GenericTask>;
 	/// This method should create a new task and insert it to its respective list.
-	fn create_task(&self, list: GenericList, task: GenericTask) -> Result<GenericTask>;
+	fn create_task(
+		&self,
+		list: GenericList,
+		task: GenericTask,
+	) -> Result<GenericTask>;
 	/// This method should update an existing task.
 	fn update_task(&self, task: GenericTask) -> Result<()>;
 	/// This method should remove an existing task.

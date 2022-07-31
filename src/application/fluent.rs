@@ -1,11 +1,11 @@
-use i18n_embed::DesktopLanguageRequester;
+use anyhow::Result;
 use i18n_embed::{
-	fluent::{fluent_language_loader, FluentLanguageLoader},
-	DefaultLocalizer, LanguageLoader, Localizer,
+	DefaultLocalizer,
+	fluent::{fluent_language_loader, FluentLanguageLoader}, LanguageLoader, Localizer,
 };
+use i18n_embed::DesktopLanguageRequester;
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
-use anyhow::Result;
 
 #[derive(RustEmbed)]
 #[folder = "locale/i18n/"]

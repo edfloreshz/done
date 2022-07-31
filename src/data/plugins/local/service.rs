@@ -1,22 +1,22 @@
-use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use crate::data::plugins::local::LocalProvider;
+use anyhow::{Context, Result};
+use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::sqlite::SqliteConnection;
+use serde::{Deserialize, Serialize};
 
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
+use crate::data::plugins::local::LocalProvider;
 use crate::data::plugins::local::models::lists::LocalList;
 use crate::data::plugins::local::models::tasks::LocalTask;
 use crate::data::traits::provider::{ProviderService, TaskProvider};
 use crate::embedded_migrations;
-use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel::sqlite::SqliteConnection;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct LocalService {
@@ -44,10 +44,11 @@ impl ProviderService for LocalService {
 		let database_url = database_path
 			.to_str()
 			.with_context(|| "Failed to convert path to string")?;
-		let connection = SqliteConnection::establish(database_url).with_context(|| "Error connecting to database")?;
+		let connection = SqliteConnection::establish(database_url)
+			.with_context(|| "Error connecting to database")?;
 		embedded_migrations::run(&connection)?;
 
-        Ok(connection)
+		Ok(connection)
 	}
 
 	fn refresh_tasks(&mut self) -> Result<()> {
@@ -60,7 +61,11 @@ impl ProviderService for LocalService {
 	}
 
 	fn refresh_lists(&mut self) -> Result<()> {
-		self.lists = self.read_task_lists()?.iter().map(|list| list.to_owned().into()).collect();
+		self.lists = self
+			.read_task_lists()?
+			.iter()
+			.map(|list| list.to_owned().into())
+			.collect();
 		Ok(())
 	}
 
@@ -69,11 +74,19 @@ impl ProviderService for LocalService {
 	}
 
 	fn get_tasks(&self) -> Vec<GenericTask> {
-		self.tasks.iter().map(|task| task.to_owned().into()).collect()
+		self
+			.tasks
+			.iter()
+			.map(|task| task.to_owned().into())
+			.collect()
 	}
 
 	fn get_task_lists(&self) -> Vec<GenericList> {
-		self.lists.iter().map(|list| list.to_owned().into()).collect()
+		self
+			.lists
+			.iter()
+			.map(|list| list.to_owned().into())
+			.collect()
 	}
 
 	fn read_tasks_from_list(&self, id: &str) -> anyhow::Result<Vec<GenericTask>> {
@@ -149,10 +162,7 @@ impl ProviderService for LocalService {
 		Ok(results)
 	}
 
-	fn create_task_list(
-		&self,
-		list: GenericList,
-	) -> Result<GenericList> {
+	fn create_task_list(&self, list: GenericList) -> Result<GenericList> {
 		use crate::schema::lists::dsl::*;
 
 		let new_list = QueryableList::new(

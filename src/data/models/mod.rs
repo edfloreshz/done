@@ -1,2 +1,2 @@
-pub mod queryable;
 pub mod generic;
+pub mod queryable;

@@ -1,5 +1,7 @@
 use relm4::{Sender, WidgetPlus};
-use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView};
+use relm4::factory::{
+	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
+};
 use relm4::gtk;
 use relm4::gtk::prelude::{
 	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
@@ -108,12 +110,22 @@ impl FactoryComponent for GenericTask {
 		})
 	}
 
-	fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: FactoryComponentSender<Self>) -> Self::Widgets {
+	fn init_widgets(
+		&mut self,
+		index: &DynamicIndex,
+		root: &Self::Root,
+		returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		sender: FactoryComponentSender<Self>,
+	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
 	}
 
-	fn update(&mut self, message: Self::Input, sender: FactoryComponentSender<Self>) {
+	fn update(
+		&mut self,
+		message: Self::Input,
+		sender: FactoryComponentSender<Self>,
+	) {
 		match message {
 			TaskInput::SetCompleted(completed) => {
 				self.status = if completed {
@@ -124,7 +136,9 @@ impl FactoryComponent for GenericTask {
 			},
 			TaskInput::Favorite(index) => {
 				self.favorite = !self.favorite;
-				sender.output.send(TaskOutput::Favorite(index, self.favorite));
+				sender
+					.output
+					.send(TaskOutput::Favorite(index, self.favorite));
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.title = title;
@@ -133,7 +147,11 @@ impl FactoryComponent for GenericTask {
 		// patch_task(self.into()).expect("Failed to update task.");
 	}
 
-	fn init_model(params: Self::InitParams, index: &DynamicIndex, sender: FactoryComponentSender<Self>) -> Self {
+	fn init_model(
+		params: Self::InitParams,
+		index: &DynamicIndex,
+		sender: FactoryComponentSender<Self>,
+	) -> Self {
 		params
 	}
 }

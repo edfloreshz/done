@@ -83,7 +83,9 @@ impl SimpleComponent for SidebarModel {
 			),
 		};
 		if plugins.local.provider.get_enabled() {
-			model.services.guard()
+			model
+				.services
+				.guard()
 				.push_back(Box::new(plugins.local.clone()));
 			// TODO: For each provider, retrieve the list of task lists.
 		}

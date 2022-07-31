@@ -1,3 +1,3 @@
 pub mod list;
-pub mod task;
 pub mod provider;
+pub mod task;

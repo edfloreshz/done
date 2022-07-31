@@ -1,7 +1,7 @@
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
-use crate::data::models::generic::tasks::GenericTask;
 
+use crate::data::models::generic::tasks::GenericTask;
 use crate::schema::tasks;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
@@ -57,7 +57,7 @@ impl From<GenericTask> for QueryableTask {
 			reminder_date: task.reminder_date,
 			status: Some(task.status.to_string()),
 			created_date_time: task.created_date_time,
-			last_modified_date_time: task.last_modified_date_time
+			last_modified_date_time: task.last_modified_date_time,
 		}
 	}
 }

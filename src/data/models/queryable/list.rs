@@ -12,18 +12,22 @@ pub struct QueryableList {
 	pub is_owner: bool,
 	pub count: i32,
 	pub icon_name: Option<String>,
-	pub(crate) provider: String
+	pub(crate) provider: String,
 }
 
 impl QueryableList {
-	pub fn new(display_name: &str, icon_name: Option<String>, list_provider: String) -> Self {
+	pub fn new(
+		display_name: &str,
+		icon_name: Option<String>,
+		list_provider: String,
+	) -> Self {
 		Self {
 			id_list: Uuid::new_v4().to_string(),
 			display_name: display_name.to_string(),
 			is_owner: true,
 			count: 0,
 			icon_name,
-			provider: list_provider
+			provider: list_provider,
 		}
 	}
 }
