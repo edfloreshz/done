@@ -28,7 +28,9 @@ pub enum ListInput {
 }
 
 #[derive(Debug)]
-pub enum ListOutput {}
+pub enum ListOutput {
+	Select(GenericList)
+}
 
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
@@ -92,7 +94,7 @@ impl FactoryComponent for GenericList {
 	fn update(
 		&mut self,
 		message: Self::Input,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) {
 		match message {
 			ListInput::Rename(name) => self.display_name = name,
@@ -105,12 +107,12 @@ impl FactoryComponent for GenericList {
 				}
 			},
 			ListInput::Select(index) => {
-				println!("Selected list at index {}", index)
+				sender.output.send(ListOutput::Select(self.clone()))
 			}
 		}
 	}
 
-	fn output_to_parent_msg(_output: Self::Output) -> Option<Self::ParentMsg> {
-		None
+	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
+		match output { ListOutput::Select(list) => Some(ServiceInput::ListSelected(list)) }
 	}
 }

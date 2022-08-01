@@ -19,13 +19,14 @@ pub struct SidebarModel {
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddTaskList(String, String),
+	ListSelected(GenericList),
 	RemoveService(String),
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarOutput {
-	ListSelected(usize, String, GenericList),
+	ListSelected(GenericList),
 	Forward,
 }
 
@@ -84,14 +85,15 @@ impl SimpleComponent for SidebarModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			SidebarInput::AddTaskList(provider, name) => {
 				self
 					.service_factory
-					.send(0, ServiceInput::AddList(provider, name));
+					.send(1, ServiceInput::AddList(provider, name));
 			},
 			SidebarInput::RemoveService(_) => todo!(),
+			SidebarInput::ListSelected(list) => sender.output.send(SidebarOutput::ListSelected(list))
 		}
 	}
 }

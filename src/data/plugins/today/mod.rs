@@ -107,14 +107,14 @@ impl Provider for TodayProvider {
 	}
 
 	fn create_task(
-		&mut self,
-		list: GenericList,
+		&self,
+		list: &GenericList,
 		task: GenericTask,
 	) -> anyhow::Result<GenericTask> {
 		use crate::schema::tasks::dsl::*;
 
 		let task: GenericTask = task.into();
-		let list: GenericList = list.into();
+		let list: GenericList = list.to_owned().into();
 
 		let inserted_task = QueryableTask::new(task.title, list.id_list);
 		diesel::insert_into(tasks)
@@ -123,7 +123,7 @@ impl Provider for TodayProvider {
 		Ok(inserted_task.into())
 	}
 
-	fn update_task(&mut self, task: GenericTask) -> anyhow::Result<()> {
+	fn update_task(&self, task: GenericTask) -> anyhow::Result<()> {
 		use crate::schema::tasks::dsl::*;
 
 		let task: QueryableTask = task.into();
@@ -146,7 +146,7 @@ impl Provider for TodayProvider {
 		Ok(())
 	}
 
-	fn remove_task(&mut self, task_id: &str) -> anyhow::Result<()> {
+	fn remove_task(&self, task_id: &str) -> anyhow::Result<()> {
 		use crate::schema::tasks::dsl::*;
 		diesel::delete(tasks.filter(id_task.eq(task_id)))
 			.execute(&establish_connection()?)?;
@@ -182,7 +182,7 @@ impl Provider for TodayProvider {
 	}
 
 	fn update_task_list(
-		&mut self,
+		&self,
 		list: GenericList,
 		name: &str,
 	) -> anyhow::Result<()> {
@@ -207,7 +207,7 @@ impl Provider for TodayProvider {
 		Ok(())
 	}
 
-	fn remove_task_list(&mut self, list: GenericList) -> anyhow::Result<()> {
+	fn remove_task_list(&self, list: GenericList) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
 		diesel::delete(lists.filter(id_list.eq(list.clone().id_list)))
 			.execute(&establish_connection()?)?;

@@ -55,7 +55,7 @@ impl App {
 #[derive(Debug)]
 pub(super) enum AppMsg {
 	AddTaskList(String, String),
-	ListSelected(usize, String, GenericList),
+	ListSelected(GenericList),
 	UpdateSidebarCounters(Vec<ListType>),
 	Folded,
 	Unfolded,
@@ -241,8 +241,8 @@ impl SimpleComponent for App {
 			SidebarModel::builder()
 				.launch(None)
 				.forward(&sender.input, |message| match message {
-					SidebarOutput::ListSelected(index, provider, list) => {
-						AppMsg::ListSelected(index, provider, list)
+					SidebarOutput::ListSelected(list) => {
+						AppMsg::ListSelected(list)
 					},
 					SidebarOutput::Forward => AppMsg::Forward,
 				});
@@ -316,10 +316,10 @@ impl SimpleComponent for App {
 				.sidebar
 				.sender()
 				.send(SidebarInput::AddTaskList(provider, title)),
-			AppMsg::ListSelected(index, provider, list) => self
+			AppMsg::ListSelected(list) => self
 				.content
 				.sender()
-				.send(ContentInput::SetTaskList(index, provider, list)),
+				.send(ContentInput::SetTaskList(list)),
 			_ => self.message = Some(message),
 		}
 	}

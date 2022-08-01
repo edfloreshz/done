@@ -1,5 +1,5 @@
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::components::sidebar::SidebarInput;
+use crate::widgets::components::sidebar::{SidebarInput, SidebarOutput};
 use adw::prelude::ExpanderRowExt;
 use adw::prelude::PreferencesGroupExt;
 use adw::prelude::PreferencesRowExt;
@@ -29,11 +29,13 @@ pub enum ServiceInput {
 	SelectList(usize),
 	RemoveList(DynamicIndex),
 	RenameList(DynamicIndex, String),
-	ListSelected(usize),
+	ListSelected(GenericList),
 }
 
 #[derive(Debug)]
-pub enum ServiceOutput {}
+pub enum ServiceOutput {
+	ListSelected(GenericList),
+}
 
 #[relm4::factory(pub)]
 impl FactoryComponent for ServiceModel {
@@ -99,7 +101,7 @@ impl FactoryComponent for ServiceModel {
 	fn update(
 		&mut self,
 		message: Self::Input,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) {
 		match message {
 			ServiceInput::UpdateService => {
@@ -111,10 +113,16 @@ impl FactoryComponent for ServiceModel {
 				.guard()
 				.push_back(GenericList::new(&name, "icon", 0, &provider)),
 			ServiceInput::RenameList(_, _) => todo!(),
-			ServiceInput::ListSelected(_) => todo!(),
+			ServiceInput::ListSelected(list) => {
+				sender.output.send(ServiceOutput::ListSelected(list))
+			},
 			ServiceInput::SelectList(index) => self
 				.list_factory
 				.send(index, ListInput::Select(index))
 		}
+	}
+
+	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
+		match output { ServiceOutput::ListSelected(list) => Some(SidebarInput::ListSelected(list)) }
 	}
 }

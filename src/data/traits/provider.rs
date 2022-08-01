@@ -53,14 +53,14 @@ pub trait Provider: Debug {
 	fn read_task(&self, id: &str) -> Result<GenericTask>;
 	/// This method should create a new task and insert it to its respective list.
 	fn create_task(
-		&mut self,
-		list: GenericList,
+		&self,
+		list: &GenericList,
 		task: GenericTask,
 	) -> Result<GenericTask>;
 	/// This method should update an existing task.
-	fn update_task(&mut self, task: GenericTask) -> Result<()>;
+	fn update_task(&self, task: GenericTask) -> Result<()>;
 	/// This method should remove an existing task.
-	fn remove_task(&mut self, task_id: &str) -> Result<()>;
+	fn remove_task(&self, task_id: &str) -> Result<()>;
 
 	/// Task Lists
 	///
@@ -74,9 +74,9 @@ pub trait Provider: Debug {
 		icon: &str,
 	) -> Result<GenericList>;
 	/// This method should update an existing list for a provider.
-	fn update_task_list(&mut self, list: GenericList, name: &str) -> Result<()>;
+	fn update_task_list(&self, list: GenericList, name: &str) -> Result<()>;
 	/// This method should remove a list from a provider.
-	fn remove_task_list(&mut self, list: GenericList) -> Result<()>;
+	fn remove_task_list(&self, list: GenericList) -> Result<()>;
 }
 
 #[derive(Debug, Copy, Serialize, Deserialize, Clone)]

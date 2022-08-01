@@ -9,12 +9,12 @@ use relm4::{
 
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
-use crate::fl;
+use crate::{fl, Provider, SERVICES};
 use crate::widgets::factory::list::ListType;
 use crate::widgets::factory::list::ListType::{All, Other, Starred};
 
 pub struct ContentModel {
-	parent_list: (usize, Option<GenericList>),
+	parent_list: Option<GenericList>,
 	tasks: FactoryVecDeque<GenericTask>,
 	show_tasks: bool,
 }
@@ -24,7 +24,7 @@ pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
 	RemoveWelcomeScreen,
-	SetTaskList(usize, String, GenericList),
+	SetTaskList(GenericList),
 	UpdateCounters(Vec<ListType>),
 	FavoriteTask(DynamicIndex, bool),
 }
@@ -65,7 +65,7 @@ impl SimpleComponent for ContentModel {
 					},
 					append = &gtk::Button {
 						#[watch]
-						set_visible: model.parent_list.0 > 5,
+						// set_visible: model.parent_list.0 > 5,
 						add_css_class: "suggested-action",
 						set_label: fl!("add-tasks"),
 						connect_clicked[sender] => move |_| {
@@ -95,7 +95,7 @@ impl SimpleComponent for ContentModel {
 					append: entry = &gtk::Entry {
 						set_hexpand: true,
 						#[watch]
-						set_visible: model.parent_list.0 > 5,
+						// set_visible: model.parent_list.0 > 5,
 						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
 						set_placeholder_text: Some(fl!("new-task")),
 						set_height_request: 42,
@@ -121,7 +121,7 @@ impl SimpleComponent for ContentModel {
 				}
 		}
 		let model = ContentModel {
-			parent_list: (0, None),
+			parent_list: None,
 			tasks: FactoryVecDeque::new(list_box.clone(), &sender.input),
 			show_tasks: false,
 		};
@@ -130,67 +130,59 @@ impl SimpleComponent for ContentModel {
 	}
 
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
-		let mut guard = self.tasks.guard();
+		let services = unsafe {
+			&*SERVICES.get_mut().unwrap()
+		};
 		match message {
-			ContentInput::AddTask(_title) => {
-				let _id_list = &self.parent_list.1.as_ref().unwrap().id_list;
-				let _task =
-					// post_task(id_list.to_owned(), title).expect("Failed to post task.");
-					// self.tasks.push_back(task);
-
-					sender.output(ContentOutput::UpdateCounters(vec![
-						All(1),
-						Other(self.parent_list.0, 1),
-					]));
+			ContentInput::AddTask(title) => {
+				let parent_list = self.parent_list.as_ref().unwrap();
+				let service = services.iter().find(|l| l.get_id() == parent_list.provider).unwrap();
+				let task = GenericTask::new(title, parent_list.id_list.to_owned());
+				let task = service.create_task(self.parent_list.as_ref().unwrap(), task).expect("Failed to post task.");
+				self.tasks.guard().push_back(task);
 			},
 			ContentInput::RemoveTask(index) => {
-				if guard.get(index.current_index()).unwrap().favorite {
-					sender.output(ContentOutput::UpdateCounters(vec![
-						All(-1),
-						Starred(-1),
-						Other(self.parent_list.0, -1),
-					]));
+				if self.tasks.guard().get(index.current_index()).unwrap().favorite {
+					// sender.output(ContentOutput::UpdateCounters(vec![
+					// 	All(-1),
+					// 	Starred(-1),
+					// 	Other(self.parent_list.0, -1),
+					// ]));
 				} else {
-					sender.output(ContentOutput::UpdateCounters(vec![
-						All(-1),
-						Other(self.parent_list.0, -1),
-					]));
+					// sender.output(ContentOutput::UpdateCounters(vec![
+					// 	All(-1),
+					// 	Other(self.parent_list.0, -1),
+					// ]));
 				}
 				{
-					let _task = guard.get(index.current_index());
+					let _task = self.tasks.guard().get(index.current_index());
 					// delete_task(&task.id_task).expect("Failed to remove task.");
 				}
-				guard.remove(index.current_index());
+				self.tasks.guard().remove(index.current_index());
 			},
 			ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
-			ContentInput::SetTaskList(index, _provider, list) => {
-				self.parent_list = (index, Some(list.clone()));
-				let tasks: Vec<GenericTask> = match index {
-					0 => vec![], //TODO: Get tasks from `Inbox` provide
-					1 => vec![], //TODO: Get tasks from `Today` provider."),
-					2 => vec![], //TODO: Get tasks from `Next7Days` provider."),
-					3 => vec![], //TODO: Get tasks from `All` provider."),
-					4 => vec![], //TODO: Get tasks from `Favorites` provider."),
-					_ => vec![], //TODO: Get specific task list."),
-				};
+			ContentInput::SetTaskList(list) => {
+				self.parent_list = Some(list.clone());
+				let service = services.iter().find(|l| l.get_id() == list.provider).unwrap();
+				let tasks: Vec<GenericTask> = service.read_tasks_from_list(&list.id_list).unwrap();
 				loop {
-					let task = guard.pop_front();
+					let task = self.tasks.guard().pop_front();
 					if task.is_none() {
 						break;
 					}
 				}
 				for task in tasks {
-					guard.push_back(task.clone());
+					self.tasks.guard().push_back(task.clone());
 				}
-				self.show_tasks = !guard.is_empty();
+				self.show_tasks = !self.tasks.guard().is_empty();
 			},
 			ContentInput::UpdateCounters(lists) => {
 				sender.output(ContentOutput::UpdateCounters(lists))
 			},
 			ContentInput::FavoriteTask(index, favorite) => {
-				if self.parent_list.0 == 4 {
-					guard.remove(index.current_index());
-				}
+				// if self.parent_list.0 == 4 {
+				// 	guard.remove(index.current_index());
+				// }
 				let value = if favorite { 1 } else { -1 };
 				sender.output(ContentOutput::UpdateCounters(vec![Starred(value)]))
 			},
