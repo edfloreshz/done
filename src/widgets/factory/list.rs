@@ -4,7 +4,7 @@ use relm4::factory::{
 
 use crate::data::models::generic::lists::GenericList;
 use crate::gtk::prelude::WidgetExt;
-use crate::widgets::factory::service::ServiceInput;
+use crate::widgets::popover::providers_list::ServiceInput;
 use crate::{adw, gtk};
 use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
 

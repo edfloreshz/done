@@ -5,20 +5,25 @@ use relm4::factory::{
 };
 use relm4::gtk;
 
-use crate::data::traits::provider::Provider;
+use crate::ProviderType;
 use crate::widgets::popover::new_list::NewListOutput;
+
+#[derive(Debug)]
+pub struct ProvidersList {
+	pub(crate) provider: ProviderType
+}
 
 #[derive(Debug)]
 pub enum ProviderInput {}
 
 #[relm4::factory(pub)]
-impl FactoryComponent for Box<dyn Provider> {
+impl FactoryComponent for ProvidersList {
 	type ParentMsg = NewListOutput;
 	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ();
-	type InitParams = Box<dyn Provider>;
+	type InitParams = ProviderType;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -28,10 +33,10 @@ impl FactoryComponent for Box<dyn Provider> {
 				#[wrap(Some)]
 				set_child = &gtk::Box {
 					append = &gtk::Image {
-						set_icon_name: Some(&self.get_icon_name())
+						set_icon_name: Some(&self.provider.get_icon_name())
 					},
 					append = &gtk::Label {
-						set_label: self.get_name()
+						set_label: self.provider.get_name()
 					}
 				}
 		}
@@ -42,7 +47,9 @@ impl FactoryComponent for Box<dyn Provider> {
 		_index: &DynamicIndex,
 		_sender: FactoryComponentSender<Self>,
 	) -> Self {
-		params
+		Self {
+			provider: params
+		}
 	}
 
 	fn update(

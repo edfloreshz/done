@@ -7,7 +7,7 @@ use relm4::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::factory::service::{ServiceInput, ServiceModel};
+use crate::widgets::popover::providers_list::{ServiceInput, ServiceModel};
 use crate::SERVICES;
 
 #[derive(Debug)]

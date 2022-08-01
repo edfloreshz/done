@@ -42,6 +42,8 @@ thread_local! {
 
 embed_migrations!("migrations");
 
+pub type ProviderType = &'static (dyn Provider + Sync);
+
 fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
 }
