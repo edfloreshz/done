@@ -6,9 +6,9 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::SERVICES;
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::factory::service::{ServiceModel, ServiceInput};
+use crate::widgets::factory::service::{ServiceInput, ServiceModel};
+use crate::SERVICES;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -76,7 +76,7 @@ impl SimpleComponent for SidebarModel {
 		};
 		unsafe {
 			for service in &mut *SERVICES.get_mut().unwrap() {
-				if service.get_provider().get_enabled() {
+				if service.is_enabled() {
 					model.service_factory.guard().push_back(service);
 				}
 			}
@@ -87,7 +87,9 @@ impl SimpleComponent for SidebarModel {
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			SidebarInput::AddTaskList(provider, name) => {
-				self.service_factory.send(0, ServiceInput::AddList(provider, name));
+				self
+					.service_factory
+					.send(0, ServiceInput::AddList(provider, name));
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 		}

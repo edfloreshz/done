@@ -3,10 +3,10 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::{OrientableExt, WidgetExt};
+use crate::gtk::prelude::WidgetExt;
 use crate::widgets::factory::service::ServiceInput;
 use crate::{adw, gtk};
-use relm4::adw::prelude::{PreferencesRowExt, ActionRowExt};
+use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
 
 #[derive(Debug)]
 pub enum ListType {
@@ -38,7 +38,7 @@ impl FactoryComponent for GenericList {
 	type Output = ListOutput;
 	type InitParams = GenericList;
 	type Widgets = ListWidgets;
-	
+
 	view! {
 		#[root]
 		adw::ActionRow {
@@ -58,7 +58,7 @@ impl FactoryComponent for GenericList {
 			}
 		}
 	}
-	
+
 	fn init_widgets(
 		&mut self,
 		_index: &DynamicIndex,

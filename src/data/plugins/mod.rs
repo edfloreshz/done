@@ -1,28 +1,19 @@
+use crate::data::plugins::local::LocalProvider;
 use serde::{Deserialize, Serialize};
-
-use crate::data::plugins::local::service::LocalService;
-use crate::data::traits::provider::{Provider, Service};
 
 pub mod local;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Plugins {
-	pub(crate) local: LocalService,
+	pub(crate) local: LocalProvider,
 }
 
 impl Plugins {
 	pub fn init() -> Self {
-		let mut plugins = Self {
+		debug!("Initializing services...");
+		let plugins = Self {
 			local: Default::default(),
 		};
-		debug!("Initializing services...");
-		plugins.local = LocalService::init();
-		match plugins.local.establish_connection() {
-			Ok(_) => {
-				plugins.local.provider.set_enabled();
-			},
-			Err(err) => debug!("Error: {}", err),
-		}
 		debug!("Services initialized...");
 		plugins
 	}

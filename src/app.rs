@@ -5,11 +5,6 @@ use relm4::{
 	ComponentSender, Controller, SimpleComponent,
 };
 
-use crate::{data::{
-	models::generic::lists::GenericList,
-	plugins::Plugins,
-	traits::provider::{Provider, Service},
-}, SERVICES};
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
 use crate::widgets::popover::new_list::NewListOutput;
@@ -23,6 +18,13 @@ use crate::{
 		factory::list::ListType,
 		popover::new_list::NewListModel,
 	},
+};
+use crate::{
+	data::{
+		models::generic::lists::GenericList, plugins::Plugins,
+		traits::provider::Provider,
+	},
+	SERVICES,
 };
 
 pub(super) struct App {
@@ -77,7 +79,7 @@ impl SimpleComponent for App {
 	type Input = AppMsg;
 	type Output = ();
 	type Widgets = AppWidgets;
-	type InitParams = Option<Vec<Box<dyn Service>>>;
+	type InitParams = Option<Vec<Box<dyn Provider>>>;
 
 	menu! {
 			primary_menu: {
@@ -217,21 +219,24 @@ impl SimpleComponent for App {
 	) -> ComponentParts<Self> {
 		let plugins = Plugins::init();
 
-		if plugins.local.provider.get_enabled() {
+		if plugins.local.is_enabled() {
 			unsafe {
-				SERVICES.get_mut().unwrap().push(Box::new(plugins.local.clone()))
+				SERVICES
+					.get_mut()
+					.unwrap()
+					.push(Box::new(plugins.local.clone()))
 			}
 		}
 
-		let sidebar_controller = SidebarModel::builder().launch(None).forward(
-			&sender.input,
-			|message| match message {
-				SidebarOutput::ListSelected(index, provider, list) => {
-					AppMsg::ListSelected(index, provider, list)
-				},
-				SidebarOutput::Forward => AppMsg::Forward,
-			},
-		);
+		let sidebar_controller =
+			SidebarModel::builder()
+				.launch(None)
+				.forward(&sender.input, |message| match message {
+					SidebarOutput::ListSelected(index, provider, list) => {
+						AppMsg::ListSelected(index, provider, list)
+					},
+					SidebarOutput::Forward => AppMsg::Forward,
+				});
 		let content_controller =
 			ContentModel::builder()
 				.launch(None)

@@ -13,13 +13,13 @@ use relm4::{
 	actions::{AccelsPlus, RelmAction, RelmActionGroup},
 	adw, gtk, RelmApp,
 };
-use std::{sync::{Mutex, RwLock, Arc}, cell::RefCell};
+use std::sync::RwLock;
 
 use app::App;
-use data::{plugins::Plugins, traits::provider::Service};
 use setup::setup;
 
 use crate::config::APP_ID;
+use crate::data::traits::provider::Provider;
 
 #[rustfmt::skip]
 mod config;
@@ -33,7 +33,8 @@ mod widgets;
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 
-static mut SERVICES: LazySync<RwLock<Vec<Box<dyn Service + Sync>>>> = LazySync::new(|| RwLock::new(vec![]));
+static mut SERVICES: LazySync<RwLock<Vec<Box<dyn Provider + Sync>>>> =
+	LazySync::new(|| RwLock::new(vec![]));
 
 thread_local! {
 	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
