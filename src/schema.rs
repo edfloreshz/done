@@ -15,15 +15,15 @@ table! {
 		id_list -> Text,
 		title -> Text,
 		body -> Nullable<Text>,
-		completed_on -> Nullable<Text>,
-		due_date -> Nullable<Text>,
 		importance -> Nullable<Text>,
 		favorite -> Bool,
 		is_reminder_on -> Bool,
-		reminder_date -> Nullable<Text>,
 		status -> Nullable<Text>,
-		created_date_time -> Nullable<Text>,
-		last_modified_date_time -> Nullable<Text>,
+		completed_on -> Nullable<Timestamp>,
+		due_date -> Nullable<Timestamp>,
+		reminder_date -> Nullable<Timestamp>,
+		created_date_time -> Nullable<Timestamp>,
+		last_modified_date_time -> Nullable<Timestamp>,
 	}
 }
 

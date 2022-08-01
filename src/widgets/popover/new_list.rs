@@ -10,7 +10,7 @@ use crate::{fl, SERVICES};
 use crate::widgets::popover::providers_list::ProvidersList;
 
 pub struct NewListModel {
-	selected_provider: Option<String>,
+	selected_provider: Option<(usize, String)>,
 	providers: FactoryVecDeque<ProvidersList>,
 }
 
@@ -22,14 +22,14 @@ pub enum NewListInput {
 
 #[derive(Debug)]
 pub enum NewListOutput {
-	AddTaskListToSidebar(String, String),
+	AddTaskListToSidebar(usize, String, String),
 }
 
 #[relm4::component(pub)]
 impl SimpleComponent for NewListModel {
 	type Input = NewListInput;
 	type Output = NewListOutput;
-	type InitParams = Option<String>;
+	type InitParams = Option<(usize, String)>;
 	type Widgets = NewListWidgets;
 
 	view! {
@@ -128,11 +128,12 @@ impl SimpleComponent for NewListModel {
 		match message {
 			NewListInput::SelectProvider(index) => {
 				self.selected_provider =
-					Some(self.providers.get(index).unwrap().provider.get_id().to_string())
+					Some((index, self.providers.get(index).unwrap().provider.get_id().to_string()))
 			},
 			NewListInput::AddTaskList(name) => {
 				sender.output.send(NewListOutput::AddTaskListToSidebar(
-					self.selected_provider.clone().unwrap(),
+					self.selected_provider.as_ref().unwrap().0,
+					self.selected_provider.as_ref().unwrap().1.clone(),
 					name,
 				))
 			},

@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use chrono::NaiveDateTime;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -14,15 +15,15 @@ pub struct GenericTask {
 	pub id_list: String,
 	pub title: String,
 	pub body: Option<String>,
-	pub completed_on: Option<String>,
-	pub due_date: Option<String>,
 	pub importance: TaskImportance,
 	pub favorite: bool,
 	pub is_reminder_on: bool,
-	pub reminder_date: Option<String>,
 	pub status: TaskStatus,
-	pub created_date_time: Option<String>,
-	pub last_modified_date_time: Option<String>,
+	pub completed_on: Option<NaiveDateTime>,
+	pub due_date: Option<NaiveDateTime>,
+	pub reminder_date: Option<NaiveDateTime>,
+	pub created_date_time: Option<NaiveDateTime>,
+	pub last_modified_date_time: Option<NaiveDateTime>,
 }
 
 impl GenericTask {

@@ -1,7 +1,9 @@
 pub const APP_ID: &str = @APP_ID@;
 pub const GETTEXT_PACKAGE: &str = @GETTEXT_PACKAGE@;
 pub const LOCALEDIR: &str = @LOCALEDIR@;
+#[allow(dead_code)]
 pub const PKGDATADIR: &str = @PKGDATADIR@;
 pub const PROFILE: &str = @PROFILE@;
+#[allow(dead_code)]
 pub const RESOURCES_FILE: &str = concat!(@PKGDATADIR@, "/resources.gresource");
 pub const VERSION: &str = @VERSION@;

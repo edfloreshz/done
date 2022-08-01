@@ -18,7 +18,7 @@ pub struct SidebarModel {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarInput {
-	AddTaskList(String, String),
+	AddTaskList(usize, String, String),
 	ListSelected(GenericList),
 	RemoveService(String),
 }
@@ -40,25 +40,21 @@ impl SimpleComponent for SidebarModel {
 	view! {
 		sidebar = &gtk::Box {
 			set_orientation: gtk::Orientation::Vertical,
-			append: scroll_window = &gtk::ScrolledWindow {
-				#[wrap(Some)]
-				set_child: clamp = &adw::Clamp {
-					#[wrap(Some)]
-						set_child: providers_container = &gtk::Box {
-							set_margin_top: 5,
-							set_margin_start: 10,
-							set_margin_end: 10,
-							set_orientation: gtk::Orientation::Vertical,
-							set_spacing: 12,
-							set_vexpand: true,
-							set_css_classes: &["navigation-sidebar"],
-							// connect_row_activated[sender] => move |listbox, _| {
-							// 	let index = listbox.selected_row().unwrap().index() as usize;
-							// 	sender.input(SidebarInput::ListSelected(index));
-							// 	sender.output(SidebarOutput::Forward)
-							// },
-						},
-					}
+			#[name(scroll_window)]
+			gtk::ScrolledWindow {
+				#[name(clamp)]
+				adw::Clamp {
+					#[name(providers_container)]
+					gtk::Box {
+						set_margin_top: 5,
+						set_margin_start: 10,
+						set_margin_end: 10,
+						set_orientation: gtk::Orientation::Vertical,
+						set_spacing: 12,
+						set_vexpand: true,
+						set_css_classes: &["navigation-sidebar"],
+					},
+				}
 			},
 		}
 	}
@@ -87,10 +83,10 @@ impl SimpleComponent for SidebarModel {
 
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
-			SidebarInput::AddTaskList(provider, name) => {
+			SidebarInput::AddTaskList(index, provider, name) => {
 				self
 					.service_factory
-					.send(1, ServiceInput::AddList(provider, name));
+					.send(index, ServiceInput::AddList(provider, name));
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 			SidebarInput::ListSelected(list) => sender.output.send(SidebarOutput::ListSelected(list))

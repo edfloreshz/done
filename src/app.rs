@@ -54,7 +54,7 @@ impl App {
 
 #[derive(Debug)]
 pub(super) enum AppMsg {
-	AddTaskList(String, String),
+	AddTaskList(usize, String, String),
 	ListSelected(GenericList),
 	UpdateSidebarCounters(Vec<ListType>),
 	Folded,
@@ -227,6 +227,30 @@ impl SimpleComponent for App {
 					.push(Box::new(plugins.today.clone()))
 			}
 		}
+		if plugins.next.is_enabled() {
+			unsafe {
+				SERVICES
+					.get_mut()
+					.unwrap()
+					.push(Box::new(plugins.next.clone()))
+			}
+		}
+		if plugins.all.is_enabled() {
+			unsafe {
+				SERVICES
+					.get_mut()
+					.unwrap()
+					.push(Box::new(plugins.all.clone()))
+			}
+		}
+		if plugins.starred.is_enabled() {
+			unsafe {
+				SERVICES
+					.get_mut()
+					.unwrap()
+					.push(Box::new(plugins.starred.clone()))
+			}
+		}
 		if plugins.local.is_enabled() {
 			unsafe {
 				SERVICES
@@ -255,10 +279,10 @@ impl SimpleComponent for App {
 					},
 				});
 		let new_list_controller = NewListModel::builder()
-			.launch(Some("local".to_string()))
+			.launch(Some((4, "local".to_string())))
 			.forward(&sender.input, |message| match message {
-				NewListOutput::AddTaskListToSidebar(provider, name) => {
-					AppMsg::AddTaskList(provider, name)
+				NewListOutput::AddTaskListToSidebar(index, provider, name) => {
+					AppMsg::AddTaskList(index, provider, name)
 				},
 			});
 
@@ -312,10 +336,10 @@ impl SimpleComponent for App {
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
-			AppMsg::AddTaskList(provider, title) => self
+			AppMsg::AddTaskList(index, provider, title) => self
 				.sidebar
 				.sender()
-				.send(SidebarInput::AddTaskList(provider, title)),
+				.send(SidebarInput::AddTaskList(index, provider, title)),
 			AppMsg::ListSelected(list) => self
 				.content
 				.sender()

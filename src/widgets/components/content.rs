@@ -9,9 +9,9 @@ use relm4::{
 
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
-use crate::{fl, Provider, SERVICES};
+use crate::{fl, SERVICES};
 use crate::widgets::factory::list_group::ListType;
-use crate::widgets::factory::list_group::ListType::{All, Other, Starred};
+use crate::widgets::factory::list_group::ListType::Starred;
 
 pub struct ContentModel {
 	parent_list: GenericList,
@@ -43,11 +43,12 @@ impl SimpleComponent for ContentModel {
 
 	view! {
 		#[root]
-		tasks = &gtk::Stack {
+		#[name(tasks)]
+		gtk::Stack {
 			set_vexpand: true,
 			set_transition_duration: 250,
 			set_transition_type: gtk::StackTransitionType::Crossfade,
-			add_child = &gtk::CenterBox {
+			gtk::CenterBox {
 				set_orientation: gtk::Orientation::Vertical,
 				#[watch]
 				set_visible: !model.show_tasks,
@@ -58,14 +59,14 @@ impl SimpleComponent for ContentModel {
 					set_orientation: gtk::Orientation::Vertical,
 					set_margin_all: 24,
 					set_spacing: 24,
-					append = &gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
-					append = &gtk::Label {
+					gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
+					gtk::Label {
 						add_css_class: "title",
 						set_text: fl!("tasks-here")
 					},
-					append = &gtk::Button {
+					gtk::Button {
 						#[watch]
-						// set_visible: model.parent_list.0 > 5,
+						set_visible: !model.parent_list.is_smart,
 						add_css_class: "suggested-action",
 						set_label: fl!("add-tasks"),
 						connect_clicked[sender] => move |_| {
@@ -74,28 +75,30 @@ impl SimpleComponent for ContentModel {
 					}
 				}
 			},
-			add_child = &gtk::Box {
+			gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				#[watch]
 				set_visible: model.show_tasks,
-				append = &gtk::Box {
-					append: task_container = &gtk::Stack {
+				gtk::Box {
+					#[name(task_container)]
+					gtk::Stack {
 						set_transition_duration: 250,
 						set_transition_type: gtk::StackTransitionType::Crossfade,
-						add_child = &gtk::ScrolledWindow {
+						gtk::ScrolledWindow {
 							set_vexpand: true,
 							set_hexpand: true,
 							set_child: Some(&list_box)
 						},
 					}
 				},
-				append = &gtk::Box {
+				gtk::Box {
 					set_orientation: gtk::Orientation::Horizontal,
 					set_margin_all: 12,
-					append: entry = &gtk::Entry {
+					#[name(entry)]
+					gtk::Entry {
 						set_hexpand: true,
 						#[watch]
-						// set_visible: model.parent_list.0 > 5,
+						set_visible: !model.parent_list.is_smart,
 						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
 						set_placeholder_text: Some(fl!("new-task")),
 						set_height_request: 42,
@@ -120,8 +123,10 @@ impl SimpleComponent for ContentModel {
 						set_orientation: gtk::Orientation::Vertical,
 				}
 		}
+		let mut  list = GenericList::default();
+		list.make_smart();
 		let model = ContentModel {
-			parent_list: GenericList::default(),
+			parent_list: list,
 			tasks: FactoryVecDeque::new(list_box.clone(), &sender.input),
 			show_tasks: false,
 		};
@@ -152,6 +157,7 @@ impl SimpleComponent for ContentModel {
 			ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
 			ContentInput::SetTaskList(list) => {
 				self.parent_list = list.clone();
+				let service = services.iter().find(|l| l.get_id() == self.parent_list.provider);
 				if let Some(service) = service {
 					let tasks: Vec<GenericTask> = service.read_tasks_from_list(&list.id_list).unwrap();
 					loop {
@@ -170,6 +176,12 @@ impl SimpleComponent for ContentModel {
 				sender.output(ContentOutput::UpdateCounters(lists))
 			},
 			ContentInput::FavoriteTask(index, favorite) => {
+				if let Some(service) = service {
+					let mut guard = self.tasks.guard();
+					let task = guard.get_mut(index.current_index()).unwrap();
+					task.favorite = favorite;
+					service.update_task(task.clone()).expect("Failed to update task.");
+				}
 				if self.parent_list.provider == "favorites" {
 					self.tasks.guard().remove(index.current_index());
 				}

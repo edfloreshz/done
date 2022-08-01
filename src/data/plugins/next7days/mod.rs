@@ -1,4 +1,6 @@
+use std::str::FromStr;
 use anyhow::Context;
+use chrono::{DateTime, Duration, Utc};
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
@@ -9,13 +11,13 @@ use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
 use crate::data::traits::provider::{Provider, ProviderType};
-use crate::embedded_migrations;
+use crate::{embedded_migrations, fl};
 use crate::gtk::Image;
 
 pub mod models;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LocalProvider {
+pub struct Next7DaysProvider {
 	id: String,
 	name: String,
 	provider_type: ProviderType,
@@ -25,21 +27,21 @@ pub struct LocalProvider {
 	icon: String,
 }
 
-impl Default for LocalProvider {
+impl Default for Next7DaysProvider {
 	fn default() -> Self {
 		Self {
-			id: "local".to_string(),
-			name: "Local".to_string(),
+			id: "next7days".to_string(),
+			name: String::from(fl!("next-7-days")),
 			provider_type: ProviderType::Local,
-			description: "Local storage".to_string(),
+			description: "Tasks due the next 7 days".to_string(),
 			enabled: true,
-			smart: false,
-			icon: "user-home-symbolic".to_string(),
+			smart: true,
+			icon: "org.gnome.Calendar.Devel-symbolic".to_string(),
 		}
 	}
 }
 
-impl Provider for LocalProvider {
+impl Provider for Next7DaysProvider {
 	fn get_id(&self) -> &str {
 		&self.id
 	}
@@ -91,11 +93,14 @@ impl Provider for LocalProvider {
 		todo!()
 	}
 
-	fn read_tasks_from_list(&self, id: &str) -> anyhow::Result<Vec<GenericTask>> {
+	fn read_tasks_from_list(&self, _id: &str) -> anyhow::Result<Vec<GenericTask>> {
 		use crate::schema::tasks::dsl::*;
-
+		let mut today = Utc::today().to_string().split_at(10).0.to_string();
+		today.push_str(" 00:00:00UTC");
+		let today: DateTime<Utc> = DateTime::from_str(&*today).unwrap();
+		let next7days = today + Duration::days(6);
 		let results = tasks
-			.filter(id_list.eq(id))
+			.filter(due_date.between(today.naive_utc(), next7days.naive_utc()))
 			.load::<QueryableTask>(&establish_connection()?)?;
 		let results: Vec<GenericTask> =
 			results.iter().map(|task| task.to_owned().into()).collect();

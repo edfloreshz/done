@@ -1,4 +1,6 @@
+use std::str::FromStr;
 use anyhow::Context;
+use chrono::{DateTime, Duration, Utc};
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
@@ -9,7 +11,7 @@ use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
 use crate::data::traits::provider::{Provider, ProviderType};
-use crate::embedded_migrations;
+use crate::{embedded_migrations, fl};
 use crate::gtk::Image;
 
 pub mod models;
@@ -29,12 +31,12 @@ impl Default for TodayProvider {
 	fn default() -> Self {
 		Self {
 			id: "today".to_string(),
-			name: "Today".to_string(),
+			name: String::from(fl!("today")),
 			provider_type: ProviderType::Local,
-			description: "Today list".to_string(),
+			description: "Tasks due today".to_string(),
 			enabled: true,
 			smart: true,
-			icon: "org.gnome.Calendar.Devel-symbolic".to_string(),
+			icon: "sun-alt-symbolic".to_string(),
 		}
 	}
 }
@@ -91,11 +93,14 @@ impl Provider for TodayProvider {
 		todo!()
 	}
 
-	fn read_tasks_from_list(&self, id: &str) -> anyhow::Result<Vec<GenericTask>> {
+	fn read_tasks_from_list(&self, _id: &str) -> anyhow::Result<Vec<GenericTask>> {
 		use crate::schema::tasks::dsl::*;
-
+		let mut today = Utc::today().to_string().split_at(10).0.to_string();
+		today.push_str(" 00:00:00UTC");
+		let today: DateTime<Utc> = DateTime::from_str(&*today).unwrap();
+		let tomorrow = today + Duration::days(1);
 		let results = tasks
-			.filter(id_list.eq(id))
+			.filter(due_date.between(today.naive_utc(), tomorrow.naive_utc()))
 			.load::<QueryableTask>(&establish_connection()?)?;
 		let results: Vec<GenericTask> =
 			results.iter().map(|task| task.to_owned().into()).collect();
@@ -165,7 +170,7 @@ impl Provider for TodayProvider {
 	}
 
 	fn create_task_list(
-		&mut self,
+		&self,
 		list_provider: &str,
 		name: &str,
 		icon: &str,

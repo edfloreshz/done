@@ -68,7 +68,7 @@ pub trait Provider: Debug {
 	fn read_task_lists(&self) -> Result<Vec<GenericList>>;
 	/// This method should create a new list for a provider.
 	fn create_task_list(
-		&mut self,
+		&self,
 		list_provider: &str,
 		name: &str,
 		icon: &str,

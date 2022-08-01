@@ -1,17 +1,14 @@
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::components::sidebar::{SidebarInput, SidebarOutput};
-use adw::prelude::{PreferencesRowExt, ExpanderRowExt, ActionRowExt, PreferencesGroupExt};
-use glib::clone;
+use crate::widgets::components::sidebar::SidebarInput;
+use adw::prelude::{PreferencesRowExt, ExpanderRowExt, PreferencesGroupExt};
 use relm4::adw;
-use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
+use relm4::gtk::prelude::WidgetExt;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
 	FactoryView,
 };
-use relm4::WidgetPlus;
 use relm4::gtk;
-use crate::ProviderType;
-use crate::widgets::factory::list_group::ListInput;
+use crate::{ProviderType, SERVICES};
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -22,7 +19,7 @@ pub struct ServiceModel {
 
 #[derive(Debug)]
 pub enum ServiceInput {
-	UpdateService,
+	SelectSmartProvider,
 	AddList(String, String),
 	RemoveList(DynamicIndex),
 	RenameList(DynamicIndex, String),
@@ -45,22 +42,21 @@ impl FactoryComponent for ServiceModel {
 	type Widgets = ProviderWidgets;
 
 	view! {
-		#[name = "list_box"]
+		#[root]
+		#[name(list_box)]
 		adw::PreferencesGroup {
-			add = if self.service.is_smart() {
-				adw::ActionRow {
-					set_title: self.service.get_name(),
-					set_subtitle: self.service.get_description(),
-					add_suffix: &self.service.get_icon(),
-				}
-			} else {
-				adw::ExpanderRow {
-					set_title: self.service.get_name(),
-					set_subtitle: self.service.get_description(),
-					set_icon_name: Some(self.service.get_icon_name()),
-					set_enable_expansion: !self.service.is_smart(),
-					set_show_enable_switch: !self.service.is_smart(),
-					set_expanded: self.service.is_smart(),
+			#[name(expander)]
+			add = &adw::ExpanderRow {
+				set_title: self.service.get_name(),
+				set_subtitle: self.service.get_description(),
+				set_icon_name: Some(self.service.get_icon_name()),
+				set_enable_expansion: !self.service.is_smart(),
+				set_show_enable_switch: !self.service.is_smart(),
+				set_expanded: self.service.is_smart(),
+			},
+			add_controller = &gtk::GestureClick {
+				connect_pressed[sender] => move |_, _, _, _| {
+					sender.input.send(ServiceInput::SelectSmartProvider)
 				}
 			}
 		}
@@ -86,7 +82,7 @@ impl FactoryComponent for ServiceModel {
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		if !self.service.is_smart() {
-			self.list_factory = FactoryVecDeque::new(expander.clone(), &sender.input);
+			self.list_factory = FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
 			for list in self.service.read_task_lists().unwrap() {
 				self.list_factory.guard().push_back(list)
 			}
@@ -100,14 +96,30 @@ impl FactoryComponent for ServiceModel {
 		sender: FactoryComponentSender<Self>,
 	) {
 		match message {
-			ServiceInput::UpdateService => {
-				todo!("Update lists")
+			ServiceInput::SelectSmartProvider => {
+				if self.service.is_smart() {
+					let mut list = GenericList::new(
+						self.service.get_name(),
+						self.service.get_icon_name(),
+						0,
+						self.service.get_id()
+					);
+					list.make_smart();
+					sender.input.send(ServiceInput::ListSelected(list));
+				}
 			},
 			ServiceInput::RemoveList(_) => {},
-			ServiceInput::AddList(provider, name) => self
-				.list_factory
-				.guard()
-				.push_back(GenericList::new(&name, "icon", 0, &provider)),
+			ServiceInput::AddList(provider, name) => {
+				let services = unsafe { &*SERVICES.get_mut().unwrap() };
+				let service = services.iter().find(|l| l.get_id() == provider);
+				if let Some(service) = service {
+					let new_list = service.create_task_list(&provider, &name, "list-compact-symbolic").expect("Failed to post task.");
+					self
+						.list_factory
+						.guard()
+						.push_back(new_list)
+				}
+			},
 			ServiceInput::RenameList(_, _) => todo!(),
 			ServiceInput::ListSelected(list) => {
 				sender.output.send(ServiceOutput::ListSelected(list))

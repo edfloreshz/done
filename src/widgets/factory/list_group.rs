@@ -3,7 +3,7 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::{WidgetExt, ButtonExt, ListBoxRowExt, BoxExt, OrientableExt};
+use crate::gtk::prelude::{WidgetExt, ButtonExt};
 use crate::widgets::factory::provider::ServiceInput;
 use crate::{adw, gtk};
 use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
@@ -44,9 +44,8 @@ impl FactoryComponent for GenericList {
 
 	view! {
 		#[root]
-		&gtk::ListBoxRow {
-			#[wrap(Some)]
-			set_child = &adw::ActionRow {
+		gtk::ListBoxRow {
+			adw::ActionRow {
 				add_prefix = &gtk::Button {
 					set_icon_name: self.icon_name.as_ref().unwrap(),
 					set_css_classes: &["flat", "image-button"],
@@ -79,7 +78,7 @@ impl FactoryComponent for GenericList {
 
 	fn init_widgets(
 		&mut self,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,

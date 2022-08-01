@@ -37,6 +37,9 @@ impl GenericList {
 			is_smart: false,
 		}
 	}
+	pub fn make_smart(&mut self) {
+		self.is_smart = true;
+	}
 }
 
 impl From<QueryableList> for GenericList {
