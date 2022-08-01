@@ -26,7 +26,6 @@ pub struct ServiceModel {
 pub enum ServiceInput {
 	UpdateService,
 	AddList(String, String),
-	SelectList(usize),
 	RemoveList(DynamicIndex),
 	RenameList(DynamicIndex, String),
 	ListSelected(GenericList),
@@ -59,11 +58,6 @@ impl FactoryComponent for ServiceModel {
 				set_enable_expansion: !self.service.is_smart(),
 				set_show_enable_switch: !self.service.is_smart(),
 				set_expanded: self.service.is_smart(),
-				#[name = "task_list"]
-				add_row = &gtk::ListBox {
-					set_css_classes: &["boxed-list"],
-					set_margin_all: 3
-				}
 			}
 		}
 	}
@@ -75,7 +69,7 @@ impl FactoryComponent for ServiceModel {
 	) -> Self {
 		Self {
 			service: params,
-			list_factory: FactoryVecDeque::new(gtk::ListBox::default(), &sender.input),
+			list_factory: FactoryVecDeque::new(adw::ExpanderRow::default(), &sender.input),
 		}
 	}
 
@@ -87,11 +81,7 @@ impl FactoryComponent for ServiceModel {
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
-		self.list_factory = FactoryVecDeque::new(widgets.task_list.clone(), &sender.input);
-		widgets.task_list.connect_row_activated(clone!(@strong sender => move |list, _| {
-			let index = list.selected_row().unwrap().index() as usize;
-			sender.input.send(ServiceInput::SelectList(index))
-		}));
+		self.list_factory = FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
 		for list in self.service.read_task_lists().unwrap() {
 			self.list_factory.guard().push_back(list)
 		}
@@ -116,9 +106,6 @@ impl FactoryComponent for ServiceModel {
 			ServiceInput::ListSelected(list) => {
 				sender.output.send(ServiceOutput::ListSelected(list))
 			},
-			ServiceInput::SelectList(index) => self
-				.list_factory
-				.send(index, ListInput::Select(index))
 		}
 	}
 

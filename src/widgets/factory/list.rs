@@ -3,7 +3,7 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::{WidgetExt, ButtonExt, ListBoxRowExt};
+use crate::gtk::prelude::{WidgetExt, ButtonExt, ListBoxRowExt, BoxExt, OrientableExt};
 use crate::widgets::factory::provider::ServiceInput;
 use crate::{adw, gtk};
 use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
@@ -21,7 +21,7 @@ pub enum ListType {
 
 #[derive(Debug)]
 pub enum ListInput {
-	Select(usize),
+	Select,
 	Rename(String),
 	UpdateCount(i32),
 	ChangeIcon(String),
@@ -35,7 +35,7 @@ pub enum ListOutput {
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
 	type ParentMsg = ServiceInput;
-	type ParentWidget = gtk::ListBox;
+	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
@@ -44,7 +44,7 @@ impl FactoryComponent for GenericList {
 
 	view! {
 		#[root]
-		gtk::ListBoxRow {
+		&gtk::ListBoxRow {
 			#[wrap(Some)]
 			set_child = &adw::ActionRow {
 				add_prefix = &gtk::Button {
@@ -68,6 +68,11 @@ impl FactoryComponent for GenericList {
 					set_css_classes: &["circular", "image-button", "destructive-action"],
 					set_valign: gtk::Align::Center
 				},
+			},
+			add_controller = &gtk::GestureClick {
+				connect_pressed[sender] => move |_, _, _, _| {
+					sender.input.send(ListInput::Select)
+				}
 			}
 		}
 	}
@@ -106,7 +111,7 @@ impl FactoryComponent for GenericList {
 					self.icon_name = Some(icon)
 				}
 			},
-			ListInput::Select(index) => {
+			ListInput::Select => {
 				sender.output.send(ListOutput::Select(self.clone()))
 			}
 		}
