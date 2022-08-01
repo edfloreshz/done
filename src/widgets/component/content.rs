@@ -166,12 +166,12 @@ impl SimpleComponent for ContentModel {
 			ContentInput::SetTaskList(index, _provider, list) => {
 				self.parent_list = (index, Some(list.clone()));
 				let tasks: Vec<GenericTask> = match index {
-					0 => vec![],  //TODO: Get tasks from `Inbox` provide
-					1 => vec![],  //TODO: Get tasks from `Today` provider."),
-					2 => vec![],  //TODO: Get tasks from `Next7Days` provider."),
-					3 => vec![],  //TODO: Get tasks from `All` provider."),
-					4 => vec![],  //TODO: Get tasks from `Favorites` provider."),
-					_ => vec![],  //TODO: Get specific task list."),
+					0 => vec![], //TODO: Get tasks from `Inbox` provide
+					1 => vec![], //TODO: Get tasks from `Today` provider."),
+					2 => vec![], //TODO: Get tasks from `Next7Days` provider."),
+					3 => vec![], //TODO: Get tasks from `All` provider."),
+					4 => vec![], //TODO: Get tasks from `Favorites` provider."),
+					_ => vec![], //TODO: Get specific task list."),
 				};
 				loop {
 					let task = guard.pop_front();

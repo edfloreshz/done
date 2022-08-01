@@ -39,7 +39,7 @@ pub enum ProviderType {
 	Local,
 }
 
-pub trait Service: Debug {
+pub trait Service: Debug + Send {
 	fn init() -> Self
 	where
 		Self: Sized;

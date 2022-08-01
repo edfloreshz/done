@@ -1,28 +1,33 @@
+use std::borrow::BorrowMut;
+
+use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::tasks::GenericTask;
+use crate::data::traits::provider::Service;
+use crate::widgets::component::sidebar::SidebarInput;
 use adw::prelude::ExpanderRowExt;
 use adw::prelude::PreferencesGroupExt;
 use adw::prelude::PreferencesRowExt;
 use relm4::adw;
-use relm4::factory::{DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque, FactoryView};
+use relm4::factory::{
+	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
+	FactoryView,
+};
 use relm4::gtk;
-use crate::data::models::generic::lists::GenericList;
-use crate::data::models::generic::tasks::GenericTask;
-use crate::data::plugins::local::LocalProvider;
-
-use crate::data::traits::provider::Provider;
-use crate::widgets::component::sidebar::SidebarInput;
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ServiceModel {
-	pub provider: LocalProvider,
-	pub lists: Option<FactoryVecDeque<GenericList>>,
-	pub tasks: Option<FactoryVecDeque<GenericTask>>
+	pub service: &'static Box<dyn Service + Sync>,
+	pub lists: FactoryVecDeque<GenericList>,
 }
 
 #[derive(Debug)]
 pub enum ServiceInput {
 	UpdateService,
+	AddList(String, String),
 	RemoveList(DynamicIndex),
+	RenameList(DynamicIndex, String),
+	ListSelected(usize),
 }
 
 #[derive(Debug)]
@@ -35,27 +40,30 @@ impl FactoryComponent for ServiceModel {
 	type CommandOutput = ();
 	type Input = ServiceInput;
 	type Output = ServiceOutput;
-	type InitParams = ServiceModel;
+	type InitParams = &'static Box<dyn Service + Sync>;
 	type Widgets = ProviderWidgets;
 
 	view! {
-			#[name = "list_box"]
-			adw::PreferencesGroup {
-					#[name = "expander"]
-					add = &adw::ExpanderRow {
-							set_title: self.provider.get_name(),
-							add_prefix: &self.provider.get_icon(),
-							add_action: &gtk::Button::from_icon_name("accessories-text-editor-symbolic")
-					}
+		#[name = "list_box"]
+		adw::PreferencesGroup {
+			#[name = "expander"]
+			add = &adw::ExpanderRow {
+				set_title: self.service.get_provider().get_name(),
+				add_prefix: &self.service.get_provider().get_icon(),
+				add_action: &gtk::Button::from_icon_name("accessories-text-editor-symbolic")
 			}
+		}
 	}
 
 	fn init_model(
 		params: Self::InitParams,
 		_index: &DynamicIndex,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) -> Self {
-		params
+		Self { 
+			service: params, 
+			lists: FactoryVecDeque::new(adw::ExpanderRow::default(), &sender.input), 
+		}
 	}
 
 	fn update(
@@ -66,8 +74,13 @@ impl FactoryComponent for ServiceModel {
 		match message {
 			ServiceInput::UpdateService => {
 				todo!("Update lists")
-			}
-			ServiceInput::RemoveList(_) => {}
+			},
+			ServiceInput::RemoveList(_) => {},
+			ServiceInput::AddList(provider, name) => {
+				self.lists.guard().push_back(GenericList::new(&name, "icon", 0, &provider))
+			},
+			ServiceInput::RenameList(_, _) => todo!(),
+			ServiceInput::ListSelected(_) => todo!(),
 		}
 	}
 
@@ -79,11 +92,10 @@ impl FactoryComponent for ServiceModel {
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
-		let fac = FactoryVecDeque::new(
-			widgets.expander.clone(),
-			&sender.input,
-		);
-		self.lists = Some(fac);
+		self.lists = FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
+		for list in self.service.get_task_lists() {
+			self.lists.guard().push_back(list)
+		}
 		//TODO: Iter list of task lists and create rows for each.
 		// for list in self.lists.unwrap() {
 		// 	relm4::view! {

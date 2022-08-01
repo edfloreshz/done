@@ -5,7 +5,11 @@ use relm4::{
 	ComponentSender, Controller, SimpleComponent,
 };
 
-use crate::data::models::generic::lists::GenericList;
+use crate::{data::{
+	models::generic::lists::GenericList,
+	plugins::Plugins,
+	traits::provider::{Provider, Service},
+}, SERVICES};
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
 use crate::widgets::popover::new_list::NewListOutput;
@@ -73,7 +77,7 @@ impl SimpleComponent for App {
 	type Input = AppMsg;
 	type Output = ();
 	type Widgets = AppWidgets;
-	type InitParams = Option<App>;
+	type InitParams = Option<Vec<Box<dyn Service>>>;
 
 	menu! {
 			primary_menu: {
@@ -211,15 +215,23 @@ impl SimpleComponent for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let sidebar_controller =
-			SidebarModel::builder()
-				.launch(None)
-				.forward(&sender.input, |message| match message {
-					SidebarOutput::ListSelected(index, provider, list) => {
-						AppMsg::ListSelected(index, provider, list)
-					},
-					SidebarOutput::Forward => AppMsg::Forward,
-				});
+		let plugins = Plugins::init();
+
+		if plugins.local.provider.get_enabled() {
+			unsafe {
+				SERVICES.get_mut().unwrap().push(Box::new(plugins.local.clone()))
+			}
+		}
+
+		let sidebar_controller = SidebarModel::builder().launch(None).forward(
+			&sender.input,
+			|message| match message {
+				SidebarOutput::ListSelected(index, provider, list) => {
+					AppMsg::ListSelected(index, provider, list)
+				},
+				SidebarOutput::Forward => AppMsg::Forward,
+			},
+		);
 		let content_controller =
 			ContentModel::builder()
 				.launch(None)
@@ -231,7 +243,7 @@ impl SimpleComponent for App {
 		let new_list_controller = NewListModel::builder()
 			.launch(Some("local".to_string()))
 			.forward(&sender.input, |message| match message {
-				NewListOutput::AddTaskList(provider, name) => {
+				NewListOutput::AddTaskListToSidebar(provider, name) => {
 					AppMsg::AddTaskList(provider, name)
 				},
 			});
@@ -289,15 +301,11 @@ impl SimpleComponent for App {
 			AppMsg::AddTaskList(provider, title) => self
 				.sidebar
 				.sender()
-				.send(SidebarInput::AddList(provider, title)),
+				.send(SidebarInput::AddTaskList(provider, title)),
 			AppMsg::ListSelected(index, provider, list) => self
 				.content
 				.sender()
 				.send(ContentInput::SetTaskList(index, provider, list)),
-			AppMsg::UpdateSidebarCounters(lists) => self
-				.sidebar
-				.sender()
-				.send(SidebarInput::UpdateCounters(lists)),
 			_ => self.message = Some(message),
 		}
 	}

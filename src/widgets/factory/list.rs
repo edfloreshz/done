@@ -3,9 +3,10 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::{adw, gtk};
 use crate::gtk::prelude::{OrientableExt, WidgetExt};
 use crate::widgets::factory::service::ServiceInput;
+use crate::{adw, gtk};
+use relm4::adw::prelude::{PreferencesRowExt, ActionRowExt};
 
 #[derive(Debug)]
 pub enum ListType {
@@ -26,8 +27,7 @@ pub enum ListInput {
 }
 
 #[derive(Debug)]
-pub enum ListOutput {
-}
+pub enum ListOutput {}
 
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
@@ -38,27 +38,15 @@ impl FactoryComponent for GenericList {
 	type Output = ListOutput;
 	type InitParams = GenericList;
 	type Widgets = ListWidgets;
-
+	
 	view! {
 		#[root]
-		list_box = &gtk::Box {
-			set_orientation: gtk::Orientation::Horizontal,
-			#[name = "icon"]
-			gtk::Image {
+		adw::ActionRow {
+			add_prefix = &gtk::Image {
 				set_from_icon_name: Some(self.icon_name.as_ref().unwrap())
 			},
-			#[name = "name"]
-			gtk::Label {
-				set_halign: gtk::Align::Start,
-				set_hexpand: true,
-				set_text: self.display_name.as_str(),
-				set_margin_top: 10,
-				set_margin_bottom: 10,
-				set_margin_start: 15,
-				set_margin_end: 15,
-			},
-			#[name = "count"]
-			gtk::Label {
+			set_title: &self.display_name,
+			add_suffix = &gtk::Label {
 				set_halign: gtk::Align::End,
 				set_css_classes: &["dim-label", "caption"],
 				#[watch]
@@ -70,7 +58,7 @@ impl FactoryComponent for GenericList {
 			}
 		}
 	}
-
+	
 	fn init_widgets(
 		&mut self,
 		_index: &DynamicIndex,

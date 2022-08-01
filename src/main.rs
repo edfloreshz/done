@@ -13,10 +13,10 @@ use relm4::{
 	actions::{AccelsPlus, RelmAction, RelmActionGroup},
 	adw, gtk, RelmApp,
 };
-use std::sync::Mutex;
+use std::{sync::{Mutex, RwLock, Arc}, cell::RefCell};
 
 use app::App;
-use data::plugins::Plugins;
+use data::{plugins::Plugins, traits::provider::Service};
 use setup::setup;
 
 use crate::config::APP_ID;
@@ -33,11 +33,10 @@ mod widgets;
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 
-static mut PLUGINS: LazySync<Mutex<Plugins>> =
-	LazySync::new(|| Mutex::new(Plugins::init()));
+static mut SERVICES: LazySync<RwLock<Vec<Box<dyn Service + Sync>>>> = LazySync::new(|| RwLock::new(vec![]));
 
 thread_local! {
-		static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
+	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
 }
 
 embed_migrations!("migrations");

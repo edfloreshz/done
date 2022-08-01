@@ -7,7 +7,7 @@ use gtk::prelude::{
 use relm4::factory::FactoryVecDeque;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
-use crate::{fl, PLUGINS};
+use crate::fl;
 
 pub struct NewListModel {
 	selected_provider: Option<String>,
@@ -22,7 +22,7 @@ pub enum NewListInput {
 
 #[derive(Debug)]
 pub enum NewListOutput {
-	AddTaskList(String, String),
+	AddTaskListToSidebar(String, String),
 }
 
 #[relm4::component(pub)]
@@ -107,27 +107,27 @@ impl SimpleComponent for NewListModel {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
-		let mut model = NewListModel {
+		let model = NewListModel {
 			selected_provider: params,
 			providers: FactoryVecDeque::new(
 				widgets.providers_list.clone(),
 				&sender.output,
 			),
 		};
-		let local = unsafe { PLUGINS.lock().unwrap().local.provider.clone() };
-		model.providers.guard().push_back(Box::new(local));
+		// let local = unsafe { PLUGINS.lock().unwrap().local.provider.clone() };
+		// model.providers.guard().push_back(Box::new(local));
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, _message: Self::Input, sender: ComponentSender<Self>) {
-		match _message {
+	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+		match message {
 			NewListInput::SelectProvider(index) => {
 				print!("Provider selected");
 				self.selected_provider =
 					Some(self.providers.get(index).unwrap().get_id().to_string())
 			},
 			NewListInput::AddTaskList(name) => {
-				sender.output.send(NewListOutput::AddTaskList(
+				sender.output.send(NewListOutput::AddTaskListToSidebar(
 					self.selected_provider.clone().unwrap(),
 					name,
 				))
