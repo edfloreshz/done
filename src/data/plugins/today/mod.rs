@@ -15,7 +15,7 @@ use crate::gtk::Image;
 pub mod models;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LocalProvider {
+pub struct TodayProvider {
 	id: String,
 	name: String,
 	provider_type: ProviderType,
@@ -25,21 +25,21 @@ pub struct LocalProvider {
 	icon: String,
 }
 
-impl Default for LocalProvider {
+impl Default for TodayProvider {
 	fn default() -> Self {
 		Self {
-			id: "local".to_string(),
-			name: "Local".to_string(),
+			id: "today".to_string(),
+			name: "Today".to_string(),
 			provider_type: ProviderType::Local,
-			description: "Local storage".to_string(),
+			description: "Today list".to_string(),
 			enabled: true,
-			smart: false,
-			icon: "user-home-symbolic".to_string(),
+			smart: true,
+			icon: "org.gnome.Calendar.Devel-symbolic".to_string(),
 		}
 	}
 }
 
-impl Provider for LocalProvider {
+impl Provider for TodayProvider {
 	fn get_id(&self) -> &str {
 		&self.id
 	}

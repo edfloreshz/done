@@ -33,7 +33,7 @@ flatpak:
 rustfmt:
   image: "rust:slim"
   script:
-    - rustup component add rustfmt
+    - rustup components add rustfmt
     # Create blank versions of our configured files
     # so rustfmt does not yell about non-existent files or completely empty files
     - echo -e "" >> src/config.rs

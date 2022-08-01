@@ -20,6 +20,8 @@ pub trait Provider: Debug {
 	fn get_description(&self) -> &str;
 	/// Whether the provider is enabled.
 	fn is_enabled(&self) -> bool;
+	/// Whether the provider is enabled.
+	fn is_smart(&self) -> bool;
 	/// Gets the icon name of the provider.
 	fn get_icon_name(&self) -> &str;
 	/// Gets the icon of the provider.

@@ -11,7 +11,7 @@ use crate::widgets::popover::new_list::NewListOutput;
 use crate::{
 	config::PROFILE,
 	widgets::{
-		component::{
+		components::{
 			content::{ContentInput, ContentModel, ContentOutput},
 			sidebar::{SidebarInput, SidebarModel, SidebarOutput},
 		},
@@ -219,6 +219,14 @@ impl SimpleComponent for App {
 	) -> ComponentParts<Self> {
 		let plugins = Plugins::init();
 
+		if plugins.today.is_enabled() {
+			unsafe {
+				SERVICES
+					.get_mut()
+					.unwrap()
+					.push(Box::new(plugins.today.clone()))
+			}
+		}
 		if plugins.local.is_enabled() {
 			unsafe {
 				SERVICES
@@ -227,6 +235,7 @@ impl SimpleComponent for App {
 					.push(Box::new(plugins.local.clone()))
 			}
 		}
+
 
 		let sidebar_controller =
 			SidebarModel::builder()

@@ -1,62 +1,80 @@
-use gtk::prelude::BoxExt;
-use gtk::prelude::ListBoxRowExt;
+use crate::data::models::generic::lists::GenericList;
+use crate::widgets::components::sidebar::SidebarInput;
+use adw::prelude::ExpanderRowExt;
+use adw::prelude::PreferencesGroupExt;
+use adw::prelude::PreferencesRowExt;
+use glib::clone;
+use relm4::adw;
+use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
 use relm4::factory::{
-	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
+	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
+	FactoryView,
 };
+use relm4::WidgetPlus;
 use relm4::gtk;
-
 use crate::ProviderType;
-use crate::widgets::popover::new_list::NewListOutput;
+use crate::widgets::factory::list::ListInput;
 
+#[allow(dead_code)]
 #[derive(Debug)]
-pub struct ProvidersList {
-	pub(crate) provider: ProviderType
+pub struct ServiceModel {
+	pub service: ProviderType,
+	pub list_factory: FactoryVecDeque<GenericList>,
 }
 
 #[derive(Debug)]
-pub enum ProviderInput {}
+pub enum ServiceInput {
+	UpdateService,
+	AddList(String, String),
+	SelectList(usize),
+	RemoveList(DynamicIndex),
+	RenameList(DynamicIndex, String),
+	ListSelected(usize),
+}
+
+#[derive(Debug)]
+pub enum ServiceOutput {}
 
 #[relm4::factory(pub)]
-impl FactoryComponent for ProvidersList {
-	type ParentMsg = NewListOutput;
-	type ParentWidget = gtk::ListBox;
+impl FactoryComponent for ServiceModel {
+	type ParentMsg = SidebarInput;
+	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
-	type Input = ProviderInput;
-	type Output = ();
+	type Input = ServiceInput;
+	type Output = ServiceOutput;
 	type InitParams = ProviderType;
 	type Widgets = ProviderWidgets;
 
 	view! {
-			#[name = "providers_container"]
-			gtk::ListBoxRow {
-				set_activatable: true,
-				#[wrap(Some)]
-				set_child = &gtk::Box {
-					append = &gtk::Image {
-						set_icon_name: Some(&self.provider.get_icon_name())
-					},
-					append = &gtk::Label {
-						set_label: self.provider.get_name()
-					}
+		#[name = "list_box"]
+		adw::PreferencesGroup {
+			#[name = "expander"]
+			add = &adw::ExpanderRow {
+				#[watch]
+				set_title: self.service.get_name(),
+				set_subtitle: self.service.get_description(),
+				set_icon_name: Some(self.service.get_icon_name()),
+				set_enable_expansion: !self.service.is_smart(),
+				set_show_enable_switch: !self.service.is_smart(),
+				set_expanded: self.service.is_smart(),
+				#[name = "task_list"]
+				add_row = &gtk::ListBox {
+					set_css_classes: &["boxed-list"],
+					set_margin_all: 3
 				}
+			}
 		}
 	}
 
 	fn init_model(
 		params: Self::InitParams,
 		_index: &DynamicIndex,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) -> Self {
 		Self {
-			provider: params
+			service: params,
+			list_factory: FactoryVecDeque::new(gtk::ListBox::default(), &sender.input),
 		}
-	}
-
-	fn update(
-		&mut self,
-		_message: Self::Input,
-		_sender: FactoryComponentSender<Self>,
-	) {
 	}
 
 	fn init_widgets(
@@ -64,9 +82,39 @@ impl FactoryComponent for ProvidersList {
 		_index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
+		self.list_factory = FactoryVecDeque::new(widgets.task_list.clone(), &sender.input);
+		widgets.task_list.connect_row_activated(clone!(@strong sender => move |list, _| {
+			let index = list.selected_row().unwrap().index() as usize;
+			sender.input.send(ServiceInput::SelectList(index))
+		}));
+		for list in self.service.read_task_lists().unwrap() {
+			self.list_factory.guard().push_back(list)
+		}
 		widgets
+	}
+
+	fn update(
+		&mut self,
+		message: Self::Input,
+		_sender: FactoryComponentSender<Self>,
+	) {
+		match message {
+			ServiceInput::UpdateService => {
+				todo!("Update lists")
+			},
+			ServiceInput::RemoveList(_) => {},
+			ServiceInput::AddList(provider, name) => self
+				.list_factory
+				.guard()
+				.push_back(GenericList::new(&name, "icon", 0, &provider)),
+			ServiceInput::RenameList(_, _) => todo!(),
+			ServiceInput::ListSelected(_) => todo!(),
+			ServiceInput::SelectList(index) => self
+				.list_factory
+				.send(index, ListInput::Select(index))
+		}
 	}
 }

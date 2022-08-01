@@ -7,7 +7,7 @@ use relm4::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::popover::providers_list::{ServiceInput, ServiceModel};
+use crate::widgets::factory::provider::{ServiceInput, ServiceModel};
 use crate::SERVICES;
 
 #[derive(Debug)]
@@ -77,7 +77,7 @@ impl SimpleComponent for SidebarModel {
 		unsafe {
 			for service in &mut *SERVICES.get_mut().unwrap() {
 				if service.is_enabled() {
-					model.service_factory.guard().push_back(service);
+					model.service_factory.guard().push_back(&**service);
 				}
 			}
 		}

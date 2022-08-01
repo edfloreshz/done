@@ -7,7 +7,7 @@ use relm4::factory::FactoryVecDeque;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::{fl, SERVICES};
-use crate::widgets::factory::provider::ProvidersList;
+use crate::widgets::popover::providers_list::ProvidersList;
 
 pub struct NewListModel {
 	selected_provider: Option<String>,
@@ -127,7 +127,6 @@ impl SimpleComponent for NewListModel {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			NewListInput::SelectProvider(index) => {
-				print!("Provider selected");
 				self.selected_provider =
 					Some(self.providers.get(index).unwrap().provider.get_id().to_string())
 			},

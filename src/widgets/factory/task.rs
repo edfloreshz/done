@@ -10,7 +10,7 @@ use relm4::WidgetPlus;
 
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::generic::tasks::GenericTask;
-use crate::widgets::component::content::ContentInput;
+use crate::widgets::components::content::ContentInput;
 use crate::widgets::factory::list::ListType;
 
 #[derive(Debug)]

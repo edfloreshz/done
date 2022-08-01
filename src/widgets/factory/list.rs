@@ -3,8 +3,8 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::WidgetExt;
-use crate::widgets::popover::providers_list::ServiceInput;
+use crate::gtk::prelude::{WidgetExt, ButtonExt, ListBoxRowExt};
+use crate::widgets::factory::provider::ServiceInput;
 use crate::{adw, gtk};
 use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
 
@@ -21,6 +21,7 @@ pub enum ListType {
 
 #[derive(Debug)]
 pub enum ListInput {
+	Select(usize),
 	Rename(String),
 	UpdateCount(i32),
 	ChangeIcon(String),
@@ -32,7 +33,7 @@ pub enum ListOutput {}
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
 	type ParentMsg = ServiceInput;
-	type ParentWidget = adw::ExpanderRow;
+	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
@@ -41,30 +42,40 @@ impl FactoryComponent for GenericList {
 
 	view! {
 		#[root]
-		adw::ActionRow {
-			add_prefix = &gtk::Image {
-				set_from_icon_name: Some(self.icon_name.as_ref().unwrap())
-			},
-			set_title: &self.display_name,
-			add_suffix = &gtk::Label {
-				set_halign: gtk::Align::End,
-				set_css_classes: &["dim-label", "caption"],
-				#[watch]
-				set_text: self.count.to_string().as_str(),
-				set_margin_top: 10,
-				set_margin_bottom: 10,
-				set_margin_start: 15,
-				set_margin_end: 15,
+		gtk::ListBoxRow {
+			#[wrap(Some)]
+			set_child = &adw::ActionRow {
+				add_prefix = &gtk::Button {
+					set_icon_name: self.icon_name.as_ref().unwrap(),
+					set_css_classes: &["flat", "image-button"],
+					set_valign: gtk::Align::Center
+				},
+				set_title: &self.display_name,
+				add_suffix = &gtk::Label {
+					set_halign: gtk::Align::End,
+					set_css_classes: &["dim-label", "caption"],
+					#[watch]
+					set_text: self.count.to_string().as_str(),
+					set_margin_top: 10,
+					set_margin_bottom: 10,
+					set_margin_start: 15,
+					set_margin_end: 15,
+				},
+				add_suffix = &gtk::Button {
+					set_icon_name: "user-trash-full-symbolic",
+					set_css_classes: &["circular", "image-button", "destructive-action"],
+					set_valign: gtk::Align::Center
+				},
 			}
 		}
 	}
 
 	fn init_widgets(
 		&mut self,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		_sender: FactoryComponentSender<Self>,
+		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -93,6 +104,9 @@ impl FactoryComponent for GenericList {
 					self.icon_name = Some(icon)
 				}
 			},
+			ListInput::Select(index) => {
+				println!("Selected list at index {}", index)
+			}
 		}
 	}
 
