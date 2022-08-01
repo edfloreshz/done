@@ -1,8 +1,6 @@
 use crate::data::models::generic::lists::GenericList;
 use crate::widgets::components::sidebar::{SidebarInput, SidebarOutput};
-use adw::prelude::ExpanderRowExt;
-use adw::prelude::PreferencesGroupExt;
-use adw::prelude::PreferencesRowExt;
+use adw::prelude::{PreferencesRowExt, ExpanderRowExt, ActionRowExt, PreferencesGroupExt};
 use glib::clone;
 use relm4::adw;
 use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
@@ -13,7 +11,7 @@ use relm4::factory::{
 use relm4::WidgetPlus;
 use relm4::gtk;
 use crate::ProviderType;
-use crate::widgets::factory::list::ListInput;
+use crate::widgets::factory::list_group::ListInput;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -49,15 +47,21 @@ impl FactoryComponent for ServiceModel {
 	view! {
 		#[name = "list_box"]
 		adw::PreferencesGroup {
-			#[name = "expander"]
-			add = &adw::ExpanderRow {
-				#[watch]
-				set_title: self.service.get_name(),
-				set_subtitle: self.service.get_description(),
-				set_icon_name: Some(self.service.get_icon_name()),
-				set_enable_expansion: !self.service.is_smart(),
-				set_show_enable_switch: !self.service.is_smart(),
-				set_expanded: self.service.is_smart(),
+			add = if self.service.is_smart() {
+				adw::ActionRow {
+					set_title: self.service.get_name(),
+					set_subtitle: self.service.get_description(),
+					add_suffix: &self.service.get_icon(),
+				}
+			} else {
+				adw::ExpanderRow {
+					set_title: self.service.get_name(),
+					set_subtitle: self.service.get_description(),
+					set_icon_name: Some(self.service.get_icon_name()),
+					set_enable_expansion: !self.service.is_smart(),
+					set_show_enable_switch: !self.service.is_smart(),
+					set_expanded: self.service.is_smart(),
+				}
 			}
 		}
 	}
@@ -81,9 +85,11 @@ impl FactoryComponent for ServiceModel {
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
-		self.list_factory = FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
-		for list in self.service.read_task_lists().unwrap() {
-			self.list_factory.guard().push_back(list)
+		if !self.service.is_smart() {
+			self.list_factory = FactoryVecDeque::new(expander.clone(), &sender.input);
+			for list in self.service.read_task_lists().unwrap() {
+				self.list_factory.guard().push_back(list)
+			}
 		}
 		widgets
 	}

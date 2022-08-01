@@ -15,7 +15,7 @@ use crate::{
 			content::{ContentInput, ContentModel, ContentOutput},
 			sidebar::{SidebarInput, SidebarModel, SidebarOutput},
 		},
-		factory::list::ListType,
+		factory::list_group::ListType,
 		popover::new_list::NewListModel,
 	},
 };

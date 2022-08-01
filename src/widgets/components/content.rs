@@ -10,8 +10,8 @@ use relm4::{
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::{fl, Provider, SERVICES};
-use crate::widgets::factory::list::ListType;
-use crate::widgets::factory::list::ListType::{All, Other, Starred};
+use crate::widgets::factory::list_group::ListType;
+use crate::widgets::factory::list_group::ListType::{All, Other, Starred};
 
 pub struct ContentModel {
 	parent_list: GenericList,

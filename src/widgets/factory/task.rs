@@ -11,7 +11,7 @@ use relm4::WidgetPlus;
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::widgets::components::content::ContentInput;
-use crate::widgets::factory::list::ListType;
+use crate::widgets::factory::list_group::ListType;
 
 #[derive(Debug)]
 pub enum TaskInput {
