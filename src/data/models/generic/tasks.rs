@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use chrono::NaiveDateTime;
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

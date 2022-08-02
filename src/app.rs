@@ -24,7 +24,7 @@ use crate::{
 		models::generic::lists::GenericList, plugins::Plugins,
 		traits::provider::Provider,
 	},
-	SERVICES,
+	PLUGINS,
 };
 
 pub(super) struct App {
@@ -217,57 +217,11 @@ impl SimpleComponent for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let plugins = Plugins::init();
-
-		if plugins.today.is_enabled() {
-			unsafe {
-				SERVICES
-					.get_mut()
-					.unwrap()
-					.push(Box::new(plugins.today.clone()))
-			}
-		}
-		if plugins.next.is_enabled() {
-			unsafe {
-				SERVICES
-					.get_mut()
-					.unwrap()
-					.push(Box::new(plugins.next.clone()))
-			}
-		}
-		if plugins.all.is_enabled() {
-			unsafe {
-				SERVICES
-					.get_mut()
-					.unwrap()
-					.push(Box::new(plugins.all.clone()))
-			}
-		}
-		if plugins.starred.is_enabled() {
-			unsafe {
-				SERVICES
-					.get_mut()
-					.unwrap()
-					.push(Box::new(plugins.starred.clone()))
-			}
-		}
-		if plugins.local.is_enabled() {
-			unsafe {
-				SERVICES
-					.get_mut()
-					.unwrap()
-					.push(Box::new(plugins.local.clone()))
-			}
-		}
-
-
 		let sidebar_controller =
 			SidebarModel::builder()
 				.launch(None)
 				.forward(&sender.input, |message| match message {
-					SidebarOutput::ListSelected(list) => {
-						AppMsg::ListSelected(list)
-					},
+					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
 					SidebarOutput::Forward => AppMsg::Forward,
 				});
 		let content_controller =
@@ -340,10 +294,9 @@ impl SimpleComponent for App {
 				.sidebar
 				.sender()
 				.send(SidebarInput::AddTaskList(index, provider, title)),
-			AppMsg::ListSelected(list) => self
-				.content
-				.sender()
-				.send(ContentInput::SetTaskList(list)),
+			AppMsg::ListSelected(list) => {
+				self.content.sender().send(ContentInput::SetTaskList(list))
+			},
 			_ => self.message = Some(message),
 		}
 	}

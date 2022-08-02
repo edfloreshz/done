@@ -6,16 +6,17 @@ use serde::{Deserialize, Serialize};
 use crate::data::models::generic::lists::GenericList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::gtk;
+use bevy_reflect::reflect_trait;
+use bevy_reflect::Reflect;
 
-pub trait Provider: Debug {
+#[reflect_trait]
+pub trait Provider: Debug + Reflect {
 	/// Getters
 	///
 	/// The unique identifier of the provider.
 	fn get_id(&self) -> &str;
 	/// The user-visible name of the provider.
 	fn get_name(&self) -> &str;
-	/// The type of the provider.
-	fn get_provider_type(&self) -> ProviderType;
 	/// The description of the provider, e.g. the account user of a GNOME Online Accounts' account
 	fn get_description(&self) -> &str;
 	/// Whether the provider is enabled.
@@ -77,13 +78,4 @@ pub trait Provider: Debug {
 	fn update_task_list(&self, list: GenericList, name: &str) -> Result<()>;
 	/// This method should remove a list from a provider.
 	fn remove_task_list(&self, list: GenericList) -> Result<()>;
-}
-
-#[derive(Debug, Copy, Serialize, Deserialize, Clone)]
-pub enum ProviderType {
-	Inbox,
-	Today,
-	Next7Days,
-	All,
-	Local,
 }

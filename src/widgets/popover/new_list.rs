@@ -6,12 +6,12 @@ use gtk::prelude::{
 use relm4::factory::FactoryVecDeque;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
-use crate::{fl, SERVICES};
 use crate::widgets::popover::providers_list::ProvidersList;
+use crate::{fl, PLUGINS};
 
 pub struct NewListModel {
 	selected_provider: Option<(usize, String)>,
-	providers: FactoryVecDeque<ProvidersList>,
+	provider_factory: FactoryVecDeque<ProvidersList>,
 }
 
 #[derive(Debug)]
@@ -109,16 +109,14 @@ impl SimpleComponent for NewListModel {
 		let widgets = view_output!();
 		let mut model = NewListModel {
 			selected_provider: params,
-			providers: FactoryVecDeque::new(
+			provider_factory: FactoryVecDeque::new(
 				widgets.providers_list.clone(),
 				&sender.output,
 			),
 		};
-		unsafe {
-			for service in &mut *SERVICES.get_mut().unwrap() {
-				if service.is_enabled() {
-					model.providers.guard().push_back(&**service);
-				}
+		for provider in PLUGINS.get_providers() {
+			if provider.is_enabled() {
+				model.provider_factory.guard().push_back(&*provider);
 			}
 		}
 		ComponentParts { model, widgets }
@@ -127,8 +125,16 @@ impl SimpleComponent for NewListModel {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			NewListInput::SelectProvider(index) => {
-				self.selected_provider =
-					Some((index, self.providers.get(index).unwrap().provider.get_id().to_string()))
+				self.selected_provider = Some((
+					index,
+					self
+						.provider_factory
+						.get(index)
+						.unwrap()
+						.provider
+						.get_id()
+						.to_string(),
+				))
 			},
 			NewListInput::AddTaskList(name) => {
 				sender.output.send(NewListOutput::AddTaskListToSidebar(

@@ -1,4 +1,6 @@
+use crate::data::traits::provider::ReflectProvider;
 use anyhow::Context;
+use bevy_reflect::Reflect;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
@@ -8,17 +10,17 @@ use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
-use crate::data::traits::provider::{Provider, ProviderType};
-use crate::{embedded_migrations, fl};
+use crate::data::traits::provider::Provider;
 use crate::gtk::Image;
+use crate::{embedded_migrations, fl};
 
 pub mod models;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Provider)]
 pub struct StarredProvider {
 	id: String,
 	name: String,
-	provider_type: ProviderType,
 	description: String,
 	enabled: bool,
 	smart: bool,
@@ -30,7 +32,6 @@ impl Default for StarredProvider {
 		Self {
 			id: "starred".to_string(),
 			name: String::from(fl!("starred")),
-			provider_type: ProviderType::Local,
 			description: "Starred task".to_string(),
 			enabled: true,
 			smart: true,
@@ -46,10 +47,6 @@ impl Provider for StarredProvider {
 
 	fn get_name(&self) -> &str {
 		&self.name
-	}
-
-	fn get_provider_type(&self) -> ProviderType {
-		self.provider_type
 	}
 
 	fn get_description(&self) -> &str {
@@ -91,7 +88,10 @@ impl Provider for StarredProvider {
 		todo!()
 	}
 
-	fn read_tasks_from_list(&self, _id: &str) -> anyhow::Result<Vec<GenericTask>> {
+	fn read_tasks_from_list(
+		&self,
+		_id: &str,
+	) -> anyhow::Result<Vec<GenericTask>> {
 		use crate::schema::tasks::dsl::*;
 		let results = tasks
 			.filter(favorite.eq_all(true))
@@ -112,10 +112,7 @@ impl Provider for StarredProvider {
 	) -> anyhow::Result<GenericTask> {
 		use crate::schema::tasks::dsl::*;
 
-		let task: GenericTask = task.into();
-		let list: GenericList = list.to_owned().into();
-
-		let inserted_task = QueryableTask::new(task.title, list.id_list);
+		let inserted_task = QueryableTask::new(task.title, list.id_list.clone());
 		diesel::insert_into(tasks)
 			.values(&inserted_task)
 			.execute(&establish_connection()?)?;
@@ -193,7 +190,7 @@ impl Provider for StarredProvider {
 			is_owner: list.is_owner,
 			count: list.count,
 			icon_name: list.icon_name.clone(),
-			provider: list.provider.clone(),
+			provider: list.provider,
 		};
 		diesel::update(lists.filter(id_list.eq(queryable_list.id_list.clone())))
 			.set((
@@ -208,7 +205,7 @@ impl Provider for StarredProvider {
 
 	fn remove_task_list(&self, list: GenericList) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
-		diesel::delete(lists.filter(id_list.eq(list.clone().id_list)))
+		diesel::delete(lists.filter(id_list.eq(list.id_list)))
 			.execute(&establish_connection()?)?;
 		Ok(())
 	}

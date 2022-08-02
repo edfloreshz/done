@@ -6,6 +6,7 @@ extern crate diesel_migrations;
 extern crate log;
 
 use anyhow::Result;
+use bevy_reflect::Reflect;
 use gtk::gio;
 use gtk::prelude::ApplicationExt;
 use once_cell::{sync::Lazy as LazySync, unsync::Lazy};
@@ -19,6 +20,7 @@ use app::App;
 use setup::setup;
 
 use crate::config::APP_ID;
+use crate::data::plugins::Plugins;
 use crate::data::traits::provider::Provider;
 
 #[rustfmt::skip]
@@ -33,8 +35,7 @@ mod widgets;
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 
-static mut SERVICES: LazySync<RwLock<Vec<Box<dyn Provider + Sync>>>> =
-	LazySync::new(|| RwLock::new(vec![]));
+static PLUGINS: LazySync<Plugins> = LazySync::new(Plugins::default);
 
 thread_local! {
 	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
@@ -42,7 +43,7 @@ thread_local! {
 
 embed_migrations!("migrations");
 
-pub type ProviderType = &'static (dyn Provider + Sync);
+pub type StaticProviderType = &'static dyn Provider;
 
 fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
@@ -69,7 +70,6 @@ fn main() -> Result<()> {
 
 	app.set_action_group(Some(&actions.into_action_group()));
 	let app = RelmApp::with_app(app);
-
 	app.run::<App>(None);
 	Ok(())
 }

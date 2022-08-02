@@ -5,12 +5,12 @@ use relm4::factory::{
 };
 use relm4::gtk;
 
-use crate::ProviderType;
 use crate::widgets::popover::new_list::NewListOutput;
+use crate::StaticProviderType;
 
 #[derive(Debug)]
 pub struct ProvidersList {
-	pub(crate) provider: ProviderType
+	pub(crate) provider: StaticProviderType,
 }
 
 #[derive(Debug)]
@@ -23,7 +23,7 @@ impl FactoryComponent for ProvidersList {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ();
-	type InitParams = ProviderType;
+	type InitParams = StaticProviderType;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -33,7 +33,7 @@ impl FactoryComponent for ProvidersList {
 				#[wrap(Some)]
 				set_child = &gtk::Box {
 					append = &gtk::Image {
-						set_icon_name: Some(&self.provider.get_icon_name())
+						set_icon_name: Some(self.provider.get_icon_name())
 					},
 					append = &gtk::Label {
 						set_label: self.provider.get_name()
@@ -47,9 +47,7 @@ impl FactoryComponent for ProvidersList {
 		_index: &DynamicIndex,
 		_sender: FactoryComponentSender<Self>,
 	) -> Self {
-		Self {
-			provider: params
-		}
+		Self { provider: params }
 	}
 
 	fn update(

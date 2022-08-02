@@ -7,12 +7,12 @@ use relm4::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::widgets::factory::provider::{ServiceInput, ServiceModel};
-use crate::SERVICES;
+use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
+use crate::PLUGINS;
 
 #[derive(Debug)]
 pub struct SidebarModel {
-	service_factory: FactoryVecDeque<ServiceModel>,
+	provider_factory: FactoryVecDeque<ProviderModel>,
 }
 
 #[allow(dead_code)]
@@ -66,16 +66,14 @@ impl SimpleComponent for SidebarModel {
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
 		let mut model = SidebarModel {
-			service_factory: FactoryVecDeque::new(
+			provider_factory: FactoryVecDeque::new(
 				widgets.providers_container.clone(),
 				&sender.input,
 			),
 		};
-		unsafe {
-			for service in &mut *SERVICES.get_mut().unwrap() {
-				if service.is_enabled() {
-					model.service_factory.guard().push_back(&**service);
-				}
+		for provider in PLUGINS.get_providers() {
+			if provider.is_enabled() {
+				model.provider_factory.guard().push_back(&*provider);
 			}
 		}
 		ComponentParts { model, widgets }
@@ -85,11 +83,13 @@ impl SimpleComponent for SidebarModel {
 		match message {
 			SidebarInput::AddTaskList(index, provider, name) => {
 				self
-					.service_factory
-					.send(index, ServiceInput::AddList(provider, name));
+					.provider_factory
+					.send(index, ProviderInput::AddList(provider, name));
 			},
 			SidebarInput::RemoveService(_) => todo!(),
-			SidebarInput::ListSelected(list) => sender.output.send(SidebarOutput::ListSelected(list))
+			SidebarInput::ListSelected(list) => {
+				sender.output.send(SidebarOutput::ListSelected(list))
+			},
 		}
 	}
 }

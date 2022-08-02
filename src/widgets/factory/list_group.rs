@@ -3,8 +3,8 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::{WidgetExt, ButtonExt};
-use crate::widgets::factory::provider::ServiceInput;
+use crate::gtk::prelude::{ButtonExt, WidgetExt};
+use crate::widgets::factory::provider::ProviderInput;
 use crate::{adw, gtk};
 use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
 
@@ -29,12 +29,12 @@ pub enum ListInput {
 
 #[derive(Debug)]
 pub enum ListOutput {
-	Select(GenericList)
+	Select(GenericList),
 }
 
 #[relm4::factory(pub)]
 impl FactoryComponent for GenericList {
-	type ParentMsg = ServiceInput;
+	type ParentMsg = ProviderInput;
 	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
 	type Input = ListInput;
@@ -110,13 +110,13 @@ impl FactoryComponent for GenericList {
 					self.icon_name = Some(icon)
 				}
 			},
-			ListInput::Select => {
-				sender.output.send(ListOutput::Select(self.clone()))
-			}
+			ListInput::Select => sender.output.send(ListOutput::Select(self.clone())),
 		}
 	}
 
 	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
-		match output { ListOutput::Select(list) => Some(ServiceInput::ListSelected(list)) }
+		match output {
+			ListOutput::Select(list) => Some(ProviderInput::ListSelected(list)),
+		}
 	}
 }

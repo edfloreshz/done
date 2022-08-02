@@ -1,4 +1,6 @@
+use crate::data::traits::provider::ReflectProvider;
 use anyhow::Context;
+use bevy_reflect::Reflect;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
@@ -8,17 +10,16 @@ use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
-use crate::data::traits::provider::{Provider, ProviderType};
+use crate::data::traits::provider::Provider;
 use crate::embedded_migrations;
 use crate::gtk::Image;
-
 pub mod models;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Provider)]
 pub struct LocalProvider {
-	id: String,
+	pub id: String,
 	name: String,
-	provider_type: ProviderType,
 	description: String,
 	enabled: bool,
 	smart: bool,
@@ -30,7 +31,6 @@ impl Default for LocalProvider {
 		Self {
 			id: "local".to_string(),
 			name: "Local".to_string(),
-			provider_type: ProviderType::Local,
 			description: "Local storage".to_string(),
 			enabled: true,
 			smart: false,
@@ -46,10 +46,6 @@ impl Provider for LocalProvider {
 
 	fn get_name(&self) -> &str {
 		&self.name
-	}
-
-	fn get_provider_type(&self) -> ProviderType {
-		self.provider_type
 	}
 
 	fn get_description(&self) -> &str {
@@ -194,7 +190,7 @@ impl Provider for LocalProvider {
 			is_owner: list.is_owner,
 			count: list.count,
 			icon_name: list.icon_name.clone(),
-			provider: list.provider.clone(),
+			provider: list.provider,
 		};
 		diesel::update(lists.filter(id_list.eq(queryable_list.id_list.clone())))
 			.set((
@@ -209,7 +205,7 @@ impl Provider for LocalProvider {
 
 	fn remove_task_list(&self, list: GenericList) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
-		diesel::delete(lists.filter(id_list.eq(list.clone().id_list)))
+		diesel::delete(lists.filter(id_list.eq(list.id_list)))
 			.execute(&establish_connection()?)?;
 		Ok(())
 	}

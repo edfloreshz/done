@@ -1,4 +1,6 @@
+use crate::data::traits::provider::ReflectProvider;
 use anyhow::Context;
+use bevy_reflect::Reflect;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
@@ -8,17 +10,17 @@ use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
-use crate::data::traits::provider::{Provider, ProviderType};
-use crate::{embedded_migrations, fl};
+use crate::data::traits::provider::Provider;
 use crate::gtk::Image;
+use crate::{embedded_migrations, fl};
 
 pub mod models;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Provider)]
 pub struct AllProvider {
 	id: String,
 	name: String,
-	provider_type: ProviderType,
 	description: String,
 	enabled: bool,
 	smart: bool,
@@ -30,7 +32,6 @@ impl Default for AllProvider {
 		Self {
 			id: "all".to_string(),
 			name: String::from(fl!("all")),
-			provider_type: ProviderType::Local,
 			description: "All tasks".to_string(),
 			enabled: true,
 			smart: true,
@@ -46,10 +47,6 @@ impl Provider for AllProvider {
 
 	fn get_name(&self) -> &str {
 		&self.name
-	}
-
-	fn get_provider_type(&self) -> ProviderType {
-		self.provider_type
 	}
 
 	fn get_description(&self) -> &str {
@@ -91,7 +88,10 @@ impl Provider for AllProvider {
 		todo!()
 	}
 
-	fn read_tasks_from_list(&self, _id: &str) -> anyhow::Result<Vec<GenericTask>> {
+	fn read_tasks_from_list(
+		&self,
+		_id: &str,
+	) -> anyhow::Result<Vec<GenericTask>> {
 		use crate::schema::tasks::dsl::*;
 		let results = tasks.load::<QueryableTask>(&establish_connection()?)?;
 		let results: Vec<GenericTask> =
