@@ -22,18 +22,3 @@ jobs:
         run: echo -e "" >> src/config.rs
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
-
-  flatpak:
-    name: Flatpak
-    runs-on: ubuntu-20.04
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-42
-      options: --privileged
-    steps:
-    - uses: actions/checkout@v2
-    - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
-      with:
-        bundle: done.flatpak
-        manifest-path: build-aux/dev.edfloreshz.Done.Devel.json
-        run-tests: true
-        cache-key: flatpak-builder-${{ github.sha }}
