@@ -6,8 +6,6 @@ use crate::data::plugins::today::TodayProvider;
 use crate::data::traits::provider::ReflectProvider;
 use crate::Provider;
 use bevy_reflect::{Reflect, Struct, TypeRegistry};
-use serde::{Deserialize, Serialize};
-use std::any::Any;
 
 pub mod all;
 pub mod local;
@@ -17,11 +15,11 @@ pub mod today;
 
 #[derive(Debug, Default, Reflect)]
 pub struct Plugins {
-	pub(crate) local: LocalProvider,
 	pub(crate) all: AllProvider,
 	pub(crate) today: TodayProvider,
 	pub(crate) starred: StarredProvider,
 	pub(crate) next: Next7DaysProvider,
+	pub(crate) local: LocalProvider,
 }
 
 impl Plugins {

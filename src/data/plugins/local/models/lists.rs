@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericTaskList;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct LocalList {
@@ -13,8 +13,8 @@ pub struct LocalList {
 	pub is_smart: bool,
 }
 
-impl From<GenericList> for LocalList {
-	fn from(list: GenericList) -> Self {
+impl From<GenericTaskList> for LocalList {
+	fn from(list: GenericTaskList) -> Self {
 		Self {
 			id_list: list.id_list,
 			display_name: list.display_name,

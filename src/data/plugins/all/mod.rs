@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
 
-use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
@@ -105,13 +105,13 @@ impl Provider for AllProvider {
 
 	fn create_task(
 		&self,
-		list: &GenericList,
+		list: &GenericTaskList,
 		task: GenericTask,
 	) -> anyhow::Result<GenericTask> {
 		use crate::schema::tasks::dsl::*;
 
-		let task: GenericTask = task.into();
-		let list: GenericList = list.to_owned().into();
+		let task: GenericTask = task;
+		let list: GenericTaskList = list.to_owned();
 
 		let inserted_task = QueryableTask::new(task.title, list.id_list);
 		diesel::insert_into(tasks)
@@ -150,13 +150,13 @@ impl Provider for AllProvider {
 		Ok(())
 	}
 
-	fn read_task_lists(&self) -> anyhow::Result<Vec<GenericList>> {
+	fn read_task_lists(&self) -> anyhow::Result<Vec<GenericTaskList>> {
 		use crate::schema::lists::dsl::*;
 
 		let results = lists
 			.filter(provider.eq(self.get_id()))
 			.load::<QueryableList>(&establish_connection()?)?;
-		let results: Vec<GenericList> =
+		let results: Vec<GenericTaskList> =
 			results.into_iter().map(|ql| ql.into()).collect();
 		Ok(results)
 	}
@@ -166,7 +166,7 @@ impl Provider for AllProvider {
 		list_provider: &str,
 		name: &str,
 		icon: &str,
-	) -> anyhow::Result<GenericList> {
+	) -> anyhow::Result<GenericTaskList> {
 		use crate::schema::lists::dsl::*;
 
 		let new_list =
@@ -174,24 +174,23 @@ impl Provider for AllProvider {
 		diesel::insert_into(lists)
 			.values(&new_list)
 			.execute(&establish_connection()?)?;
-		let list: GenericList = new_list.into();
+		let list: GenericTaskList = new_list.into();
 		Ok(list)
 	}
 
 	fn update_task_list(
 		&self,
-		list: GenericList,
-		name: &str,
+		list: GenericTaskList,
 	) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
 
 		let queryable_list = QueryableList {
 			id_list: list.id_list.clone(),
-			display_name: name.to_string(),
+			display_name: list.display_name.to_string(),
 			is_owner: list.is_owner,
 			count: list.count,
 			icon_name: list.icon_name.clone(),
-			provider: list.provider.clone(),
+			provider: list.provider,
 		};
 		diesel::update(lists.filter(id_list.eq(queryable_list.id_list.clone())))
 			.set((
@@ -204,9 +203,9 @@ impl Provider for AllProvider {
 		Ok(())
 	}
 
-	fn remove_task_list(&self, list: GenericList) -> anyhow::Result<()> {
+	fn remove_task_list(&self, list: GenericTaskList) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
-		diesel::delete(lists.filter(id_list.eq(list.clone().id_list)))
+		diesel::delete(lists.filter(id_list.eq(list.id_list)))
 			.execute(&establish_connection()?)?;
 		Ok(())
 	}

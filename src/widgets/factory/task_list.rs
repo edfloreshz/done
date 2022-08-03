@@ -2,75 +2,75 @@ use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
 
-use crate::data::models::generic::lists::GenericList;
-use crate::gtk::prelude::{ButtonExt, WidgetExt};
+use crate::data::models::generic::lists::GenericTaskList;
+use crate::gtk::prelude::{ButtonExt, WidgetExt, EditableExt};
 use crate::widgets::factory::provider::ProviderInput;
-use crate::{adw, gtk};
-use relm4::adw::prelude::{ActionRowExt, PreferencesRowExt};
+use crate::{adw, gtk, PLUGINS};
+use relm4::adw::prelude::ActionRowExt;
 
-#[derive(Debug)]
-pub enum ListType {
-	Inbox(i8),
-	Today(i8),
-	Next7Days(i8),
-	All(i8),
-	Starred(i8),
-	Archived(i8),
-	Other(usize, i8),
-}
 
 #[derive(Debug)]
 pub enum ListInput {
 	Select,
+	Delete(DynamicIndex),
 	Rename(String),
-	UpdateCount(i32),
 	ChangeIcon(String),
 }
 
 #[derive(Debug)]
 pub enum ListOutput {
-	Select(GenericList),
+	Select(GenericTaskList),
+	DeleteTaskList(DynamicIndex),
+	Forward
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for GenericList {
+impl FactoryComponent for GenericTaskList {
 	type ParentMsg = ProviderInput;
 	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-	type InitParams = GenericList;
+	type InitParams = GenericTaskList;
 	type Widgets = ListWidgets;
 
 	view! {
 		#[root]
 		gtk::ListBoxRow {
 			adw::ActionRow {
+				add_prefix = &gtk::Entry {
+					set_hexpand: false,
+					add_css_class: "flat",
+					add_css_class: "no-border",
+					#[watch]
+					set_text: self.display_name.as_str(),
+					set_margin_top: 10,
+					set_margin_bottom: 10
+				},
 				add_prefix = &gtk::Button {
 					set_icon_name: self.icon_name.as_ref().unwrap(),
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center
 				},
-				set_title: &self.display_name,
 				add_suffix = &gtk::Label {
 					set_halign: gtk::Align::End,
 					set_css_classes: &["dim-label", "caption"],
 					#[watch]
 					set_text: self.count.to_string().as_str(),
-					set_margin_top: 10,
-					set_margin_bottom: 10,
-					set_margin_start: 15,
-					set_margin_end: 15,
 				},
 				add_suffix = &gtk::Button {
 					set_icon_name: "user-trash-full-symbolic",
 					set_css_classes: &["circular", "image-button", "destructive-action"],
-					set_valign: gtk::Align::Center
+					set_valign: gtk::Align::Center,
+					connect_clicked[sender, index] => move |_| {
+						sender.input.send(ListInput::Delete(index.clone()))
+					}
 				},
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input.send(ListInput::Select)
+					sender.input.send(ListInput::Select);
+					sender.output(ListOutput::Forward)
 				}
 			}
 		}
@@ -78,7 +78,7 @@ impl FactoryComponent for GenericList {
 
 	fn init_widgets(
 		&mut self,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,
@@ -100,14 +100,25 @@ impl FactoryComponent for GenericList {
 		message: Self::Input,
 		sender: FactoryComponentSender<Self>,
 	) {
+		let service = PLUGINS.get_provider(&self.provider);
 		match message {
-			ListInput::Rename(name) => self.display_name = name,
-			ListInput::UpdateCount(count) => self.count = count,
+			ListInput::Rename(name) => {
+				let mut list = self.clone();
+				list.display_name = name.clone();
+				if service.update_task_list(list).is_ok() {
+					self.display_name = name;
+				}
+			},
+			ListInput::Delete(index) => {
+				if service.remove_task_list(self.clone()).is_ok() {
+					sender.output.send(ListOutput::DeleteTaskList(index))
+				}
+			},
 			ListInput::ChangeIcon(icon) => {
-				if icon.is_empty() {
-					self.icon_name = None
-				} else {
-					self.icon_name = Some(icon)
+				let mut list = self.clone();
+				list.icon_name = Some(icon.clone());
+				if service.update_task_list(list).is_ok() {
+					self.icon_name = Some(icon);
 				}
 			},
 			ListInput::Select => sender.output.send(ListOutput::Select(self.clone())),
@@ -117,6 +128,8 @@ impl FactoryComponent for GenericList {
 	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
 		match output {
 			ListOutput::Select(list) => Some(ProviderInput::ListSelected(list)),
+			ListOutput::DeleteTaskList(index) => Some(ProviderInput::DeleteTaskList(index)),
+			ListOutput::Forward => Some(ProviderInput::Forward(true))
 		}
 	}
 }

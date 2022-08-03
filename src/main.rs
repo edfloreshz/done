@@ -2,11 +2,9 @@
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
-#[macro_use]
-extern crate log;
 
 use anyhow::Result;
-use bevy_reflect::Reflect;
+
 use gtk::gio;
 use gtk::prelude::ApplicationExt;
 use once_cell::{sync::Lazy as LazySync, unsync::Lazy};
@@ -14,7 +12,7 @@ use relm4::{
 	actions::{AccelsPlus, RelmAction, RelmActionGroup},
 	adw, gtk, RelmApp,
 };
-use std::sync::RwLock;
+
 
 use app::App;
 use setup::setup;

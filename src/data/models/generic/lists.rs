@@ -5,7 +5,7 @@ use crate::data::models::queryable::list::QueryableList;
 use crate::data::plugins::local::models::lists::LocalList;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct GenericList {
+pub struct GenericTaskList {
 	pub id_list: String,
 	pub display_name: String,
 	pub is_owner: bool,
@@ -15,7 +15,7 @@ pub struct GenericList {
 	pub is_smart: bool,
 }
 
-impl GenericList {
+impl GenericTaskList {
 	pub fn new(
 		display_name: &str,
 		icon_name: &str,
@@ -42,7 +42,7 @@ impl GenericList {
 	}
 }
 
-impl From<QueryableList> for GenericList {
+impl From<QueryableList> for GenericTaskList {
 	fn from(queryable_list: QueryableList) -> Self {
 		Self {
 			id_list: queryable_list.id_list,
@@ -56,7 +56,7 @@ impl From<QueryableList> for GenericList {
 	}
 }
 
-impl From<LocalList> for GenericList {
+impl From<LocalList> for GenericTaskList {
 	fn from(local_list: LocalList) -> Self {
 		Self {
 			id_list: local_list.id_list,

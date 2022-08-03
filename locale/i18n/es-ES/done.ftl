@@ -7,6 +7,7 @@ list-name = Nombre de la lista
 new-task = Nueva tarea...
 add-tasks = Añadir tareas...
 tasks-here = Las tareas aparecerán aquí
+select-list = Seleccione una lista de la barra lateral
 
 providers = Proveedores
 

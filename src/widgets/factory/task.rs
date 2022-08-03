@@ -11,7 +11,6 @@ use relm4::WidgetPlus;
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::widgets::components::content::ContentInput;
-use crate::widgets::factory::list_group::ListType;
 
 #[derive(Debug)]
 pub enum TaskInput {
@@ -24,7 +23,6 @@ pub enum TaskInput {
 pub enum TaskOutput {
 	Remove(DynamicIndex),
 	Favorite(DynamicIndex, bool),
-	UpdateCounters(Vec<ListType>),
 }
 
 #[relm4::factory(pub)]
@@ -103,7 +101,6 @@ impl FactoryComponent for GenericTask {
 	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
 		Some(match output {
 			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::UpdateCounters(lists) => ContentInput::UpdateCounters(lists),
 			TaskOutput::Favorite(index, favorite) => {
 				ContentInput::FavoriteTask(index, favorite)
 			},

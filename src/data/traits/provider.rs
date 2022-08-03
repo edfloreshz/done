@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 
-use crate::data::models::generic::lists::GenericList;
+
+use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::gtk;
 use bevy_reflect::reflect_trait;
@@ -55,7 +55,7 @@ pub trait Provider: Debug + Reflect {
 	/// This method should create a new task and insert it to its respective list.
 	fn create_task(
 		&self,
-		list: &GenericList,
+		list: &GenericTaskList,
 		task: GenericTask,
 	) -> Result<GenericTask>;
 	/// This method should update an existing task.
@@ -66,16 +66,16 @@ pub trait Provider: Debug + Reflect {
 	/// Task Lists
 	///
 	/// This method should return the lists from a provider.
-	fn read_task_lists(&self) -> Result<Vec<GenericList>>;
+	fn read_task_lists(&self) -> Result<Vec<GenericTaskList>>;
 	/// This method should create a new list for a provider.
 	fn create_task_list(
 		&self,
 		list_provider: &str,
 		name: &str,
 		icon: &str,
-	) -> Result<GenericList>;
+	) -> Result<GenericTaskList>;
 	/// This method should update an existing list for a provider.
-	fn update_task_list(&self, list: GenericList, name: &str) -> Result<()>;
+	fn update_task_list(&self, list: GenericTaskList) -> Result<()>;
 	/// This method should remove a list from a provider.
-	fn remove_task_list(&self, list: GenericList) -> Result<()>;
+	fn remove_task_list(&self, list: GenericTaskList) -> Result<()>;
 }

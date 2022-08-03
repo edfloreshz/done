@@ -1,12 +1,13 @@
 done = Done
 
-create-list = Create List
+create-list = Create list
 cancel = Cancel
 
-list-name = List Name
+list-name = List name
 new-task = New task...
-add-tasks = Add Tasks...
-tasks-here = Tasks Will Appear Here
+add-tasks = Add tasks...
+tasks-here = Tasks will appear here
+select-list = Select a list from the sidebar
 
 providers = Providers
 

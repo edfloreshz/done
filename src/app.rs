@@ -7,56 +7,44 @@ use relm4::{
 
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
-use crate::widgets::popover::new_list::NewListOutput;
 use crate::{
 	config::PROFILE,
 	widgets::{
 		components::{
-			content::{ContentInput, ContentModel, ContentOutput},
-			sidebar::{SidebarInput, SidebarModel, SidebarOutput},
+			content::{ContentInput, ContentModel},
+			sidebar::{SidebarModel, SidebarOutput},
 		},
-		factory::list_group::ListType,
-		popover::new_list::NewListModel,
 	},
 };
 use crate::{
 	data::{
-		models::generic::lists::GenericList, plugins::Plugins,
+		models::generic::lists::GenericTaskList,
 		traits::provider::Provider,
 	},
-	PLUGINS,
 };
 
 pub(super) struct App {
 	message: Option<AppMsg>,
-	sidebar: Controller<SidebarModel>,
 	content: Controller<ContentModel>,
-	_new_list_popover: Controller<NewListModel>,
 	about_dialog: Controller<AboutDialog>,
 }
 
 impl App {
 	pub fn new(
-		sidebar: Controller<SidebarModel>,
 		content: Controller<ContentModel>,
-		new_list_popover: Controller<NewListModel>,
 		about_dialog: Controller<AboutDialog>,
 	) -> Self {
 		Self {
 			message: None,
-			sidebar,
 			content,
-			_new_list_popover: new_list_popover,
 			about_dialog,
 		}
 	}
 }
-
+#[allow(dead_code)]
 #[derive(Debug)]
 pub(super) enum AppMsg {
-	AddTaskList(usize, String, String),
-	ListSelected(GenericList),
-	UpdateSidebarCounters(Vec<ListType>),
+	ListSelected(GenericTaskList),
 	Folded,
 	Unfolded,
 	Forward,
@@ -147,12 +135,6 @@ impl SimpleComponent for App {
 									set_text: "Done"
 								}
 							},
-							pack_start: new_list_button = &gtk::MenuButton {
-								set_icon_name: "value-increase-symbolic",
-								add_css_class: "raised",
-								set_has_frame: true,
-								set_popover: Some(new_list_controller.widget())
-							},
 							pack_end = &gtk::MenuButton {
 								set_icon_name: "open-menu-symbolic",
 								set_menu_model: Some(&primary_menu),
@@ -227,18 +209,7 @@ impl SimpleComponent for App {
 		let content_controller =
 			ContentModel::builder()
 				.launch(None)
-				.forward(&sender.input, |message| match message {
-					ContentOutput::UpdateCounters(lists) => {
-						AppMsg::UpdateSidebarCounters(lists)
-					},
-				});
-		let new_list_controller = NewListModel::builder()
-			.launch(Some((4, "local".to_string())))
-			.forward(&sender.input, |message| match message {
-				NewListOutput::AddTaskListToSidebar(index, provider, name) => {
-					AppMsg::AddTaskList(index, provider, name)
-				},
-			});
+				.forward(&sender.input, |message| match message { });
 
 		let widgets = view_output!();
 
@@ -256,9 +227,7 @@ impl SimpleComponent for App {
 		};
 
 		let model = App::new(
-			sidebar_controller,
 			content_controller,
-			new_list_controller,
 			about_dialog,
 		);
 
@@ -290,10 +259,6 @@ impl SimpleComponent for App {
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
-			AppMsg::AddTaskList(index, provider, title) => self
-				.sidebar
-				.sender()
-				.send(SidebarInput::AddTaskList(index, provider, title)),
 			AppMsg::ListSelected(list) => {
 				self.content.sender().send(ContentInput::SetTaskList(list))
 			},

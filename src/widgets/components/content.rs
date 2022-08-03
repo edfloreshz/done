@@ -1,4 +1,3 @@
-use bevy_reflect::{Struct, TypeData, TypeRegistry};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
@@ -8,20 +7,18 @@ use relm4::{
 	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
 
-use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::plugins::all::AllProvider;
-use crate::data::plugins::local::LocalProvider;
-use crate::data::plugins::next7days::Next7DaysProvider;
-use crate::data::plugins::starred::StarredProvider;
-use crate::data::plugins::today::TodayProvider;
-use crate::data::traits::provider::ReflectProvider;
-use crate::widgets::factory::list_group::ListType;
-use crate::widgets::factory::list_group::ListType::Starred;
-use crate::{fl, Plugins, Provider, PLUGINS};
+
+
+
+
+
+use crate::{fl, Provider, PLUGINS};
 
 pub struct ContentModel {
-	parent_list: GenericList,
+	parent_list: GenericTaskList,
 	tasks_factory: FactoryVecDeque<GenericTask>,
 	show_tasks: bool,
 }
@@ -31,14 +28,12 @@ pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
 	RemoveWelcomeScreen,
-	SetTaskList(GenericList),
-	UpdateCounters(Vec<ListType>),
+	SetTaskList(GenericTaskList),
 	FavoriteTask(DynamicIndex, bool),
 }
 
 #[derive(Debug)]
 pub enum ContentOutput {
-	UpdateCounters(Vec<ListType>),
 }
 
 #[relm4::component(pub)]
@@ -68,7 +63,10 @@ impl SimpleComponent for ContentModel {
 					set_spacing: 24,
 					gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
 					gtk::Label {
-						add_css_class: "large-title",
+						set_css_classes: &["large-title", "accent"],
+						set_text: fl!("select-list")
+					},
+					gtk::Label {
 						set_text: fl!("tasks-here")
 					},
 					gtk::Button {
@@ -132,7 +130,7 @@ impl SimpleComponent for ContentModel {
 		}
 		let all = AllProvider::new();
 		let mut list =
-			GenericList::new(all.get_name(), all.get_icon_name(), 0, all.get_id());
+			GenericTaskList::new(all.get_name(), all.get_icon_name(), 0, all.get_id());
 		list.make_smart();
 		let model = ContentModel {
 			parent_list: list.clone(),
@@ -144,7 +142,7 @@ impl SimpleComponent for ContentModel {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		let parent_list = &self.parent_list;
 		let service = PLUGINS.get_provider(&parent_list.provider);
 		match message {
@@ -180,9 +178,6 @@ impl SimpleComponent for ContentModel {
 				}
 				self.show_tasks = !self.tasks_factory.guard().is_empty();
 			},
-			ContentInput::UpdateCounters(lists) => {
-				sender.output(ContentOutput::UpdateCounters(lists))
-			},
 			ContentInput::FavoriteTask(index, favorite) => {
 				let mut guard = self.tasks_factory.guard();
 				let task = guard.get_mut(index.current_index()).unwrap();
@@ -193,8 +188,6 @@ impl SimpleComponent for ContentModel {
 				if self.parent_list.provider == "favorites" {
 					guard.remove(index.current_index());
 				}
-				let value = if favorite { 1 } else { -1 };
-				sender.output(ContentOutput::UpdateCounters(vec![Starred(value)]))
 			},
 		}
 	}

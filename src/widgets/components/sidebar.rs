@@ -6,7 +6,7 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericTaskList;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use crate::PLUGINS;
 
@@ -19,14 +19,15 @@ pub struct SidebarModel {
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddTaskList(usize, String, String),
-	ListSelected(GenericList),
+	ListSelected(GenericTaskList),
 	RemoveService(String),
+	Forward
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarOutput {
-	ListSelected(GenericList),
+	ListSelected(GenericTaskList),
 	Forward,
 }
 
@@ -90,6 +91,7 @@ impl SimpleComponent for SidebarModel {
 			SidebarInput::ListSelected(list) => {
 				sender.output.send(SidebarOutput::ListSelected(list))
 			},
+			SidebarInput::Forward => sender.output.send(SidebarOutput::Forward)
 		}
 	}
 }

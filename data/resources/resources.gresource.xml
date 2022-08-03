@@ -22,6 +22,8 @@
     <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/go-previous-symbolic.svg</file>
     <file alias="accessories-text-editor-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/accessories-text-editor-symbolic.svg</file>
     <file alias="user-home-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-home-symbolic.svg</file>
+    <file alias="small-x-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/small-x-symbolic.svg</file>
+    <file alias="checkmark-small-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/checkmark-small-symbolic.svg</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
     <file alias="app-icon.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.svg</file>

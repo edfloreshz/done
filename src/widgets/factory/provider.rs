@@ -1,34 +1,39 @@
-use crate::data::models::generic::lists::GenericList;
+use crate::data::models::generic::lists::GenericTaskList;
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::{StaticProviderType, PLUGINS};
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use relm4::adw;
+use relm4::{adw, Component, Controller};
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
 	FactoryView,
 };
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
+use relm4::ComponentController;
+use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProviderModel {
 	pub provider: StaticProviderType,
-	pub list_factory: FactoryVecDeque<GenericList>,
+	pub list_factory: FactoryVecDeque<GenericTaskList>,
+	pub new_list_controller: Controller<NewListModel>,
 }
 
 #[derive(Debug)]
 pub enum ProviderInput {
 	SelectSmartProvider,
 	AddList(String, String),
-	RemoveList(DynamicIndex),
+	DeleteTaskList(DynamicIndex),
 	RenameList(DynamicIndex, String),
-	ListSelected(GenericList),
+	ListSelected(GenericTaskList),
+	Forward(bool)
 }
 
 #[derive(Debug)]
 pub enum ProviderOutput {
-	ListSelected(GenericList),
+	ListSelected(GenericTaskList),
+	Forward
 }
 
 #[relm4::factory(pub)]
@@ -51,12 +56,12 @@ impl FactoryComponent for ProviderModel {
 				set_subtitle: self.provider.get_description(),
 				set_icon_name: Some(self.provider.get_icon_name()),
 				set_enable_expansion: !self.provider.is_smart(),
-				set_show_enable_switch: !self.provider.is_smart(),
 				set_expanded: self.provider.is_smart(),
 			},
 			add_controller = &gtk::GestureClick {
-				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input.send(ProviderInput::SelectSmartProvider)
+				connect_pressed[sender, index] => move |_, _, _, _| {
+					sender.input.send(ProviderInput::SelectSmartProvider);
+					sender.input.send(ProviderInput::Forward(index.clone().current_index() <= 3))
 				}
 			}
 		}
@@ -73,12 +78,19 @@ impl FactoryComponent for ProviderModel {
 				adw::ExpanderRow::default(),
 				&sender.input,
 			),
+			new_list_controller: NewListModel::builder()
+				.launch(())
+				.forward(&sender.input, |message| match message {
+					NewListOutput::AddTaskListToSidebar(name) => {
+						ProviderInput::AddList(params.get_id().into(), name)
+					},
+				})
 		}
 	}
 
 	fn init_widgets(
 		&mut self,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,
@@ -90,6 +102,16 @@ impl FactoryComponent for ProviderModel {
 			for list in self.provider.read_task_lists().unwrap() {
 				self.list_factory.guard().push_back(list)
 			}
+			relm4::view! {
+				#[name(new_list_button)]
+				gtk::MenuButton {
+					set_icon_name: "value-increase-symbolic",
+					set_css_classes: &["flat", "image-button"],
+					set_valign: gtk::Align::Center,
+					set_popover: Some(self.new_list_controller.widget())
+				}
+			}
+			widgets.expander.add_action(&new_list_button);
 		}
 		widgets
 	}
@@ -101,7 +123,7 @@ impl FactoryComponent for ProviderModel {
 	) {
 		match message {
 			ProviderInput::SelectSmartProvider => {
-				let mut list = GenericList::new(
+				let mut list = GenericTaskList::new(
 					self.provider.get_name(),
 					self.provider.get_icon_name(),
 					0,
@@ -112,7 +134,9 @@ impl FactoryComponent for ProviderModel {
 				}
 				sender.input.send(ProviderInput::ListSelected(list))
 			},
-			ProviderInput::RemoveList(_) => {},
+			ProviderInput::DeleteTaskList(index) => {
+				self.list_factory.guard().remove(index.current_index());
+			},
 			ProviderInput::AddList(provider, name) => {
 				let current_provider = PLUGINS.get_provider(&provider);
 				let new_list = current_provider
@@ -124,6 +148,9 @@ impl FactoryComponent for ProviderModel {
 			ProviderInput::ListSelected(list) => {
 				sender.output.send(ProviderOutput::ListSelected(list))
 			},
+			ProviderInput::Forward(forward) => if forward {
+				sender.output.send(ProviderOutput::Forward)
+			}
 		}
 	}
 
@@ -132,6 +159,7 @@ impl FactoryComponent for ProviderModel {
 			ProviderOutput::ListSelected(list) => {
 				Some(SidebarInput::ListSelected(list))
 			},
+			ProviderOutput::Forward => Some(SidebarInput::Forward)
 		}
 	}
 }

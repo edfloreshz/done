@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::schema::lists;
 
+#[allow(clippy::extra_unused_lifetimes)]
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[table_name = "lists"]
 pub struct QueryableList {

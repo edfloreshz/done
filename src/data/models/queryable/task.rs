@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::schema::tasks;
 
+#[allow(clippy::extra_unused_lifetimes)]
 #[derive(Debug, Clone, Insertable, Queryable)]
 #[table_name = "tasks"]
 pub struct QueryableTask {
