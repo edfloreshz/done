@@ -60,7 +60,9 @@ impl FactoryComponent for ProviderModel {
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender, index] => move |_, _, _, _| {
-					sender.input.send(ProviderInput::SelectSmartProvider);
+					if index.clone().current_index() <= 3 {
+						sender.input.send(ProviderInput::SelectSmartProvider);
+					}
 					sender.input.send(ProviderInput::Forward(index.clone().current_index() <= 3))
 				}
 			}
@@ -131,9 +133,7 @@ impl FactoryComponent for ProviderModel {
 					0,
 					self.provider.get_id(),
 				);
-				if self.provider.is_smart() {
-					list.make_smart();
-				}
+				list.make_smart();
 				sender.input.send(ProviderInput::ListSelected(list))
 			},
 			ProviderInput::DeleteTaskList(index) => {
