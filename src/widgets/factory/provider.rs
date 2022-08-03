@@ -25,7 +25,6 @@ pub enum ProviderInput {
 	SelectSmartProvider,
 	AddList(String, String),
 	DeleteTaskList(DynamicIndex),
-	RenameList(DynamicIndex, String),
 	ListSelected(GenericTaskList),
 	Forward(bool),
 }
@@ -146,7 +145,6 @@ impl FactoryComponent for ProviderModel {
 					.expect("Failed to post task.");
 				self.list_factory.guard().push_back(new_list)
 			},
-			ProviderInput::RenameList(_, _) => todo!(),
 			ProviderInput::ListSelected(list) => {
 				sender.output.send(ProviderOutput::ListSelected(list))
 			},
