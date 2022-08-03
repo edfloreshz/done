@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use anyhow::Result;
 
-
 use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::gtk;

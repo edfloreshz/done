@@ -183,10 +183,7 @@ impl Provider for Next7DaysProvider {
 		Ok(list)
 	}
 
-	fn update_task_list(
-		&self,
-		list: GenericTaskList,
-	) -> anyhow::Result<()> {
+	fn update_task_list(&self, list: GenericTaskList) -> anyhow::Result<()> {
 		use crate::schema::lists::dsl::*;
 
 		let queryable_list = QueryableList {

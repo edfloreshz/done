@@ -13,7 +13,6 @@ use relm4::{
 	adw, gtk, RelmApp,
 };
 
-
 use app::App;
 use setup::setup;
 

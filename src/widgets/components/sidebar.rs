@@ -21,7 +21,7 @@ pub enum SidebarInput {
 	AddTaskList(usize, String, String),
 	ListSelected(GenericTaskList),
 	RemoveService(String),
-	Forward
+	Forward,
 }
 
 #[allow(dead_code)]
@@ -91,7 +91,7 @@ impl SimpleComponent for SidebarModel {
 			SidebarInput::ListSelected(list) => {
 				sender.output.send(SidebarOutput::ListSelected(list))
 			},
-			SidebarInput::Forward => sender.output.send(SidebarOutput::Forward)
+			SidebarInput::Forward => sender.output.send(SidebarOutput::Forward),
 		}
 	}
 }

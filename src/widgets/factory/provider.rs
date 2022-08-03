@@ -1,8 +1,8 @@
 use crate::data::models::generic::lists::GenericTaskList;
 use crate::widgets::components::sidebar::SidebarInput;
+use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 use crate::{StaticProviderType, PLUGINS};
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use relm4::{adw, Component, Controller};
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
 	FactoryView,
@@ -10,7 +10,7 @@ use relm4::factory::{
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
-use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
+use relm4::{adw, Component, Controller};
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -27,13 +27,13 @@ pub enum ProviderInput {
 	DeleteTaskList(DynamicIndex),
 	RenameList(DynamicIndex, String),
 	ListSelected(GenericTaskList),
-	Forward(bool)
+	Forward(bool),
 }
 
 #[derive(Debug)]
 pub enum ProviderOutput {
 	ListSelected(GenericTaskList),
-	Forward
+	Forward,
 }
 
 #[relm4::factory(pub)]
@@ -78,13 +78,14 @@ impl FactoryComponent for ProviderModel {
 				adw::ExpanderRow::default(),
 				&sender.input,
 			),
-			new_list_controller: NewListModel::builder()
-				.launch(())
-				.forward(&sender.input, |message| match message {
+			new_list_controller: NewListModel::builder().launch(()).forward(
+				&sender.input,
+				|message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
 						ProviderInput::AddList(params.get_id().into(), name)
 					},
-				})
+				},
+			),
 		}
 	}
 
@@ -108,6 +109,7 @@ impl FactoryComponent for ProviderModel {
 					set_icon_name: "value-increase-symbolic",
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
+					set_direction: gtk::ArrowType::Right,
 					set_popover: Some(self.new_list_controller.widget())
 				}
 			}
@@ -140,7 +142,7 @@ impl FactoryComponent for ProviderModel {
 			ProviderInput::AddList(provider, name) => {
 				let current_provider = PLUGINS.get_provider(&provider);
 				let new_list = current_provider
-					.create_task_list(&provider, &name, "list-compact-symbolic")
+					.create_task_list(&provider, &name, "✍️")
 					.expect("Failed to post task.");
 				self.list_factory.guard().push_back(new_list)
 			},
@@ -148,18 +150,19 @@ impl FactoryComponent for ProviderModel {
 			ProviderInput::ListSelected(list) => {
 				sender.output.send(ProviderOutput::ListSelected(list))
 			},
-			ProviderInput::Forward(forward) => if forward {
-				sender.output.send(ProviderOutput::Forward)
-			}
+			ProviderInput::Forward(forward) => {
+				if forward {
+					sender.output.send(ProviderOutput::Forward)
+				}
+			},
 		}
 	}
 
 	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
-		match output {
-			ProviderOutput::ListSelected(list) => {
-				Some(SidebarInput::ListSelected(list))
-			},
-			ProviderOutput::Forward => Some(SidebarInput::Forward)
-		}
+		let output = match output {
+			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
+			ProviderOutput::Forward => SidebarInput::Forward,
+		};
+		Some(output)
 	}
 }

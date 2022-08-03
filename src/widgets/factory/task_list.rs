@@ -3,11 +3,12 @@ use relm4::factory::{
 };
 
 use crate::data::models::generic::lists::GenericTaskList;
-use crate::gtk::prelude::{ButtonExt, WidgetExt, EditableExt};
+use crate::gtk::prelude::{
+	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
+};
 use crate::widgets::factory::provider::ProviderInput;
 use crate::{adw, gtk, PLUGINS};
 use relm4::adw::prelude::ActionRowExt;
-
 
 #[derive(Debug)]
 pub enum ListInput {
@@ -21,7 +22,7 @@ pub enum ListInput {
 pub enum ListOutput {
 	Select(GenericTaskList),
 	DeleteTaskList(DynamicIndex),
-	Forward
+	Forward,
 }
 
 #[relm4::factory(pub)]
@@ -45,12 +46,29 @@ impl FactoryComponent for GenericTaskList {
 					#[watch]
 					set_text: self.display_name.as_str(),
 					set_margin_top: 10,
-					set_margin_bottom: 10
+					set_margin_bottom: 10,
+					connect_activate[sender] => move |entry| {
+						let buffer = entry.buffer();
+						sender.input(ListInput::Rename(buffer.text()));
+					},
+					// This crashes the program.
+					// connect_changed[sender] => move |entry| {
+					// 	let buffer = entry.buffer();
+					// 	sender.input.send(ListInput::Rename(buffer.text()));
+					// }
 				},
-				add_prefix = &gtk::Button {
-					set_icon_name: self.icon_name.as_ref().unwrap(),
+				add_prefix = &gtk4::MenuButton {
+					#[watch]
+					set_label: self.icon_name.as_ref().unwrap(),
 					set_css_classes: &["flat", "image-button"],
-					set_valign: gtk::Align::Center
+					set_valign: gtk::Align::Center,
+					set_always_show_arrow: false,
+					#[wrap(Some)]
+					set_popover = &gtk::EmojiChooser{
+						connect_emoji_picked[sender] => move |_, emoji| {
+							sender.input.send(ListInput::ChangeIcon(emoji.to_string()))
+						}
+					}
 				},
 				add_suffix = &gtk::Label {
 					set_halign: gtk::Align::End,
@@ -128,8 +146,10 @@ impl FactoryComponent for GenericTaskList {
 	fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
 		match output {
 			ListOutput::Select(list) => Some(ProviderInput::ListSelected(list)),
-			ListOutput::DeleteTaskList(index) => Some(ProviderInput::DeleteTaskList(index)),
-			ListOutput::Forward => Some(ProviderInput::Forward(true))
+			ListOutput::DeleteTaskList(index) => {
+				Some(ProviderInput::DeleteTaskList(index))
+			},
+			ListOutput::Forward => Some(ProviderInput::Forward(true)),
 		}
 	}
 }

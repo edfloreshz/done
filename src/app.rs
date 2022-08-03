@@ -5,21 +5,16 @@ use relm4::{
 	ComponentSender, Controller, SimpleComponent,
 };
 
+use crate::data::{
+	models::generic::lists::GenericTaskList, traits::provider::Provider,
+};
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
 use crate::{
 	config::PROFILE,
-	widgets::{
-		components::{
-			content::{ContentInput, ContentModel},
-			sidebar::{SidebarModel, SidebarOutput},
-		},
-	},
-};
-use crate::{
-	data::{
-		models::generic::lists::GenericTaskList,
-		traits::provider::Provider,
+	widgets::components::{
+		content::{ContentInput, ContentModel},
+		sidebar::{SidebarModel, SidebarOutput},
 	},
 };
 
@@ -206,10 +201,9 @@ impl SimpleComponent for App {
 					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
 					SidebarOutput::Forward => AppMsg::Forward,
 				});
-		let content_controller =
-			ContentModel::builder()
-				.launch(None)
-				.forward(&sender.input, |message| match message { });
+		let content_controller = ContentModel::builder()
+			.launch(None)
+			.forward(&sender.input, |message| match message {});
 
 		let widgets = view_output!();
 
@@ -226,10 +220,7 @@ impl SimpleComponent for App {
 			})
 		};
 
-		let model = App::new(
-			content_controller,
-			about_dialog,
-		);
+		let model = App::new(content_controller, about_dialog);
 
 		let about_action = {
 			let sender = model.about_dialog.sender().clone();

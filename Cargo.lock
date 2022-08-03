@@ -314,6 +314,7 @@ dependencies = [
  "gettext-rs",
  "glib 0.15.12",
  "glib-build-tools",
+ "gtk4",
  "i18n-embed",
  "i18n-embed-fl",
  "libset",

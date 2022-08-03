@@ -25,7 +25,6 @@ impl SimpleComponent for NewListModel {
 	view! {
 		#[root]
 		gtk::Popover {
-			set_position: gtk::PositionType::Bottom,
 			#[wrap(Some)]
 			set_child = &gtk::Stack {
 				add_child = &gtk::Box {
@@ -72,6 +71,9 @@ impl SimpleComponent for NewListModel {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
-		ComponentParts { model: NewListModel, widgets }
+		ComponentParts {
+			model: NewListModel,
+			widgets,
+		}
 	}
 }

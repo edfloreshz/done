@@ -11,10 +11,6 @@ use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::plugins::all::AllProvider;
 
-
-
-
-
 use crate::{fl, Provider, PLUGINS};
 
 pub struct ContentModel {
@@ -33,8 +29,7 @@ pub enum ContentInput {
 }
 
 #[derive(Debug)]
-pub enum ContentOutput {
-}
+pub enum ContentOutput {}
 
 #[relm4::component(pub)]
 impl SimpleComponent for ContentModel {
@@ -129,8 +124,12 @@ impl SimpleComponent for ContentModel {
 				}
 		}
 		let all = AllProvider::new();
-		let mut list =
-			GenericTaskList::new(all.get_name(), all.get_icon_name(), 0, all.get_id());
+		let mut list = GenericTaskList::new(
+			all.get_name(),
+			all.get_icon_name(),
+			0,
+			all.get_id(),
+		);
 		list.make_smart();
 		let model = ContentModel {
 			parent_list: list.clone(),
