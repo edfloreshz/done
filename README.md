@@ -53,24 +53,22 @@ Done is a simple to do app that lets you combine your existing set of task provi
 
 - [x] Show lists
 - [x] Add a new list
-- [ ] Delete an existing list
-- [ ] Rename an existing list
+- [x] Delete an existing list
+- [x] Rename an existing list
 - [x] Update task counters
 
 ### Smart Lists
-- [ ] Inbox
-- [ ] Today
-- [ ] Next 7 Days
+- [x] Today
+- [x] Next 7 Days
 - [x] All
 - [x] Starred
-- [ ] Archived
 
 ### Tasks
 - [x] Add a new task
 - [x] Show tasks for every list
 - [x] Mark a task as completed
-- [ ] Delete a task
-- [ ] Rename a task
+- [x] Delete a task
+- [x] Rename a task
 - [ ] Add steps
 - [ ] Add tags
 - [ ] Add to My Day
