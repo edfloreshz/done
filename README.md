@@ -12,6 +12,19 @@
    <a href="https://crates.io/crates/done">
     <img src="https://img.shields.io/crates/d/done" alt="downloads"/>
   </a>
+  <br/>
+  <a href="https://github.com/sponsors/edfloreshz">
+    <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white"/>
+  </a>
+  <a href="https://matrix.to/#/#done-gh:matrix.org">
+    <img src="https://img.shields.io/badge/Element-0DBD8B?style=for-the-badge&logo=element&logoColor=white"/>
+  </a>
+  <a href="https://t.me/done_gh">
+    <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
+  </a>
+  <a href="https://github.com/edfloreshz/done">
+    <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"/>
+  </a>
 </div>
 <br/>
 
