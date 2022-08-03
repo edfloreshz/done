@@ -22,7 +22,7 @@ pub enum TaskInput {
 #[derive(Debug)]
 pub enum TaskOutput {
 	Remove(DynamicIndex),
-	Favorite(DynamicIndex, bool),
+	UpdateTask(Option<DynamicIndex>, GenericTask)
 }
 
 #[relm4::factory(pub)]
@@ -67,10 +67,14 @@ impl FactoryComponent for GenericTask {
 								let buffer = entry.buffer();
 								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
 							},
-							connect_changed[sender] => move |entry| {
-								let buffer = entry.buffer();
-								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
-							}
+							// connect_insert_text[sender] => move |entry, _, _| {
+							// 	let buffer = entry.buffer();
+							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// },
+							// connect_delete_text[sender] => move |entry, _, _| {
+							// 	let buffer = entry.buffer();
+							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// }
 						},
 						#[name = "favorite"]
 						gtk::ToggleButton {
@@ -98,13 +102,12 @@ impl FactoryComponent for GenericTask {
 		}
 	}
 
-	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
-		Some(match output {
-			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::Favorite(index, favorite) => {
-				ContentInput::FavoriteTask(index, favorite)
-			},
-		})
+	fn init_model(
+		params: Self::InitParams,
+		_index: &DynamicIndex,
+		_sender: FactoryComponentSender<Self>,
+	) -> Self {
+		params
 	}
 
 	fn init_widgets(
@@ -130,25 +133,31 @@ impl FactoryComponent for GenericTask {
 				} else {
 					TaskStatus::NotStarted
 				};
+				sender
+					.output
+					.send(TaskOutput::UpdateTask(None, self.clone()));
 			},
 			TaskInput::Favorite(index) => {
 				self.favorite = !self.favorite;
 				sender
 					.output
-					.send(TaskOutput::Favorite(index, self.favorite));
+					.send(TaskOutput::UpdateTask(Some(index), self.clone()));
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.title = title;
+				sender
+					.output
+					.send(TaskOutput::UpdateTask(None, self.clone()));
 			},
 		}
-		// patch_task(self.into()).expect("Failed to update task.");
 	}
 
-	fn init_model(
-		params: Self::InitParams,
-		_index: &DynamicIndex,
-		_sender: FactoryComponentSender<Self>,
-	) -> Self {
-		params
+	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
+		Some(match output {
+			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
+			TaskOutput::UpdateTask(index, task) => {
+				ContentInput::UpdateTask(index, task)
+			},
+		})
 	}
 }

@@ -25,7 +25,7 @@ pub enum ContentInput {
 	RemoveTask(DynamicIndex),
 	RemoveWelcomeScreen,
 	SetTaskList(GenericTaskList),
-	FavoriteTask(DynamicIndex, bool),
+	UpdateTask(Option<DynamicIndex>, GenericTask),
 }
 
 #[derive(Debug)]
@@ -177,15 +177,12 @@ impl SimpleComponent for ContentModel {
 				}
 				self.show_tasks = !self.tasks_factory.guard().is_empty();
 			},
-			ContentInput::FavoriteTask(index, favorite) => {
-				let mut guard = self.tasks_factory.guard();
-				let task = guard.get_mut(index.current_index()).unwrap();
-				task.favorite = favorite;
+			ContentInput::UpdateTask(index, task) => {
 				service
 					.update_task(task.clone())
 					.expect("Failed to update task.");
-				if self.parent_list.provider == "favorites" {
-					guard.remove(index.current_index());
+				if self.parent_list.provider == "starred" && index.is_some() {
+					self.tasks_factory.guard().remove(index.unwrap().current_index());
 				}
 			},
 		}
