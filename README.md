@@ -31,7 +31,7 @@
 Done is a simple to do app that lets you combine your existing set of task providers into one database, easily.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/edfloreshz/done/bb354c88b053249877ecfdaaf7f247e1caf2ecf9/data/screenshots/tasks.png"/>
+  <img src="https://raw.githubusercontent.com/edfloreshz/done/next/data/screenshots/tasks.png"/>
 </div>
 
 
