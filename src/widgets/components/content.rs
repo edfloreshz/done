@@ -182,7 +182,10 @@ impl SimpleComponent for ContentModel {
 					.update_task(task.clone())
 					.expect("Failed to update task.");
 				if self.parent_list.provider == "starred" && index.is_some() {
-					self.tasks_factory.guard().remove(index.unwrap().current_index());
+					self
+						.tasks_factory
+						.guard()
+						.remove(index.unwrap().current_index());
 				}
 			},
 		}

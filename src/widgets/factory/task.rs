@@ -22,7 +22,7 @@ pub enum TaskInput {
 #[derive(Debug)]
 pub enum TaskOutput {
 	Remove(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, GenericTask)
+	UpdateTask(Option<DynamicIndex>, GenericTask),
 }
 
 #[relm4::factory(pub)]
