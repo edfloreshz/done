@@ -6,4 +6,4 @@ pub const PKGDATADIR: &str = "/app/share/done";
 pub const PROFILE: &str = "";
 #[allow(dead_code)]
 pub const RESOURCES_FILE: &str = concat!("/app/share/done", "/resources.gresource");
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.1.2";

@@ -1,13 +1,7 @@
-use gtk::prelude::*;
-use relm4::{
-	actions::{ActionGroupName, RelmAction, RelmActionGroup},
-	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
-	ComponentSender, Controller, SimpleComponent,
-};
-
 use crate::data::{
 	models::generic::lists::GenericTaskList, traits::provider::Provider,
 };
+use crate::fl;
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
 use crate::{
@@ -17,12 +11,19 @@ use crate::{
 		sidebar::{SidebarModel, SidebarOutput},
 	},
 };
+use gtk::prelude::*;
+use relm4::{
+	actions::{ActionGroupName, RelmAction, RelmActionGroup},
+	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
+	ComponentSender, Controller, SimpleComponent,
+};
 
 pub(super) struct App {
 	message: Option<AppMsg>,
 	content: Option<Controller<ContentModel>>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	content_title: String,
+	warning_revealed: bool,
 }
 
 impl App {
@@ -35,6 +36,7 @@ impl App {
 			content,
 			about_dialog,
 			content_title: "All".to_string(),
+			warning_revealed: true,
 		}
 	}
 }
@@ -42,6 +44,7 @@ impl App {
 #[derive(Debug)]
 pub(super) enum AppMsg {
 	ListSelected(GenericTaskList),
+	CloseWarning,
 	Folded,
 	Unfolded,
 	Forward,
@@ -119,9 +122,23 @@ impl SimpleComponent for App {
 							#[name = "sidebar_header"]
 							adw::HeaderBar {
 								set_show_end_title_buttons: false,
+								set_title_widget: Some(&gtk::Label::new(Some("Done"))),
 								pack_end = &gtk::MenuButton {
 									set_icon_name: "open-menu-symbolic",
 									set_menu_model: Some(&primary_menu),
+								},
+							},
+							append = &gtk::InfoBar {
+								set_message_type: gtk::MessageType::Warning,
+								#[watch]
+								set_revealed: model.warning_revealed,
+								adw::Clamp {
+									set_maximum_size: 280,
+									gtk::Label {
+										set_wrap: true,
+										add_css_class: "warning",
+										set_text: fl!("alpha-warning")
+									}
 								},
 							},
 							append: sidebar_controller.widget()
@@ -246,6 +263,7 @@ impl SimpleComponent for App {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::ListSelected(list) => {
+				self.warning_revealed = false;
 				self.content_title = list.display_name.clone();
 				self
 					.content
@@ -254,6 +272,7 @@ impl SimpleComponent for App {
 					.sender()
 					.send(ContentInput::SetTaskList(list))
 			},
+			AppMsg::CloseWarning => self.warning_revealed = false,
 			_ => self.message = Some(message),
 		}
 	}

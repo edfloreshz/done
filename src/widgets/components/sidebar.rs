@@ -54,7 +54,7 @@ impl SimpleComponent for SidebarModel {
 						set_spacing: 12,
 						set_vexpand: true,
 						set_css_classes: &["navigation-sidebar"],
-					},
+					}
 				}
 			},
 		}

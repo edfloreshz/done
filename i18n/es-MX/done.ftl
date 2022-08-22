@@ -8,6 +8,7 @@ new-task = Nueva tarea...
 add-tasks = Añadir tareas...
 tasks-here = Las tareas aparecerán aquí
 select-list = Seleccione una lista de la barra lateral
+alpha-warning = Está ejecutando una versión de desarrollo en etapa inicial. Tenga en cuenta que es un trabajo en progreso y está lejos de estar completo todavía.
 
 providers = Proveedores
 

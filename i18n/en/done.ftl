@@ -8,6 +8,7 @@ new-task = New task...
 add-tasks = Add tasks...
 tasks-here = Tasks will appear here
 select-list = Select a list from the sidebar
+alpha-warning = You are running an early stage development version. Be aware it is a work in progress and far from complete yet.
 
 providers = Providers
 

@@ -22,13 +22,13 @@
   </description>
   <screenshots>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/tasks.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/tasks.png</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/blank.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/blank.png</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/screenshots/dark.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/dark.png</image>
     </screenshot>
   </screenshots>
   <url type="homepage">https://done.edfloreshz.dev/</url>
@@ -40,6 +40,17 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.2" date="2022-08-22">
+      <description>
+        <p>New sidebar!</p>
+        <ul>
+            <li>Implemented a new sidebar design.</li>
+            <li>Added Italian and German translation.</li>
+            <li>Simplified list creation process.</li>
+            <li>Added alpha state warning banner.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.1" date="2022-07-26">
       <description>
         <p>Lots of changes!</p>
