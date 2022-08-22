@@ -1,0 +1,24 @@
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+    branches: [main, next]
+
+name: CI
+
+jobs:
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: Create blank versions of configured file
+        run: echo -e "" >> src/config.rs
+      - name: Run cargo fmt
+        run: cargo fmt --all -- --check

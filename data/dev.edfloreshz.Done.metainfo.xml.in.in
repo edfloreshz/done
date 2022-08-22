@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Eduardo Flores 2022 <edfloreshz@gmail.com> -->
 <component type="desktop-application">
-  <id>@APPLICATION_ID@</id>
+  <id>@app-id@</id>
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <name>Done</name>
@@ -88,5 +88,5 @@ https://hughsie.github.io/oars/index.html
   <developer_name>Eduardo Flores</developer_name>
   <update_contact>edfloreshz@gmail.com</update_contact>
 
-  <launchable type="desktop-id">@APPLICATION_ID@.desktop</launchable>
+  <launchable type="desktop-id">@app-id@.desktop</launchable>
 </component>
