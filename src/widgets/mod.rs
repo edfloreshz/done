@@ -1,4 +1,4 @@
-pub mod app;
-mod component;
-mod factory;
-mod popover;
+pub mod components;
+pub mod factory;
+pub mod modals;
+pub mod popover;
