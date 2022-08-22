@@ -1,3 +1,4 @@
+use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
@@ -8,7 +9,6 @@ use crate::gtk::prelude::{
 };
 use crate::widgets::factory::provider::ProviderInput;
 use crate::{adw, gtk, PLUGINS};
-use relm4::adw::prelude::ActionRowExt;
 
 #[derive(Debug)]
 pub enum ListInput {
@@ -32,7 +32,7 @@ impl FactoryComponent for GenericTaskList {
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-	type InitParams = GenericTaskList;
+	type Init = GenericTaskList;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -106,7 +106,7 @@ impl FactoryComponent for GenericTaskList {
 	}
 
 	fn init_model(
-		params: Self::InitParams,
+		params: Self::Init,
 		_index: &DynamicIndex,
 		_sender: FactoryComponentSender<Self>,
 	) -> Self {

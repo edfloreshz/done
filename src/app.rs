@@ -20,19 +20,21 @@ use crate::{
 
 pub(super) struct App {
 	message: Option<AppMsg>,
-	content: Controller<ContentModel>,
-	about_dialog: Controller<AboutDialog>,
+	content: Option<Controller<ContentModel>>,
+	about_dialog: Option<Controller<AboutDialog>>,
+	content_title: String,
 }
 
 impl App {
 	pub fn new(
-		content: Controller<ContentModel>,
-		about_dialog: Controller<AboutDialog>,
+		content: Option<Controller<ContentModel>>,
+		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
 			message: None,
 			content,
 			about_dialog,
+			content_title: "All".to_string(),
 		}
 	}
 }
@@ -62,7 +64,7 @@ impl SimpleComponent for App {
 	type Input = AppMsg;
 	type Output = ();
 	type Widgets = AppWidgets;
-	type InitParams = Option<Vec<Box<dyn Provider>>>;
+	type Init = Option<Vec<Box<dyn Provider>>>;
 
 	menu! {
 			primary_menu: {
@@ -76,96 +78,86 @@ impl SimpleComponent for App {
 	}
 
 	view! {
-			#[root]
-			main_window = adw::ApplicationWindow::new(&main_app()) {
-					set_default_width: 800,
-					set_default_height: 700,
-					set_width_request: 300,
-					set_height_request: 300,
-					connect_close_request[sender] => move |_| {
-							sender.input(AppMsg::Quit);
-							gtk::Inhibit(true)
-					},
+		#[root]
+		main_window = adw::ApplicationWindow::new(&main_app()) {
+			set_default_width: 800,
+			set_default_height: 700,
+			set_width_request: 300,
+			set_height_request: 300,
+			connect_close_request[sender] => move |_| {
+				sender.input(AppMsg::Quit);
+				gtk::Inhibit(true)
+			},
 
-					#[wrap(Some)]
-					set_help_overlay: shortcuts = &gtk::Builder::from_resource(
-									"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
-							)
-							.object::<gtk::ShortcutsWindow>("help_overlay")
-							.unwrap() -> gtk::ShortcutsWindow {
-									set_transient_for: Some(&main_window),
-									set_application: Some(&crate::main_app()),
-					},
-
-					add_css_class?: if PROFILE == "Devel" {
-			Some("devel")
-		} else {
-			None
-		},
-
-		#[name = "overlay"]
-		gtk::Overlay {
 			#[wrap(Some)]
-			set_child: stack = &gtk::Stack {
-				set_hexpand: true,
-				set_vexpand: true,
-				set_transition_duration: 250,
-				set_transition_type: gtk::StackTransitionType::Crossfade,
-				add_child: leaflet = &adw::Leaflet {
-					set_can_navigate_back: true,
-					append: sidebar = &gtk::Box {
-						set_orientation: gtk::Orientation::Vertical,
-						set_width_request: 280,
-						#[name = "sidebar_header"]
-						adw::HeaderBar {
-							set_show_end_title_buttons: false,
-							#[wrap(Some)]
-							set_title_widget = &gtk::Box {
-								set_orientation: gtk::Orientation::Horizontal,
-								set_spacing: 5,
-								gtk::Image {
-									set_from_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
+			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
+					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
+			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
+				set_transient_for: Some(&main_window),
+				set_application: Some(&crate::main_app()),
+			},
+
+			add_css_class?: if PROFILE == "Devel" {
+				Some("devel")
+			} else {
+				None
+			},
+
+			#[name = "overlay"]
+			gtk::Overlay {
+				#[wrap(Some)]
+				set_child: stack = &gtk::Stack {
+					set_hexpand: true,
+					set_vexpand: true,
+					set_transition_duration: 250,
+					set_transition_type: gtk::StackTransitionType::Crossfade,
+					add_child: leaflet = &adw::Leaflet {
+						set_can_navigate_back: true,
+						append: sidebar = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							set_width_request: 280,
+							#[name = "sidebar_header"]
+							adw::HeaderBar {
+								set_show_end_title_buttons: false,
+								pack_end = &gtk::MenuButton {
+									set_icon_name: "open-menu-symbolic",
+									set_menu_model: Some(&primary_menu),
 								},
-								gtk::Label {
-									set_text: "Done"
+							},
+							append: sidebar_controller.widget()
+						},
+						append: &gtk::Separator::default(),
+						append: content = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							set_hexpand: true,
+							set_vexpand: true,
+								#[name = "content_header"]
+							append = &adw::HeaderBar {
+								set_hexpand: true,
+								set_show_start_title_buttons: true,
+								#[watch]
+								set_title_widget: Some(&gtk::Label::new(Some(&model.content_title))),
+								pack_start: go_back_button = &gtk::Button {
+									set_icon_name: "go-previous-symbolic",
+									set_visible: false,
+									connect_clicked[sender] => move |_| {
+										sender.input(AppMsg::Back);
+									}
 								}
 							},
-							pack_end = &gtk::MenuButton {
-								set_icon_name: "open-menu-symbolic",
-								set_menu_model: Some(&primary_menu),
-							}
+							append: content_controller.widget()
 						},
-						append: sidebar_controller.widget()
-					},
-					append: &gtk::Separator::default(),
-					append: content = &gtk::Box {
-						set_orientation: gtk::Orientation::Vertical,
-						set_hexpand: true,
-						set_vexpand: true,
-						append = &adw::HeaderBar {
-							set_hexpand: true,
-							set_show_end_title_buttons: true,
-							pack_start: go_back_button = &gtk::Button {
-								set_icon_name: "go-previous-symbolic",
-								set_visible: false,
-								connect_clicked[sender] => move |_| {
-									sender.input(AppMsg::Back);
-								}
+						connect_folded_notify[sender] => move |leaflet| {
+							if leaflet.is_folded() {
+								sender.input(AppMsg::Folded);
+							} else {
+								sender.input(AppMsg::Unfolded);
 							}
-						},
-						append: content_controller.widget()
-					},
-					connect_folded_notify[sender] => move |leaflet| {
-						if leaflet.is_folded() {
-							sender.input(AppMsg::Folded);
-						} else {
-							sender.input(AppMsg::Unfolded);
 						}
 					}
 				}
 			}
 		}
-			}
 	}
 
 	fn post_view() {
@@ -190,7 +182,7 @@ impl SimpleComponent for App {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		_init: Self::Init,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
@@ -201,17 +193,16 @@ impl SimpleComponent for App {
 					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
 					SidebarOutput::Forward => AppMsg::Forward,
 				});
+
 		let content_controller = ContentModel::builder()
 			.launch(None)
 			.forward(&sender.input, |message| match message {});
 
-		let widgets = view_output!();
-
-		let about_dialog = ComponentBuilder::new()
-			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
-			.detach();
-
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
+
+		let model = App::new(None, None);
+
+		let widgets = view_output!();
 
 		let shortcuts_action = {
 			let shortcuts = widgets.shortcuts.clone();
@@ -220,10 +211,14 @@ impl SimpleComponent for App {
 			})
 		};
 
-		let model = App::new(content_controller, about_dialog);
+		let about_dialog = ComponentBuilder::default()
+			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
+			.detach();
+
+		let model = App::new(Some(content_controller), Some(about_dialog));
 
 		let about_action = {
-			let sender = model.about_dialog.sender().clone();
+			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
 			RelmAction::<AboutAction>::new_stateless(move |_| {
 				sender.send(());
 			})
@@ -251,7 +246,13 @@ impl SimpleComponent for App {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::ListSelected(list) => {
-				self.content.sender().send(ContentInput::SetTaskList(list))
+				self.content_title = list.display_name.clone();
+				self
+					.content
+					.as_ref()
+					.unwrap()
+					.sender()
+					.send(ContentInput::SetTaskList(list))
 			},
 			_ => self.message = Some(message),
 		}

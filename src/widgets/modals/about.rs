@@ -13,7 +13,7 @@ pub struct AboutDialogWidgets {
 }
 
 impl SimpleComponent for AboutDialog {
-	type InitParams = gtk::Window;
+	type Init = gtk::Window;
 	type Widgets = AboutDialogWidgets;
 	type Input = ();
 	type Output = ();
@@ -24,7 +24,7 @@ impl SimpleComponent for AboutDialog {
 	}
 
 	fn init(
-		main_window: Self::InitParams,
+		main_window: Self::Init,
 		_root: &Self::Root,
 		_sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {

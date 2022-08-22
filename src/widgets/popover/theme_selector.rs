@@ -21,7 +21,7 @@ pub enum MainMenuInput {
 impl SimpleComponent for MainMenuInput {
 	type Input = MainMenuInput;
 	type Output = ();
-	type InitParams = ();
+	type Init = ();
 	type Widgets = MenuWidgets;
 
 	view! {
@@ -32,7 +32,7 @@ impl SimpleComponent for MainMenuInput {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		_init: Self::Init,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {

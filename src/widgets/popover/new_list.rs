@@ -19,7 +19,7 @@ pub enum NewListOutput {
 impl SimpleComponent for NewListModel {
 	type Input = ();
 	type Output = NewListOutput;
-	type InitParams = ();
+	type Init = ();
 	type Widgets = NewListWidgets;
 
 	view! {
@@ -66,7 +66,7 @@ impl SimpleComponent for NewListModel {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		_init: Self::Init,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {

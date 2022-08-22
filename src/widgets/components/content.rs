@@ -10,7 +10,6 @@ use relm4::{
 use crate::data::models::generic::lists::GenericTaskList;
 use crate::data::models::generic::tasks::GenericTask;
 use crate::data::plugins::all::AllProvider;
-
 use crate::{fl, Provider, PLUGINS};
 
 pub struct ContentModel {
@@ -35,7 +34,7 @@ pub enum ContentOutput {}
 impl SimpleComponent for ContentModel {
 	type Input = ContentInput;
 	type Output = ContentOutput;
-	type InitParams = Option<GenericTask>;
+	type Init = Option<GenericTask>;
 	type Widgets = ContentWidgets;
 
 	view! {
@@ -58,7 +57,7 @@ impl SimpleComponent for ContentModel {
 					set_spacing: 24,
 					gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
 					gtk::Label {
-						set_css_classes: &["large-title", "accent"],
+						set_css_classes: &["title-2", "accent"],
 						set_text: fl!("select-list")
 					},
 					gtk::Label {
@@ -114,7 +113,7 @@ impl SimpleComponent for ContentModel {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		_init: Self::Init,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
@@ -178,14 +177,11 @@ impl SimpleComponent for ContentModel {
 				self.show_tasks = !self.tasks_factory.guard().is_empty();
 			},
 			ContentInput::UpdateTask(index, task) => {
-				service
-					.update_task(task.clone())
-					.expect("Failed to update task.");
-				if self.parent_list.provider == "starred" && index.is_some() {
-					self
-						.tasks_factory
-						.guard()
-						.remove(index.unwrap().current_index());
+				service.update_task(task).expect("Failed to update task.");
+				if let Some(index) = index {
+					if self.parent_list.provider == "starred" {
+						self.tasks_factory.guard().remove(index.current_index());
+					}
 				}
 			},
 		}

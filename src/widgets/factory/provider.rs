@@ -1,7 +1,3 @@
-use crate::data::models::generic::lists::GenericTaskList;
-use crate::widgets::components::sidebar::SidebarInput;
-use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
-use crate::{StaticProviderType, PLUGINS};
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
@@ -11,6 +7,11 @@ use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
+
+use crate::data::models::generic::lists::GenericTaskList;
+use crate::widgets::components::sidebar::SidebarInput;
+use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
+use crate::{StaticProviderType, PLUGINS};
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -42,7 +43,7 @@ impl FactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type InitParams = StaticProviderType;
+	type Init = StaticProviderType;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -69,7 +70,7 @@ impl FactoryComponent for ProviderModel {
 	}
 
 	fn init_model(
-		params: Self::InitParams,
+		params: Self::Init,
 		_index: &DynamicIndex,
 		sender: FactoryComponentSender<Self>,
 	) -> Self {
@@ -102,7 +103,7 @@ impl FactoryComponent for ProviderModel {
 			self.list_factory =
 				FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
 			for list in self.provider.read_task_lists().unwrap() {
-				self.list_factory.guard().push_back(list)
+				self.list_factory.guard().push_back(list);
 			}
 			relm4::view! {
 				#[name(new_list_button)]
@@ -143,7 +144,7 @@ impl FactoryComponent for ProviderModel {
 				let new_list = current_provider
 					.create_task_list(&provider, &name, "✍️")
 					.expect("Failed to post task.");
-				self.list_factory.guard().push_back(new_list)
+				self.list_factory.guard().push_back(new_list);
 			},
 			ProviderInput::ListSelected(list) => {
 				sender.output.send(ProviderOutput::ListSelected(list))

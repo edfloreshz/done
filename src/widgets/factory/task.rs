@@ -32,7 +32,7 @@ impl FactoryComponent for GenericTask {
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type InitParams = GenericTask;
+	type Init = GenericTask;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -103,7 +103,7 @@ impl FactoryComponent for GenericTask {
 	}
 
 	fn init_model(
-		params: Self::InitParams,
+		params: Self::Init,
 		_index: &DynamicIndex,
 		_sender: FactoryComponentSender<Self>,
 	) -> Self {

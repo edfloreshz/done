@@ -35,7 +35,7 @@ pub enum SidebarOutput {
 impl SimpleComponent for SidebarModel {
 	type Input = SidebarInput;
 	type Output = SidebarOutput;
-	type InitParams = Option<SidebarModel>;
+	type Init = Option<SidebarModel>;
 	type Widgets = SidebarWidgets;
 
 	view! {
@@ -61,7 +61,7 @@ impl SimpleComponent for SidebarModel {
 	}
 
 	fn init(
-		_params: Self::InitParams,
+		_init: Self::Init,
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
