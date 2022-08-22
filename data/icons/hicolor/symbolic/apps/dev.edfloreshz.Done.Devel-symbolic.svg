@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1080"
+   height="1080"
+   viewBox="0 0 1080 1080"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="dev.edfloreshz.Done.Devel-symbolic.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="false"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:snap-object-midpoints="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     borderlayer="true"
+     inkscape:showpageshadow="false"
+     inkscape:zoom="0.90509668"
+     inkscape:cx="327.58931"
+     inkscape:cy="517.07183"
+     inkscape:window-width="2544"
+     inkscape:window-height="1259"
+     inkscape:window-x="1448"
+     inkscape:window-y="589"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="27.045055 : 674.78053 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="336.77379 : 514.56652 : 1"
+       inkscape:persp3d-origin="540 : 360 : 1"
+       id="perspective465" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath2048">
+      <g
+         inkscape:label="Clip"
+         id="use2050">
+        <g
+           id="g2060"
+           transform="translate(-4.0803327,6.9098013)"
+           style="display:inline;fill:#d35f5f">
+          <rect
+             style="fill:#d35f5f;fill-opacity:1;fill-rule:evenodd;stroke-width:0.904043"
+             id="rect2056"
+             width="104.12474"
+             height="287.49304"
+             x="-214.81413"
+             y="572.086"
+             transform="rotate(-45)" />
+          <rect
+             style="fill:#d35f5f;fill-opacity:1;fill-rule:evenodd;stroke-width:1.23539"
+             id="rect2058"
+             width="104.12474"
+             height="536.8548"
+             x="755.45428"
+             y="-322.04068"
+             transform="rotate(45)" />
+        </g>
+      </g>
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Logo"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline">
+    <path
+       id="rect1466"
+       style="fill:#000000"
+       d="M 215.00391 42.640625 C 129.48625 42.640625 60.640625 111.48625 60.640625 197.00391 L 60.640625 882.99609 C 60.640625 968.51375 129.48625 1037.3594 215.00391 1037.3594 L 864.99609 1037.3594 C 950.51375 1037.3594 1019.3594 968.51375 1019.3594 882.99609 L 1019.3594 197.00391 C 1019.3594 111.48625 950.51375 42.640625 864.99609 42.640625 L 215.00391 42.640625 z M 757.82422 313.37891 L 831.45117 387.00586 L 525.46484 692.99414 L 451.83789 766.62109 L 378.21094 692.99414 L 248.54883 563.33203 L 322.17578 489.70508 L 451.83789 619.36719 L 757.82422 313.37891 z " />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Icon" />
+</svg>
