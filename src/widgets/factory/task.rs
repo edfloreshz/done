@@ -1,35 +1,38 @@
-use relm4::factory::{DynamicIndex, FactoryComponent};
+use relm4::factory::{
+	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
+};
 use relm4::gtk;
 use relm4::gtk::prelude::{
 	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
 	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
 };
-use relm4::{Sender, WidgetPlus};
+use relm4::WidgetPlus;
 
-use crate::core::local::tasks::patch_task;
-use crate::models::task::{Task, TaskStatus};
-use crate::widgets::component::content::ContentInput;
-use crate::widgets::factory::list::ListType;
+use crate::data::models::generic::task_status::TaskStatus;
+use crate::data::models::generic::tasks::GenericTask;
+use crate::widgets::components::content::ContentInput;
 
+#[derive(Debug)]
 pub enum TaskInput {
 	SetCompleted(bool),
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
 }
 
+#[derive(Debug)]
 pub enum TaskOutput {
 	Remove(DynamicIndex),
-	Favorite(DynamicIndex, bool),
-	UpdateCounters(Vec<ListType>),
+	UpdateTask(Option<DynamicIndex>, GenericTask),
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent<gtk::Box, ContentInput> for Task {
-	type Command = ();
+impl FactoryComponent for GenericTask {
+	type ParentMsg = ContentInput;
+	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type InitParams = Task;
+	type Init = GenericTask;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -47,8 +50,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 					#[name = "check_button"]
 					gtk::CheckButton {
 						set_active: self.status.as_bool(),
-						connect_toggled[input] => move |checkbox| {
-							input.send(TaskInput::SetCompleted(checkbox.is_active()));
+						connect_toggled[sender] => move |checkbox| {
+							sender.input.send(TaskInput::SetCompleted(checkbox.is_active()));
 						}
 					},
 					gtk::Box {
@@ -60,14 +63,18 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 							add_css_class: "no-border",
 							set_hexpand: true,
 							set_text: &self.title,
-							connect_activate[input] => move |entry| {
+							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
-								input.send(TaskInput::ModifyTitle(buffer.text()));
+								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
 							},
-							connect_changed[input] => move |entry| {
-								let buffer = entry.buffer();
-								input.send(TaskInput::ModifyTitle(buffer.text()));
-							}
+							// connect_insert_text[sender] => move |entry, _, _| {
+							// 	let buffer = entry.buffer();
+							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// },
+							// connect_delete_text[sender] => move |entry, _, _| {
+							// 	let buffer = entry.buffer();
+							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// }
 						},
 						#[name = "favorite"]
 						gtk::ToggleButton {
@@ -76,17 +83,17 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 							#[watch]
 							set_class_active: ("favorite", self.favorite),
 							set_icon_name: "star-filled-rounded-symbolic",
-							connect_toggled[input, index] => move |_| {
-								input.send(TaskInput::Favorite(index.clone()));
+							connect_toggled[sender, index] => move |_| {
+								sender.input.send(TaskInput::Favorite(index.clone()));
 							}
 						},
 						#[name = "delete"]
 						gtk::Button {
 							add_css_class: "destructive-action",
 							add_css_class: "circular",
-							set_icon_name: "user-trash-symbolic",
-							connect_clicked[output, index] => move |_| {
-								output.send(TaskOutput::Remove(index.clone()))
+							set_icon_name: "user-trash-full-symbolic",
+							connect_clicked[sender, index] => move |_| {
+								sender.output.send(TaskOutput::Remove(index.clone()))
 							}
 						}
 					}
@@ -95,21 +102,10 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 		}
 	}
 
-	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
-		Some(match output {
-			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::UpdateCounters(lists) => ContentInput::UpdateCounters(lists),
-			TaskOutput::Favorite(index, favorite) => {
-				ContentInput::FavoriteTask(index, favorite)
-			},
-		})
-	}
-
 	fn init_model(
-		params: Self::InitParams,
+		params: Self::Init,
 		_index: &DynamicIndex,
-		_input: &Sender<Self::Input>,
-		_output: &Sender<Self::Output>,
+		_sender: FactoryComponentSender<Self>,
 	) -> Self {
 		params
 	}
@@ -118,9 +114,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 		&mut self,
 		index: &DynamicIndex,
 		root: &Self::Root,
-		_returned_widget: &gtk::Widget,
-		input: &Sender<Self::Input>,
-		output: &Sender<Self::Output>,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -129,9 +124,8 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 	fn update(
 		&mut self,
 		message: Self::Input,
-		_input: &Sender<Self::Input>,
-		output: &Sender<Self::Output>,
-	) -> Option<Self::Command> {
+		sender: FactoryComponentSender<Self>,
+	) {
 		match message {
 			TaskInput::SetCompleted(completed) => {
 				self.status = if completed {
@@ -139,16 +133,31 @@ impl FactoryComponent<gtk::Box, ContentInput> for Task {
 				} else {
 					TaskStatus::NotStarted
 				};
+				sender
+					.output
+					.send(TaskOutput::UpdateTask(None, self.clone()));
 			},
 			TaskInput::Favorite(index) => {
 				self.favorite = !self.favorite;
-				output.send(TaskOutput::Favorite(index, self.favorite));
+				sender
+					.output
+					.send(TaskOutput::UpdateTask(Some(index), self.clone()));
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.title = title;
+				sender
+					.output
+					.send(TaskOutput::UpdateTask(None, self.clone()));
 			},
 		}
-		patch_task(self.into()).expect("Failed to update task.");
-		None
+	}
+
+	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
+		Some(match output {
+			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
+			TaskOutput::UpdateTask(index, task) => {
+				ContentInput::UpdateTask(index, task)
+			},
+		})
 	}
 }
