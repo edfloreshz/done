@@ -34,6 +34,8 @@ Done is a simple to do app that lets you combine your existing set of task provi
   <img src="https://raw.githubusercontent.com/edfloreshz/done/81ea1f6d32cd491d1893f9ba730f511bc1cb0aea/data/resources/screenshots/tasks.png"/>
 </div>
 
+> This is still in very early development. Be aware it is a work in progress and far from complete yet.
+
 
 ## Install
 | Platform   | Command                                 |
