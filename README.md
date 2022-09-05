@@ -3,6 +3,7 @@
   <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.Devel.svg" width="150" />
   <h1>Done</h1>
   <h3>To-do lists reimagined</h3>
+  
   <a href="https://github.com/edfloreshz/done/actions/workflows/rust.yml">
     <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
   </a>
@@ -25,6 +26,8 @@
   <a href="https://t.me/done_gh">
     <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
   </a>
+  <h4>This is still in very early development. Be aware it is a work in progress and far from complete yet.</h4>
+  
 </div>
 <br/>
 
@@ -34,7 +37,6 @@ Done is a simple to do app that lets you combine your existing set of task provi
   <img src="https://raw.githubusercontent.com/edfloreshz/done/81ea1f6d32cd491d1893f9ba730f511bc1cb0aea/data/resources/screenshots/tasks.png"/>
 </div>
 
-> This is still in very early development. Be aware it is a work in progress and far from complete yet.
 
 
 ## Install
