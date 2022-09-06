@@ -1,0 +1,90 @@
+# Brazilian Portuguese translation for done.
+# Copyright (C) 2022 done's COPYRIGHT HOLDER
+# This file is distributed under the same license as the done package.
+# Eduardo Flores <edfloreshz@gmail.com>, 2022.
+# Isabella Breder <isabellabreder@proton.me>, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: done main\n"
+"Report-Msgid-Bugs-To: https://github.com/edfloreshz/done/issues\n"
+"POT-Creation-Date: 2022-06-26 21:59+0000\n"
+"PO-Revision-Date: 2022-09-05 20:16-0300\n"
+"Last-Translator: Isabella Breder <isabellabreder@proton.me>\n"
+"Language-Team: Brazilian Portuguese <isabellabreder@proton.me>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"X-Generator: Gtranslator 42.0\n"
+
+#: data/dev.edfloreshz.Done.desktop.in.in:2
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:7
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:7
+msgid "Done"
+msgstr "Done"
+
+#: data/dev.edfloreshz.Done.desktop.in.in:3
+msgid "To Do App"
+msgstr "App de Tarefas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:8
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:8 src/app/application.rs:98
+msgid "To-do lists reimagined"
+msgstr "Listas de afazeres reimaginadas"
+
+#: data/dev.edfloreshz.Done.desktop.in.in:4
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:10
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:10
+msgid ""
+"Done is a simple to do app that lets you combine your existing set of task "
+"providers into one database, easily."
+msgstr ""
+"Done é um aplicativo de tarefas simples que te permite combinar os seus "
+"provedores de conjuntos de afazeres em um banco de dados, facilmente."
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:11
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:11
+msgid "Current features:"
+msgstr "Características atuais:"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:13
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:13
+msgid "Add lists to the sidebar"
+msgstr "Adiciona listas à barra lateral"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:14
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:14
+msgid "Add tasks to your lists"
+msgstr "Adiciona tarefas às suas listas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:15
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:15
+msgid "Mark tasks as completed"
+msgstr "Marca taredas como completas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:16
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:16
+msgid "Edit title of your tasks"
+msgstr "Edita o título de suas tarefas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:17
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:17
+msgid "Mark tasks as favorite"
+msgstr "Marca tarefas como favoritas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:18
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:18
+msgid "Delete tasks"
+msgstr "Apaga tarefas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:19
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:19
+msgid "List your starred tasks"
+msgstr "Lista suas tarefas favoritas"
+
+#: data/dev.edfloreshz.Done.appdata.xml.in.in:20
+#: data/dev.edfloreshz.Done.metainfo.xml.in.in:20
+msgid "List all tasks"
+msgstr "Lista todas as tarefas"
