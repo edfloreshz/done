@@ -2,12 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - TBD
+
+### Added
+
+- Added Brazilian Portugese 🇧🇷 translation
+
 ## [0.1.2] - 2022-08-22
 
 ### Added
 
 - Implemented a new sidebar design
-- Added Italian and German translation
+- Added Italian 🇮🇹 and German 🇩🇪 translation  
 - Simplified list creation process.
 - Added alpha state warning banner.
 
