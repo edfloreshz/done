@@ -2,10 +2,10 @@
 <svg height="128px" viewBox="0 0 128 128" width="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <linearGradient id="a" gradientTransform="matrix(-1 0 0 -1 0 -172)" gradientUnits="userSpaceOnUse" x1="-116.000031" x2="-12.000023" y1="-237.999969" y2="-237.999969">
         <stop offset="0" stop-color="#865e3c"/>
-        <stop offset="0.0384615" stop-color="#b5835a"/>
-        <stop offset="0.0768555" stop-color="#986a44"/>
-        <stop offset="0.923077" stop-color="#986a44"/>
-        <stop offset="0.961538" stop-color="#b5835a"/>
+        <stop offset="0.0769234" stop-color="#b5835a"/>
+        <stop offset="0.153846" stop-color="#986a44"/>
+        <stop offset="0.846154" stop-color="#986a44"/>
+        <stop offset="0.923077" stop-color="#b5835a"/>
         <stop offset="1" stop-color="#865e3c"/>
     </linearGradient>
     <clipPath id="b">
