@@ -36,19 +36,19 @@
          id="stop3918" />
       <stop
          id="stop3920"
-         offset="0.03846154"
+         offset="0.07692336"
          style="stop-color:#b5835a;stop-opacity:1;" />
       <stop
          style="stop-color:#986a44;stop-opacity:1;"
-         offset="0.07685554"
+         offset="0.15384644"
          id="stop3922" />
       <stop
          id="stop3924"
-         offset="0.92307693"
+         offset="0.84615409"
          style="stop-color:#986a44;stop-opacity:1;" />
       <stop
          style="stop-color:#b5835a;stop-opacity:1;"
-         offset="0.96153849"
+         offset="0.92307717"
          id="stop3926" />
       <stop
          style="stop-color:#865e3c;stop-opacity:1;"
@@ -700,9 +700,9 @@
      borderopacity="0.25490196"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.198166"
-     inkscape:cx="85.980768"
-     inkscape:cy="107.36223"
+     inkscape:zoom="3.34782"
+     inkscape:cx="78.558585"
+     inkscape:cy="113.208"
      inkscape:current-layer="layer9"
      showgrid="true"
      inkscape:grid-bbox="true"
@@ -1513,7 +1513,7 @@
          height="100.00005"
          width="104.00001"
          id="rect3246"
-         style="vector-effect:none;fill:url(#linearGradient3808);fill-opacity:1.0;stroke:none;stroke-width:13.5781;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal" />
+         style="vector-effect:none;fill:url(#linearGradient3808);fill-opacity:1;stroke:none;stroke-width:13.5781;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal" />
       <g
          style="display:inline;enable-background:new"
          id="g1064"
