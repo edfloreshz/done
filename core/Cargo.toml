@@ -1,0 +1,24 @@
+[package]
+name = "done_core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0.56"
+uuid = { version = "0.8.2", features = ["serde", "v4"] }
+diesel = { version = "2.0.0", features = ["sqlite", "r2d2", "chrono"] }
+diesel_migrations = "2.0.0"
+dirs = "4.0.0"
+libset = "0.1.1"
+pretty_env_logger = "0.4.0"
+log = "0.4.17"
+libsqlite3-sys = { version = "^0", features = ["bundled"] }
+chrono = { version = "0.4.19", features = ["serde"] }
+
+[[example]]
+name = "usage"
+path = "examples/usage/src/main.rs"
