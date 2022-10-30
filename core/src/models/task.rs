@@ -2,7 +2,6 @@ use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
 
-use crate::traits::Task;
 use crate::enums::{TaskImportance, TaskStatus};
 
 use crate::schema::tasks;
@@ -43,83 +42,4 @@ impl QueryableTask {
 			last_modified_date_time: None,
 		}
 	}
-
-	pub fn from(task: &impl Task) -> Self {
-		Self {
-			id_task: task.id(),
-			parent_list: task.parent_list(),
-			title: task.title(),
-			body: task.body(),
-			completed_on: task.completed_on(),
-			due_date: task.due_date(),
-			importance: task.importance() as i32,
-			favorite: task.favorite(),
-			is_reminder_on: task.is_reminder_on(),
-			reminder_date: task.reminder_date(),
-            status: task.status() as i32,
-			created_date_time: task.created_date_time(),
-			last_modified_date_time: task.last_modified_date_time(),
-		}
-	}
-}
-
-impl Task for QueryableTask {
-    fn id(&self) -> String {
-        self.id_task.clone()
-    }
-
-    fn parent_list(&self) -> String {
-        self.parent_list.clone()
-    }
-
-    fn title(&self) -> String {
-        self.title.clone()
-    }
-
-    fn body(&self) -> Option<String> {
-        self.body.clone()
-    }
-
-    fn importance(&self) -> TaskImportance {
-        match self.importance {
-            3 => TaskImportance::High,
-            2 => TaskImportance::Normal,
-            _ => TaskImportance::Low
-        }
-    }
-
-    fn favorite(&self) -> bool {
-        self.favorite
-    }
-
-    fn is_reminder_on(&self) -> bool {
-        self.is_reminder_on
-    }
-
-    fn status(&self) -> TaskStatus {
-        match self.status {
-            2 => TaskStatus::Completed,
-            _ => TaskStatus::NotStarted
-        }
-    }
-
-    fn completed_on(&self) -> Option<NaiveDateTime> {
-        self.completed_on
-    }
-
-    fn due_date(&self) -> Option<NaiveDateTime> {
-        self.due_date
-    }
-
-    fn reminder_date(&self) -> Option<NaiveDateTime> {
-        self.reminder_date
-    }
-
-    fn created_date_time(&self) -> Option<NaiveDateTime> {
-        self.created_date_time
-    }
-
-    fn last_modified_date_time(&self) -> Option<NaiveDateTime> {
-        self.last_modified_date_time
-    }
 }
