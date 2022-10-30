@@ -3,7 +3,8 @@ name = "done_core"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["src/bin/*"]
 
 [dependencies]
 serde = { version = "1.0.136", features = ["derive"] }
@@ -18,7 +19,9 @@ pretty_env_logger = "0.4.0"
 log = "0.4.17"
 libsqlite3-sys = { version = "^0", features = ["bundled"] }
 chrono = { version = "0.4.19", features = ["serde"] }
+tonic = "0.8.2"
+prost = "0.11.0"
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 
-[[example]]
-name = "usage"
-path = "examples/usage/src/main.rs"
+[build-dependencies]
+tonic-build = "0.8.2"
