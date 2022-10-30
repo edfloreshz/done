@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package provider;
+
+import "google/protobuf/wrappers.proto";
+
+service Provider {
+    rpc GetId (Void) returns (google.protobuf.StringValue);
+    rpc AddTask (ProviderRequest) returns (ProviderResponse);
+}
+
+message Void {}
+
+message ProviderRequest {
+    List list = 1;
+    Task task = 2;
+}
+
+message ProviderResponse {
+    bool successful = 1;
+    string message = 2;
+}
+
+message Task {
+    string id = 1;
+    string parent = 2;
+    string title = 3;
+    string body = 4;
+    TaskImportance importance = 5;
+    bool favorite = 6;
+    bool is_reminder_on = 7;
+    TaskStatus status = 8;
+    int64 completed_on = 9;
+    int64 due_date = 10;
+    int64 reminder_date = 11;
+    int64 created_date_time = 12;
+    int64 last_modified_date_time = 13;
+}
+
+enum TaskImportance {
+    LOW = 0;
+    NORMAL = 1;
+    HIGH = 2;
+}
+
+enum TaskStatus {
+    NOT_STARTED = 0;
+    COMPLETED = 1;
+}
+
+message List {
+    string id = 1;
+    string name = 2;
+    bool is_owner = 3;
+    int32 count = 4;
+    string icon = 5;
+    string provider = 6;
+}
