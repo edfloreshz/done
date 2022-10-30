@@ -10,6 +10,10 @@ name = "provider-local"
 path = "src/local.rs"
 
 [[bin]]
+name = "provider-google"
+path = "src/google.rs"
+
+[[bin]]
 name = "provider-client"
 path = "src/client.rs"
 
