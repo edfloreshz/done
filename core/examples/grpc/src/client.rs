@@ -1,5 +1,5 @@
 use provider::provider_client::ProviderClient;
-use provider::{List, ProviderTaskRequest, Task};
+use provider::{List, ProviderRequest, Task};
 
 pub mod provider {
 	tonic::include_proto!("provider");
@@ -7,7 +7,7 @@ pub mod provider {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let mut client = ProviderClient::connect("http://[::1]:5123").await?;
+    let mut client = ProviderClient::connect("http://[::1]:5123").await?;
 
 	let list = List {
 		id: String::new(),
@@ -34,14 +34,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		last_modified_date_time: Default::default(),
 	};
 
-	let request = tonic::Request::new(ProviderTaskRequest {
+	let request = tonic::Request::new(ProviderRequest {
 		list: Some(list),
 		task: Some(task),
 	});
 
 	let resposne = client.add_task(request).await?;
+    let id = client.get_id(crate::provider::Void {}).await?;
 
-	print!("Response: {:?}", resposne);
+    print!("Response: {:#?} with id: {}", resposne, id.into_inner());
 
 	Ok(())
 }
