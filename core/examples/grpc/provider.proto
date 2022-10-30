@@ -6,7 +6,20 @@ import "google/protobuf/wrappers.proto";
 
 service Provider {
     rpc GetId (Void) returns (google.protobuf.StringValue);
-    rpc AddTask (ProviderRequest) returns (ProviderResponse);
+    rpc GetName (Void) returns (google.protobuf.StringValue);
+    rpc GetDescription (Void) returns (google.protobuf.StringValue);
+    rpc GetIconName (Void) returns (google.protobuf.StringValue);
+    rpc ReadAllTasks (ProviderRequest) returns (ProviderResponse);
+    rpc CreateTask (ProviderRequest) returns (ProviderResponse);
+    rpc ReadTask (ProviderRequest) returns (ProviderResponse);
+    rpc UpdateTask (ProviderRequest) returns (ProviderResponse);
+    rpc DeleteTask (ProviderRequest) returns (ProviderResponse);
+
+    rpc ReadAllLists (ProviderRequest) returns (ProviderResponse);
+    rpc CreateList (ProviderRequest) returns (ProviderResponse);
+    rpc ReadList (ProviderRequest) returns (ProviderResponse);
+    rpc UpdateList (ProviderRequest) returns (ProviderResponse);
+    rpc DeleteList (ProviderRequest) returns (ProviderResponse);
 }
 
 message Void {}
