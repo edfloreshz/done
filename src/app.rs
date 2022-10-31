@@ -1,5 +1,5 @@
 use crate::data::{
-	models::generic::lists::GenericTaskList, traits::provider::Provider,
+	traits::provider::Provider,
 };
 use crate::fl;
 use crate::main_app;
@@ -17,6 +17,7 @@ use relm4::{
 	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
 	ComponentSender, Controller, SimpleComponent,
 };
+use crate::data::plugins::List;
 
 pub(super) struct App {
 	message: Option<AppMsg>,
@@ -43,7 +44,7 @@ impl App {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub(super) enum AppMsg {
-	ListSelected(GenericTaskList),
+	ListSelected(List),
 	CloseWarning,
 	Folded,
 	Unfolded,
@@ -264,7 +265,7 @@ impl SimpleComponent for App {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::ListSelected(list) => {
 				self.warning_revealed = false;
-				self.content_title = list.display_name.clone();
+				self.content_title = list.name.clone();
 				self
 					.content
 					.as_ref()

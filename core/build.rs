@@ -1,11 +1,7 @@
-use std::process::Command;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::compile_protos("provider.proto")?;
-    let out_dir = std::env::var_os("OUT_DIR").unwrap();
-    Command::new("echo")
-        .arg(out_dir)
-        .spawn()
-        .expect("failed to spawn process");
+    tonic_build::configure()
+        .protoc_arg("--experimental_allow_proto3_optional")
+        .type_attribute(".", "#[derive(serde::Deserialize, serde::Serialize)]")
+        .compile(&["provider.proto"], &["."])?;
     Ok(())
 }

@@ -7,32 +7,34 @@ use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
+use tonic::Request;
+use tonic::transport::Channel;
 
-use crate::data::models::generic::lists::GenericTaskList;
+use crate::data::plugins::{ProviderClient, Empty, List, Plugin, ProviderRequest};
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
-use crate::{StaticProviderType, PLUGINS};
+use crate::rt;
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProviderModel {
-	pub provider: StaticProviderType,
-	pub list_factory: FactoryVecDeque<GenericTaskList>,
+	pub provider: ProviderClient<Channel>,
+	pub list_factory: FactoryVecDeque<List>,
 	pub new_list_controller: Controller<NewListModel>,
 }
 
 #[derive(Debug)]
 pub enum ProviderInput {
-	SelectSmartProvider,
 	AddList(String, String),
 	DeleteTaskList(DynamicIndex),
-	ListSelected(GenericTaskList),
 	Forward(bool),
+	ListSelected(List),
+	SelectSmartProvider
 }
 
 #[derive(Debug)]
 pub enum ProviderOutput {
-	ListSelected(GenericTaskList),
+	ListSelected(List),
 	Forward,
 }
 
@@ -43,7 +45,7 @@ impl FactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type Init = StaticProviderType;
+	type Init = ProviderClient<Channel>;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -52,11 +54,11 @@ impl FactoryComponent for ProviderModel {
 		adw::PreferencesGroup {
 			#[name(expander)]
 			add = &adw::ExpanderRow {
-				set_title: self.provider.get_name(),
-				set_subtitle: self.provider.get_description(),
-				set_icon_name: Some(self.provider.get_icon_name()),
-				set_enable_expansion: !self.provider.is_smart(),
-				set_expanded: self.provider.is_smart(),
+				set_title: rt().block_on(self.provider.get_name(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+				set_subtitle: rt().block_on(self.provider.get_description(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+				set_icon_name: Some(rt().block_on(self.provider.get_icon_name(Request::new(Empty {}))).unwrap().into_inner().as_str()),
+				set_enable_expansion: !false,
+				set_expanded: false,
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender, index] => move |_, _, _, _| {
@@ -70,10 +72,11 @@ impl FactoryComponent for ProviderModel {
 	}
 
 	fn init_model(
-		params: Self::Init,
+		mut params: Self::Init,
 		_index: &DynamicIndex,
 		sender: FactoryComponentSender<Self>,
 	) -> Self {
+		let id = rt().block_on(params.get_id(Request::new(Empty {}))).unwrap().into_inner();
 		Self {
 			provider: params,
 			list_factory: FactoryVecDeque::new(
@@ -82,9 +85,9 @@ impl FactoryComponent for ProviderModel {
 			),
 			new_list_controller: NewListModel::builder().launch(()).forward(
 				&sender.input,
-				|message| match message {
+				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::AddList(params.get_id().into(), name)
+						ProviderInput::AddList(id.clone(), name)
 					},
 				},
 			),
@@ -99,10 +102,13 @@ impl FactoryComponent for ProviderModel {
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
-		if !self.provider.is_smart() {
+		if !false { // TODO: Is smart?
 			self.list_factory =
 				FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
-			for list in self.provider.read_task_lists().unwrap() {
+			
+			let response = rt().block_on(self.provider.read_all_lists(Request::new(Empty {}))).unwrap();
+			let data: Vec<List> = serde_json::from_str(response.into_inner().data.unwrap().as_str()).unwrap();
+			for list in data {
 				self.list_factory.guard().push_back(list);
 			}
 			relm4::view! {
@@ -126,33 +132,38 @@ impl FactoryComponent for ProviderModel {
 		sender: FactoryComponentSender<Self>,
 	) {
 		match message {
-			ProviderInput::SelectSmartProvider => {
-				let mut list = GenericTaskList::new(
-					self.provider.get_name(),
-					self.provider.get_icon_name(),
-					0,
-					self.provider.get_id(),
-				);
-				list.make_smart();
-				sender.input.send(ProviderInput::ListSelected(list))
-			},
 			ProviderInput::DeleteTaskList(index) => {
 				self.list_factory.guard().remove(index.current_index());
 			},
 			ProviderInput::AddList(provider, name) => {
-				let current_provider = PLUGINS.get_provider(&provider);
-				let new_list = current_provider
-					.create_task_list(&provider, &name, "✍️")
-					.expect("Failed to post task.");
-				self.list_factory.guard().push_back(new_list);
-			},
-			ProviderInput::ListSelected(list) => {
-				sender.output.send(ProviderOutput::ListSelected(list))
+				let mut service = rt().block_on(Plugin::from_str(&provider).connect()).unwrap();
+				let list = List::new(&name, "✍️", &provider);
+				let response = rt().block_on(service
+					.create_list(tonic::Request::new(ProviderRequest {
+						list: Some(list.clone()),
+						task: None,
+					}))).unwrap();
+				
+				if response.into_inner().successful {
+					self.list_factory.guard().push_back(list);
+				}
 			},
 			ProviderInput::Forward(forward) => {
 				if forward {
 					sender.output.send(ProviderOutput::Forward)
 				}
+			},
+			ProviderInput::ListSelected(list) => {
+				sender.output.send(ProviderOutput::ListSelected(list))
+			},
+			ProviderInput::SelectSmartProvider => {
+				let list = List::new(
+					rt().block_on(self.provider.get_name(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+					rt().block_on(self.provider.get_icon_name(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+					rt().block_on(self.provider.get_id(Request::new(Empty {}))).unwrap().into_inner().as_str()
+				);
+				// list.make_smart();
+				sender.input.send(ProviderInput::ListSelected(list))
 			},
 		}
 	}

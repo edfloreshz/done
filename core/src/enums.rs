@@ -1,13 +1,13 @@
 
 #[derive(Debug, Copy, Clone)]
 pub enum TaskImportance {
-    Low,
-    Normal,
-    High,
+    Low = 0,
+    Normal = 1,
+    High = 2,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum TaskStatus {
-    NotStarted,
-    Completed,
+    NotStarted = 0,
+    Completed = 1,
 }
