@@ -6,9 +6,10 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::data::models::generic::lists::GenericTaskList;
+use crate::data::plugins::Plugin;
+use crate::data::plugins::provider::List;
+use crate::rt;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
-use crate::PLUGINS;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -19,7 +20,7 @@ pub struct SidebarModel {
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddTaskList(usize, String, String),
-	ListSelected(GenericTaskList),
+	ListSelected(List),
 	RemoveService(String),
 	Forward,
 }
@@ -27,7 +28,7 @@ pub enum SidebarInput {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarOutput {
-	ListSelected(GenericTaskList),
+	ListSelected(List),
 	Forward,
 }
 
@@ -66,15 +67,21 @@ impl SimpleComponent for SidebarModel {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
+
 		let mut model = SidebarModel {
 			provider_factory: FactoryVecDeque::new(
 				widgets.providers_container.clone(),
 				&sender.input,
 			),
 		};
-		for provider in PLUGINS.get_providers() {
-			if provider.is_enabled() {
-				model.provider_factory.guard().push_back(&*provider);
+		
+		for plugin in Plugin::list() {
+			match rt().block_on(plugin.connect()) {
+				Ok(provider) => {
+					model.provider_factory.guard().push_back(provider);
+					()
+				},
+				Err(_) => (),
 			}
 		}
 		ComponentParts { model, widgets }

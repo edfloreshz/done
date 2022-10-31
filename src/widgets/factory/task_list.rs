@@ -3,12 +3,15 @@ use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
 
-use crate::data::models::generic::lists::GenericTaskList;
+use crate::data::plugins::Plugin;
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use crate::{adw, gtk, PLUGINS};
+use crate::data::plugins::provider::List;
+use crate::data::plugins::ProviderRequest;
+
+use crate::{adw, gtk, rt};
 
 #[derive(Debug)]
 pub enum ListInput {
@@ -20,19 +23,19 @@ pub enum ListInput {
 
 #[derive(Debug)]
 pub enum ListOutput {
-	Select(GenericTaskList),
+	Select(List),
 	DeleteTaskList(DynamicIndex),
 	Forward,
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for GenericTaskList {
+impl FactoryComponent for List {
 	type ParentMsg = ProviderInput;
 	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-	type Init = GenericTaskList;
+	type Init = List;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -44,7 +47,7 @@ impl FactoryComponent for GenericTaskList {
 					add_css_class: "flat",
 					add_css_class: "no-border",
 					#[watch]
-					set_text: self.display_name.as_str(),
+					set_text: self.name.as_str(),
 					set_margin_top: 10,
 					set_margin_bottom: 10,
 					connect_activate[sender] => move |entry| {
@@ -59,7 +62,7 @@ impl FactoryComponent for GenericTaskList {
 				},
 				add_prefix = &gtk4::MenuButton {
 					#[watch]
-					set_label: self.icon_name.as_ref().unwrap(),
+					// set_label: self.icon.as_str(),
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					set_always_show_arrow: false,
@@ -73,8 +76,8 @@ impl FactoryComponent for GenericTaskList {
 				add_suffix = &gtk::Label {
 					set_halign: gtk::Align::End,
 					set_css_classes: &["dim-label", "caption"],
-					#[watch]
-					set_text: self.count.to_string().as_str(),
+					// #[watch]
+					// set_text: self.count.to_string().as_str(),
 				},
 				add_suffix = &gtk::Button {
 					set_icon_name: "user-trash-full-symbolic",
@@ -118,25 +121,29 @@ impl FactoryComponent for GenericTaskList {
 		message: Self::Input,
 		sender: FactoryComponentSender<Self>,
 	) {
-		let service = PLUGINS.get_provider(&self.provider);
+		let mut service = rt().block_on(Plugin::from_str(&self.provider).connect()).unwrap();
+
 		match message {
 			ListInput::Rename(name) => {
 				let mut list = self.clone();
-				list.display_name = name.clone();
-				if service.update_task_list(list).is_ok() {
-					self.display_name = name;
+				list.name = name.clone();
+				let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
+				if response.successful {
+					self.name = name;
 				}
 			},
 			ListInput::Delete(index) => {
-				if service.remove_task_list(self.clone()).is_ok() {
+				let response = rt().block_on(service.delete_list(ProviderRequest::new(Some(self.clone()), None))).unwrap().into_inner();
+				if response.successful {
 					sender.output.send(ListOutput::DeleteTaskList(index))
 				}
 			},
 			ListInput::ChangeIcon(icon) => {
 				let mut list = self.clone();
-				list.icon_name = Some(icon.clone());
-				if service.update_task_list(list).is_ok() {
-					self.icon_name = Some(icon);
+				list.icon = Some(icon.clone());
+				let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
+				if response.successful {
+					self.icon = Some(icon);
 				}
 			},
 			ListInput::Select => sender.output.send(ListOutput::Select(self.clone())),

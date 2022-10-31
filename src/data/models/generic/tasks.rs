@@ -7,7 +7,6 @@ use uuid::Uuid;
 use crate::data::models::generic::task_importance::TaskImportance;
 use crate::data::models::generic::task_status::TaskStatus;
 use crate::data::models::queryable::task::QueryableTask;
-use crate::data::plugins::local::models::tasks::LocalTask;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GenericTask {
@@ -64,26 +63,6 @@ impl From<QueryableTask> for GenericTask {
 				.unwrap_or_default(),
 			created_date_time: task.created_date_time,
 			last_modified_date_time: task.last_modified_date_time,
-		}
-	}
-}
-
-impl From<LocalTask> for GenericTask {
-	fn from(local_task: LocalTask) -> Self {
-		Self {
-			id_task: local_task.id_task,
-			id_list: local_task.id_list,
-			title: local_task.title,
-			body: local_task.body,
-			completed_on: local_task.completed_on,
-			due_date: local_task.due_date,
-			importance: local_task.importance,
-			favorite: local_task.favorite,
-			is_reminder_on: local_task.is_reminder_on,
-			reminder_date: local_task.reminder_date,
-			status: local_task.status,
-			created_date_time: local_task.created_date_time,
-			last_modified_date_time: local_task.last_modified_date_time,
 		}
 	}
 }

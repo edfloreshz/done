@@ -1,3 +1,4 @@
+use done_core::enums::TaskStatus;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
@@ -8,8 +9,7 @@ use relm4::gtk::prelude::{
 };
 use relm4::WidgetPlus;
 
-use crate::data::models::generic::task_status::TaskStatus;
-use crate::data::models::generic::tasks::GenericTask;
+use crate::data::plugins::client::Task;
 use crate::widgets::components::content::ContentInput;
 
 #[derive(Debug)]
@@ -22,17 +22,17 @@ pub enum TaskInput {
 #[derive(Debug)]
 pub enum TaskOutput {
 	Remove(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, GenericTask),
+	UpdateTask(Option<DynamicIndex>, Task),
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for GenericTask {
+impl FactoryComponent for Task {
 	type ParentMsg = ContentInput;
 	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type Init = GenericTask;
+	type Init = Task;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -49,7 +49,7 @@ impl FactoryComponent for GenericTask {
 					set_margin_end: 10,
 					#[name = "check_button"]
 					gtk::CheckButton {
-						set_active: self.status.as_bool(),
+						set_active: self.status == 1,
 						connect_toggled[sender] => move |checkbox| {
 							sender.input.send(TaskInput::SetCompleted(checkbox.is_active()));
 						}
@@ -129,9 +129,9 @@ impl FactoryComponent for GenericTask {
 		match message {
 			TaskInput::SetCompleted(completed) => {
 				self.status = if completed {
-					TaskStatus::Completed
+					TaskStatus::Completed as i32
 				} else {
-					TaskStatus::NotStarted
+					TaskStatus::NotStarted as i32
 				};
 				sender
 					.output

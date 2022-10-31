@@ -5,14 +5,14 @@ pub mod provider {
 	tonic::include_proto!("provider");
 }
 
-enum Plugins {
+pub enum Plugins {
 	Local,
 	GoogleTask
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let plugin = Plugins::Local;
+	let plugin = Plugins::GoogleTask;
 	let mut client = match plugin {
 		Plugins::GoogleTask => ProviderClient::connect("http://[::1]:6006").await?,
 		Plugins::Local => ProviderClient::connect("http://[::1]:5123").await?,
@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	});
 
 	let response = client.create_task(request).await?;
-    let id = client.get_id(crate::provider::Void {}).await?;
+    let id = client.get_id().await?;
 
     print!("Response: {:#?} with id: {}", response, id.into_inner());
 
