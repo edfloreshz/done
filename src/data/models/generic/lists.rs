@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::data::models::queryable::list::QueryableList;
-use crate::data::plugins::local::models::lists::LocalList;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct GenericTaskList {
@@ -51,20 +50,6 @@ impl From<QueryableList> for GenericTaskList {
 			count: queryable_list.count,
 			icon_name: queryable_list.icon_name,
 			provider: queryable_list.provider,
-			is_smart: false,
-		}
-	}
-}
-
-impl From<LocalList> for GenericTaskList {
-	fn from(local_list: LocalList) -> Self {
-		Self {
-			id_list: local_list.id_list,
-			display_name: local_list.display_name,
-			is_owner: local_list.is_owner,
-			count: local_list.count,
-			icon_name: local_list.icon_name,
-			provider: local_list.provider,
 			is_smart: false,
 		}
 	}
