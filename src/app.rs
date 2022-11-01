@@ -17,7 +17,7 @@ use relm4::{
 	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
 	ComponentSender, Controller, SimpleComponent,
 };
-use crate::data::plugins::List;
+use crate::data::plugins::client::List;
 
 pub(super) struct App {
 	message: Option<AppMsg>,

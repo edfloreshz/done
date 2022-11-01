@@ -6,8 +6,8 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::data::plugins::Plugin;
-use crate::data::plugins::provider::List;
+use crate::data::plugins::client::Plugin;
+use crate::data::plugins::client::provider::List;
 use crate::rt;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 

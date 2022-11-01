@@ -3,13 +3,13 @@ use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
 
-use crate::data::plugins::Plugin;
+use crate::data::plugins::client::Plugin;
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use crate::data::plugins::provider::List;
-use crate::data::plugins::ProviderRequest;
+use crate::data::plugins::client::provider::List;
+use crate::data::plugins::client::ProviderRequest;
 
 use crate::{adw, gtk, rt};
 
