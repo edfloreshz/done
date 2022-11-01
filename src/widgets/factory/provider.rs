@@ -10,7 +10,7 @@ use relm4::{adw, Component, Controller};
 use tonic::Request;
 use tonic::transport::Channel;
 
-use crate::data::plugins::{ProviderClient, Empty, List, Plugin, ProviderRequest};
+use crate::data::plugins::client::{ProviderClient, Empty, List, Plugin, ProviderRequest};
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 use crate::rt;
