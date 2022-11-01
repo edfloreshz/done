@@ -8,6 +8,7 @@ use relm4::{
 
 use crate::plugins::client::Plugin;
 use crate::plugins::client::provider::List;
+use crate::rt;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 
 #[derive(Debug)]
@@ -77,7 +78,9 @@ impl SimpleComponent for SidebarModel {
 		};
 		
 		for provider in Plugin::list() {
-			model.provider_factory.guard().push_back(provider);
+			if let Ok(connector) = rt().block_on(provider.connect()) {
+				model.provider_factory.guard().push_back((provider, connector));
+			}
 		}
 		ComponentParts { model, widgets }
 	}

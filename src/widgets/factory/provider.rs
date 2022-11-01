@@ -9,8 +9,9 @@ use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 use tonic::Request;
+use tonic::transport::Channel;
 
-use crate::plugins::client::{Empty, List, Plugin, ProviderRequest};
+use crate::plugins::client::{Empty, List, Plugin, ProviderClient, ProviderRequest};
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 use crate::rt;
@@ -19,6 +20,7 @@ use crate::rt;
 #[derive(Debug)]
 pub struct ProviderModel {
 	pub provider: Plugin,
+	pub connector: ProviderClient<Channel>,
 	pub list_factory: FactoryVecDeque<List>,
 	pub new_list_controller: Controller<NewListModel>,
 }
@@ -46,7 +48,7 @@ impl FactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type Init = Plugin;
+	type Init = (Plugin, ProviderClient<Channel>);
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -55,11 +57,18 @@ impl FactoryComponent for ProviderModel {
 		adw::PreferencesGroup {
 			#[name(expander)]
 			add = &adw::ExpanderRow {
-				set_title: rt().block_on(service.get_name(Request::new(Empty {}))).unwrap().into_inner().as_str(),
-				set_subtitle: rt().block_on(service.get_description(Request::new(Empty {}))).unwrap().into_inner().as_str(),
-				set_icon_name: Some(rt().block_on(service.get_icon_name(Request::new(Empty {}))).unwrap().into_inner().as_str()),
+				set_title: rt().block_on(self.connector.get_name(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+				set_subtitle: rt().block_on(self.connector.get_description(Request::new(Empty {}))).unwrap().into_inner().as_str(),
+				set_icon_name: Some(rt().block_on(self.connector.get_icon_name(Request::new(Empty {}))).unwrap().into_inner().as_str()),
 				set_enable_expansion: self.list_factory.guard().len() > 0,
 				set_expanded: false,
+				add_action = &gtk::MenuButton {
+					set_icon_name: "value-increase-symbolic",
+					set_css_classes: &["flat", "image-button"],
+					set_valign: gtk::Align::Center,
+					set_direction: gtk::ArrowType::Right,
+					set_popover: Some(self.new_list_controller.widget())
+				},
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender, index] => move |_, _, _, _| {
@@ -77,10 +86,12 @@ impl FactoryComponent for ProviderModel {
 		_index: &DynamicIndex,
 		sender: FactoryComponentSender<Self>,
 	) -> Self {
-		let mut service = rt().block_on(params.connect()).unwrap();
+		let mut service = params.1;
 		let id = rt().block_on(service.get_id(Request::new(Empty {}))).unwrap().into_inner();
+
 		Self {
-			provider: params,
+			provider: params.0,
+			connector: service,
 			list_factory: FactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				&sender.input,
@@ -103,27 +114,16 @@ impl FactoryComponent for ProviderModel {
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactoryComponentSender<Self>,
 	) -> Self::Widgets {
-		let mut service = rt().block_on(self.provider.connect()).unwrap();
 		let widgets = view_output!();
-		self.list_factory =
-			FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
 
-		let response = rt().block_on(service.read_all_lists(Request::new(Empty {}))).unwrap();
-		let data: Vec<List> = serde_json::from_str(response.into_inner().data.unwrap().as_str()).unwrap();
+		self.list_factory = FactoryVecDeque::new(widgets.expander.clone(), &sender.input);
+
+		let response = rt().block_on(self.connector.read_all_lists(Request::new(Empty {}))).unwrap().into_inner();
+		let data: Vec<List> = serde_json::from_str(response.data.unwrap().as_str()).unwrap();
 		for list in data {
 			self.list_factory.guard().push_back(list);
 		}
-		relm4::view! {
-			#[name(new_list_button)]
-			gtk::MenuButton {
-				set_icon_name: "value-increase-symbolic",
-				set_css_classes: &["flat", "image-button"],
-				set_valign: gtk::Align::Center,
-				set_direction: gtk::ArrowType::Right,
-				set_popover: Some(self.new_list_controller.widget())
-			}
-		}
-		widgets.expander.add_action(&new_list_button);
+
 		widgets
 	}
 
