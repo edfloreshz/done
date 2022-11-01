@@ -3,9 +3,9 @@ use crate::MIGRATIONS;
 use anyhow::{Context, Result};
 use diesel::{Connection, SqliteConnection};
 
-pub fn establish_connection() -> Result<SqliteConnection> {
+pub fn _establish_connection() -> Result<SqliteConnection> {
     let database_path = dirs::data_dir()
-        .with_context(|| "Failed to get data directory.")?
+        .with_context(|| "Failed to get plugins directory.")?
         .join("done/dev.edfloreshz.Done.db");
     let database_url = database_path
         .to_str()

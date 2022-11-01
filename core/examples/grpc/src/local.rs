@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:7007".parse()?;
 
     let local_service = LocalService {
-        id: "Local Service".to_string(),
+        id: "local".to_string(),
         name: "Local".to_string(),
         description: "Local tasks are stored here.".to_string(),
         icon: "".to_string()

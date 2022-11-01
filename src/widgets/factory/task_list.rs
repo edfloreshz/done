@@ -1,15 +1,16 @@
+use std::str::FromStr;
 use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
 
-use crate::data::plugins::client::Plugin;
+use crate::plugins::client::Plugin;
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use crate::data::plugins::client::provider::List;
-use crate::data::plugins::client::ProviderRequest;
+use crate::plugins::client::provider::List;
+use crate::plugins::client::ProviderRequest;
 
 use crate::{adw, gtk, rt};
 
@@ -121,32 +122,38 @@ impl FactoryComponent for List {
 		message: Self::Input,
 		sender: FactoryComponentSender<Self>,
 	) {
-		let mut service = rt().block_on(Plugin::from_str(&self.provider).connect()).unwrap();
-
-		match message {
-			ListInput::Rename(name) => {
-				let mut list = self.clone();
-				list.name = name.clone();
-				let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
-				if response.successful {
-					self.name = name;
-				}
-			},
-			ListInput::Delete(index) => {
-				let response = rt().block_on(service.delete_list(ProviderRequest::new(Some(self.clone()), None))).unwrap().into_inner();
-				if response.successful {
-					sender.output.send(ListOutput::DeleteTaskList(index))
-				}
-			},
-			ListInput::ChangeIcon(icon) => {
-				let mut list = self.clone();
-				list.icon = Some(icon.clone());
-				let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
-				if response.successful {
-					self.icon = Some(icon);
-				}
-			},
-			ListInput::Select => sender.output.send(ListOutput::Select(self.clone())),
+		if let Ok(provider) = Plugin::from_str(&self.provider) {
+			let mut service = rt().block_on(provider.connect()).unwrap();
+			match message {
+				ListInput::Rename(name) => {
+					let mut list = self.clone();
+					list.name = name.clone();
+					let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
+					if response.successful {
+						self.name = name;
+					}
+				},
+				ListInput::Delete(index) => {
+					let response = rt().block_on(service.delete_list(ProviderRequest::new(Some(self.clone()), None))).unwrap().into_inner();
+					if response.successful {
+						sender.output.send(ListOutput::DeleteTaskList(index))
+					}
+				},
+				ListInput::ChangeIcon(icon) => {
+					let mut list = self.clone();
+					list.icon = Some(icon.clone());
+					let response = rt().block_on(service.update_list(ProviderRequest::new(Some(list), None))).unwrap().into_inner();
+					if response.successful {
+						self.icon = Some(icon);
+					}
+				},
+				_ => ()
+			}
+		} else {
+			match message {
+				ListInput::Select => sender.output.send(ListOutput::Select(self.clone())),
+				_ => ()
+			}
 		}
 	}
 

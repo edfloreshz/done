@@ -9,7 +9,7 @@ use relm4::gtk::prelude::{
 };
 use relm4::WidgetPlus;
 
-use crate::data::plugins::client::Task;
+use crate::plugins::client::Task;
 use crate::widgets::components::content::ContentInput;
 
 #[derive(Debug)]

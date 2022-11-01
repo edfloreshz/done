@@ -24,7 +24,7 @@ use crate::config::APP_ID;
 mod config;
 mod app;
 mod application;
-mod data;
+mod plugins;
 mod schema;
 mod setup;
 mod widgets;
@@ -69,6 +69,6 @@ fn main() -> Result<()> {
 
 	app.set_action_group(Some(&actions.into_action_group()));
 	let app = RelmApp::with_app(app);
-	app.run::<App>(None);
+	app.run::<App>(());
 	Ok(())
 }
