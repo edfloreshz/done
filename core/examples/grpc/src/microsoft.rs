@@ -9,17 +9,17 @@ pub mod provider {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let addr = "[::1]:6006".parse()?;
+	let addr = "[::1]:3003".parse()?;
 
-	let google_task_service = GoogleTaskService {
-		id: "Google Task Service".to_string(),
-		name: "Google Task".to_string(),
-		description: "Google Tasks are stored here.".to_string(),
+	let microsoft_to_do_service = MicrosoftToDoService {
+		id: "Microsoft To Do Service".to_string(),
+		name: "Microsoft To Do".to_string(),
+		description: "Microsoft To Do tasks are stored here.".to_string(),
 		icon: "".to_string()
 	};
 
 	Server::builder()
-		.add_service(ProviderServer::new(google_task_service))
+		.add_service(ProviderServer::new(microsoft_to_do_service))
 		.serve(addr)
 		.await?;
 
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug, Default)]
-pub struct GoogleTaskService {
+pub struct MicrosoftToDoService {
 	id: String,
 	name: String,
 	description: String,
@@ -35,7 +35,7 @@ pub struct GoogleTaskService {
 }
 
 #[tonic::async_trait]
-impl Provider for GoogleTaskService {
+impl Provider for MicrosoftToDoService {
 	async fn get_id(
 		&self,
 		_request: Request<Empty>,
@@ -79,14 +79,14 @@ impl Provider for GoogleTaskService {
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		println!("GoogleTask Service got a request: {:#?}", request);
+		println!("Microsoft To Do Service got a request: {:#?}", request);
 
 		let req = request.into_inner();
 
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!(
-				"Task with name \"{}\" added to Google Task Service",
+				"Task with name \"{}\" added to Microsoft To Do Service",
 				req.task.unwrap().title
 			),
 			data: None

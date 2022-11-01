@@ -76,6 +76,8 @@ impl Plugin {
 		match provider {
 			"local" => Self::Local,
 			"google" => Self::Google,
+			"microsoft" => Self::Microsoft,
+			"nextcloud" => Self::Nextcloud,
 			_ => Self::None,
 		}
 	}

@@ -14,6 +14,14 @@ name = "provider-google"
 path = "src/google.rs"
 
 [[bin]]
+name = "provider-microsoft"
+path = "src/microsoft.rs"
+
+[[bin]]
+name = "provider-nextcloud"
+path = "src/nextcloud.rs"
+
+[[bin]]
 name = "provider-client"
 path = "src/client.rs"
 

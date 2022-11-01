@@ -6,7 +6,7 @@ use relm4::{
 	},
 	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
-use crate::data::plugins::{List, Task, ProviderRequest, Plugin};
+use crate::data::plugins::client::{List, Task, ProviderRequest, Plugin};
 use crate::{fl, rt};
 
 pub struct ContentModel {
