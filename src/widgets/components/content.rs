@@ -1,26 +1,26 @@
+use std::str::FromStr;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
 	gtk::prelude::{
-		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
+		BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 	},
 	view, ComponentParts, ComponentSender, SimpleComponent, WidgetPlus,
 };
-use crate::data::plugins::client::{List, Task, ProviderRequest, Plugin};
+use crate::plugins::client::{List, Task, ProviderRequest, Plugin};
 use crate::{fl, rt};
-
 pub struct ContentModel {
+	current_provider: Plugin,
 	parent_list: Option<List>,
 	tasks_factory: FactoryVecDeque<Task>,
-	show_tasks: bool,
 }
 
 #[derive(Debug)]
 pub enum ContentInput {
 	AddTask(String),
 	RemoveTask(DynamicIndex),
-	RemoveWelcomeScreen,
 	SetTaskList(List),
+	SetProvider(Plugin),
 	UpdateTask(Option<DynamicIndex>, Task),
 }
 
@@ -44,7 +44,7 @@ impl SimpleComponent for ContentModel {
 			gtk::CenterBox {
 				set_orientation: gtk::Orientation::Vertical,
 				#[watch]
-				set_visible: !model.show_tasks,
+				set_visible: model.parent_list.is_none(),
 				set_halign: gtk::Align::Center,
 				set_valign: gtk::Align::Center,
 				#[wrap(Some)]
@@ -59,22 +59,13 @@ impl SimpleComponent for ContentModel {
 					},
 					gtk::Label {
 						set_text: fl!("tasks-here")
-					},
-					gtk::Button {
-						// #[watch]
-						// set_visible: !model.parent_list.is_smart,
-						add_css_class: "suggested-action",
-						set_label: fl!("add-tasks"),
-						connect_clicked[sender] => move |_| {
-								sender.input(ContentInput::RemoveWelcomeScreen)
-						}
 					}
 				}
 			},
 			gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				#[watch]
-				set_visible: model.show_tasks,
+				set_visible: model.parent_list.is_some(),
 				gtk::Box {
 					#[name(task_container)]
 					gtk::Stack {
@@ -93,8 +84,8 @@ impl SimpleComponent for ContentModel {
 					#[name(entry)]
 					gtk::Entry {
 						set_hexpand: true,
-						// #[watch]
-						// set_visible: !model.parent_list.is_smart,
+						#[watch]
+						set_visible: model.parent_list.is_some(),
 						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
 						set_placeholder_text: Some(fl!("new-task")),
 						set_height_request: 42,
@@ -120,9 +111,9 @@ impl SimpleComponent for ContentModel {
 			}
 		}
 		let model = ContentModel {
+			current_provider: Plugin::Local,
 			parent_list: None,
 			tasks_factory: FactoryVecDeque::new(list_box.clone(), &sender.input),
-			show_tasks: false,
 		};
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
@@ -131,79 +122,89 @@ impl SimpleComponent for ContentModel {
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		let parent_list = &self.parent_list;
 		if let Some(parent) = parent_list {
-			let mut service = rt().block_on(Plugin::from_str(&parent.provider).connect()).unwrap();
+			if let Ok(provider) = Plugin::from_str(&parent.provider) {
+				let mut service = rt().block_on(provider.connect()).unwrap();
+				match message {
+					ContentInput::AddTask(title) => {
+						let task = Task::new(title, parent.id.to_owned());
+						let response = rt().block_on(service
+							.create_task(tonic::Request::new(ProviderRequest {
+								list: parent_list.clone(),
+								task: Some(task.clone()),
+							}))).unwrap();
 
-			match message {
-				ContentInput::AddTask(title) => {
-					let task = Task::new(title, parent.id.to_owned());
-					let response = rt().block_on(service
-						.create_task(tonic::Request::new(ProviderRequest {
-							list: parent_list.clone(),
-							task: Some(task.clone()),
-						}))).unwrap();
+						if response.into_inner().successful {
+							self.tasks_factory.guard().push_back(task);
+						}
+					},
+					ContentInput::RemoveTask(index) => {
+						let mut guard = self.tasks_factory.guard();
+						let task = guard.get(index.current_index()).unwrap();
+						let response = rt().block_on(service
+							.delete_task(tonic::Request::new(ProviderRequest {
+								list: parent_list.clone(),
+								task: Some(task.clone()),
+							}))).unwrap();
 
-					if response.into_inner().successful {
-						self.tasks_factory.guard().push_back(task);
-					}
-				},
-				ContentInput::RemoveTask(index) => {
-					let mut guard = self.tasks_factory.guard();
-					let task = guard.get(index.current_index()).unwrap();
-					let response = rt().block_on(service
-						.delete_task(tonic::Request::new(ProviderRequest {
-							list: parent_list.clone(),
-							task: Some(task.clone()),
-						}))).unwrap();
+						if response.into_inner().successful {
+							guard.remove(index.current_index());
+						}
+					},
+					ContentInput::UpdateTask(index, task) => {
+						let response = rt().block_on(service
+							.update_task(tonic::Request::new(ProviderRequest {
+								list: parent_list.clone(),
+								task: Some(task.clone()),
+							}))).unwrap();
 
-					if response.into_inner().successful {
-						guard.remove(index.current_index());
-					}
-				},
-				ContentInput::UpdateTask(index, task) => {
-					let response = rt().block_on(service
-						.update_task(tonic::Request::new(ProviderRequest {
-							list: parent_list.clone(),
-							task: Some(task.clone()),
-						}))).unwrap();
-
-					if response.into_inner().successful {
-						if let Some(index) = index {
-							if self.parent_list.as_ref().unwrap().provider == "starred" {
-								self.tasks_factory.guard().remove(index.current_index());
+						if response.into_inner().successful {
+							if let Some(index) = index {
+								if self.parent_list.as_ref().unwrap().provider == "starred" {
+									self.tasks_factory.guard().remove(index.current_index());
+								}
 							}
 						}
-					}
-				},
-				_ => {}
+					},
+					_ => {}
+				}
+			}
+			else {
+				todo!("Display connection error")
 			}
 		} else {
 			match message {
-				ContentInput::RemoveWelcomeScreen => self.show_tasks = true,
+				ContentInput::SetProvider(provider) => {
+					self.current_provider = provider;
+					self.parent_list = None;
+				},
 				ContentInput::SetTaskList(list) => {
 					self.parent_list = Some(list.clone());
-					let mut service = rt().block_on(Plugin::from_str(&list.provider).connect()).unwrap();
+					if let Ok(provider) = Plugin::from_str(&list.provider) {
+						let mut service = rt().block_on(provider.connect()).unwrap();
 
-					let response = rt().block_on(service
-						.read_tasks_from_list(tonic::Request::new(ProviderRequest {
-							list: Some(list.clone()),
-							task: None,
-						}))).unwrap().into_inner();
+						let response = rt().block_on(service
+							.read_tasks_from_list(tonic::Request::new(ProviderRequest {
+								list: Some(list.clone()),
+								task: None,
+							}))).unwrap().into_inner();
 
-					let mut tasks: Vec<Task> = vec![];
-					if response.successful {
-						tasks = serde_json::from_str(response.data.unwrap().as_str()).unwrap();
-					}
-
-					loop {
-						let task = self.tasks_factory.guard().pop_front();
-						if task.is_none() {
-							break;
+						let mut tasks: Vec<Task> = vec![];
+						if response.successful {
+							tasks = serde_json::from_str(response.data.unwrap().as_str()).unwrap();
 						}
+
+						loop {
+							let task = self.tasks_factory.guard().pop_front();
+							if task.is_none() {
+								break;
+							}
+						}
+						for task in tasks {
+							self.tasks_factory.guard().push_back(task.clone());
+						}
+					} else {
+						todo!("Display connection error")
 					}
-					for task in tasks {
-						self.tasks_factory.guard().push_back(task.clone());
-					}
-					self.show_tasks = !self.tasks_factory.guard().is_empty();
 				},
 				_ => {}
 			}

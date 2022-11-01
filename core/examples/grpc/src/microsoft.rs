@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let addr = "[::1]:3003".parse()?;
 
 	let microsoft_to_do_service = MicrosoftToDoService {
-		id: "Microsoft To Do Service".to_string(),
+		id: "microsoft".to_string(),
 		name: "Microsoft To Do".to_string(),
 		description: "Microsoft To Do tasks are stored here.".to_string(),
 		icon: "".to_string()

@@ -1,6 +1,5 @@
-use crate::data::{
-	traits::provider::Provider,
-};
+use crate::plugins::client::List;
+use crate::plugins::client::Plugin;
 use crate::fl;
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
@@ -17,7 +16,6 @@ use relm4::{
 	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
 	ComponentSender, Controller, SimpleComponent,
 };
-use crate::data::plugins::client::List;
 
 pub(super) struct App {
 	message: Option<AppMsg>,
@@ -45,6 +43,7 @@ impl App {
 #[derive(Debug)]
 pub(super) enum AppMsg {
 	ListSelected(List),
+	ProviderSelected(Plugin),
 	CloseWarning,
 	Folded,
 	Unfolded,
@@ -68,7 +67,7 @@ impl SimpleComponent for App {
 	type Input = AppMsg;
 	type Output = ();
 	type Widgets = AppWidgets;
-	type Init = Option<Vec<Box<dyn Provider>>>;
+	type Init = ();
 
 	menu! {
 			primary_menu: {
@@ -210,6 +209,9 @@ impl SimpleComponent for App {
 				.forward(&sender.input, |message| match message {
 					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
 					SidebarOutput::Forward => AppMsg::Forward,
+					SidebarOutput::ProviderSelected(plugin) => {
+						AppMsg::ProviderSelected(plugin)
+					},
 				});
 
 		let content_controller = ContentModel::builder()
@@ -274,6 +276,12 @@ impl SimpleComponent for App {
 					.send(ContentInput::SetTaskList(list))
 			},
 			AppMsg::CloseWarning => self.warning_revealed = false,
+			AppMsg::ProviderSelected(provider) => self
+				.content
+				.as_ref()
+				.unwrap()
+				.sender()
+				.send(ContentInput::SetProvider(provider)),
 			_ => self.message = Some(message),
 		}
 	}
