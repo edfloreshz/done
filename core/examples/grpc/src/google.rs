@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let addr = "[::1]:6006".parse()?;
 
 	let google_task_service = GoogleTaskService {
-		id: "Google Task Service".to_string(),
+		id: "google".to_string(),
 		name: "Google Task".to_string(),
 		description: "Google Tasks are stored here.".to_string(),
 		icon: "".to_string()

@@ -6,9 +6,8 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::data::plugins::client::Plugin;
-use crate::data::plugins::client::provider::List;
-use crate::rt;
+use crate::plugins::client::Plugin;
+use crate::plugins::client::provider::List;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 
 #[derive(Debug)]
@@ -21,6 +20,7 @@ pub struct SidebarModel {
 pub enum SidebarInput {
 	AddTaskList(usize, String, String),
 	ListSelected(List),
+	ProviderSelected(Plugin),
 	RemoveService(String),
 	Forward,
 }
@@ -29,6 +29,7 @@ pub enum SidebarInput {
 #[derive(Debug)]
 pub enum SidebarOutput {
 	ListSelected(List),
+	ProviderSelected(Plugin),
 	Forward,
 }
 
@@ -75,14 +76,8 @@ impl SimpleComponent for SidebarModel {
 			),
 		};
 		
-		for plugin in Plugin::list() {
-			match rt().block_on(plugin.connect()) {
-				Ok(provider) => {
-					model.provider_factory.guard().push_back(provider);
-					()
-				},
-				Err(_) => (),
-			}
+		for provider in Plugin::list() {
+			model.provider_factory.guard().push_back(provider);
 		}
 		ComponentParts { model, widgets }
 	}
@@ -99,6 +94,7 @@ impl SimpleComponent for SidebarModel {
 				sender.output.send(SidebarOutput::ListSelected(list))
 			},
 			SidebarInput::Forward => sender.output.send(SidebarOutput::Forward),
+			SidebarInput::ProviderSelected(provider) => sender.output.send(SidebarOutput::ProviderSelected(provider))
 		}
 	}
 }

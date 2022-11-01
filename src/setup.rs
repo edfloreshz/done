@@ -65,7 +65,7 @@ pub fn verify_data_integrity() -> Result<()> {
 		config.write()?;
 	}
 	let database_path = dirs::data_dir()
-		.with_context(|| "Failed to get data directory.")?
+		.with_context(|| "Failed to get plugins directory.")?
 		.join("done/dev.edfloreshz.Done.db");
 	let database_url = database_path
 		.to_str()
