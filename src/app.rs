@@ -1,5 +1,3 @@
-use crate::plugins::client::List;
-use crate::plugins::client::Plugin;
 use crate::fl;
 use crate::main_app;
 use crate::widgets::modals::about::AboutDialog;
@@ -10,6 +8,8 @@ use crate::{
 		sidebar::{SidebarModel, SidebarOutput},
 	},
 };
+use done_core::plugins::Plugin;
+use done_core::provider::List;
 use gtk::prelude::*;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
@@ -203,20 +203,20 @@ impl SimpleComponent for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let sidebar_controller =
-			SidebarModel::builder()
-				.launch(None)
-				.forward(&sender.input, |message| match message {
-					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
-					SidebarOutput::Forward => AppMsg::Forward,
-					SidebarOutput::ProviderSelected(plugin) => {
-						AppMsg::ProviderSelected(plugin)
-					},
-				});
+		let sidebar_controller = SidebarModel::builder().launch(None).forward(
+			&sender.input_sender(),
+			|message| match message {
+				SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
+				SidebarOutput::Forward => AppMsg::Forward,
+				SidebarOutput::ProviderSelected(plugin) => {
+					AppMsg::ProviderSelected(plugin)
+				},
+			},
+		);
 
 		let content_controller = ContentModel::builder()
 			.launch(None)
-			.forward(&sender.input, |message| match message {});
+			.forward(&sender.input_sender(), |message| match message {});
 
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
 
@@ -250,9 +250,9 @@ impl SimpleComponent for App {
 			})
 		};
 
-		actions.add_action(shortcuts_action);
-		actions.add_action(about_action);
-		actions.add_action(quit_action);
+		actions.add_action(&shortcuts_action);
+		actions.add_action(&about_action);
+		actions.add_action(&quit_action);
 
 		widgets.main_window.insert_action_group(
 			WindowActionGroup::NAME,
