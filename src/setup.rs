@@ -1,5 +1,4 @@
-use anyhow::{Context, Result};
-use diesel::{Connection, SqliteConnection};
+use anyhow::Result;
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gdk, gio, glib};
 use libset::{config::Config, new_dir, new_file};
@@ -8,7 +7,6 @@ use relm4::gtk;
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
-	embedded_migrations,
 };
 
 pub fn setup() -> Result<()> {
@@ -64,15 +62,6 @@ pub fn verify_data_integrity() -> Result<()> {
 	!user_database.exists() {
 		config.write()?;
 	}
-	let database_path = dirs::data_dir()
-		.with_context(|| "Failed to get plugins directory.")?
-		.join("done/dev.edfloreshz.Done.db");
-	let database_url = database_path
-		.to_str()
-		.with_context(|| "Failed to convert path to string")?;
-	let connection = SqliteConnection::establish(database_url)
-		.with_context(|| "Error connecting to database")?;
-	embedded_migrations::run(&connection)?;
 	Ok(())
 }
 

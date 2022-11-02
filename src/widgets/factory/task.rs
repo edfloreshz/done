@@ -1,16 +1,18 @@
-use done_core::enums::TaskStatus;
+use done_core::provider::TaskStatus;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
-use relm4::gtk;
-use relm4::gtk::prelude::{
-	BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
-	EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
+use relm4::{
+	gtk,
+	gtk::prelude::{
+		BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
+		EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
+	},
+	RelmWidgetExt,
 };
-use relm4::WidgetPlus;
 
-use crate::plugins::client::Task;
 use crate::widgets::components::content::ContentInput;
+use done_core::provider::Task;
 
 #[derive(Debug)]
 pub enum TaskInput {
@@ -25,14 +27,19 @@ pub enum TaskOutput {
 	UpdateTask(Option<DynamicIndex>, Task),
 }
 
+#[derive(Debug)]
+pub struct TaskData {
+	pub data: Task,
+}
+
 #[relm4::factory(pub)]
-impl FactoryComponent for Task {
-	type ParentMsg = ContentInput;
+impl FactoryComponent for TaskData {
+	type ParentInput = ContentInput;
 	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type Init = Task;
+	type Init = TaskData;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -49,9 +56,9 @@ impl FactoryComponent for Task {
 					set_margin_end: 10,
 					#[name = "check_button"]
 					gtk::CheckButton {
-						set_active: self.status == 1,
+						set_active: self.data.status == 1,
 						connect_toggled[sender] => move |checkbox| {
-							sender.input.send(TaskInput::SetCompleted(checkbox.is_active()));
+							sender.input(TaskInput::SetCompleted(checkbox.is_active()));
 						}
 					},
 					gtk::Box {
@@ -62,18 +69,18 @@ impl FactoryComponent for Task {
 							add_css_class: "flat",
 							add_css_class: "no-border",
 							set_hexpand: true,
-							set_text: &self.title,
+							set_text: &self.data.title,
 							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
-								sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+								sender.input(TaskInput::ModifyTitle(buffer.text()));
 							},
 							// connect_insert_text[sender] => move |entry, _, _| {
 							// 	let buffer = entry.buffer();
-							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// 	sender.input(TaskInput::ModifyTitle(buffer.text()));
 							// },
 							// connect_delete_text[sender] => move |entry, _, _| {
 							// 	let buffer = entry.buffer();
-							// 	sender.input.send(TaskInput::ModifyTitle(buffer.text()));
+							// 	sender.input(TaskInput::ModifyTitle(buffer.text()));
 							// }
 						},
 						#[name = "favorite"]
@@ -81,10 +88,10 @@ impl FactoryComponent for Task {
 							add_css_class: "opaque",
 							add_css_class: "circular",
 							#[watch]
-							set_class_active: ("favorite", self.favorite),
+							set_class_active: ("favorite", self.data.favorite),
 							set_icon_name: "star-filled-rounded-symbolic",
 							connect_toggled[sender, index] => move |_| {
-								sender.input.send(TaskInput::Favorite(index.clone()));
+								sender.input(TaskInput::Favorite(index.clone()));
 							}
 						},
 						#[name = "delete"]
@@ -93,7 +100,7 @@ impl FactoryComponent for Task {
 							add_css_class: "circular",
 							set_icon_name: "user-trash-full-symbolic",
 							connect_clicked[sender, index] => move |_| {
-								sender.output.send(TaskOutput::Remove(index.clone()))
+								sender.output(TaskOutput::Remove(index.clone()))
 							}
 						}
 					}
@@ -128,31 +135,31 @@ impl FactoryComponent for Task {
 	) {
 		match message {
 			TaskInput::SetCompleted(completed) => {
-				self.status = if completed {
+				self.data.status = if completed {
 					TaskStatus::Completed as i32
 				} else {
 					TaskStatus::NotStarted as i32
 				};
 				sender
-					.output
-					.send(TaskOutput::UpdateTask(None, self.clone()));
+					.output_sender()
+					.send(TaskOutput::UpdateTask(None, self.data.clone()));
 			},
 			TaskInput::Favorite(index) => {
-				self.favorite = !self.favorite;
+				self.data.favorite = !self.data.favorite;
 				sender
-					.output
-					.send(TaskOutput::UpdateTask(Some(index), self.clone()));
+					.output_sender()
+					.send(TaskOutput::UpdateTask(Some(index), self.data.clone()));
 			},
 			TaskInput::ModifyTitle(title) => {
-				self.title = title;
+				self.data.title = title;
 				sender
-					.output
-					.send(TaskOutput::UpdateTask(None, self.clone()));
+					.output_sender()
+					.send(TaskOutput::UpdateTask(None, self.data.clone()));
 			},
 		}
 	}
 
-	fn output_to_parent_msg(output: Self::Output) -> Option<ContentInput> {
+	fn output_to_parent_input(output: Self::Output) -> Option<ContentInput> {
 		Some(match output {
 			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
 			TaskOutput::UpdateTask(index, task) => {

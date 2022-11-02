@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable};
 use uuid::Uuid;
 
-use crate::enums::{TaskImportance, TaskStatus};
+use crate::provider::{TaskImportance, TaskStatus};
 
 use crate::schema::tasks;
 
@@ -13,10 +13,10 @@ pub struct QueryableTask {
 	pub parent_list: String,
 	pub title: String,
 	pub body: Option<String>,
-    pub importance: i32,
+	pub importance: i32,
 	pub favorite: bool,
 	pub is_reminder_on: bool,
-    pub status: i32,
+	pub status: i32,
 	pub completed_on: Option<NaiveDateTime>,
 	pub due_date: Option<NaiveDateTime>,
 	pub reminder_date: Option<NaiveDateTime>,

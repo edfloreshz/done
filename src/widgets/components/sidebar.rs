@@ -6,10 +6,10 @@ use relm4::{
 	ComponentParts, ComponentSender, SimpleComponent,
 };
 
-use crate::plugins::client::Plugin;
-use crate::plugins::client::provider::List;
 use crate::rt;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
+use done_core::plugins::Plugin;
+use done_core::provider::List;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -73,13 +73,16 @@ impl SimpleComponent for SidebarModel {
 		let mut model = SidebarModel {
 			provider_factory: FactoryVecDeque::new(
 				widgets.providers_container.clone(),
-				&sender.input,
+				&sender.input_sender(),
 			),
 		};
-		
+
 		for provider in Plugin::list() {
 			if let Ok(connector) = rt().block_on(provider.connect()) {
-				model.provider_factory.guard().push_back((provider, connector));
+				model
+					.provider_factory
+					.guard()
+					.push_back((provider, connector));
 			}
 		}
 		ComponentParts { model, widgets }
@@ -94,10 +97,12 @@ impl SimpleComponent for SidebarModel {
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 			SidebarInput::ListSelected(list) => {
-				sender.output.send(SidebarOutput::ListSelected(list))
+				sender.output(SidebarOutput::ListSelected(list))
 			},
-			SidebarInput::Forward => sender.output.send(SidebarOutput::Forward),
-			SidebarInput::ProviderSelected(provider) => sender.output.send(SidebarOutput::ProviderSelected(provider))
+			SidebarInput::Forward => sender.output(SidebarOutput::Forward),
+			SidebarInput::ProviderSelected(provider) => {
+				sender.output(SidebarOutput::ProviderSelected(provider))
+			},
 		}
 	}
 }

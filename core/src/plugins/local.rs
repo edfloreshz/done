@@ -1,25 +1,20 @@
-use provider::provider_server::{Provider, ProviderServer};
-use provider::{ProviderRequest, ProviderResponse, Empty};
+use done_core::provider::provider_server::{Provider, ProviderServer};
+use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
 use tonic::{transport::Server, Request, Response, Status};
-use crate::provider::Task;
-
-pub mod provider {
-	tonic::include_proto!("provider");
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let addr = "[::1]:4004".parse()?;
+	let addr = "[::1]:7007".parse()?;
 
-	let nextcloud_to_do_service = NextcloudService {
-		id: "nextcloud".to_string(),
-		name: "Nextcloud".to_string(),
-		description: "Nextcloud tasks are stored here.".to_string(),
-		icon: "".to_string()
+	let local_service = LocalService {
+		id: "local".to_string(),
+		name: "Local".to_string(),
+		description: "Local tasks are stored here.".to_string(),
+		icon: "".to_string(),
 	};
 
 	Server::builder()
-		.add_service(ProviderServer::new(nextcloud_to_do_service))
+		.add_service(ProviderServer::new(local_service))
 		.serve(addr)
 		.await?;
 
@@ -27,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug, Default)]
-pub struct NextcloudService {
+pub struct LocalService {
 	id: String,
 	name: String,
 	description: String,
@@ -35,7 +30,7 @@ pub struct NextcloudService {
 }
 
 #[tonic::async_trait]
-impl Provider for NextcloudService {
+impl Provider for LocalService {
 	async fn get_id(
 		&self,
 		_request: Request<Empty>,
@@ -71,25 +66,38 @@ impl Provider for NextcloudService {
 		todo!()
 	}
 
-	async fn read_tasks_from_list(&self, request: Request<ProviderRequest>) -> Result<Response<ProviderResponse>, Status> {
-		todo!()
+	async fn read_tasks_from_list(
+		&self,
+		request: Request<ProviderRequest>,
+	) -> Result<Response<ProviderResponse>, Status> {
+		let req = request.into_inner();
+
+		let reply = ProviderResponse {
+			successful: true,
+			message: format!(
+				"Task with name \"{}\" added to Local Service",
+				req.task.unwrap().title
+			),
+			data: None,
+		};
+		Ok(Response::new(reply))
 	}
 
 	async fn create_task(
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		println!("Nextcloud Service got a request: {:#?}", request);
+		println!("Local Service got a request: {:#?}", request);
 
 		let req = request.into_inner();
 
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!(
-				"Task with name \"{}\" added to Nextcloud Service",
+				"Task with name \"{}\" added to Local Service",
 				req.task.unwrap().title
 			),
-			data: None
+			data: None,
 		};
 		Ok(Response::new(reply))
 	}
@@ -124,7 +132,7 @@ impl Provider for NextcloudService {
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!("read_all_lists"),
-			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap())
+			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap()),
 		};
 		Ok(Response::new(reply))
 	}

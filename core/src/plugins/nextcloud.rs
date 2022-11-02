@@ -1,25 +1,20 @@
-use provider::provider_server::{Provider, ProviderServer};
-use provider::{ProviderRequest, ProviderResponse, Empty};
+use done_core::provider::provider_server::{Provider, ProviderServer};
+use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
 use tonic::{transport::Server, Request, Response, Status};
-use crate::provider::Task;
-
-pub mod provider {
-	tonic::include_proto!("provider");
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let addr = "[::1]:3003".parse()?;
+	let addr = "[::1]:4004".parse()?;
 
-	let microsoft_to_do_service = MicrosoftToDoService {
-		id: "microsoft".to_string(),
-		name: "Microsoft To Do".to_string(),
-		description: "Microsoft To Do tasks are stored here.".to_string(),
-		icon: "".to_string()
+	let nextcloud_to_do_service = NextcloudService {
+		id: "nextcloud".to_string(),
+		name: "Nextcloud".to_string(),
+		description: "Nextcloud tasks are stored here.".to_string(),
+		icon: "".to_string(),
 	};
 
 	Server::builder()
-		.add_service(ProviderServer::new(microsoft_to_do_service))
+		.add_service(ProviderServer::new(nextcloud_to_do_service))
 		.serve(addr)
 		.await?;
 
@@ -27,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug, Default)]
-pub struct MicrosoftToDoService {
+pub struct NextcloudService {
 	id: String,
 	name: String,
 	description: String,
@@ -35,7 +30,7 @@ pub struct MicrosoftToDoService {
 }
 
 #[tonic::async_trait]
-impl Provider for MicrosoftToDoService {
+impl Provider for NextcloudService {
 	async fn get_id(
 		&self,
 		_request: Request<Empty>,
@@ -71,7 +66,10 @@ impl Provider for MicrosoftToDoService {
 		todo!()
 	}
 
-	async fn read_tasks_from_list(&self, request: Request<ProviderRequest>) -> Result<Response<ProviderResponse>, Status> {
+	async fn read_tasks_from_list(
+		&self,
+		request: Request<ProviderRequest>,
+	) -> Result<Response<ProviderResponse>, Status> {
 		todo!()
 	}
 
@@ -79,17 +77,17 @@ impl Provider for MicrosoftToDoService {
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		println!("Microsoft To Do Service got a request: {:#?}", request);
+		println!("Nextcloud Service got a request: {:#?}", request);
 
 		let req = request.into_inner();
 
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!(
-				"Task with name \"{}\" added to Microsoft To Do Service",
+				"Task with name \"{}\" added to Nextcloud Service",
 				req.task.unwrap().title
 			),
-			data: None
+			data: None,
 		};
 		Ok(Response::new(reply))
 	}
@@ -124,7 +122,7 @@ impl Provider for MicrosoftToDoService {
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!("read_all_lists"),
-			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap())
+			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap()),
 		};
 		Ok(Response::new(reply))
 	}
