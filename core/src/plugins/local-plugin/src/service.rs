@@ -1,6 +1,8 @@
 use done_core::provider::provider_server::{Provider, ProviderServer};
 use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status};
+
+use crate::database::establish_connection;
 
 #[derive(Debug, Default)]
 pub struct LocalService {
@@ -51,6 +53,7 @@ impl Provider for LocalService {
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
+		let conn = establish_connection();
 		let req = request.into_inner();
 
 		let reply = ProviderResponse {
