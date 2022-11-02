@@ -1,11 +1,6 @@
-use provider::provider_server::{Provider, ProviderServer};
-use provider::{ProviderRequest, ProviderResponse, Empty};
+use done_core::provider::provider_server::{Provider, ProviderServer};
+use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
 use tonic::{transport::Server, Request, Response, Status};
-use crate::provider::Task;
-
-pub mod provider {
-	tonic::include_proto!("provider");
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		id: "google".to_string(),
 		name: "Google Task".to_string(),
 		description: "Google Tasks are stored here.".to_string(),
-		icon: "".to_string()
+		icon: "".to_string(),
 	};
 
 	Server::builder()
@@ -71,7 +66,10 @@ impl Provider for GoogleTaskService {
 		todo!()
 	}
 
-	async fn read_tasks_from_list(&self, request: Request<ProviderRequest>) -> Result<Response<ProviderResponse>, Status> {
+	async fn read_tasks_from_list(
+		&self,
+		request: Request<ProviderRequest>,
+	) -> Result<Response<ProviderResponse>, Status> {
 		todo!()
 	}
 
@@ -89,7 +87,7 @@ impl Provider for GoogleTaskService {
 				"Task with name \"{}\" added to Google Task Service",
 				req.task.unwrap().title
 			),
-			data: None
+			data: None,
 		};
 		Ok(Response::new(reply))
 	}
@@ -124,7 +122,7 @@ impl Provider for GoogleTaskService {
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!("read_all_lists"),
-			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap())
+			data: Some(serde_json::to_string::<Vec<Task>>(&vec![]).unwrap()),
 		};
 		Ok(Response::new(reply))
 	}

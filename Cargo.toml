@@ -14,16 +14,13 @@ readme = "README.md"
 
 [dependencies]
 done_core = { path = "core" }
-gtk4 = { git = "https://github.com/gtk-rs/gtk4-rs", package = "gtk4", features = ["v4_4"]}
-relm4 = { git = "https://github.com/Relm4/Relm4", branch = "main", version = "0.5.0-beta.1", features = ["all"] }
+relm4 = { version = "0.5.0-beta.4", features = ["all"] }
 serde = { version = "1.0.136", features = ["derive"] }
-glib = "0.15.11"
+glib = "0.16.2"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 serde_json = "1.0"
 anyhow = "1.0.56"
-uuid = { version = "0.8.2", features = ["serde", "v4"] }
-diesel = { version = "1.4.8", features = ["sqlite", "r2d2", "chrono"] }
-diesel_migrations = "1.4.0"
+uuid = { version = "1.2.1", features = ["serde", "v4"] }
 dirs = "4.0.0"
 libset = "0.1.1"
 pretty_env_logger = "0.4.0"
@@ -36,13 +33,7 @@ libsqlite3-sys = { version = "^0", features = ["bundled"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 bevy_reflect = "0.8.0"
 tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
-tonic = "0.8.2"
-prost = "0.11.0"
-strum = "0.24.1"
-strum_macros = "0.24.3"
-prost-build = "0.11.1"
-protobuf = "3.2.0"
-prost-types = "0.11.1"
+
 
 [build-dependencies]
 glib-build-tools = { git = "https://github.com/gtk-rs/gtk-rs-core" }

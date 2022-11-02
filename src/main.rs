@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
-
 use anyhow::Result;
 
 use gtk::gio;
@@ -14,9 +9,9 @@ use relm4::{
 };
 
 use app::App;
-use setup::setup;
-use tokio::{runtime::Runtime};
 use once_cell::sync::OnceCell;
+use setup::setup;
+use tokio::runtime::Runtime;
 
 use crate::config::APP_ID;
 
@@ -24,8 +19,6 @@ use crate::config::APP_ID;
 mod config;
 mod app;
 mod application;
-mod plugins;
-mod schema;
 mod setup;
 mod widgets;
 
@@ -41,8 +34,6 @@ static RT: OnceCell<Runtime> = OnceCell::new();
 pub fn rt<'a>() -> &'a Runtime {
 	RT.get().unwrap()
 }
-
-embed_migrations!("migrations");
 
 fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
@@ -63,7 +54,7 @@ fn main() -> Result<()> {
 		})
 	};
 
-	actions.add_action(quit_action);
+	actions.add_action(&quit_action);
 
 	app.set_accelerators_for_action::<QuitAction>(&["<Control>q"]);
 
