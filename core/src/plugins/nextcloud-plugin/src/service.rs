@@ -2,31 +2,12 @@ use done_core::provider::provider_server::{Provider, ProviderServer};
 use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
 use tonic::{transport::Server, Request, Response, Status};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let addr = "[::1]:4004".parse()?;
-
-	let nextcloud_to_do_service = NextcloudService {
-		id: "nextcloud".to_string(),
-		name: "Nextcloud".to_string(),
-		description: "Nextcloud tasks are stored here.".to_string(),
-		icon: "".to_string(),
-	};
-
-	Server::builder()
-		.add_service(ProviderServer::new(nextcloud_to_do_service))
-		.serve(addr)
-		.await?;
-
-	Ok(())
-}
-
 #[derive(Debug, Default)]
 pub struct NextcloudService {
-	id: String,
-	name: String,
-	description: String,
-	icon: String,
+	pub id: String,
+	pub name: String,
+	pub description: String,
+	pub icon: String,
 }
 
 #[tonic::async_trait]

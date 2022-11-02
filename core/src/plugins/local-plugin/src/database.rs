@@ -1,7 +1,9 @@
+use diesel_migrations::EmbeddedMigrations;
 use crate::diesel_migrations::MigrationHarness;
-use crate::MIGRATIONS;
 use anyhow::{Context, Result};
 use diesel::{Connection, SqliteConnection};
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub fn _establish_connection() -> Result<SqliteConnection> {
 	let database_path = dirs::data_dir()

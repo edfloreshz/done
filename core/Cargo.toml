@@ -3,43 +3,15 @@ name = "done_core"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "provider-local"
-path = "src/plugins/local.rs"
-
-[[bin]]
-name = "provider-google"
-path = "src/plugins/google.rs"
-
-[[bin]]
-name = "provider-microsoft"
-path = "src/plugins/microsoft.rs"
-
-[[bin]]
-name = "provider-nextcloud"
-path = "src/plugins/nextcloud.rs"
-
 [dependencies]
-serde = { version = "1.0.136", features = ["derive"] }
-serde_json = "1.0"
-anyhow = "1.0.56"
-uuid = { version = "0.8.2", features = ["serde", "v4"] }
-diesel = { version = "2.0.0", features = ["sqlite", "r2d2", "chrono"] }
-diesel_migrations = "2.0.0"
-dirs = "4.0.0"
-libset = "0.1.1"
-pretty_env_logger = "0.4.0"
-log = "0.4.17"
-libsqlite3-sys = { version = "^0", features = ["bundled"] }
 chrono = { version = "0.4.19", features = ["serde"] }
-tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1.0.136", features = ["derive"] }
+anyhow = "1.0.66"
+uuid = { version = "1.2.1", features = ["v4"] }
 tonic = "0.8.2"
 prost = "0.11.0"
 strum = "0.24.1"
 strum_macros = "0.24.3"
-prost-build = "0.11.1"
-protobuf = "3.2.0"
-prost-types = "0.11.1"
 
 [build-dependencies]
 tonic-build = "0.8.2"

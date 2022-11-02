@@ -1,22 +1,11 @@
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
-
 use crate::provider::{List, ProviderRequest, Task};
 use chrono::Utc;
-use diesel_migrations::EmbeddedMigrations;
 use uuid::Uuid;
 
-mod data;
-mod models;
 pub mod plugins;
 pub mod provider;
-mod schema;
 
 pub use tonic::transport::Channel;
-
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 impl List {
 	pub fn new(name: &str, icon: &str, provider: &str) -> Self {
