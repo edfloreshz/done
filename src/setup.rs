@@ -13,9 +13,6 @@ pub fn setup() -> Result<()> {
 	// Initialize GTK
 	gtk::init().unwrap();
 
-	// Initialize logger
-	pretty_env_logger::init();
-
 	setup_gettext();
 	setup_fluent()?;
 
