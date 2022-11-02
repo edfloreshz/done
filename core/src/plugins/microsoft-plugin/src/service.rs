@@ -1,36 +1,17 @@
-use done_core::provider::provider_server::{Provider, ProviderServer};
+use done_core::provider::provider_server::{Provider};
 use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
-use tonic::{transport::Server, Request, Response, Status};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let addr = "[::1]:7007".parse()?;
-
-	let local_service = LocalService {
-		id: "local".to_string(),
-		name: "Local".to_string(),
-		description: "Local tasks are stored here.".to_string(),
-		icon: "".to_string(),
-	};
-
-	Server::builder()
-		.add_service(ProviderServer::new(local_service))
-		.serve(addr)
-		.await?;
-
-	Ok(())
-}
+use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
-pub struct LocalService {
-	id: String,
-	name: String,
-	description: String,
-	icon: String,
+pub struct MicrosoftToDoService {
+	pub id: String,
+	pub name: String,
+	pub description: String,
+	pub icon: String,
 }
 
 #[tonic::async_trait]
-impl Provider for LocalService {
+impl Provider for MicrosoftToDoService {
 	async fn get_id(
 		&self,
 		_request: Request<Empty>,
@@ -70,31 +51,21 @@ impl Provider for LocalService {
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let req = request.into_inner();
-
-		let reply = ProviderResponse {
-			successful: true,
-			message: format!(
-				"Task with name \"{}\" added to Local Service",
-				req.task.unwrap().title
-			),
-			data: None,
-		};
-		Ok(Response::new(reply))
+		todo!()
 	}
 
 	async fn create_task(
 		&self,
 		request: Request<ProviderRequest>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		println!("Local Service got a request: {:#?}", request);
+		println!("Microsoft To Do Service got a request: {:#?}", request);
 
 		let req = request.into_inner();
 
 		let reply = ProviderResponse {
 			successful: true,
 			message: format!(
-				"Task with name \"{}\" added to Local Service",
+				"Task with name \"{}\" added to Microsoft To Do Service",
 				req.task.unwrap().title
 			),
 			data: None,
