@@ -63,7 +63,7 @@ impl FactoryComponent for ProviderModel {
 				set_title: rt().block_on(self.connector.get_name(Empty {})).unwrap().into_inner().as_str(),
 				set_subtitle: rt().block_on(self.connector.get_description(Empty {})).unwrap().into_inner().as_str(),
 				set_icon_name: Some(rt().block_on(self.connector.get_icon_name(Empty {})).unwrap().into_inner().as_str()),
-				set_enable_expansion: self.list_factory.guard().len() > 0,
+				set_enable_expansion: true,
 				set_expanded: false,
 				add_action = &gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
@@ -123,7 +123,7 @@ impl FactoryComponent for ProviderModel {
 		let widgets = view_output!();
 
 		self.list_factory =
-			FactoryVecDeque::new(widgets.expander.clone(), &sender.input_sender());
+			FactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
 
 		let response = rt()
 			.block_on(self.connector.read_all_lists(Empty {}))
@@ -148,21 +148,22 @@ impl FactoryComponent for ProviderModel {
 				self.list_factory.guard().remove(index.current_index());
 			},
 			ProviderInput::AddList(provider_id, name) => {
-				if let Ok(provider) = Plugin::from_str(&provider_id) {
-					let mut service = rt().block_on(provider.connect()).unwrap();
-					let list = List::new(&name, "✍️", &provider_id);
-					let response = rt()
-						.block_on(service.create_list(ProviderRequest {
-							list: Some(list.clone()),
-							task: None,
-						}))
-						.unwrap();
+				match Plugin::from_str(&provider_id) {
+				    Ok(provider) => {
+					    let mut service = rt().block_on(provider.connect()).unwrap();
+					    let list = List::new(&name, "✍️", &provider_id);
+					    let response = rt()
+						    .block_on(service.create_list(ProviderRequest {
+							    list: Some(list.clone()),
+							    task: None,
+						    }))
+						    .unwrap();
 
-					if response.into_inner().successful {
-						self.list_factory.guard().push_back(ListData { data: list });
-					}
-				} else {
-					todo!("Display connection error")
+					    if response.into_inner().successful {
+						    self.list_factory.guard().push_back(ListData { data: list });
+					    }
+				    },
+					Err(err) => eprintln!("{}", err),
 				}
 			},
 			ProviderInput::Forward(forward) => {
@@ -179,12 +180,12 @@ impl FactoryComponent for ProviderModel {
 		}
 	}
 
-	// fn output_to_parent_msg(output: Self::Output) -> Option<Self::ParentMsg> {
-	// 	let output = match output {
-	// 		ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
-	// 		ProviderOutput::Forward => SidebarInput::Forward,
-	// 		ProviderOutput::ProviderSelected(provider) => SidebarInput::ProviderSelected(provider)
-	// 	};
-	// 	Some(output)
-	// }
+	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
+		let output = match output {
+			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
+			ProviderOutput::Forward => SidebarInput::Forward,
+			ProviderOutput::ProviderSelected(provider) => SidebarInput::ProviderSelected(provider)
+		};
+		Some(output)
+	}
 }

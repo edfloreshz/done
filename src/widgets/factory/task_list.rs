@@ -68,7 +68,7 @@ impl FactoryComponent for ListData {
 				},
 				add_prefix = &gtk::MenuButton {
 					#[watch]
-					// set_label: self.icon.as_str(),
+					set_label: self.data.icon.as_ref().unwrap().as_str(),
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					#[wrap(Some)]
@@ -168,15 +168,10 @@ impl FactoryComponent for ListData {
 						self.data.icon = Some(icon);
 					}
 				},
-				_ => (),
+				ListInput::Select => sender.output(ListOutput::Select(self.data.clone())),
 			}
-		} else {
-			match message {
-				ListInput::Select => {
-					sender.output(ListOutput::Select(self.data.clone()))
-				},
-				_ => (),
-			}
+		} else if let ListInput::Select = message {
+			sender.output(ListOutput::Select(self.data.clone()))
 		}
 	}
 
