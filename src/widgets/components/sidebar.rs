@@ -73,7 +73,7 @@ impl SimpleComponent for SidebarModel {
 		let mut model = SidebarModel {
 			provider_factory: FactoryVecDeque::new(
 				widgets.providers_container.clone(),
-				&sender.input_sender(),
+				sender.input_sender(),
 			),
 		};
 

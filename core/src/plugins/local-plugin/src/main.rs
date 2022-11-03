@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
@@ -8,7 +7,8 @@ use tonic::transport::Server;
 
 mod service;
 mod database;
-mod schema;
+mod schemas;
+mod models;
 
 use service::LocalService;
 
@@ -17,10 +17,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let addr = "[::1]:7007".parse()?;
 
 	let local_service = LocalService {
-		id: "local".to_string(),
+		id: "Local".to_string(),
 		name: "Local".to_string(),
 		description: "Stores tasks on your computer.".to_string(),
-		icon: "home".to_string(),
+		icon: "user-home-symbolic".to_string(),
 	};
 
 	Server::builder()
