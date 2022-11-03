@@ -51,12 +51,10 @@ fn setup_css() {
 
 pub fn verify_data_integrity() -> Result<()> {
 	let config = get_config();
-	let user_database = dirs::data_dir()
+	let app_data_dir = dirs::data_dir()
 		.unwrap()
-		.join("done/dev.edfloreshz.Done.db");
-	if
-	// !config.is_written() ||
-	!user_database.exists() {
+		.join("done");
+	if !app_data_dir.exists() {
 		config.write()?;
 	}
 	Ok(())
@@ -64,7 +62,7 @@ pub fn verify_data_integrity() -> Result<()> {
 
 fn get_config() -> Config {
 	Config::new("done")
-		.about("Do is a To Do app for Linux built with Rust and GTK.")
+		.about("Done is a To Do app for Linux built with Rust and GTK.")
 		.author("Eduardo Flores")
 		.version(VERSION)
 		.add(new_file!("dev.edfloreshz.Done.db"))
