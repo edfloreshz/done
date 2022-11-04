@@ -1,4 +1,4 @@
-use crate::provider::provider_client::ProviderClient;
+use crate::services::provider::provider_client::ProviderClient;
 use anyhow::Result;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, EnumString};

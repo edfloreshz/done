@@ -1,4 +1,4 @@
-use done_core::provider::TaskStatus;
+use done_core::services::provider::TaskStatus;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
 };
@@ -12,7 +12,7 @@ use relm4::{
 };
 
 use crate::widgets::components::content::ContentInput;
-use done_core::provider::Task;
+use done_core::services::provider::Task;
 
 #[derive(Debug)]
 pub enum TaskInput {
@@ -27,7 +27,7 @@ pub enum TaskOutput {
 	UpdateTask(Option<DynamicIndex>, Task),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TaskData {
 	pub data: Task,
 }

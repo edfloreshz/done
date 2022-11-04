@@ -9,7 +9,7 @@ use crate::{
 	},
 };
 use done_core::plugins::Plugin;
-use done_core::provider::List;
+use done_core::services::provider::List;
 use gtk::prelude::*;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
