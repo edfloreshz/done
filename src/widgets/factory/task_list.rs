@@ -9,8 +9,7 @@ use crate::gtk::prelude::{
 };
 use crate::widgets::factory::provider::ProviderInput;
 use done_core::plugins::Plugin;
-use done_core::provider::List;
-use done_core::provider::ProviderRequest;
+use done_core::services::provider::List;
 
 use crate::{adw, gtk, rt};
 
@@ -29,7 +28,7 @@ pub enum ListOutput {
 	Forward,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ListData {
 	pub data: List,
 }
@@ -134,7 +133,7 @@ impl FactoryComponent for ListData {
 					list.name = name.clone();
 					let response = rt()
 						.block_on(
-							service.update_list(ProviderRequest::new(Some(list), None)),
+							service.update_list(list),
 						)
 						.unwrap()
 						.into_inner();
@@ -145,10 +144,7 @@ impl FactoryComponent for ListData {
 				ListInput::Delete(index) => {
 					let response =
 						rt()
-							.block_on(service.delete_list(ProviderRequest::new(
-								Some(self.data.clone()),
-								None,
-							)))
+							.block_on(service.delete_list(self.clone().data.id))
 							.unwrap()
 							.into_inner();
 					if response.successful {
@@ -160,7 +156,7 @@ impl FactoryComponent for ListData {
 					list.icon = Some(icon.clone());
 					let response = rt()
 						.block_on(
-							service.update_list(ProviderRequest::new(Some(list), None)),
+							service.update_list(list),
 						)
 						.unwrap()
 						.into_inner();

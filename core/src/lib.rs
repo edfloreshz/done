@@ -1,9 +1,9 @@
-use crate::provider::{List, ProviderRequest, Task};
+use crate::services::provider::{List, Task};
 use chrono::Utc;
 use uuid::Uuid;
 
 pub mod plugins;
-pub mod provider;
+pub mod services;
 
 pub use tonic::transport::Channel;
 
@@ -41,11 +41,5 @@ impl Task {
 			created_date_time: Utc::now().timestamp(),
 			last_modified_date_time: Utc::now().timestamp(),
 		}
-	}
-}
-
-impl ProviderRequest {
-	pub fn new(list: Option<List>, task: Option<Task>) -> Self {
-		Self { list, task }
 	}
 }

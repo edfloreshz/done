@@ -1,4 +1,4 @@
-use done_core::provider::provider_server::ProviderServer;
+use done_core::services::provider::provider_server::ProviderServer;
 use tonic::transport::Server;
 
 mod service;

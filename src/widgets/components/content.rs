@@ -1,7 +1,7 @@
 use crate::widgets::factory::task::TaskData;
 use crate::{fl, rt};
 use done_core::plugins::Plugin;
-use done_core::provider::{List, ProviderRequest, Task};
+use done_core::services::provider::{List, Task};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use relm4::{
 	gtk,
@@ -140,10 +140,7 @@ impl SimpleComponent for ContentModel {
 					let mut service = rt().block_on(provider.connect()).unwrap();
 
 					let response = rt()
-						.block_on(service.read_tasks_from_list(ProviderRequest {
-							list: Some(list.clone()),
-							task: None,
-						}))
+						.block_on(service.read_tasks_from_list(list.id))
 						.unwrap()
 						.into_inner();
 
@@ -178,10 +175,7 @@ impl SimpleComponent for ContentModel {
 							ContentInput::AddTask(title) => {
 								let task = Task::new(title, parent.id.to_owned());
 								let response = rt()
-									.block_on(service.create_task(ProviderRequest {
-										list: parent_list.clone(),
-										task: Some(task.clone()),
-									}))
+									.block_on(service.create_task(task.clone()))
 									.unwrap();
 
 								if response.into_inner().successful {
@@ -195,10 +189,7 @@ impl SimpleComponent for ContentModel {
 								let mut guard = self.tasks_factory.guard();
 								let task = guard.get(index.current_index()).unwrap();
 								let response = rt()
-									.block_on(service.delete_task(ProviderRequest {
-										list: parent_list.clone(),
-										task: Some(task.data.clone()),
-									}))
+									.block_on(service.delete_task(task.clone().data.id))
 									.unwrap();
 
 								if response.into_inner().successful {
@@ -207,10 +198,7 @@ impl SimpleComponent for ContentModel {
 							},
 							ContentInput::UpdateTask(index, task) => {
 								let response = rt()
-									.block_on(service.update_task(ProviderRequest {
-										list: parent_list.clone(),
-										task: Some(task),
-									}))
+									.block_on(service.update_task(task))
 									.unwrap();
 
 								if response.into_inner().successful {

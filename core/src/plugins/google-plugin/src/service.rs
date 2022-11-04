@@ -1,5 +1,5 @@
-use done_core::provider::provider_server::{Provider};
-use done_core::provider::{Empty, ProviderRequest, ProviderResponse, Task};
+use done_core::services::provider::provider_server::{Provider};
+use done_core::services::provider::{Empty, ProviderRequest, ProviderResponse, Task};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]

@@ -11,8 +11,8 @@ use relm4::{adw, Component, Controller};
 use std::str::FromStr;
 
 use done_core::plugins::Plugin;
-use done_core::provider::provider_client::ProviderClient;
-use done_core::provider::{Empty, List, ProviderRequest};
+use done_core::services::provider::provider_client::ProviderClient;
+use done_core::services::provider::{Empty, List};
 
 use crate::rt;
 use crate::widgets::components::sidebar::SidebarInput;
@@ -155,10 +155,7 @@ impl FactoryComponent for ProviderModel {
 					    let mut service = rt().block_on(provider.connect()).unwrap();
 					    let list = List::new(&name, "✍️", &provider_id);
 					    let response = rt()
-						    .block_on(service.create_list(ProviderRequest {
-							    list: Some(list.clone()),
-							    task: None,
-						    }))
+						    .block_on(service.create_list(list.clone()))
 						    .unwrap();
 
 					    if response.into_inner().successful {

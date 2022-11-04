@@ -9,7 +9,7 @@ use relm4::{
 use crate::{rt, fl};
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
-use done_core::provider::List;
+use done_core::services::provider::List;
 
 #[derive(Debug)]
 pub struct SidebarModel {

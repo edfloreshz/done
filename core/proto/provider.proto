@@ -11,31 +11,21 @@ service Provider {
     rpc GetIconName (Empty) returns (google.protobuf.StringValue);
 
     rpc ReadAllTasks (Empty) returns (ProviderResponse);
-    rpc ReadTasksFromList(ProviderRequest) returns (ProviderResponse);
-    rpc CreateTask (ProviderRequest) returns (ProviderResponse);
-    rpc ReadTask (ProviderRequest) returns (ProviderResponse);
-    rpc UpdateTask (ProviderRequest) returns (ProviderResponse);
-    rpc DeleteTask (ProviderRequest) returns (ProviderResponse);
+    rpc ReadTasksFromList(google.protobuf.StringValue) returns (ProviderResponse);
+    rpc ReadTaskCountFromList(google.protobuf.StringValue) returns (ProviderResponse);
+    rpc CreateTask (Task) returns (ProviderResponse);
+    rpc ReadTask (google.protobuf.StringValue) returns (ProviderResponse);
+    rpc UpdateTask (Task) returns (ProviderResponse);
+    rpc DeleteTask (google.protobuf.StringValue) returns (ProviderResponse);
 
     rpc ReadAllLists (Empty) returns (ProviderResponse);
-    rpc CreateList (ProviderRequest) returns (ProviderResponse);
-    rpc ReadList (ProviderRequest) returns (ProviderResponse);
-    rpc UpdateList (ProviderRequest) returns (ProviderResponse);
-    rpc DeleteList (ProviderRequest) returns (ProviderResponse);
+    rpc CreateList (List) returns (ProviderResponse);
+    rpc ReadList (google.protobuf.StringValue) returns (ProviderResponse);
+    rpc UpdateList (List) returns (ProviderResponse);
+    rpc DeleteList (google.protobuf.StringValue) returns (ProviderResponse);
 }
 
 message Empty {}
-
-message ProviderRequest {
-    optional List list = 1;
-    optional Task task = 2;
-}
-
-message ProviderResponse {
-    bool successful = 1;
-    string message = 2;
-    optional string data = 3;
-}
 
 message Task {
     string id = 1;
@@ -70,4 +60,10 @@ message List {
     bool is_owner = 3;
     optional string icon = 5;
     string provider = 6;
+}
+
+message ProviderResponse {
+    bool successful = 1;
+    string message = 2;
+    optional string data = 3;
 }
