@@ -14,7 +14,7 @@ pub enum Plugin {
 
 impl Plugin {
 	pub fn list() -> Vec<Plugin> {
-		Plugin::iter().map(|p| p).collect()
+		Plugin::iter().collect()
 	}
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {

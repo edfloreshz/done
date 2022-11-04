@@ -18,6 +18,7 @@ pub fn database_exists() -> Result<String> {
 
 pub fn establish_connection() -> Result<SqliteConnection> {
 	let url = database_exists()?;
+
 	let mut connection = SqliteConnection::establish(url.as_str()).context("Error connecting to database")?;
 	connection.run_pending_migrations(MIGRATIONS).unwrap();
 	Ok(connection)

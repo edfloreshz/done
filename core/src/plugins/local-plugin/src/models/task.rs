@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use done_core::provider::{Task, TaskImportance, TaskStatus};
 
-use crate::schemas::tasks;
+use crate::schema::tasks;
 
 #[derive(Debug, Clone, Insertable, Queryable)]
 #[diesel(table_name = tasks)]
