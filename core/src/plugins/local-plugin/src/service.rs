@@ -1,8 +1,8 @@
 use crate::database::establish_connection;
 use crate::diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use crate::models::{QueryableList, QueryableTask};
-use crate::schemas::lists::dsl::*;
-use crate::schemas::tasks::dsl::*;
+use crate::schema::lists::dsl::*;
+use crate::schema::tasks::dsl::*;
 use anyhow::{anyhow, Context};
 use done_core::provider::provider_server::Provider;
 use done_core::provider::{
@@ -381,9 +381,8 @@ impl Provider for LocalService {
 				anyhow!("List parameter is required and it was not provided.")
 			})?;
 
-			diesel::delete(tasks.filter(id_task.eq(list.id)))
-				.execute(&mut establish_connection()?)
-				.context("Failed to delete list")?;
+			diesel::delete(lists.filter(id_list.eq(list.id)))
+				.execute(&mut establish_connection()?)?;
 
 			Ok(())
 		};

@@ -63,8 +63,10 @@ impl FactoryComponent for ProviderModel {
 				set_title: rt().block_on(self.connector.get_name(Empty {})).unwrap().into_inner().as_str(),
 				set_subtitle: rt().block_on(self.connector.get_description(Empty {})).unwrap().into_inner().as_str(),
 				set_icon_name: Some(rt().block_on(self.connector.get_icon_name(Empty {})).unwrap().into_inner().as_str()),
-				set_enable_expansion: true,
-				set_expanded: false,
+				#[watch]
+				set_enable_expansion: !self.list_factory.is_empty(),
+				#[watch]
+				set_expanded: !self.list_factory.is_empty(),
 				add_action = &gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
 					set_css_classes: &["flat", "image-button"],
@@ -100,10 +102,10 @@ impl FactoryComponent for ProviderModel {
 			connector: service,
 			list_factory: FactoryVecDeque::new(
 				adw::ExpanderRow::default(),
-				&sender.input_sender(),
+				sender.input_sender(),
 			),
 			new_list_controller: NewListModel::builder().launch(()).forward(
-				&sender.input_sender(),
+				sender.input_sender(),
 				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
 						ProviderInput::AddList(id.clone(), name)

@@ -7,7 +7,7 @@ use tonic::transport::Server;
 
 mod service;
 mod database;
-mod schemas;
+mod schema;
 mod models;
 
 use service::LocalService;

@@ -128,19 +128,6 @@ impl SimpleComponent for App {
 									set_menu_model: Some(&primary_menu),
 								},
 							},
-							append = &gtk::InfoBar {
-								set_message_type: gtk::MessageType::Warning,
-								#[watch]
-								set_revealed: model.warning_revealed,
-								adw::Clamp {
-									set_maximum_size: 280,
-									gtk::Label {
-										set_wrap: true,
-										add_css_class: "warning",
-										set_text: fl!("alpha-warning")
-									}
-								},
-							},
 							append: sidebar_controller.widget()
 						},
 						append: &gtk::Separator::default(),
@@ -161,6 +148,18 @@ impl SimpleComponent for App {
 										sender.input(AppMsg::Back);
 									}
 								}
+							},
+							append = &gtk::InfoBar {
+								set_message_type: gtk::MessageType::Warning,
+								#[watch]
+								set_revealed: model.warning_revealed,
+								adw::Clamp {
+									gtk::Label {
+										set_wrap: true,
+										add_css_class: "warning",
+										set_text: fl!("alpha-warning")
+									}
+								},
 							},
 							append: content_controller.widget()
 						},
@@ -204,7 +203,7 @@ impl SimpleComponent for App {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let sidebar_controller = SidebarModel::builder().launch(None).forward(
-			&sender.input_sender(),
+			sender.input_sender(),
 			|message| match message {
 				SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
 				SidebarOutput::Forward => AppMsg::Forward,
@@ -216,7 +215,7 @@ impl SimpleComponent for App {
 
 		let content_controller = ContentModel::builder()
 			.launch(None)
-			.forward(&sender.input_sender(), |message| match message {});
+			.forward(sender.input_sender(), |message| match message {});
 
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
 
