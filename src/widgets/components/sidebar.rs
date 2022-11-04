@@ -3,10 +3,10 @@ use relm4::factory::FactoryVecDeque;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	ComponentParts, ComponentSender, SimpleComponent,
+	ComponentParts, ComponentSender, SimpleComponent, RelmWidgetExt
 };
 
-use crate::rt;
+use crate::{rt, fl};
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
 use done_core::provider::List;
@@ -57,6 +57,31 @@ impl SimpleComponent for SidebarModel {
 						set_spacing: 12,
 						set_vexpand: true,
 						set_css_classes: &["navigation-sidebar"],
+						gtk::CenterBox {
+							set_visible: empty,
+							set_orientation: gtk::Orientation::Vertical,
+							set_halign: gtk::Align::Center,
+							set_valign: gtk::Align::Center,
+							set_vexpand: true,
+							#[wrap(Some)]
+							set_center_widget = &gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								set_spacing: 24,
+								gtk::Picture {
+									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/leaf.png"),
+									set_margin_all: 25
+								},
+								gtk::Label {
+									set_label: fl!("empty-sidebar"),
+									set_css_classes: &["title-4", "accent"],
+									set_wrap: true
+								},
+								gtk::Label {
+									set_label: fl!("open-preferences"),
+									set_wrap: true
+								}
+							}
+						}
 					}
 				}
 			},
@@ -68,6 +93,8 @@ impl SimpleComponent for SidebarModel {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
+		let plugins = Plugin::list();
+		let empty = !plugins.iter().any(|provider| rt().block_on(provider.connect()).is_ok());
 		let widgets = view_output!();
 
 		let mut model = SidebarModel {
@@ -77,7 +104,7 @@ impl SimpleComponent for SidebarModel {
 			),
 		};
 
-		for provider in Plugin::list() {
+		for provider in plugins {
 			if let Ok(connector) = rt().block_on(provider.connect()) {
 				model
 					.provider_factory
@@ -85,6 +112,7 @@ impl SimpleComponent for SidebarModel {
 					.push_back((provider, connector));
 			}
 		}
+
 		ComponentParts { model, widgets }
 	}
 

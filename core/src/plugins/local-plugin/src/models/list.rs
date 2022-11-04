@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use done_core::provider::List;
 
-use crate::schemas::lists;
+use crate::schema::lists;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[diesel(table_name = lists)]

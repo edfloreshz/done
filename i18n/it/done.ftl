@@ -7,6 +7,9 @@ list-name = Nome lista
 new-task = Nuovo compito...
 add-tasks = Aggiungi compiti...
 tasks-here = I compiti appariranno qui
+empty-sidebar = Looking quite empty in here...
+open-preferences = Open preferences to add a provider
+select-list = Select a list from the sidebar
 alpha-warning = Stai eseguendo una versione di sviluppo in fase iniziale. Tieni presente che è un lavoro in corso e tutt'altro che completo.
 
 providers = Fornitori

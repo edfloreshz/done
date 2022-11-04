@@ -55,7 +55,10 @@ impl SimpleComponent for ContentModel {
 					set_orientation: gtk::Orientation::Vertical,
 					set_margin_all: 24,
 					set_spacing: 24,
-					gtk::Picture::for_resource("/dev/edfloreshz/Done/icons/scalable/actions/all-done.svg"),
+					gtk::Picture {
+						set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/paper-plane.png"),
+						set_margin_all: 70
+					},
 					gtk::Label {
 						set_css_classes: &["title-2", "accent"],
 						set_text: fl!("select-list")
@@ -118,7 +121,7 @@ impl SimpleComponent for ContentModel {
 			parent_list: None,
 			tasks_factory: FactoryVecDeque::new(
 				list_box.clone(),
-				&sender.input_sender(),
+				sender.input_sender(),
 			),
 		};
 		let widgets = view_output!();
@@ -126,105 +129,106 @@ impl SimpleComponent for ContentModel {
 	}
 
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-		let parent_list = &self.parent_list;
-		if let Some(parent) = parent_list {
-			if let Ok(provider) = Plugin::from_str(&parent.provider) {
-				let mut service = rt().block_on(provider.connect()).unwrap();
-				match message {
-					ContentInput::AddTask(title) => {
-						let task = Task::new(title, parent.id.to_owned());
-						let response = rt()
-							.block_on(service.create_task(ProviderRequest {
-								list: parent_list.clone(),
-								task: Some(task.clone()),
-							}))
-							.unwrap();
+		match message {
+			ContentInput::SetProvider(provider) => {
+				self.current_provider = provider;
+				self.parent_list = None;
+			},
+			ContentInput::SetTaskList(list) => {
+				self.parent_list = Some(list.clone());
+				if let Ok(provider) = Plugin::from_str(&list.provider) {
+					let mut service = rt().block_on(provider.connect()).unwrap();
 
-						if response.into_inner().successful {
-							self
-								.tasks_factory
-								.guard()
-								.push_back(TaskData { data: task });
-						}
-					},
-					ContentInput::RemoveTask(index) => {
-						let mut guard = self.tasks_factory.guard();
-						let task = guard.get(index.current_index()).unwrap();
-						let response = rt()
-							.block_on(service.delete_task(ProviderRequest {
-								list: parent_list.clone(),
-								task: Some(task.data.clone()),
-							}))
-							.unwrap();
+					let response = rt()
+						.block_on(service.read_tasks_from_list(ProviderRequest {
+							list: Some(list.clone()),
+							task: None,
+						}))
+						.unwrap()
+						.into_inner();
 
-						if response.into_inner().successful {
-							guard.remove(index.current_index());
-						}
-					},
-					ContentInput::UpdateTask(index, task) => {
-						let response = rt()
-							.block_on(service.update_task(ProviderRequest {
-								list: parent_list.clone(),
-								task: Some(task.clone()),
-							}))
-							.unwrap();
+					let mut tasks: Vec<Task> = vec![];
+					if response.successful {
+						tasks =
+							serde_json::from_str(response.data.unwrap().as_str()).unwrap();
+					}
 
-						if response.into_inner().successful {
-							if let Some(index) = index {
-								if self.parent_list.as_ref().unwrap().provider == "starred" {
-									self.tasks_factory.guard().remove(index.current_index());
-								}
-							}
+					loop {
+						let task = self.tasks_factory.guard().pop_front();
+						if task.is_none() {
+							break;
 						}
-					},
-					_ => {},
+					}
+					for task in tasks {
+						self
+							.tasks_factory
+							.guard()
+							.push_back(TaskData { data: task });
+					}
+				} else {
+					todo!("Display connection error")
 				}
-			} else {
-				todo!("Display connection error")
-			}
-		} else {
-			match message {
-				ContentInput::SetProvider(provider) => {
-					self.current_provider = provider;
-					self.parent_list = None;
-				},
-				ContentInput::SetTaskList(list) => {
-					self.parent_list = Some(list.clone());
-					if let Ok(provider) = Plugin::from_str(&list.provider) {
+			},
+			_ => {
+				let parent_list = &self.parent_list;
+				if let Some(parent) = parent_list {
+					if let Ok(provider) = Plugin::from_str(&parent.provider) {
 						let mut service = rt().block_on(provider.connect()).unwrap();
+						match message {
+							ContentInput::AddTask(title) => {
+								let task = Task::new(title, parent.id.to_owned());
+								let response = rt()
+									.block_on(service.create_task(ProviderRequest {
+										list: parent_list.clone(),
+										task: Some(task.clone()),
+									}))
+									.unwrap();
 
-						let response = rt()
-							.block_on(service.read_tasks_from_list(ProviderRequest {
-								list: Some(list.clone()),
-								task: None,
-							}))
-							.unwrap()
-							.into_inner();
+								if response.into_inner().successful {
+									self
+										.tasks_factory
+										.guard()
+										.push_back(TaskData { data: task });
+								}
+							},
+							ContentInput::RemoveTask(index) => {
+								let mut guard = self.tasks_factory.guard();
+								let task = guard.get(index.current_index()).unwrap();
+								let response = rt()
+									.block_on(service.delete_task(ProviderRequest {
+										list: parent_list.clone(),
+										task: Some(task.data.clone()),
+									}))
+									.unwrap();
 
-						let mut tasks: Vec<Task> = vec![];
-						if response.successful {
-							tasks =
-								serde_json::from_str(response.data.unwrap().as_str()).unwrap();
-						}
+								if response.into_inner().successful {
+									guard.remove(index.current_index());
+								}
+							},
+							ContentInput::UpdateTask(index, task) => {
+								let response = rt()
+									.block_on(service.update_task(ProviderRequest {
+										list: parent_list.clone(),
+										task: Some(task),
+									}))
+									.unwrap();
 
-						loop {
-							let task = self.tasks_factory.guard().pop_front();
-							if task.is_none() {
-								break;
-							}
+								if response.into_inner().successful {
+									if let Some(index) = index {
+										if self.parent_list.as_ref().unwrap().provider == "starred" {
+											self.tasks_factory.guard().remove(index.current_index());
+										}
+									}
+								}
+							},
+							_ => {},
 						}
-						for task in tasks {
-							self
-								.tasks_factory
-								.guard()
-								.push_back(TaskData { data: task });
-						}
-					} else {
+					}
+					else {
 						todo!("Display connection error")
 					}
-				},
-				_ => {},
-			}
+				}
+			},
 		}
 	}
 }

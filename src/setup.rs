@@ -10,19 +10,14 @@ use crate::{
 };
 
 pub fn setup() -> Result<()> {
-	// Initialize GTK
 	gtk::init().unwrap();
-
 	setup_gettext();
 	setup_fluent()?;
-
-	glib::set_application_name(&gettext("Done"));
-
-	gio::resources_register_include!("resources.gresource")?;
-
 	setup_css();
 	verify_data_integrity()?;
 
+	glib::set_application_name(&gettext("Done"));
+	gio::resources_register_include!("resources.gresource")?;
 	gtk::Window::set_default_icon_name(APP_ID);
 
 	Ok(())
