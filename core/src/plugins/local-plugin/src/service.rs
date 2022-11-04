@@ -3,10 +3,10 @@ use crate::diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use crate::models::{QueryableList, QueryableTask};
 use crate::schema::lists::dsl::*;
 use crate::schema::tasks::dsl::*;
-use anyhow::{anyhow, Context};
-use done_core::provider::provider_server::Provider;
-use done_core::provider::{
-	Empty, List, ProviderRequest, ProviderResponse, Task,
+use anyhow::Context;
+use done_core::services::provider::provider_server::Provider;
+use done_core::services::provider::{
+	Empty, List, ProviderResponse, Task
 };
 use tonic::{Request, Response, Status};
 
@@ -48,6 +48,31 @@ impl Provider for LocalService {
 		Ok(Response::new(self.icon.clone()))
 	}
 
+	async fn read_task_count_from_list(
+		&self,
+		request: Request<String>,
+	) -> Result<Response<ProviderResponse>, Status> {
+		let id = request.into_inner();
+		let mut response = ProviderResponse::default();
+
+		let send_request = || -> anyhow::Result<String> {
+			let count: i64 = tasks
+				.filter(id_task.eq(id))
+				.count()
+				.get_result(&mut establish_connection()?)?;
+			Ok(count.to_string())
+		};
+
+		match send_request() {
+			Ok(value) => {
+				response.data = Some(value);
+				response.successful = true;
+			},
+			Err(err) => response.message = err.to_string(),
+		}
+		Ok(Response::new(response))
+	}
+
 	async fn read_all_tasks(
 		&self,
 		_request: Request<Empty>,
@@ -77,17 +102,14 @@ impl Provider for LocalService {
 
 	async fn read_tasks_from_list(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<String>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let id = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<String> {
-			let list = request.list.ok_or_else(|| {
-				anyhow!("List parameter is required and it was not provided.")
-			})?;
 			let result: Vec<QueryableTask> = tasks
-				.filter(parent_list.eq(list.id))
+				.filter(parent_list.eq(id))
 				.load::<QueryableTask>(&mut establish_connection()?)
 				.context("Failed to fetch list of tasks.")?;
 			let results: Vec<Task> =
@@ -109,15 +131,12 @@ impl Provider for LocalService {
 
 	async fn create_task(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<Task>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let task = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let task = request.task.ok_or_else(|| {
-				anyhow!("Task parameter is required and it was not provided")
-			})?;
 			let task: QueryableTask = task.into();
 
 			diesel::insert_into(tasks)
@@ -140,17 +159,14 @@ impl Provider for LocalService {
 
 	async fn read_task(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<String>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let id = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<String> {
-			let task = request.task.ok_or_else(|| {
-				anyhow!("Task parameter is required and it was not provided")
-			})?;
 			let result: Vec<QueryableTask> = tasks
-				.filter(id_task.eq(task.id))
+				.filter(id_task.eq(id))
 				.load::<QueryableTask>(&mut establish_connection()?)
 				.context("Failed to fetch list of tasks.")?;
 			let results: Vec<Task> =
@@ -172,15 +188,12 @@ impl Provider for LocalService {
 
 	async fn update_task(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<Task>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let task = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let task = request.task.ok_or_else(|| {
-				anyhow!("Task parameter is required and it was not provided")
-			})?;
 			let task: QueryableTask = task.into();
 
 			diesel::update(tasks.filter(id_task.eq(task.id_task.clone())))
@@ -216,17 +229,13 @@ impl Provider for LocalService {
 
 	async fn delete_task(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<String>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let id = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let task = request.task.ok_or_else(|| {
-				anyhow!("Task parameter is required and it was not provided")
-			})?;
-
-			diesel::delete(tasks.filter(id_task.eq(task.id)))
+			diesel::delete(tasks.filter(id_task.eq(id)))
 				.execute(&mut establish_connection()?)
 				.context("Failed to delete task")?;
 
@@ -272,15 +281,12 @@ impl Provider for LocalService {
 
 	async fn create_list(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<List>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let list = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let list = request.list.ok_or_else(|| {
-				anyhow!("List parameter is required and it was not provided.")
-			})?;
 			let list: QueryableList = list.into();
 
 			diesel::insert_into(lists)
@@ -303,17 +309,14 @@ impl Provider for LocalService {
 
 	async fn read_list(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<String>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let id = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<String> {
-			let list = request.list.ok_or_else(|| {
-				anyhow!("List parameter is required and it was not provided.")
-			})?;
 			let result: Vec<QueryableList> = lists
-				.filter(id_list.eq(list.id))
+				.filter(id_list.eq(id))
 				.load::<QueryableList>(&mut establish_connection()?)
 				.context("Failed to fetch list.")?;
 			let results: Vec<List> =
@@ -335,15 +338,12 @@ impl Provider for LocalService {
 
 	async fn update_list(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<List>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let list = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let list = request.list.ok_or_else(|| {
-				anyhow!("List parameter is required and it was not provided.")
-			})?;
 			let list: QueryableList = list.into();
 
 			diesel::update(lists.filter(id_list.eq(list.id_list.clone())))
@@ -371,17 +371,13 @@ impl Provider for LocalService {
 
 	async fn delete_list(
 		&self,
-		request: Request<ProviderRequest>,
+		request: Request<String>,
 	) -> Result<Response<ProviderResponse>, Status> {
-		let request = request.into_inner();
+		let id = request.into_inner();
 		let mut response = ProviderResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
-			let list = request.list.ok_or_else(|| {
-				anyhow!("List parameter is required and it was not provided.")
-			})?;
-
-			diesel::delete(lists.filter(id_list.eq(list.id)))
+			diesel::delete(lists.filter(id_list.eq(id)))
 				.execute(&mut establish_connection()?)?;
 
 			Ok(())
