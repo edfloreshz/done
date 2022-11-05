@@ -6,8 +6,9 @@ use crate::schema::tasks::dsl::*;
 use anyhow::Context;
 use done_core::services::provider::provider_server::Provider;
 use done_core::services::provider::{
-	Empty, List, ProviderResponse, Task
+	CountResponse, Empty, List, ListResponse, Task, TaskResponse,
 };
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
@@ -51,21 +52,21 @@ impl Provider for LocalService {
 	async fn read_task_count_from_list(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<CountResponse>, Status> {
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = CountResponse::default();
 
-		let send_request = || -> anyhow::Result<String> {
+		let send_request = || -> anyhow::Result<i64> {
 			let count: i64 = tasks
 				.filter(id_task.eq(id))
 				.count()
 				.get_result(&mut establish_connection()?)?;
-			Ok(count.to_string())
+			Ok(count)
 		};
 
 		match send_request() {
 			Ok(value) => {
-				response.data = Some(value);
+				response.count = value;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -76,65 +77,76 @@ impl Provider for LocalService {
 	async fn read_all_tasks(
 		&self,
 		_request: Request<Empty>,
-	) -> Result<Response<ProviderResponse>, Status> {
-		let mut response = ProviderResponse::default();
-
-		let send_request = || -> anyhow::Result<String> {
-			let result: Vec<QueryableTask> = tasks
-				.load::<QueryableTask>(&mut establish_connection()?)
-				.context("Failed to fetch list of tasks.")?;
-			let results: Vec<Task> =
-				result.iter().map(|t| t.clone().into()).collect();
-			let value = serde_json::to_string(&results)
-				.context("Failed to serialize response.")?;
-			Ok(value)
-		};
-
-		match send_request() {
-			Ok(value) => {
-				response.data = Some(value);
-				response.successful = true;
-			},
-			Err(err) => response.message = err.to_string(),
-		}
-		Ok(Response::new(response))
+	) -> Result<Response<TaskResponse>, Status> {
+		todo!();
+		// let mut response = TaskResponse::default();
+		//
+		// let send_request = || -> anyhow::Result<Vec<Task>> {
+		// 	let result: Vec<QueryableTask> = tasks
+		// 		.load::<QueryableTask>(&mut establish_connection()?)
+		// 		.context("Failed to fetch list of tasks.")?;
+		// 	let results: Vec<Task> =
+		// 		result.iter().map(|t| t.clone().into()).collect();
+		// 	Ok(results)
+		// };
+		//
+		// match send_request() {
+		// 	Ok(value) => {
+		// 		response.task = Some(value);
+		// 		response.successful = true;
+		// 	},
+		// 	Err(err) => response.message = err.to_string(),
+		// }
+		// Ok(Response::new(response))
 	}
+
+	type ReadTasksFromListStream = ReceiverStream<Result<TaskResponse, Status>>;
 
 	async fn read_tasks_from_list(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<Self::ReadTasksFromListStream>, Status> {
+		let (tx, rx) = tokio::sync::mpsc::channel(4);
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
 
-		let send_request = || -> anyhow::Result<String> {
+		let send_request = || -> anyhow::Result<Vec<Task>> {
 			let result: Vec<QueryableTask> = tasks
 				.filter(parent_list.eq(id))
 				.load::<QueryableTask>(&mut establish_connection()?)
 				.context("Failed to fetch list of tasks.")?;
 			let results: Vec<Task> =
 				result.iter().map(|t| t.clone().into()).collect();
-			let value = serde_json::to_string(&results)
-				.context("Failed to serialize response.")?;
-			Ok(value)
+			Ok(results)
 		};
 
-		match send_request() {
-			Ok(value) => {
-				response.data = Some(value);
-				response.successful = true;
-			},
-			Err(err) => response.message = err.to_string(),
-		}
-		Ok(Response::new(response))
+		let mut response = TaskResponse::default();
+
+		tokio::spawn(async move {
+			match send_request() {
+				Ok(value) => {
+					response.successful = true;
+					for task in &value[..] {
+						let response = TaskResponse {
+							successful: true,
+							message: "".to_string(),
+							task: Some(task.clone()),
+						};
+						tx.send(Ok(response)).await.unwrap();
+					}
+				},
+				Err(err) => response.message = err.to_string(),
+			}
+		});
+
+		Ok(Response::new(ReceiverStream::new(rx)))
 	}
 
 	async fn create_task(
 		&self,
 		request: Request<Task>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<TaskResponse>, Status> {
 		let task = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = TaskResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			let task: QueryableTask = task.into();
@@ -149,7 +161,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.task = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -160,25 +172,21 @@ impl Provider for LocalService {
 	async fn read_task(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<TaskResponse>, Status> {
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = TaskResponse::default();
 
-		let send_request = || -> anyhow::Result<String> {
-			let result: Vec<QueryableTask> = tasks
-				.filter(id_task.eq(id))
-				.load::<QueryableTask>(&mut establish_connection()?)
+		let send_request = || -> anyhow::Result<Task> {
+			let result: QueryableTask = tasks
+				.find(id)
+				.first(&mut establish_connection()?)
 				.context("Failed to fetch list of tasks.")?;
-			let results: Vec<Task> =
-				result.iter().map(|t| t.clone().into()).collect();
-			let value = serde_json::to_string(&results)
-				.context("Failed to serialize response.")?;
-			Ok(value)
+			Ok(result.into())
 		};
 
 		match send_request() {
 			Ok(value) => {
-				response.data = Some(value);
+				response.task = Some(value);
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -189,9 +197,9 @@ impl Provider for LocalService {
 	async fn update_task(
 		&self,
 		request: Request<Task>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<TaskResponse>, Status> {
 		let task = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = TaskResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			let task: QueryableTask = task.into();
@@ -219,7 +227,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.task = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -230,9 +238,9 @@ impl Provider for LocalService {
 	async fn delete_task(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<TaskResponse>, Status> {
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = TaskResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			diesel::delete(tasks.filter(id_task.eq(id)))
@@ -244,7 +252,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.task = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -252,39 +260,51 @@ impl Provider for LocalService {
 		Ok(Response::new(response))
 	}
 
+	type ReadAllListsStream = ReceiverStream<Result<ListResponse, Status>>;
+
 	async fn read_all_lists(
 		&self,
 		_request: Request<Empty>,
-	) -> Result<Response<ProviderResponse>, Status> {
-		let mut response = ProviderResponse::default();
+	) -> Result<Response<Self::ReadAllListsStream>, Status>{
+		let (tx, rx) = tokio::sync::mpsc::channel(4);
 
-		let send_request = || -> anyhow::Result<String> {
+		let send_request = || -> anyhow::Result<Vec<List>> {
 			let results = lists
 				.load::<QueryableList>(&mut establish_connection()?)
 				.context("Failed to read all lists")?;
 			let results: Vec<List> =
 				results.iter().map(|t| t.clone().into()).collect();
-			let value = serde_json::to_string(&results)
-				.context("Failed to serialize response.")?;
-			Ok(value)
+			Ok(results)
 		};
 
-		match send_request() {
-			Ok(value) => {
-				response.data = Some(value);
-				response.successful = true;
-			},
-			Err(err) => response.message = err.to_string(),
-		}
-		Ok(Response::new(response))
+		let mut response = ListResponse::default();
+
+		tokio::spawn(async move {
+			match send_request() {
+				Ok(value) => {
+					response.successful = true;
+					for list in &value[..] {
+						let response = ListResponse {
+							successful: true,
+							message: "".to_string(),
+							list: Some(list.clone()),
+						};
+						tx.send(Ok(response)).await.unwrap();
+					}
+				},
+				Err(err) => response.message = err.to_string(),
+			}
+		});
+
+		Ok(Response::new(ReceiverStream::new(rx)))
 	}
 
 	async fn create_list(
 		&self,
 		request: Request<List>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<ListResponse>, Status> {
 		let list = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = ListResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			let list: QueryableList = list.into();
@@ -299,7 +319,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.list = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -310,25 +330,19 @@ impl Provider for LocalService {
 	async fn read_list(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<ListResponse>, Status> {
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = ListResponse::default();
 
-		let send_request = || -> anyhow::Result<String> {
-			let result: Vec<QueryableList> = lists
-				.filter(id_list.eq(id))
-				.load::<QueryableList>(&mut establish_connection()?)
-				.context("Failed to fetch list.")?;
-			let results: Vec<List> =
-				result.iter().map(|t| t.clone().into()).collect();
-			let value = serde_json::to_string(&results)
-				.context("Failed to serialize response.")?;
-			Ok(value)
+		let send_request = || -> anyhow::Result<List> {
+			let result: QueryableList =
+				lists.find(id).first(&mut establish_connection()?)?;
+			Ok(result.into())
 		};
 
 		match send_request() {
 			Ok(value) => {
-				response.data = Some(value);
+				response.list = Some(value);
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -339,9 +353,9 @@ impl Provider for LocalService {
 	async fn update_list(
 		&self,
 		request: Request<List>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<ListResponse>, Status> {
 		let list = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = ListResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			let list: QueryableList = list.into();
@@ -361,7 +375,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.list = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),
@@ -372,9 +386,9 @@ impl Provider for LocalService {
 	async fn delete_list(
 		&self,
 		request: Request<String>,
-	) -> Result<Response<ProviderResponse>, Status> {
+	) -> Result<Response<ListResponse>, Status> {
 		let id = request.into_inner();
-		let mut response = ProviderResponse::default();
+		let mut response = ListResponse::default();
 
 		let send_request = || -> anyhow::Result<()> {
 			diesel::delete(lists.filter(id_list.eq(id)))
@@ -385,7 +399,7 @@ impl Provider for LocalService {
 
 		match send_request() {
 			Ok(()) => {
-				response.data = None;
+				response.list = None;
 				response.successful = true;
 			},
 			Err(err) => response.message = err.to_string(),

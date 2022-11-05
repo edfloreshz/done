@@ -10,19 +10,19 @@ service Provider {
     rpc GetDescription (Empty) returns (google.protobuf.StringValue);
     rpc GetIconName (Empty) returns (google.protobuf.StringValue);
 
-    rpc ReadAllTasks (Empty) returns (ProviderResponse);
-    rpc ReadTasksFromList(google.protobuf.StringValue) returns (ProviderResponse);
-    rpc ReadTaskCountFromList(google.protobuf.StringValue) returns (ProviderResponse);
-    rpc CreateTask (Task) returns (ProviderResponse);
-    rpc ReadTask (google.protobuf.StringValue) returns (ProviderResponse);
-    rpc UpdateTask (Task) returns (ProviderResponse);
-    rpc DeleteTask (google.protobuf.StringValue) returns (ProviderResponse);
+    rpc ReadAllTasks (Empty) returns (TaskResponse);
+    rpc ReadTasksFromList(google.protobuf.StringValue) returns (stream TaskResponse);
+    rpc ReadTaskCountFromList(google.protobuf.StringValue) returns (CountResponse);
+    rpc CreateTask (Task) returns (TaskResponse);
+    rpc ReadTask (google.protobuf.StringValue) returns (TaskResponse);
+    rpc UpdateTask (Task) returns (TaskResponse);
+    rpc DeleteTask (google.protobuf.StringValue) returns (TaskResponse);
 
-    rpc ReadAllLists (Empty) returns (ProviderResponse);
-    rpc CreateList (List) returns (ProviderResponse);
-    rpc ReadList (google.protobuf.StringValue) returns (ProviderResponse);
-    rpc UpdateList (List) returns (ProviderResponse);
-    rpc DeleteList (google.protobuf.StringValue) returns (ProviderResponse);
+    rpc ReadAllLists (Empty) returns (stream ListResponse);
+    rpc CreateList (List) returns (ListResponse);
+    rpc ReadList (google.protobuf.StringValue) returns (ListResponse);
+    rpc UpdateList (List) returns (ListResponse);
+    rpc DeleteList (google.protobuf.StringValue) returns (ListResponse);
 }
 
 message Empty {}
@@ -62,8 +62,20 @@ message List {
     string provider = 6;
 }
 
-message ProviderResponse {
+message TaskResponse {
     bool successful = 1;
     string message = 2;
-    optional string data = 3;
+    optional Task task = 3;
+}
+
+message ListResponse {
+    bool successful = 1;
+    string message = 2;
+    optional List list = 3;
+}
+
+message CountResponse {
+    bool successful = 1;
+    string message = 2;
+    int64 count = 3;
 }

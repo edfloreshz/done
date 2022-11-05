@@ -139,16 +139,18 @@ impl SimpleComponent for ContentModel {
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
 					let mut service = rt().block_on(provider.connect()).unwrap();
 
-					let response = rt()
-						.block_on(service.read_tasks_from_list(list.id))
-						.unwrap()
-						.into_inner();
+					let (tx, mut rx) = tokio::sync::mpsc::channel(4);
 
-					let mut tasks: Vec<Task> = vec![];
-					if response.successful {
-						tasks =
-							serde_json::from_str(response.data.unwrap().as_str()).unwrap();
-					}
+					tokio::spawn(async move {
+						let mut stream = service
+							.read_tasks_from_list(list.id)
+							.await
+							.unwrap()
+							.into_inner();
+						while let Some(task) = stream.message().await.unwrap() {
+							tx.send(task).await.unwrap()
+						}
+					});
 
 					loop {
 						let task = self.tasks_factory.guard().pop_front();
@@ -156,12 +158,13 @@ impl SimpleComponent for ContentModel {
 							break;
 						}
 					}
-					for task in tasks {
-						self
-							.tasks_factory
-							.guard()
-							.push_back(TaskData { data: task });
-					}
+
+					// while let Some(task) = rx.recv().await.unwrap().task {
+					// 	self
+					// 		.tasks_factory
+					// 		.guard()
+					// 		.push_back(TaskData { data: task });
+					// }
 				} else {
 					todo!("Display connection error")
 				}

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use relm4::adw;
 use relm4::factory::FactoryVecDeque;
 use relm4::{
@@ -5,11 +7,13 @@ use relm4::{
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	ComponentParts, ComponentSender, SimpleComponent, RelmWidgetExt
 };
+use done_core::Channel;
 
 use crate::{rt, fl};
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
+use done_core::services::provider::provider_client::ProviderClient;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -104,14 +108,35 @@ impl SimpleComponent for SidebarModel {
 			),
 		};
 
-		for provider in plugins {
-			if let Ok(connector) = rt().block_on(provider.connect()) {
-				model
-					.provider_factory
-					.guard()
-					.push_back((provider, connector));
+		let (tx, mut rx) = tokio::sync::mpsc::channel(4);
+
+		let local = tokio::task::LocalSet::new();
+
+		tokio::spawn(async move {
+			for provider in plugins {
+				if let Ok(connector) = provider.connect().await {
+					tx.send((provider, connector)).await.unwrap()
+				}
 			}
-		}
+		});
+
+		// let mut pluginsx: Arc<Mutex<Vec<(Plugin, ProviderClient<Channel>)>>> = Arc::new(Mutex::new(vec![]));
+		//
+		// 	let data = pluginsx.clone();
+		// local.run_until(async move {
+		// 	tokio::task::spawn_local(async move {
+		// 		while let Some((provider, connector)) = rx.recv().await {
+		// 			data.lock().unwrap().push((provider, connector));
+		// 		}
+		// 	}).await.unwrap();
+		// });
+		//
+		// for (provider, connector) in data.lock().unwrap().iter() {
+		// 	model
+		// 		.provider_factory
+		// 		.guard()
+		// 		.push_back((provider.clone(), connector.clone()));
+		// }
 
 		ComponentParts { model, widgets }
 	}
