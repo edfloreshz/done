@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 serde = { version = "1.0.136", features = ["derive"] }
 anyhow = "1.0.66"
@@ -15,3 +16,7 @@ strum_macros = "0.24.3"
 
 [build-dependencies]
 tonic-build = "0.8.2"
+
+[[bin]]
+name = "client"
+path = "src/bin/client.rs"

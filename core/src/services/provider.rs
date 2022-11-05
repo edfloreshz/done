@@ -48,13 +48,33 @@ pub struct List {
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProviderResponse {
+pub struct TaskResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
     #[prost(string, tag="2")]
     pub message: ::prost::alloc::string::String,
-    #[prost(string, optional, tag="3")]
-    pub data: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag="3")]
+    pub task: ::core::option::Option<Task>,
+}
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListResponse {
+    #[prost(bool, tag="1")]
+    pub successful: bool,
+    #[prost(string, tag="2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="3")]
+    pub list: ::core::option::Option<List>,
+}
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CountResponse {
+    #[prost(bool, tag="1")]
+    pub successful: bool,
+    #[prost(string, tag="2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(int64, tag="3")]
+    pub count: i64,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -242,7 +262,7 @@ pub mod provider_client {
         pub async fn read_all_tasks(
             &mut self,
             request: impl tonic::IntoRequest<super::Empty>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -261,7 +281,10 @@ pub mod provider_client {
         pub async fn read_tasks_from_list(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<
+            tonic::Response<tonic::codec::Streaming<super::TaskResponse>>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -275,12 +298,12 @@ pub mod provider_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/provider.Provider/ReadTasksFromList",
             );
-            self.inner.unary(request.into_request(), path, codec).await
+            self.inner.server_streaming(request.into_request(), path, codec).await
         }
         pub async fn read_task_count_from_list(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::CountResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -299,7 +322,7 @@ pub mod provider_client {
         pub async fn create_task(
             &mut self,
             request: impl tonic::IntoRequest<super::Task>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -318,7 +341,7 @@ pub mod provider_client {
         pub async fn read_task(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -337,7 +360,7 @@ pub mod provider_client {
         pub async fn update_task(
             &mut self,
             request: impl tonic::IntoRequest<super::Task>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -356,7 +379,7 @@ pub mod provider_client {
         pub async fn delete_task(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -375,7 +398,10 @@ pub mod provider_client {
         pub async fn read_all_lists(
             &mut self,
             request: impl tonic::IntoRequest<super::Empty>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<
+            tonic::Response<tonic::codec::Streaming<super::ListResponse>>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -389,12 +415,12 @@ pub mod provider_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/provider.Provider/ReadAllLists",
             );
-            self.inner.unary(request.into_request(), path, codec).await
+            self.inner.server_streaming(request.into_request(), path, codec).await
         }
         pub async fn create_list(
             &mut self,
             request: impl tonic::IntoRequest<super::List>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -413,7 +439,7 @@ pub mod provider_client {
         pub async fn read_list(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -432,7 +458,7 @@ pub mod provider_client {
         pub async fn update_list(
             &mut self,
             request: impl tonic::IntoRequest<super::List>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -451,7 +477,7 @@ pub mod provider_client {
         pub async fn delete_list(
             &mut self,
             request: impl tonic::IntoRequest<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status> {
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -495,51 +521,63 @@ pub mod provider_server {
         async fn read_all_tasks(
             &self,
             request: tonic::Request<super::Empty>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
+        ///Server streaming response type for the ReadTasksFromList method.
+        type ReadTasksFromListStream: futures_core::Stream<
+                Item = Result<super::TaskResponse, tonic::Status>,
+            >
+            + Send
+            + 'static;
         async fn read_tasks_from_list(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::ReadTasksFromListStream>, tonic::Status>;
         async fn read_task_count_from_list(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::CountResponse>, tonic::Status>;
         async fn create_task(
             &self,
             request: tonic::Request<super::Task>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
         async fn read_task(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
         async fn update_task(
             &self,
             request: tonic::Request<super::Task>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
         async fn delete_task(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
+        ///Server streaming response type for the ReadAllLists method.
+        type ReadAllListsStream: futures_core::Stream<
+                Item = Result<super::ListResponse, tonic::Status>,
+            >
+            + Send
+            + 'static;
         async fn read_all_lists(
             &self,
             request: tonic::Request<super::Empty>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::ReadAllListsStream>, tonic::Status>;
         async fn create_list(
             &self,
             request: tonic::Request<super::List>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
         async fn read_list(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
         async fn update_list(
             &self,
             request: tonic::Request<super::List>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
         async fn delete_list(
             &self,
             request: tonic::Request<::prost::alloc::string::String>,
-        ) -> Result<tonic::Response<super::ProviderResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct ProviderServer<T: Provider> {
@@ -753,7 +791,7 @@ pub mod provider_server {
                     struct ReadAllTasksSvc<T: Provider>(pub Arc<T>);
                     impl<T: Provider> tonic::server::UnaryService<super::Empty>
                     for ReadAllTasksSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::TaskResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -791,11 +829,13 @@ pub mod provider_server {
                     struct ReadTasksFromListSvc<T: Provider>(pub Arc<T>);
                     impl<
                         T: Provider,
-                    > tonic::server::UnaryService<::prost::alloc::string::String>
-                    for ReadTasksFromListSvc<T> {
-                        type Response = super::ProviderResponse;
+                    > tonic::server::ServerStreamingService<
+                        ::prost::alloc::string::String,
+                    > for ReadTasksFromListSvc<T> {
+                        type Response = super::TaskResponse;
+                        type ResponseStream = T::ReadTasksFromListStream;
                         type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
+                            tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
                         fn call(
@@ -821,7 +861,7 @@ pub mod provider_server {
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             );
-                        let res = grpc.unary(method, req).await;
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
@@ -833,7 +873,7 @@ pub mod provider_server {
                         T: Provider,
                     > tonic::server::UnaryService<::prost::alloc::string::String>
                     for ReadTaskCountFromListSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::CountResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -871,7 +911,7 @@ pub mod provider_server {
                     struct CreateTaskSvc<T: Provider>(pub Arc<T>);
                     impl<T: Provider> tonic::server::UnaryService<super::Task>
                     for CreateTaskSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::TaskResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -909,7 +949,7 @@ pub mod provider_server {
                         T: Provider,
                     > tonic::server::UnaryService<::prost::alloc::string::String>
                     for ReadTaskSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::TaskResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -945,7 +985,7 @@ pub mod provider_server {
                     struct UpdateTaskSvc<T: Provider>(pub Arc<T>);
                     impl<T: Provider> tonic::server::UnaryService<super::Task>
                     for UpdateTaskSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::TaskResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -983,7 +1023,7 @@ pub mod provider_server {
                         T: Provider,
                     > tonic::server::UnaryService<::prost::alloc::string::String>
                     for DeleteTaskSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::TaskResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -1017,11 +1057,12 @@ pub mod provider_server {
                 "/provider.Provider/ReadAllLists" => {
                     #[allow(non_camel_case_types)]
                     struct ReadAllListsSvc<T: Provider>(pub Arc<T>);
-                    impl<T: Provider> tonic::server::UnaryService<super::Empty>
+                    impl<T: Provider> tonic::server::ServerStreamingService<super::Empty>
                     for ReadAllListsSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::ListResponse;
+                        type ResponseStream = T::ReadAllListsStream;
                         type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
+                            tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
                         fn call(
@@ -1047,7 +1088,7 @@ pub mod provider_server {
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             );
-                        let res = grpc.unary(method, req).await;
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
@@ -1057,7 +1098,7 @@ pub mod provider_server {
                     struct CreateListSvc<T: Provider>(pub Arc<T>);
                     impl<T: Provider> tonic::server::UnaryService<super::List>
                     for CreateListSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::ListResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -1095,7 +1136,7 @@ pub mod provider_server {
                         T: Provider,
                     > tonic::server::UnaryService<::prost::alloc::string::String>
                     for ReadListSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::ListResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -1131,7 +1172,7 @@ pub mod provider_server {
                     struct UpdateListSvc<T: Provider>(pub Arc<T>);
                     impl<T: Provider> tonic::server::UnaryService<super::List>
                     for UpdateListSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::ListResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -1169,7 +1210,7 @@ pub mod provider_server {
                         T: Provider,
                     > tonic::server::UnaryService<::prost::alloc::string::String>
                     for DeleteListSvc<T> {
-                        type Response = super::ProviderResponse;
+                        type Response = super::ListResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,

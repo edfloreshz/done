@@ -384,6 +384,7 @@ dependencies = [
  "serde",
  "strum",
  "strum_macros",
+ "tokio",
  "tonic",
  "tonic-build",
  "uuid",
