@@ -39,7 +39,8 @@ fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
 	setup()?;
 
 	let app = main_app();

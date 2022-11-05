@@ -127,13 +127,20 @@ impl FactoryComponent for ProviderModel {
 		self.list_factory =
 			FactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
 
-		let response = rt()
-			.block_on(self.connector.read_all_lists(Empty {}))
+		let (tx, mut rx) = tokio::sync::mpsc::channel(4);
+		let mut connector = self.connector.clone();
+		std::thread::spawn(move || {
+			let mut stream = rt().block_on(
+				connector.read_all_lists(Empty {})
+			)
 			.unwrap()
 			.into_inner();
-		let data: Vec<List> =
-			serde_json::from_str(response.data.unwrap().as_str()).unwrap();
-		for list in data {
+			while let Some(task) = rt().block_on(stream.message()).unwrap() {
+				rt().block_on(tx.send(task)).unwrap()
+			}
+		});
+
+		while let Some(list) = rt().block_on(rx.recv()).unwrap().list {
 			self.list_factory.guard().push_back(ListData { data: list });
 		}
 
