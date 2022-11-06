@@ -1775,7 +1775,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 [[package]]
 name = "relm4"
 version = "0.5.0-beta.4"
-source = "git+https://github.com/Relm4/Relm4?branch=async-components#0c91abe3a2f08d189e86a29408563fa314aa47a9"
+source = "git+https://github.com/Relm4/Relm4?branch=main#28cbbdaf6749c7162ada1a3c442260759d076e9e"
 dependencies = [
  "async-broadcast",
  "async-trait",
@@ -1793,7 +1793,7 @@ dependencies = [
 [[package]]
 name = "relm4-macros"
 version = "0.5.0-beta.4"
-source = "git+https://github.com/Relm4/Relm4?branch=async-components#0c91abe3a2f08d189e86a29408563fa314aa47a9"
+source = "git+https://github.com/Relm4/Relm4?branch=main#28cbbdaf6749c7162ada1a3c442260759d076e9e"
 dependencies = [
  "proc-macro2",
  "quote",
