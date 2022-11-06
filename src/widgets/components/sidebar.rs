@@ -1,19 +1,17 @@
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
 use relm4::adw;
 use relm4::factory::FactoryVecDeque;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	ComponentParts, ComponentSender, SimpleComponent, RelmWidgetExt
+	async_component::AsyncComponent,
+	RelmWidgetExt
 };
-use done_core::Channel;
+use relm4::async_component::{AsyncComponentParts, AsyncComponentSender};
 
-use crate::{rt, fl};
+use crate::fl;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
-use done_core::services::provider::provider_client::ProviderClient;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -38,12 +36,13 @@ pub enum SidebarOutput {
 	Forward,
 }
 
-#[relm4::component(pub)]
-impl SimpleComponent for SidebarModel {
+#[relm4::component(pub async)]
+impl AsyncComponent for SidebarModel {
 	type Input = SidebarInput;
 	type Output = SidebarOutput;
 	type Init = Option<SidebarModel>;
 	type Widgets = SidebarWidgets;
+	type CommandOutput = ();
 
 	view! {
 		sidebar = &gtk::Box {
@@ -92,13 +91,8 @@ impl SimpleComponent for SidebarModel {
 		}
 	}
 
-	fn init(
-		_init: Self::Init,
-		root: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> ComponentParts<Self> {
-		let plugins = Plugin::list();
-		let empty = !plugins.iter().any(|provider| rt().block_on(provider.connect()).is_ok());
+	async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+		let empty = Plugin::connected_count().await == 0;
 		let widgets = view_output!();
 
 		let mut model = SidebarModel {
@@ -108,40 +102,22 @@ impl SimpleComponent for SidebarModel {
 			),
 		};
 
-		let (tx, mut rx) = tokio::sync::mpsc::channel(4);
-
-		let local = tokio::task::LocalSet::new();
-
-		tokio::spawn(async move {
-			for provider in plugins {
-				if let Ok(connector) = provider.connect().await {
-					tx.send((provider, connector)).await.unwrap()
-				}
+		for provider in Plugin::list() {
+			if let Ok(connector) = provider.connect().await {
+				let data = provider.data().await.unwrap();
+				info!("Connected to {} plug-in.", data.name);
+				model
+					.provider_factory
+					.guard()
+					.push_back(data.clone());
+				info!("Added {} provider to the sidebar", data.name)
 			}
-		});
+		}
 
-		// let mut pluginsx: Arc<Mutex<Vec<(Plugin, ProviderClient<Channel>)>>> = Arc::new(Mutex::new(vec![]));
-		//
-		// 	let data = pluginsx.clone();
-		// local.run_until(async move {
-		// 	tokio::task::spawn_local(async move {
-		// 		while let Some((provider, connector)) = rx.recv().await {
-		// 			data.lock().unwrap().push((provider, connector));
-		// 		}
-		// 	}).await.unwrap();
-		// });
-		//
-		// for (provider, connector) in data.lock().unwrap().iter() {
-		// 	model
-		// 		.provider_factory
-		// 		.guard()
-		// 		.push_back((provider.clone(), connector.clone()));
-		// }
-
-		ComponentParts { model, widgets }
+		AsyncComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+	async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
 		match message {
 			SidebarInput::AddTaskList(index, provider, name) => {
 				self
