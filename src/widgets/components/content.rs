@@ -1,5 +1,5 @@
 use crate::widgets::factory::task::TaskData;
-use crate::{fl, rt};
+use crate::fl;
 use done_core::plugins::Plugin;
 use done_core::services::provider::{List, Task};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
@@ -8,9 +8,10 @@ use relm4::{
 	gtk::prelude::{
 		BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 	},
-	view, ComponentParts, ComponentSender, RelmWidgetExt, SimpleComponent,
+	view, RelmWidgetExt,
 };
 use std::str::FromStr;
+use relm4::async_component::{AsyncComponent, AsyncComponentParts, AsyncComponentSender};
 
 pub struct ContentModel {
 	current_provider: Plugin,
@@ -30,12 +31,13 @@ pub enum ContentInput {
 #[derive(Debug)]
 pub enum ContentOutput {}
 
-#[relm4::component(pub)]
-impl SimpleComponent for ContentModel {
+#[relm4::component(pub async)]
+impl AsyncComponent for ContentModel {
 	type Input = ContentInput;
 	type Output = ContentOutput;
 	type Init = Option<Task>;
 	type Widgets = ContentWidgets;
+	type CommandOutput = ();
 
 	view! {
 		#[root]
@@ -106,11 +108,7 @@ impl SimpleComponent for ContentModel {
 		}
 	}
 
-	fn init(
-		_init: Self::Init,
-		root: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> ComponentParts<Self> {
+	async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
 		view! {
 			list_box = &gtk::Box {
 					set_orientation: gtk::Orientation::Vertical,
@@ -125,10 +123,10 @@ impl SimpleComponent for ContentModel {
 			),
 		};
 		let widgets = view_output!();
-		ComponentParts { model, widgets }
+		AsyncComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+	async fn update(&mut self, message: Self::Input, _sender: AsyncComponentSender<Self>) {
 		match message {
 			ContentInput::SetProvider(provider) => {
 				self.current_provider = provider;
@@ -137,7 +135,7 @@ impl SimpleComponent for ContentModel {
 			ContentInput::SetTaskList(list) => {
 				self.parent_list = Some(list.clone());
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
-					let mut service = rt().block_on(provider.connect()).unwrap();
+					let mut service = provider.connect().await.unwrap();
 
 					let (tx, mut rx) = tokio::sync::mpsc::channel(4);
 
@@ -159,12 +157,12 @@ impl SimpleComponent for ContentModel {
 						}
 					}
 
-					// while let Some(task) = rx.recv().await.unwrap().task {
-					// 	self
-					// 		.tasks_factory
-					// 		.guard()
-					// 		.push_back(TaskData { data: task });
-					// }
+					while let Some(task) = rx.recv().await.unwrap().task {
+						self
+							.tasks_factory
+							.guard()
+							.push_back(TaskData { data: task });
+					}
 				} else {
 					todo!("Display connection error")
 				}
@@ -173,12 +171,13 @@ impl SimpleComponent for ContentModel {
 				let parent_list = &self.parent_list;
 				if let Some(parent) = parent_list {
 					if let Ok(provider) = Plugin::from_str(&parent.provider) {
-						let mut service = rt().block_on(provider.connect()).unwrap();
+						let mut service = provider.connect().await.unwrap();
 						match message {
 							ContentInput::AddTask(title) => {
 								let task = Task::new(title, parent.id.to_owned());
-								let response = rt()
-									.block_on(service.create_task(task.clone()))
+								let response = service
+									.create_task(task.clone())
+									.await
 									.unwrap();
 
 								if response.into_inner().successful {
@@ -191,8 +190,9 @@ impl SimpleComponent for ContentModel {
 							ContentInput::RemoveTask(index) => {
 								let mut guard = self.tasks_factory.guard();
 								let task = guard.get(index.current_index()).unwrap();
-								let response = rt()
-									.block_on(service.delete_task(task.clone().data.id))
+								let response = service
+									.delete_task(task.clone().data.id)
+									.await
 									.unwrap();
 
 								if response.into_inner().successful {
@@ -200,8 +200,9 @@ impl SimpleComponent for ContentModel {
 								}
 							},
 							ContentInput::UpdateTask(index, task) => {
-								let response = rt()
-									.block_on(service.update_task(task))
+								let response = service
+									.update_task(task)
+									.await
 									.unwrap();
 
 								if response.into_inner().successful {

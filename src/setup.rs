@@ -15,6 +15,7 @@ pub fn setup() -> Result<()> {
 	setup_fluent()?;
 	setup_css();
 	verify_data_integrity()?;
+	pretty_env_logger::init();
 
 	glib::set_application_name(&gettext("Done"));
 	gio::resources_register_include!("resources.gresource")?;
