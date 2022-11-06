@@ -11,7 +11,7 @@ use crate::widgets::factory::provider::ProviderInput;
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 
-use crate::{adw, gtk, rt};
+use crate::{adw, gtk};
 
 #[derive(Debug)]
 pub enum ListInput {
@@ -126,43 +126,43 @@ impl FactoryComponent for ListData {
 		sender: FactoryComponentSender<Self>,
 	) {
 		if let Ok(provider) = Plugin::from_str(&self.data.provider) {
-			let mut service = rt().block_on(provider.connect()).unwrap();
+			// let mut service = provider.connect().await.unwrap();
 			match message {
 				ListInput::Rename(name) => {
 					let mut list = self.data.clone();
 					list.name = name.clone();
-					let response = rt()
-						.block_on(
-							service.update_list(list),
-						)
-						.unwrap()
-						.into_inner();
-					if response.successful {
-						self.data.name = name;
-					}
+					// let response = rt()
+					// 	.block_on(
+					// 		service.update_list(list),
+					// 	)
+					// 	.unwrap()
+					// 	.into_inner();
+					// if response.successful {
+					// 	self.data.name = name;
+					// }
 				},
 				ListInput::Delete(index) => {
-					let response =
-						rt()
-							.block_on(service.delete_list(self.clone().data.id))
-							.unwrap()
-							.into_inner();
-					if response.successful {
-						sender.output(ListOutput::DeleteTaskList(index))
-					}
+					// let response =
+					// 	rt()
+					// 		.block_on(service.delete_list(self.clone().data.id))
+					// 		.unwrap()
+					// 		.into_inner();
+					// if response.successful {
+					// 	sender.output(ListOutput::DeleteTaskList(index))
+					// }
 				},
 				ListInput::ChangeIcon(icon) => {
 					let mut list = self.data.clone();
 					list.icon = Some(icon.clone());
-					let response = rt()
-						.block_on(
-							service.update_list(list),
-						)
-						.unwrap()
-						.into_inner();
-					if response.successful {
-						self.data.icon = Some(icon);
-					}
+					// let response = rt()
+					// 	.block_on(
+					// 		service.update_list(list),
+					// 	)
+					// 	.unwrap()
+					// 	.into_inner();
+					// if response.successful {
+					// 	self.data.icon = Some(icon);
+					// }
 				},
 				ListInput::Select => sender.output(ListOutput::Select(self.data.clone())),
 			}

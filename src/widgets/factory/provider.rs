@@ -10,11 +10,10 @@ use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 use std::str::FromStr;
 
-use done_core::plugins::Plugin;
+use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::provider_client::ProviderClient;
 use done_core::services::provider::{Empty, List};
 
-use crate::rt;
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::factory::task_list::ListData;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
@@ -22,8 +21,7 @@ use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProviderModel {
-	pub provider: Plugin,
-	pub connector: ProviderClient<Channel>,
+	pub provider: PluginData,
 	pub list_factory: FactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
 }
@@ -51,7 +49,7 @@ impl FactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type Init = (Plugin, ProviderClient<Channel>);
+	type Init = PluginData;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -60,9 +58,9 @@ impl FactoryComponent for ProviderModel {
 		adw::PreferencesGroup {
 			#[name(expander)]
 			add = &adw::ExpanderRow {
-				set_title: rt().block_on(self.connector.get_name(Empty {})).unwrap().into_inner().as_str(),
-				set_subtitle: rt().block_on(self.connector.get_description(Empty {})).unwrap().into_inner().as_str(),
-				set_icon_name: Some(rt().block_on(self.connector.get_icon_name(Empty {})).unwrap().into_inner().as_str()),
+				set_title: self.provider.name.as_str(),
+				set_subtitle: self.provider.description.as_str(),
+				set_icon_name: Some(self.provider.icon.as_str()),
 				#[watch]
 				set_enable_expansion: !self.list_factory.is_empty(),
 				#[watch]
@@ -91,15 +89,8 @@ impl FactoryComponent for ProviderModel {
 		_index: &DynamicIndex,
 		sender: FactoryComponentSender<Self>,
 	) -> Self {
-		let mut service = params.1;
-		let id = rt()
-			.block_on(service.get_id(Empty {}))
-			.unwrap()
-			.into_inner();
-
 		Self {
-			provider: params.0,
-			connector: service,
+			provider: params.clone(),
 			list_factory: FactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
@@ -108,7 +99,7 @@ impl FactoryComponent for ProviderModel {
 				sender.input_sender(),
 				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::AddList(id.clone(), name)
+						ProviderInput::AddList(params.id.clone(), name)
 					},
 				},
 			),
@@ -127,21 +118,8 @@ impl FactoryComponent for ProviderModel {
 		self.list_factory =
 			FactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
 
-		let (tx, mut rx) = tokio::sync::mpsc::channel(4);
-		let mut connector = self.connector.clone();
-		std::thread::spawn(move || {
-			let mut stream = rt().block_on(
-				connector.read_all_lists(Empty {})
-			)
-			.unwrap()
-			.into_inner();
-			while let Some(task) = rt().block_on(stream.message()).unwrap() {
-				rt().block_on(tx.send(task)).unwrap()
-			}
-		});
-
-		while let Some(list) = rt().block_on(rx.recv()).unwrap().list {
-			self.list_factory.guard().push_back(ListData { data: list });
+		for list in &self.provider.lists {
+			self.list_factory.guard().push_back(ListData { data: list.clone() });
 		}
 
 		widgets
@@ -159,15 +137,15 @@ impl FactoryComponent for ProviderModel {
 			ProviderInput::AddList(provider_id, name) => {
 				match Plugin::from_str(&provider_id) {
 				    Ok(provider) => {
-					    let mut service = rt().block_on(provider.connect()).unwrap();
-					    let list = List::new(&name, "✍️", &provider_id);
-					    let response = rt()
-						    .block_on(service.create_list(list.clone()))
-						    .unwrap();
-
-					    if response.into_inner().successful {
-						    self.list_factory.guard().push_back(ListData { data: list });
-					    }
+					    // let mut service = rt().block_on(provider.connect()).unwrap();
+					    // let list = List::new(&name, "✍️", &provider_id);
+					    // let response = rt()
+						//     .block_on(service.create_list(list.clone()))
+						//     .unwrap();
+					    //
+					    // if response.into_inner().successful {
+						//     self.list_factory.guard().push_back(ListData { data: list });
+					    // }
 				    },
 					Err(err) => eprintln!("{}", err),
 				}
@@ -181,7 +159,7 @@ impl FactoryComponent for ProviderModel {
 				sender.output(ProviderOutput::ListSelected(list))
 			},
 			ProviderInput::SelectSmartProvider => {
-				sender.output(ProviderOutput::ProviderSelected(self.provider));
+				sender.output(ProviderOutput::ProviderSelected(self.provider.plugin));
 			},
 		}
 	}

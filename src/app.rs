@@ -12,14 +12,16 @@ use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 use gtk::prelude::*;
 use relm4::{
+	async_component::{AsyncComponent, AsyncComponentController},
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
-	adw, gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
+	adw, gtk, ComponentBuilder, ComponentController, ComponentParts,
 	ComponentSender, Controller, SimpleComponent,
 };
+use relm4::async_component::AsyncController;
 
 pub(super) struct App {
 	message: Option<AppMsg>,
-	content: Option<Controller<ContentModel>>,
+	content: Option<AsyncController<ContentModel>>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	content_title: String,
 	warning_revealed: bool,
@@ -27,7 +29,7 @@ pub(super) struct App {
 
 impl App {
 	pub fn new(
-		content: Option<Controller<ContentModel>>,
+		content: Option<AsyncController<ContentModel>>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {

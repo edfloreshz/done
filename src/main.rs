@@ -1,5 +1,7 @@
-use anyhow::Result;
+extern crate pretty_env_logger;
+#[macro_use] extern crate log;
 
+use anyhow::Result;
 use gtk::gio;
 use gtk::prelude::ApplicationExt;
 use once_cell::unsync::Lazy;
@@ -9,9 +11,7 @@ use relm4::{
 };
 
 use app::App;
-use once_cell::sync::OnceCell;
 use setup::setup;
-use tokio::runtime::Runtime;
 
 use crate::config::APP_ID;
 
@@ -29,12 +29,6 @@ thread_local! {
 	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
 }
 
-static RT: OnceCell<Runtime> = OnceCell::new();
-
-pub fn rt<'a>() -> &'a Runtime {
-	RT.get().unwrap()
-}
-
 fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
 }
@@ -45,7 +39,6 @@ async fn main() -> Result<()> {
 
 	let app = main_app();
 	app.set_resource_base_path(Some("/dev/edfloreshz/Done/"));
-	RT.set(Runtime::new().unwrap()).unwrap();
 	let actions = RelmActionGroup::<AppActionGroup>::new();
 
 	let quit_action = {
