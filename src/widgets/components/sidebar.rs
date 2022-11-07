@@ -8,11 +8,12 @@ use relm4::{
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	RelmWidgetExt,
 };
-
+use std::str::FromStr;
 use crate::fl;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
+use crate::widgets::factory::list::ListData;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -124,10 +125,21 @@ impl SimpleAsyncComponent for SidebarModel {
 
 	async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
 		match message {
-			SidebarInput::AddListToProvider(index, provider, name) => {
-				self
-					.provider_factory
-					.send(index, ProviderInput::AddList(provider, name));
+			SidebarInput::AddListToProvider(index, provider_id, name) => {
+				match Plugin::from_str(&provider_id) {
+					Ok(provider) => {
+						let mut service = provider.connect().await.unwrap();
+						let list = List::new(&name, "✍️", &provider_id);
+						let response = service.create_list(list.clone()).await.unwrap();
+
+						if response.into_inner().successful {
+							self
+								.provider_factory
+								.send(index, ProviderInput::AddList(ListData { data: list }));
+						}
+					},
+					Err(err) => eprintln!("{}", err),
+				}
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 			SidebarInput::ListSelected(list) => {
