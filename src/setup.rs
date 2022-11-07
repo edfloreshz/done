@@ -13,12 +13,12 @@ pub fn setup() -> Result<()> {
 	gtk::init().unwrap();
 	setup_gettext();
 	setup_fluent()?;
-	setup_css();
 	verify_data_integrity()?;
 	pretty_env_logger::init();
 
 	glib::set_application_name(&gettext("Done"));
 	gio::resources_register_include!("resources.gresource")?;
+	setup_css();
 	gtk::Window::set_default_icon_name(APP_ID);
 
 	Ok(())

@@ -7,11 +7,14 @@ use crate::widgets::modals::about::AboutDialog;
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 use gtk::prelude::*;
-use relm4::async_component::{
-	AsyncComponentParts, AsyncComponentSender, AsyncController,
-	SimpleAsyncComponent,
+use relm4::{
+	actions::{ActionGroupName, RelmAction, RelmActionGroup},
+	adw,
+	async_component::{AsyncComponent, AsyncComponentController},
+	gtk, ComponentBuilder, ComponentController, ComponentParts, ComponentSender,
+	Controller, SimpleComponent,
 };
-use relm4::{actions::{ActionGroupName, RelmAction, RelmActionGroup}, adw, async_component::{AsyncComponent, AsyncComponentController}, gtk, ComponentBuilder, ComponentController, Controller, ComponentParts, ComponentSender, SimpleComponent};
+use relm4::async_component::AsyncController;
 
 pub struct App {
 	message: Option<AppMsg>,
@@ -103,6 +106,8 @@ impl SimpleComponent for App {
 				None
 			},
 
+
+
 			#[name = "overlay"]
 			gtk::Overlay {
 				#[wrap(Some)]
@@ -111,60 +116,61 @@ impl SimpleComponent for App {
 					set_vexpand: true,
 					set_transition_duration: 250,
 					set_transition_type: gtk::StackTransitionType::Crossfade,
-					add_child: leaflet = &adw::Leaflet {
-						set_can_navigate_back: true,
-						append: sidebar = &gtk::Box {
-							set_orientation: gtk::Orientation::Vertical,
-							set_width_request: 280,
-							#[name = "sidebar_header"]
-							adw::HeaderBar {
-								set_show_end_title_buttons: false,
-								set_title_widget: Some(&gtk::Label::new(Some("Done"))),
-								pack_end = &gtk::MenuButton {
-									set_icon_name: "open-menu-symbolic",
-									set_menu_model: Some(&primary_menu),
+					add_child = &gtk::Box {
+						set_orientation: gtk::Orientation::Vertical,
+						append: leaflet = &adw::Leaflet {
+							set_can_navigate_back: true,
+							append: sidebar = &gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								set_width_request: 280,
+								#[name = "sidebar_header"]
+								adw::HeaderBar {
+									set_show_end_title_buttons: false,
+									set_title_widget: Some(&gtk::Label::new(Some("Done"))),
+									pack_end = &gtk::MenuButton {
+										set_icon_name: "open-menu-symbolic",
+										set_menu_model: Some(&primary_menu),
+									},
 								},
+								append: model.sidebar_controller.widget(),
 							},
-							append: model.sidebar_controller.widget(),
-						},
-						append: &gtk::Separator::default(),
-						append: content = &gtk::Box {
-							set_orientation: gtk::Orientation::Vertical,
-							#[name = "content_header"]
-							append = &adw::HeaderBar {
-								set_hexpand: true,
-								set_show_start_title_buttons: false,
-								#[watch]
-								set_title_widget: Some(&gtk::Label::new(model.content_title.as_ref().map(|x| x.as_str()))),
-								pack_start: go_back_button = &gtk::Button {
-									set_icon_name: "go-previous-symbolic",
-									set_visible: false,
-									connect_clicked[sender] => move |_| {
-										sender.input(AppMsg::Back);
+							append: &gtk::Separator::default(),
+							append: content = &gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								#[name = "content_header"]
+								append = &adw::HeaderBar {
+									set_hexpand: true,
+									set_show_start_title_buttons: true,
+									#[watch]
+									set_title_widget: Some(&gtk::Label::new(model.content_title.as_ref().map(|x| x.as_str()))),
+									pack_start: go_back_button = &gtk::Button {
+										set_icon_name: "go-previous-symbolic",
+										set_visible: false,
+										connect_clicked[sender] => move |_| {
+											sender.input(AppMsg::Back);
+										}
 									}
+								},
+								append: model.content_controller.widget()
+							},
+							connect_folded_notify[sender] => move |leaflet| {
+								if leaflet.is_folded() {
+									sender.input(AppMsg::Folded);
+								} else {
+									sender.input(AppMsg::Unfolded);
 								}
-							},
-							append = &gtk::InfoBar {
-								set_message_type: gtk::MessageType::Warning,
-								#[watch]
-								set_revealed: model.warning_revealed,
-								adw::Clamp {
-									gtk::Label {
-										set_wrap: true,
-										add_css_class: "warning",
-										set_text: fl!("alpha-warning")
-									}
-								},
-							},
-							append: model.content_controller.widget()
-						},
-						connect_folded_notify[sender] => move |leaflet| {
-							if leaflet.is_folded() {
-								sender.input(AppMsg::Folded);
-							} else {
-								sender.input(AppMsg::Unfolded);
 							}
-						}
+						},
+						append = &gtk::InfoBar {
+							set_message_type: gtk::MessageType::Warning,
+							#[watch]
+							set_revealed: model.warning_revealed,
+							gtk::Label {
+								set_wrap: true,
+								add_css_class: "warning",
+								set_text: fl!("alpha-warning")
+							}
+						},
 					}
 				}
 			}
@@ -259,11 +265,7 @@ impl SimpleComponent for App {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(
-		&mut self,
-		message: Self::Input,
-		_sender: ComponentSender<Self>,
-	) {
+	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::ListSelected(list) => {

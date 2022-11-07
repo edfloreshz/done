@@ -7,13 +7,12 @@ use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
-use std::str::FromStr;
 
 use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::List;
 
 use crate::widgets::components::sidebar::SidebarInput;
-use crate::widgets::factory::task_list::ListData;
+use crate::widgets::factory::list::ListData;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 
 #[allow(dead_code)]
@@ -26,7 +25,8 @@ pub struct ProviderModel {
 
 #[derive(Debug)]
 pub enum ProviderInput {
-	AddList(String, String),
+	RequestAddList(usize, String, String),
+	AddList(ListData),
 	DeleteTaskList(DynamicIndex),
 	Forward(bool),
 	ListSelected(List),
@@ -38,6 +38,7 @@ pub enum ProviderOutput {
 	ListSelected(List),
 	ProviderSelected(Plugin),
 	Forward,
+	AddListToProvider(usize, String, String)
 }
 
 #[relm4::factory(pub)]
@@ -59,10 +60,8 @@ impl FactoryComponent for ProviderModel {
 				set_title: self.provider.name.as_str(),
 				set_subtitle: self.provider.description.as_str(),
 				set_icon_name: Some(self.provider.icon.as_str()),
-				#[watch]
-				set_enable_expansion: !self.list_factory.is_empty(),
-				#[watch]
-				set_expanded: !self.list_factory.is_empty(),
+				set_enable_expansion: !self.provider.lists.is_empty(),
+				set_expanded: !self.provider.lists.is_empty(),
 				add_action = &gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
 					set_css_classes: &["flat", "image-button"],
@@ -84,9 +83,10 @@ impl FactoryComponent for ProviderModel {
 
 	fn init_model(
 		params: Self::Init,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		sender: FactoryComponentSender<Self>,
 	) -> Self {
+		let index = index.current_index();
 		Self {
 			provider: params.clone(),
 			list_factory: FactoryVecDeque::new(
@@ -97,7 +97,7 @@ impl FactoryComponent for ProviderModel {
 				sender.input_sender(),
 				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::AddList(params.id.clone(), name)
+						ProviderInput::RequestAddList(index, params.id.clone(), name)
 					},
 				},
 			),
@@ -132,22 +132,12 @@ impl FactoryComponent for ProviderModel {
 			ProviderInput::DeleteTaskList(index) => {
 				self.list_factory.guard().remove(index.current_index());
 			},
-			ProviderInput::AddList(provider_id, name) => {
-				match Plugin::from_str(&provider_id) {
-					Ok(provider) => {
-						// let mut service = rt().block_on(provider.connect()).unwrap();
-						// let list = List::new(&name, "✍️", &provider_id);
-						// let response = rt()
-						//     .block_on(service.create_list(list.clone()))
-						//     .unwrap();
-						//
-						// if response.into_inner().successful {
-						//     self.list_factory.guard().push_back(ListData { data: list });
-						// }
-					},
-					Err(err) => eprintln!("{}", err),
-				}
+			ProviderInput::RequestAddList(index, provider_id, name) => {
+				sender.output(ProviderOutput::AddListToProvider(index, provider_id, name))
 			},
+			ProviderInput::AddList(list) => {
+				self.list_factory.guard().push_back(list);
+			}
 			ProviderInput::Forward(forward) => {
 				if forward {
 					sender.output(ProviderOutput::Forward)
@@ -166,7 +156,10 @@ impl FactoryComponent for ProviderModel {
 		let output = match output {
 			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
 			ProviderOutput::Forward => SidebarInput::Forward,
-			ProviderOutput::ProviderSelected(provider) => SidebarInput::ProviderSelected(provider)
+			ProviderOutput::ProviderSelected(provider) => SidebarInput::ProviderSelected(provider),
+			ProviderOutput::AddListToProvider(index, provider_id, name) => {
+				SidebarInput::AddListToProvider(index, provider_id, name)
+			}
 		};
 		Some(output)
 	}
