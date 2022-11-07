@@ -1,5 +1,4 @@
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use done_core::Channel;
 use relm4::factory::{
 	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
 	FactoryView,
@@ -11,8 +10,7 @@ use relm4::{adw, Component, Controller};
 use std::str::FromStr;
 
 use done_core::plugins::{Plugin, PluginData};
-use done_core::services::provider::provider_client::ProviderClient;
-use done_core::services::provider::{Empty, List};
+use done_core::services::provider::List;
 
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::factory::task_list::ListData;
@@ -136,17 +134,17 @@ impl FactoryComponent for ProviderModel {
 			},
 			ProviderInput::AddList(provider_id, name) => {
 				match Plugin::from_str(&provider_id) {
-				    Ok(provider) => {
-					    // let mut service = rt().block_on(provider.connect()).unwrap();
-					    // let list = List::new(&name, "✍️", &provider_id);
-					    // let response = rt()
+					Ok(provider) => {
+						// let mut service = rt().block_on(provider.connect()).unwrap();
+						// let list = List::new(&name, "✍️", &provider_id);
+						// let response = rt()
 						//     .block_on(service.create_list(list.clone()))
 						//     .unwrap();
-					    //
-					    // if response.into_inner().successful {
+						//
+						// if response.into_inner().successful {
 						//     self.list_factory.guard().push_back(ListData { data: list });
-					    // }
-				    },
+						// }
+					},
 					Err(err) => eprintln!("{}", err),
 				}
 			},
