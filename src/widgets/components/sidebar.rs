@@ -1,12 +1,13 @@
 use relm4::adw;
+use relm4::async_component::{
+	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
+};
 use relm4::factory::FactoryVecDeque;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	async_component::AsyncComponent,
-	RelmWidgetExt
+	RelmWidgetExt,
 };
-use relm4::async_component::{AsyncComponentParts, AsyncComponentSender};
 
 use crate::fl;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
@@ -16,12 +17,13 @@ use done_core::services::provider::List;
 #[derive(Debug)]
 pub struct SidebarModel {
 	provider_factory: FactoryVecDeque<ProviderModel>,
+	is_empty: bool
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarInput {
-	AddTaskList(usize, String, String),
+	AddListToProvider(usize, String, String),
 	ListSelected(List),
 	ProviderSelected(Plugin),
 	RemoveService(String),
@@ -37,12 +39,11 @@ pub enum SidebarOutput {
 }
 
 #[relm4::component(pub async)]
-impl AsyncComponent for SidebarModel {
+impl SimpleAsyncComponent for SidebarModel {
 	type Input = SidebarInput;
 	type Output = SidebarOutput;
-	type Init = Option<SidebarModel>;
 	type Widgets = SidebarWidgets;
-	type CommandOutput = ();
+	type Init = ();
 
 	view! {
 		sidebar = &gtk::Box {
@@ -51,8 +52,8 @@ impl AsyncComponent for SidebarModel {
 			gtk::ScrolledWindow {
 				#[name(clamp)]
 				adw::Clamp {
-					#[name(providers_container)]
-					gtk::Box {
+					#[local_ref]
+					providers_container -> gtk::Box {
 						set_margin_top: 5,
 						set_margin_start: 10,
 						set_margin_end: 10,
@@ -61,7 +62,8 @@ impl AsyncComponent for SidebarModel {
 						set_vexpand: true,
 						set_css_classes: &["navigation-sidebar"],
 						gtk::CenterBox {
-							set_visible: empty,
+							#[watch]
+							set_visible: model.is_empty,
 							set_orientation: gtk::Orientation::Vertical,
 							set_halign: gtk::Align::Center,
 							set_valign: gtk::Align::Center,
@@ -91,25 +93,28 @@ impl AsyncComponent for SidebarModel {
 		}
 	}
 
-	async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
-		let empty = Plugin::connected_count().await == 0;
-		let widgets = view_output!();
-
+	async fn init(
+		_init: Self::Init,
+		root: Self::Root,
+		sender: AsyncComponentSender<Self>,
+	) -> AsyncComponentParts<Self> {
 		let mut model = SidebarModel {
 			provider_factory: FactoryVecDeque::new(
-				widgets.providers_container.clone(),
+				gtk::Box::default(),
 				sender.input_sender(),
 			),
+			is_empty: Plugin::connected_count().await == 0
 		};
 
+		let providers_container = model.provider_factory.widget();
+
+		let widgets = view_output!();
+
 		for provider in Plugin::list() {
-			if let Ok(connector) = provider.connect().await {
+			if provider.connect().await.is_ok()  {
 				let data = provider.data().await.unwrap();
 				info!("Connected to {} plug-in.", data.name);
-				model
-					.provider_factory
-					.guard()
-					.push_back(data.clone());
+				model.provider_factory.guard().push_back(data.clone());
 				info!("Added {} provider to the sidebar", data.name)
 			}
 		}
@@ -119,7 +124,7 @@ impl AsyncComponent for SidebarModel {
 
 	async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
 		match message {
-			SidebarInput::AddTaskList(index, provider, name) => {
+			SidebarInput::AddListToProvider(index, provider, name) => {
 				self
 					.provider_factory
 					.send(index, ProviderInput::AddList(provider, name));

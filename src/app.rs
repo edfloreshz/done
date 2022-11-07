@@ -1,49 +1,46 @@
+use crate::config::PROFILE;
 use crate::fl;
 use crate::main_app;
+use crate::widgets::components::content::{ContentInput, ContentModel};
+use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
 use crate::widgets::modals::about::AboutDialog;
-use crate::{
-	config::PROFILE,
-	widgets::components::{
-		content::{ContentInput, ContentModel},
-		sidebar::{SidebarModel, SidebarOutput},
-	},
-};
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 use gtk::prelude::*;
-use relm4::{
-	async_component::{AsyncComponent, AsyncComponentController},
-	actions::{ActionGroupName, RelmAction, RelmActionGroup},
-	adw, gtk, ComponentBuilder, ComponentController, ComponentParts,
-	ComponentSender, Controller, SimpleComponent,
+use relm4::async_component::{
+	AsyncComponentParts, AsyncComponentSender, AsyncController,
+	SimpleAsyncComponent,
 };
-use relm4::async_component::AsyncController;
+use relm4::{actions::{ActionGroupName, RelmAction, RelmActionGroup}, adw, async_component::{AsyncComponent, AsyncComponentController}, gtk, ComponentBuilder, ComponentController, Controller, ComponentParts, ComponentSender, SimpleComponent};
 
-pub(super) struct App {
+pub struct App {
 	message: Option<AppMsg>,
-	content: Option<AsyncController<ContentModel>>,
+	sidebar_controller: AsyncController<SidebarModel>,
+	content_controller: AsyncController<ContentModel>,
 	about_dialog: Option<Controller<AboutDialog>>,
-	content_title: String,
+	content_title: Option<String>,
 	warning_revealed: bool,
 }
 
 impl App {
 	pub fn new(
-		content: Option<AsyncController<ContentModel>>,
+		sidebar: AsyncController<SidebarModel>,
+		content: AsyncController<ContentModel>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
 			message: None,
-			content,
+			sidebar_controller: sidebar,
+			content_controller: content,
 			about_dialog,
-			content_title: "All".to_string(),
+			content_title: None,
 			warning_revealed: true,
 		}
 	}
 }
-#[allow(dead_code)]
+
 #[derive(Debug)]
-pub(super) enum AppMsg {
+pub enum AppMsg {
 	ListSelected(List),
 	ProviderSelected(Plugin),
 	CloseWarning,
@@ -72,14 +69,14 @@ impl SimpleComponent for App {
 	type Init = ();
 
 	menu! {
-			primary_menu: {
-					section! {
-							"_Preferences" => PreferencesAction,
-							"_Keyboard" => ShortcutsAction,
-							"_About Done" => AboutAction,
-							"_Quit" => QuitAction,
-					}
+		primary_menu: {
+			section! {
+				"_Preferences" => PreferencesAction,
+				"_Keyboard" => ShortcutsAction,
+				"_About Done" => AboutAction,
+				"_Quit" => QuitAction,
 			}
+		}
 	}
 
 	view! {
@@ -87,8 +84,6 @@ impl SimpleComponent for App {
 		main_window = adw::ApplicationWindow::new(&main_app()) {
 			set_default_width: 800,
 			set_default_height: 700,
-			set_width_request: 300,
-			set_height_request: 300,
 			connect_close_request[sender] => move |_| {
 				sender.input(AppMsg::Quit);
 				gtk::Inhibit(true)
@@ -130,19 +125,17 @@ impl SimpleComponent for App {
 									set_menu_model: Some(&primary_menu),
 								},
 							},
-							append: sidebar_controller.widget()
+							append: model.sidebar_controller.widget(),
 						},
 						append: &gtk::Separator::default(),
 						append: content = &gtk::Box {
 							set_orientation: gtk::Orientation::Vertical,
-							set_hexpand: true,
-							set_vexpand: true,
-								#[name = "content_header"]
+							#[name = "content_header"]
 							append = &adw::HeaderBar {
 								set_hexpand: true,
 								set_show_start_title_buttons: false,
 								#[watch]
-								set_title_widget: Some(&gtk::Label::new(Some(&model.content_title))),
+								set_title_widget: Some(&gtk::Label::new(model.content_title.as_ref().map(|x| x.as_str()))),
 								pack_start: go_back_button = &gtk::Button {
 									set_icon_name: "go-previous-symbolic",
 									set_visible: false,
@@ -163,7 +156,7 @@ impl SimpleComponent for App {
 									}
 								},
 							},
-							append: content_controller.widget()
+							append: model.content_controller.widget()
 						},
 						connect_folded_notify[sender] => move |leaflet| {
 							if leaflet.is_folded() {
@@ -182,7 +175,11 @@ impl SimpleComponent for App {
 		if let Some(msg) = &model.message {
 			match msg {
 				AppMsg::Folded => {
-					leaflet.set_visible_child(content);
+					if model.content_title.is_some() {
+						leaflet.set_visible_child(content);
+					} else {
+						leaflet.set_visible_child(sidebar);
+					}
 					go_back_button.set_visible(true);
 					sidebar_header.set_show_start_title_buttons(true);
 					sidebar_header.set_show_end_title_buttons(true);
@@ -204,24 +201,23 @@ impl SimpleComponent for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let sidebar_controller = SidebarModel::builder().launch(None).forward(
-			sender.input_sender(),
-			|message| match message {
-				SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
-				SidebarOutput::Forward => AppMsg::Forward,
-				SidebarOutput::ProviderSelected(plugin) => {
-					AppMsg::ProviderSelected(plugin)
-				},
-			},
-		);
-
-		let content_controller = ContentModel::builder()
-			.launch(None)
-			.forward(sender.input_sender(), |message| match message {});
-
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
-
-		let model = App::new(None, None);
+		let mut model = App::new(
+			SidebarModel::builder().launch(()).forward(
+				sender.input_sender(),
+				|message| match message {
+					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
+					SidebarOutput::Forward => AppMsg::Forward,
+					SidebarOutput::ProviderSelected(plugin) => {
+						AppMsg::ProviderSelected(plugin)
+					},
+				},
+			),
+			ContentModel::builder()
+				.launch(None)
+				.forward(sender.input_sender(), |message| match message {}),
+			None,
+		);
 
 		let widgets = view_output!();
 
@@ -236,7 +232,7 @@ impl SimpleComponent for App {
 			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
 			.detach();
 
-		let model = App::new(Some(content_controller), Some(about_dialog));
+		model.about_dialog = Some(about_dialog);
 
 		let about_action = {
 			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
@@ -263,24 +259,24 @@ impl SimpleComponent for App {
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+	fn update(
+		&mut self,
+		message: Self::Input,
+		_sender: ComponentSender<Self>,
+	) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::ListSelected(list) => {
 				self.warning_revealed = false;
-				self.content_title = list.name.clone();
+				self.content_title = Some(list.name.clone());
 				self
-					.content
-					.as_ref()
-					.unwrap()
+					.content_controller
 					.sender()
 					.send(ContentInput::SetTaskList(list))
 			},
 			AppMsg::CloseWarning => self.warning_revealed = false,
 			AppMsg::ProviderSelected(provider) => self
-				.content
-				.as_ref()
-				.unwrap()
+				.content_controller
 				.sender()
 				.send(ContentInput::SetProvider(provider)),
 			_ => self.message = Some(message),
