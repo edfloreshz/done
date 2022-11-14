@@ -3,13 +3,28 @@ use gettextrs::{gettext, LocaleCategory};
 use gtk::{gdk, gio, glib};
 use libset::{config::Config, new_dir, new_file};
 use relm4::gtk;
-
+use relm4::actions::{RelmAction, RelmActionGroup};
+use relm4::gtk::prelude::ApplicationExt;
+use relm4::actions::AccelsPlus;
+use relm4::adw;
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
 };
+use once_cell::unsync::Lazy;
 
-pub fn setup() -> Result<()> {
+relm4::new_action_group!(AppActionGroup, "app");
+relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
+
+thread_local! {
+    static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
+}
+
+pub fn main_app() -> adw::Application {
+    APP.with(|app| (*app).clone())
+}
+
+pub fn setup_app() -> Result<adw::Application> {
 	gtk::init().unwrap();
 	setup_gettext();
 	setup_fluent()?;
@@ -21,7 +36,29 @@ pub fn setup() -> Result<()> {
 	setup_css();
 	gtk::Window::set_default_icon_name(APP_ID);
 
-	Ok(())
+    let app = main_app();
+
+    setup_actions(&app);
+
+    Ok(app)
+}
+
+fn setup_actions(app: &adw::Application) {
+    app.set_resource_base_path(Some("/dev/edfloreshz/Done/"));
+    let actions = RelmActionGroup::<AppActionGroup>::new();
+
+    let quit_action = {
+        let app = app.clone();
+        RelmAction::<QuitAction>::new_stateless(move |_| {
+            app.quit();
+        })
+    };
+
+    actions.add_action(&quit_action);
+
+    app.set_accelerators_for_action::<QuitAction>(&["<Control>q"]);
+
+    app.set_action_group(Some(&actions.into_action_group()));
 }
 
 fn setup_gettext() {

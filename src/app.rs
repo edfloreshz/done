@@ -1,9 +1,9 @@
 use crate::config::PROFILE;
 use crate::fl;
-use crate::main_app;
 use crate::widgets::components::content::{ContentInput, ContentModel};
 use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
 use crate::widgets::modals::about::AboutDialog;
+use crate::setup::main_app;
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 use gtk::prelude::*;
@@ -97,7 +97,7 @@ impl SimpleComponent for App {
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
 				set_transient_for: Some(&main_window),
-				set_application: Some(&crate::main_app()),
+				set_application: Some(&crate::setup::main_app()),
 			},
 
 			add_css_class?: if PROFILE == "Devel" {
