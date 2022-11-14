@@ -1,6 +1,7 @@
 use relm4::adw::prelude::ActionRowExt;
+use relm4::factory::r#async::traits::AsyncFactoryComponent;
 use relm4::factory::{
-	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
+	AsyncFactoryComponentSender, DynamicIndex, FactoryView,
 };
 use std::str::FromStr;
 
@@ -33,8 +34,8 @@ pub struct ListData {
 	pub data: List,
 }
 
-#[relm4::factory(pub)]
-impl FactoryComponent for ListData {
+#[relm4::factory(pub async)]
+impl AsyncFactoryComponent for ListData {
 	type ParentInput = ProviderInput;
 	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
@@ -106,65 +107,65 @@ impl FactoryComponent for ListData {
 		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: FactoryComponentSender<Self>,
+		sender: AsyncFactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
 	}
 
-	fn init_model(
+	async fn init_model(
 		params: Self::Init,
 		_index: &DynamicIndex,
-		_sender: FactoryComponentSender<Self>,
+		_sender: AsyncFactoryComponentSender<Self>,
 	) -> Self {
 		params
 	}
 
-	fn update(
+	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: FactoryComponentSender<Self>,
+		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		if let Ok(provider) = Plugin::from_str(&self.data.provider) {
-			// let mut service = provider.connect().await.unwrap();
+			let mut service = provider.connect().await.unwrap();
 			match message {
 				ListInput::Rename(name) => {
 					let mut list = self.data.clone();
 					list.name = name.clone();
-					// let response = rt()
-					// 	.block_on(
-					// 		service.update_list(list),
-					// 	)
-					// 	.unwrap()
-					// 	.into_inner();
-					// if response.successful {
-					// 	self.data.name = name;
-					// }
+					let response = service
+						.update_list(list)
+						.await
+						.unwrap()
+						.into_inner();
+					if response.successful {
+						self.data.name = name;
+					}
 				},
 				ListInput::Delete(index) => {
-					// let response =
-					// 	rt()
-					// 		.block_on(service.delete_list(self.clone().data.id))
-					// 		.unwrap()
-					// 		.into_inner();
-					// if response.successful {
-					// 	sender.output(ListOutput::DeleteTaskList(index))
-					// }
+					let response = service
+						.delete_list(self.clone().data.id)
+						.await
+						.unwrap()
+						.into_inner();
+					if response.successful {
+						sender.output(ListOutput::DeleteTaskList(index))
+					}
 				},
 				ListInput::ChangeIcon(icon) => {
 					let mut list = self.data.clone();
 					list.icon = Some(icon.clone());
-					// let response = rt()
-					// 	.block_on(
-					// 		service.update_list(list),
-					// 	)
-					// 	.unwrap()
-					// 	.into_inner();
-					// if response.successful {
-					// 	self.data.icon = Some(icon);
-					// }
+					let response = service
+						.update_list(list)
+						.await
+						.unwrap()
+						.into_inner();
+					if response.successful {
+						self.data.icon = Some(icon);
+					}
 				},
-				ListInput::Select => sender.output(ListOutput::Select(self.data.clone())),
+				ListInput::Select => {
+					sender.output(ListOutput::Select(self.data.clone()))
+				},
 			}
 		} else if let ListInput::Select = message {
 			sender.output(ListOutput::Select(self.data.clone()))

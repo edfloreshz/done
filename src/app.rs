@@ -10,11 +10,11 @@ use gtk::prelude::*;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
-	async_component::{AsyncComponent, AsyncComponentController},
+	component::{AsyncComponent, AsyncComponentController},
 	gtk, ComponentBuilder, ComponentController, ComponentParts, ComponentSender,
 	Controller, SimpleComponent,
 };
-use relm4::async_component::AsyncController;
+use relm4::component::AsyncController;
 
 pub struct App {
 	message: Option<AppMsg>,

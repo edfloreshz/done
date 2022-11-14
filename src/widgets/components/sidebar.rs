@@ -1,14 +1,14 @@
 use relm4::adw;
-use relm4::async_component::{
+use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
 };
-use relm4::factory::FactoryVecDeque;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	RelmWidgetExt,
 };
 use std::str::FromStr;
+use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 use crate::fl;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
 use done_core::plugins::Plugin;
@@ -17,7 +17,7 @@ use crate::widgets::factory::list::ListData;
 
 #[derive(Debug)]
 pub struct SidebarModel {
-	provider_factory: FactoryVecDeque<ProviderModel>,
+	provider_factory: AsyncFactoryVecDeque<ProviderModel>,
 	is_empty: bool
 }
 
@@ -100,7 +100,7 @@ impl SimpleAsyncComponent for SidebarModel {
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
 		let mut model = SidebarModel {
-			provider_factory: FactoryVecDeque::new(
+			provider_factory: AsyncFactoryVecDeque::new(
 				gtk::Box::default(),
 				sender.input_sender(),
 			),

@@ -1,12 +1,11 @@
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use relm4::factory::{
-	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryVecDeque,
-	FactoryView,
-};
+use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
+use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
+use relm4::factory::r#async::traits::AsyncFactoryComponent;
 
 use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::List;
@@ -19,7 +18,7 @@ use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 #[derive(Debug)]
 pub struct ProviderModel {
 	pub provider: PluginData,
-	pub list_factory: FactoryVecDeque<ListData>,
+	pub list_factory: AsyncFactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
 }
 
@@ -41,8 +40,8 @@ pub enum ProviderOutput {
 	AddListToProvider(usize, String, String)
 }
 
-#[relm4::factory(pub)]
-impl FactoryComponent for ProviderModel {
+#[relm4::factory(pub async)]
+impl AsyncFactoryComponent for ProviderModel {
 	type ParentInput = SidebarInput;
 	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
@@ -81,15 +80,11 @@ impl FactoryComponent for ProviderModel {
 		}
 	}
 
-	fn init_model(
-		params: Self::Init,
-		index: &DynamicIndex,
-		sender: FactoryComponentSender<Self>,
-	) -> Self {
+	async fn init_model(init: Self::Init, index: &DynamicIndex, sender: AsyncFactoryComponentSender<Self>) -> Self {
 		let index = index.current_index();
 		Self {
-			provider: params.clone(),
-			list_factory: FactoryVecDeque::new(
+			provider: init.clone(),
+			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
 			),
@@ -97,24 +92,18 @@ impl FactoryComponent for ProviderModel {
 				sender.input_sender(),
 				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::RequestAddList(index, params.id.clone(), name)
+						ProviderInput::RequestAddList(index, init.id.clone(), name)
 					},
 				},
 			),
 		}
 	}
 
-	fn init_widgets(
-		&mut self,
-		index: &DynamicIndex,
-		root: &Self::Root,
-		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: FactoryComponentSender<Self>,
-	) -> Self::Widgets {
+	fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: AsyncFactoryComponentSender<Self>) -> Self::Widgets {
 		let widgets = view_output!();
 
 		self.list_factory =
-			FactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
+			AsyncFactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
 
 		for list in &self.provider.lists {
 			self.list_factory.guard().push_back(ListData { data: list.clone() });
@@ -123,10 +112,10 @@ impl FactoryComponent for ProviderModel {
 		widgets
 	}
 
-	fn update(
+	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: FactoryComponentSender<Self>,
+		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		match message {
 			ProviderInput::DeleteTaskList(index) => {
