@@ -2,7 +2,7 @@ use crate::widgets::factory::task::TaskData;
 use crate::fl;
 use done_core::plugins::Plugin;
 use done_core::services::provider::{List, Task};
-use relm4::factory::{DynamicIndex, FactoryVecDeque};
+use relm4::factory::DynamicIndex;
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -11,12 +11,13 @@ use relm4::{
 	view, RelmWidgetExt,
 };
 use std::str::FromStr;
-use relm4::async_component::{AsyncComponent, AsyncComponentParts, AsyncComponentSender};
+use relm4::component::{AsyncComponent, AsyncComponentParts, AsyncComponentSender};
+use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 
 pub struct ContentModel {
 	current_provider: Plugin,
 	parent_list: Option<List>,
-	tasks_factory: FactoryVecDeque<TaskData>,
+	tasks_factory: AsyncFactoryVecDeque<TaskData>,
 }
 
 #[derive(Debug)]
@@ -117,7 +118,7 @@ impl AsyncComponent for ContentModel {
 		let model = ContentModel {
 			current_provider: Plugin::Local,
 			parent_list: None,
-			tasks_factory: FactoryVecDeque::new(
+			tasks_factory: AsyncFactoryVecDeque::new(
 				list_box.clone(),
 				sender.input_sender(),
 			),

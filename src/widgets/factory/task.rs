@@ -1,7 +1,6 @@
 use done_core::services::provider::TaskStatus;
-use relm4::factory::{
-	DynamicIndex, FactoryComponent, FactoryComponentSender, FactoryView,
-};
+use relm4::factory::r#async::traits::AsyncFactoryComponent;
+use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -32,8 +31,8 @@ pub struct TaskData {
 	pub data: Task,
 }
 
-#[relm4::factory(pub)]
-impl FactoryComponent for TaskData {
+#[relm4::factory(pub async)]
+impl AsyncFactoryComponent for TaskData {
 	type ParentInput = ContentInput;
 	type ParentWidget = gtk::Box;
 	type CommandOutput = ();
@@ -109,12 +108,12 @@ impl FactoryComponent for TaskData {
 		}
 	}
 
-	fn init_model(
-		params: Self::Init,
+	async fn init_model(
+		init: Self::Init,
 		_index: &DynamicIndex,
-		_sender: FactoryComponentSender<Self>,
+		_sender: AsyncFactoryComponentSender<Self>,
 	) -> Self {
-		params
+		init
 	}
 
 	fn init_widgets(
@@ -122,16 +121,16 @@ impl FactoryComponent for TaskData {
 		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: FactoryComponentSender<Self>,
+		sender: AsyncFactoryComponentSender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
 	}
 
-	fn update(
+	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: FactoryComponentSender<Self>,
+		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		match message {
 			TaskInput::SetCompleted(completed) => {
@@ -146,6 +145,7 @@ impl FactoryComponent for TaskData {
 			},
 			TaskInput::Favorite(index) => {
 				self.data.favorite = !self.data.favorite;
+
 				sender
 					.output_sender()
 					.send(TaskOutput::UpdateTask(Some(index), self.data.clone()));
@@ -159,7 +159,7 @@ impl FactoryComponent for TaskData {
 		}
 	}
 
-	fn output_to_parent_input(output: Self::Output) -> Option<ContentInput> {
+	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		Some(match output {
 			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
 			TaskOutput::UpdateTask(index, task) => {
