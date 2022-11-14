@@ -17,7 +17,7 @@ i18n-embed = { version = "0.13.4", features = ["fluent-system", "desktop-request
 tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 rust-embed = { version = "6.4.0", features = ["debug-embed"] }
-relm4 = { git = "https://github.com/Relm4/Relm4", branch="main", features = ["macros", "libadwaita"] }
+relm4 = { git = "https://github.com/Relm4/Relm4", branch="async-factories", features = ["macros", "libadwaita"] }
 done_core = { path = "core" }
 i18n-embed-fl = "0.6.4"
 once_cell = "1.13.0"
