@@ -1,12 +1,12 @@
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
-use relm4::gtk;
+use relm4::{gtk, view};
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 use relm4::factory::r#async::traits::AsyncFactoryComponent;
-
+use relm4::gtk::prelude::BoxExt;
 use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::List;
 
@@ -26,7 +26,7 @@ pub struct ProviderModel {
 pub enum ProviderInput {
 	RequestAddList(usize, String, String),
 	AddList(ListData),
-	DeleteTaskList(DynamicIndex),
+	DeleteTaskList(DynamicIndex, String),
 	Forward(bool),
 	ListSelected(List),
 	SelectSmartProvider,
@@ -47,43 +47,60 @@ impl AsyncFactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type Init = PluginData;
+	type Init = Plugin;
 	type Widgets = ProviderWidgets;
 
 	view! {
 		#[root]
-		#[name(list_box)]
-		adw::PreferencesGroup {
-			#[name(expander)]
-			add = &adw::ExpanderRow {
-				set_title: self.provider.name.as_str(),
-				set_subtitle: self.provider.description.as_str(),
-				set_icon_name: Some(self.provider.icon.as_str()),
-				set_enable_expansion: !self.provider.lists.is_empty(),
-				set_expanded: !self.provider.lists.is_empty(),
-				add_action = &gtk::MenuButton {
-					set_icon_name: "value-increase-symbolic",
-					set_css_classes: &["flat", "image-button"],
-					set_valign: gtk::Align::Center,
-					set_direction: gtk::ArrowType::Right,
-					set_popover: Some(self.new_list_controller.widget())
+		gtk::Box {
+			remove: &root.first_child().unwrap(),
+			#[name(list_box)]
+			adw::PreferencesGroup {
+				#[name(expander)]
+				add = &adw::ExpanderRow {
+					set_title: self.provider.name.as_str(),
+					set_subtitle: self.provider.description.as_str(),
+					set_icon_name: Some(self.provider.icon.as_str()),
+					#[watch]
+					set_enable_expansion: !self.provider.lists.is_empty(),
+					set_expanded: !self.provider.lists.is_empty(),
+					add_action = &gtk::MenuButton {
+						set_icon_name: "value-increase-symbolic",
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						set_direction: gtk::ArrowType::Right,
+						set_popover: Some(self.new_list_controller.widget())
+					},
 				},
-			},
-			add_controller = &gtk::GestureClick {
-				connect_pressed[sender, index] => move |_, _, _, _| {
-					if index.clone().current_index() <= 3 {
-						sender.input(ProviderInput::SelectSmartProvider);
+				add_controller = &gtk::GestureClick {
+					connect_pressed[sender, index] => move |_, _, _, _| {
+						if index.clone().current_index() <= 3 {
+							sender.input(ProviderInput::SelectSmartProvider);
+						}
+						sender.input(ProviderInput::Forward(index.clone().current_index() <= 3))
 					}
-					sender.input(ProviderInput::Forward(index.clone().current_index() <= 3))
 				}
+			}
+		}
+	}
+
+	fn temporary_init(root: &mut Self::Root) {
+		view! {
+			#[local_ref]
+			root {
+                gtk::Spinner {
+	                start: (),
+	                set_hexpand: false,
+                }
 			}
 		}
 	}
 
 	async fn init_model(init: Self::Init, index: &DynamicIndex, sender: AsyncFactoryComponentSender<Self>) -> Self {
 		let index = index.current_index();
+		let provider = init.data().await.unwrap();
 		Self {
-			provider: init.clone(),
+			provider: provider.clone(),
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
@@ -92,7 +109,7 @@ impl AsyncFactoryComponent for ProviderModel {
 				sender.input_sender(),
 				move |message| match message {
 					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::RequestAddList(index, init.id.clone(), name)
+						ProviderInput::RequestAddList(index, provider.id.clone(), name)
 					},
 				},
 			),
@@ -118,14 +135,20 @@ impl AsyncFactoryComponent for ProviderModel {
 		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		match message {
-			ProviderInput::DeleteTaskList(index) => {
+			ProviderInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());
+				let index = self.provider.lists.iter().position(|list| list.id == list_id).unwrap();
+				self.provider.lists.remove(index);
+				self.provider = self.provider.plugin.data().await.unwrap();
+				info!("Deleted task list with id: {}", list_id);
 			},
 			ProviderInput::RequestAddList(index, provider_id, name) => {
 				sender.output(ProviderOutput::AddListToProvider(index, provider_id, name))
 			},
 			ProviderInput::AddList(list) => {
 				self.list_factory.guard().push_back(list);
+				self.provider = self.provider.plugin.data().await.unwrap();
+				info!("List added to {}", self.provider.name)
 			}
 			ProviderInput::Forward(forward) => {
 				if forward {
@@ -133,10 +156,12 @@ impl AsyncFactoryComponent for ProviderModel {
 				}
 			},
 			ProviderInput::ListSelected(list) => {
-				sender.output(ProviderOutput::ListSelected(list))
+				sender.output(ProviderOutput::ListSelected(list.clone()));
+				info!("List selected: {}", list.name)
 			},
 			ProviderInput::SelectSmartProvider => {
 				sender.output(ProviderOutput::ProviderSelected(self.provider.plugin));
+				info!("Provider selected: {}", self.provider.name)
 			},
 		}
 	}

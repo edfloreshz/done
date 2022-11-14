@@ -4,6 +4,7 @@ use relm4::factory::{
 	AsyncFactoryComponentSender, DynamicIndex, FactoryView,
 };
 use std::str::FromStr;
+use relm4::view;
 
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
@@ -25,7 +26,7 @@ pub enum ListInput {
 #[derive(Debug)]
 pub enum ListOutput {
 	Select(List),
-	DeleteTaskList(DynamicIndex),
+	DeleteTaskList(DynamicIndex, String),
 	Forward,
 }
 
@@ -102,6 +103,20 @@ impl AsyncFactoryComponent for ListData {
 		}
 	}
 
+	fn temporary_init(root: &mut Self::Root) {
+		view! {
+			#[local_ref]
+			root {
+				adw::ActionRow {
+					add_prefix = &gtk::Spinner {
+		                start: (),
+		                set_hexpand: false,
+	                }
+				}
+			}
+		}
+	}
+
 	fn init_widgets(
 		&mut self,
 		index: &DynamicIndex,
@@ -148,7 +163,7 @@ impl AsyncFactoryComponent for ListData {
 						.unwrap()
 						.into_inner();
 					if response.successful {
-						sender.output(ListOutput::DeleteTaskList(index))
+						sender.output(ListOutput::DeleteTaskList(index, self.data.id.clone()))
 					}
 				},
 				ListInput::ChangeIcon(icon) => {
@@ -175,8 +190,8 @@ impl AsyncFactoryComponent for ListData {
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
 			ListOutput::Select(list) => Some(ProviderInput::ListSelected(list)),
-			ListOutput::DeleteTaskList(index) => {
-				Some(ProviderInput::DeleteTaskList(index))
+			ListOutput::DeleteTaskList(index, list_id) => {
+				Some(ProviderInput::DeleteTaskList(index, list_id))
 			},
 			ListOutput::Forward => Some(ProviderInput::Forward(true)),
 		}

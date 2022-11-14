@@ -106,7 +106,11 @@ impl SimpleComponent for App {
 				None
 			},
 
-
+			add_controller = &gtk::GestureClick {
+				connect_pressed[sender] => move |_, _, _, _| {
+					sender.input(AppMsg::CloseWarning)
+				}
+			},
 
 			#[name = "overlay"]
 			gtk::Overlay {
