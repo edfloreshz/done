@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.Devel.svg" width="150" />
+  <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.svg" width="150" />
   <h1>Done</h1>
   <h3>To-do lists reimagined</h3>
   
@@ -51,7 +51,7 @@ Done is a simple to do app that lets you combine your existing set of task provi
 
 ### Accounts
 
-- [ ] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
+- [-] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
 
 ### Lists
 
@@ -83,6 +83,9 @@ Done is a simple to do app that lets you combine your existing set of task provi
 - [ ] Set a reminder
 - [ ] Set a due date
 - [ ] Set recurrence for a task
+
+### Notifications
+- [ ] Send notifications
 
 ### Backups
 - [ ] Export tasks
