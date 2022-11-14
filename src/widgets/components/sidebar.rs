@@ -113,10 +113,9 @@ impl SimpleAsyncComponent for SidebarModel {
 
 		for provider in Plugin::list() {
 			if provider.connect().await.is_ok()  {
-				let data = provider.data().await.unwrap();
-				info!("Connected to {} plug-in.", data.name);
-				model.provider_factory.guard().push_back(data.clone());
-				info!("Added {} provider to the sidebar", data.name)
+				info!("Connected to {:?} plug-in.", provider);
+				model.provider_factory.guard().push_back(provider);
+				info!("Added {:?} provider to the sidebar", provider)
 			}
 		}
 
