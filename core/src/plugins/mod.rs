@@ -1,7 +1,7 @@
 use crate::services::provider::provider_client::ProviderClient;
 use anyhow::Result;
 use strum::IntoEnumIterator;
-use strum_macros::{EnumIter, EnumString};
+use strum_macros::{Display, EnumIter, EnumString};
 use tonic::transport::Channel;
 use crate::services::provider::{Empty, List};
 
@@ -15,7 +15,7 @@ pub struct PluginData {
 	pub lists: Vec<List>
 }
 
-#[derive(Debug, EnumIter, EnumString, Copy, Clone)]
+#[derive(Debug, EnumIter, EnumString, Display, Copy, Clone)]
 pub enum Plugin {
 	Local = 7007,
 	Google = 6006,
@@ -61,5 +61,16 @@ impl Plugin {
 			lists
 		};
 		Ok(data)
+	}
+
+	pub fn dummy(&self) -> PluginData {
+		PluginData {
+			plugin: self.clone(),
+			id: "".to_string(),
+			name: self.to_string(),
+			description: "".to_string(),
+			icon: "".to_string(),
+			lists: vec![]
+		}
 	}
 }

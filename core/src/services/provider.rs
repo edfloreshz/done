@@ -1,79 +1,78 @@
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Empty {
-}
+pub struct Empty {}
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Task {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub parent: ::prost::alloc::string::String,
-    #[prost(string, tag="3")]
+    #[prost(string, tag = "3")]
     pub title: ::prost::alloc::string::String,
-    #[prost(string, optional, tag="4")]
+    #[prost(string, optional, tag = "4")]
     pub body: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(enumeration="TaskImportance", tag="5")]
+    #[prost(enumeration = "TaskImportance", tag = "5")]
     pub importance: i32,
-    #[prost(bool, tag="6")]
+    #[prost(bool, tag = "6")]
     pub favorite: bool,
-    #[prost(bool, tag="7")]
+    #[prost(bool, tag = "7")]
     pub is_reminder_on: bool,
-    #[prost(enumeration="TaskStatus", tag="8")]
+    #[prost(enumeration = "TaskStatus", tag = "8")]
     pub status: i32,
-    #[prost(int64, optional, tag="9")]
+    #[prost(int64, optional, tag = "9")]
     pub completed_on: ::core::option::Option<i64>,
-    #[prost(int64, optional, tag="10")]
+    #[prost(int64, optional, tag = "10")]
     pub due_date: ::core::option::Option<i64>,
-    #[prost(int64, optional, tag="11")]
+    #[prost(int64, optional, tag = "11")]
     pub reminder_date: ::core::option::Option<i64>,
-    #[prost(int64, tag="12")]
+    #[prost(int64, tag = "12")]
     pub created_date_time: i64,
-    #[prost(int64, tag="13")]
+    #[prost(int64, tag = "13")]
     pub last_modified_date_time: i64,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct List {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub name: ::prost::alloc::string::String,
-    #[prost(bool, tag="3")]
+    #[prost(bool, tag = "3")]
     pub is_owner: bool,
-    #[prost(string, optional, tag="5")]
+    #[prost(string, optional, tag = "5")]
     pub icon: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, tag="6")]
+    #[prost(string, tag = "6")]
     pub provider: ::prost::alloc::string::String,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TaskResponse {
-    #[prost(bool, tag="1")]
+    #[prost(bool, tag = "1")]
     pub successful: bool,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub message: ::prost::alloc::string::String,
-    #[prost(message, optional, tag="3")]
+    #[prost(message, optional, tag = "3")]
     pub task: ::core::option::Option<Task>,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListResponse {
-    #[prost(bool, tag="1")]
+    #[prost(bool, tag = "1")]
     pub successful: bool,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub message: ::prost::alloc::string::String,
-    #[prost(message, optional, tag="3")]
+    #[prost(message, optional, tag = "3")]
     pub list: ::core::option::Option<List>,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CountResponse {
-    #[prost(bool, tag="1")]
+    #[prost(bool, tag = "1")]
     pub successful: bool,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub message: ::prost::alloc::string::String,
-    #[prost(int64, tag="3")]
+    #[prost(int64, tag = "3")]
     pub count: i64,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
