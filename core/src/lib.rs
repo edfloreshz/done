@@ -8,17 +8,12 @@ pub mod services;
 pub use tonic::transport::Channel;
 
 impl List {
-	pub fn new(name: &str, icon: &str, provider: &str) -> Self {
-		let icon = if icon.is_empty() {
-			None
-		} else {
-			Some(icon.to_string())
-		};
+	pub fn new(name: &str, provider: &str) -> Self {
 		Self {
 			id: Uuid::new_v4().to_string(),
 			name: name.to_string(),
 			is_owner: true,
-			icon,
+            icon: Some("✍️".to_string()),
 			provider: provider.to_string(),
 		}
 	}
