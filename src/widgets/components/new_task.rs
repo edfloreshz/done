@@ -63,6 +63,30 @@ impl Component for NewTask {
                 }
             },
             gtk::Button {
+                set_icon_name: "daytime-sunrise-symbolic",
+                connect_clicked[sender] => move |_| {
+                    sender.input(NewTaskEvent::AddToMyDay)
+                }
+            },
+            gtk::Button {
+                set_icon_name: "appointment-soon-symbolic",
+                connect_clicked[sender] => move |_| {
+                    sender.input(NewTaskEvent::SetReminder(chrono::Utc::now().naive_utc()))
+                }
+            },
+            gtk::Button {
+                set_icon_name: "office-calendar-symbolic",
+                connect_clicked[sender] => move |_| {
+                    sender.input(NewTaskEvent::SetDueDate(chrono::Utc::now().naive_utc()))
+                }
+            },
+            gtk::Button {
+                set_icon_name: "text-editor-symbolic",
+                connect_clicked[sender] => move |_| {
+                    sender.input(NewTaskEvent::AddNote(String::new()))
+                }
+            },
+            gtk::Button {
                 set_icon_name: "mail-send-symbolic",
                 connect_clicked[sender] => move |_| {
                     sender.input(NewTaskEvent::AddTask)
@@ -85,7 +109,10 @@ impl Component for NewTask {
         match message {
             NewTaskEvent::AddToMyDay => (), // TODO: Add to my day.
             NewTaskEvent::SetTitle(title) => self.task.title = title,
-            NewTaskEvent::SetReminder(reminder) => self.task.reminder_date = Some(reminder.timestamp()),
+            NewTaskEvent::SetReminder(reminder) => {
+                self.task.reminder_date = Some(reminder.timestamp());
+                self.task.is_reminder_on = true;
+            },
             NewTaskEvent::SetDueDate(due) => self.task.due_date = Some(due.timestamp()),
             NewTaskEvent::AddNote(note) => self.task.body = Some(note),
             NewTaskEvent::AddTask => if !self.task.title.is_empty() && self.parent_list.is_some() {

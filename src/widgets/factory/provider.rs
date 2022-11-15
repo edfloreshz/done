@@ -1,12 +1,12 @@
+use std::time::Duration;
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
-use relm4::{gtk, view};
+use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 use relm4::factory::r#async::traits::AsyncFactoryComponent;
-use relm4::gtk::prelude::BoxExt;
 use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::List;
 
@@ -17,9 +17,16 @@ use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProviderModel {
+	pub is_connected: bool,
 	pub provider: PluginData,
 	pub list_factory: AsyncFactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ProviderStatus {
+	Connected,
+	Disconnected
 }
 
 #[derive(Debug)]
@@ -30,6 +37,7 @@ pub enum ProviderInput {
 	Forward(bool),
 	ListSelected(List),
 	SelectSmartProvider,
+	SetStatus(ProviderStatus)
 }
 
 #[derive(Debug)]
@@ -52,54 +60,61 @@ impl AsyncFactoryComponent for ProviderModel {
 
 	view! {
 		#[root]
-		gtk::Box {
-			remove: &root.first_child().unwrap(),
-			#[name(list_box)]
-			adw::PreferencesGroup {
-				#[name(expander)]
-				add = &adw::ExpanderRow {
-					set_title: self.provider.name.as_str(),
-					set_subtitle: self.provider.description.as_str(),
-					set_icon_name: Some(self.provider.icon.as_str()),
-					#[watch]
-					set_enable_expansion: !self.provider.lists.is_empty(),
-					set_expanded: !self.provider.lists.is_empty(),
-					add_action = &gtk::MenuButton {
+		#[name(list_box)]
+		adw::PreferencesGroup {
+			#[name(expander)]
+			add = &adw::ExpanderRow {
+				set_title: self.provider.name.as_str(),
+				set_subtitle: self.provider.description.as_str(),
+				set_icon_name: Some(self.provider.icon.as_str()),
+				#[watch]
+				set_enable_expansion: !self.provider.lists.is_empty() && self.is_connected,
+				set_expanded: !self.provider.lists.is_empty(),
+				add_action = if self.is_connected {
+					gtk::MenuButton {
 						set_icon_name: "value-increase-symbolic",
 						set_css_classes: &["flat", "image-button"],
 						set_valign: gtk::Align::Center,
 						set_direction: gtk::ArrowType::Right,
 						set_popover: Some(self.new_list_controller.widget())
-					},
-				},
-				add_controller = &gtk::GestureClick {
-					connect_pressed[sender, index] => move |_, _, _, _| {
-						if index.clone().current_index() <= 3 {
-							sender.input(ProviderInput::SelectSmartProvider);
-						}
-						sender.input(ProviderInput::Forward(index.clone().current_index() <= 3))
 					}
+                } else {
+                    gtk::Spinner {
+		                start: (),
+		                set_hexpand: false,
+	                }
+                },
+			},
+			add_controller = &gtk::GestureClick {
+				connect_pressed[sender, index] => move |_, _, _, _| {
+					if index.clone().current_index() <= 3 {
+						sender.input(ProviderInput::SelectSmartProvider);
+					}
+					sender.input(ProviderInput::Forward(index.clone().current_index() <= 3))
 				}
 			}
 		}
 	}
 
-	fn temporary_init(root: &mut Self::Root) {
-		view! {
-			#[local_ref]
-			root {
-                gtk::Spinner {
-	                start: (),
-	                set_hexpand: false,
-                }
-			}
-		}
-	}
-
 	async fn init_model(init: Self::Init, index: &DynamicIndex, sender: AsyncFactoryComponentSender<Self>) -> Self {
+		let provider = if let Ok(data) = init.data().await {
+			data
+		} else {
+			init.dummy()
+		};
+		let input = sender.clone();
+		tokio::spawn(async move {
+			loop {
+				async_std::task::sleep(Duration::from_secs(1)).await;
+				match provider.plugin.connect().await {
+					Ok(_) => input.input_sender().send(ProviderInput::SetStatus(ProviderStatus::Connected)),
+					Err(_) => input.input_sender().send(ProviderInput::SetStatus(ProviderStatus::Disconnected))
+				}
+			}
+		});
 		let index = index.current_index();
-		let provider = init.data().await.unwrap();
 		Self {
+			is_connected: false,
 			provider: provider.clone(),
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
@@ -163,6 +178,9 @@ impl AsyncFactoryComponent for ProviderModel {
 				sender.output(ProviderOutput::ProviderSelected(self.provider.plugin));
 				info!("Provider selected: {}", self.provider.name)
 			},
+			ProviderInput::SetStatus(status) => {
+				self.is_connected = status == ProviderStatus::Connected;
+			}
 		}
 	}
 
