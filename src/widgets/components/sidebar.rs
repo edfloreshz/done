@@ -128,7 +128,7 @@ impl SimpleAsyncComponent for SidebarModel {
 				match Plugin::from_str(&provider_id) {
 					Ok(provider) => {
 						let mut service = provider.connect().await.unwrap();
-						let list = List::new(&name, "✍️", &provider_id);
+						let list = List::new(&name, &provider_id);
 						let response = service.create_list(list.clone()).await.unwrap();
 
 						if response.into_inner().successful {
