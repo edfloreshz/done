@@ -1,32 +1,40 @@
-use crate::widgets::factory::task::TaskData;
 use crate::fl;
+use crate::widgets::components::new_task::{
+	NewTask, NewTaskEvent, NewTaskOutput,
+};
+use crate::widgets::factory::task::TaskData;
 use done_core::plugins::Plugin;
+use done_core::services::provider::provider_client::ProviderClient;
 use done_core::services::provider::{List, Task};
+use done_core::Channel;
+use relm4::adw::Toast;
+use relm4::component::{
+	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
+};
+use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 use relm4::factory::DynamicIndex;
 use relm4::{
-	gtk,
-	gtk::prelude::{
-		BoxExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
-	},
-	view, RelmWidgetExt,
+	adw, gtk,
+	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
+	view, Controller, RelmWidgetExt,
 };
+use relm4::{Component, ComponentController};
 use std::str::FromStr;
-use relm4::component::{AsyncComponent, AsyncComponentParts, AsyncComponentSender};
-use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
 
 pub struct ContentModel {
 	current_provider: Plugin,
 	parent_list: Option<List>,
 	tasks_factory: AsyncFactoryVecDeque<TaskData>,
+	new_task_component: Controller<NewTask>,
 }
 
 #[derive(Debug)]
 pub enum ContentInput {
-	AddTask(String),
+	AddTask(Task),
 	RemoveTask(DynamicIndex),
+	UpdateTask(Option<DynamicIndex>, Task),
 	SetTaskList(List),
 	SetProvider(Plugin),
-	UpdateTask(Option<DynamicIndex>, Task),
 }
 
 #[derive(Debug)]
@@ -36,7 +44,7 @@ pub enum ContentOutput {}
 impl AsyncComponent for ContentModel {
 	type Input = ContentInput;
 	type Output = ContentOutput;
-	type Init = Option<Task>;
+	type Init = Option<String>;
 	type Widgets = ContentWidgets;
 	type CommandOutput = ();
 
@@ -87,32 +95,21 @@ impl AsyncComponent for ContentModel {
 						},
 					}
 				},
-				gtk::Box {
-					set_orientation: gtk::Orientation::Horizontal,
-					set_margin_all: 12,
-					#[name(entry)]
-					gtk::Entry {
-						set_hexpand: true,
-						#[watch]
-						set_visible: model.parent_list.is_some(),
-						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
-						set_placeholder_text: Some(fl!("new-task")),
-						set_height_request: 42,
-						connect_activate[sender] => move |entry| {
-							let buffer = entry.buffer();
-							sender.input(ContentInput::AddTask(buffer.text()));
-							buffer.delete_text(0, None);
-						}
-					}
-				}
+				#[name(toasts)]
+				adw::ToastOverlay { },
+				append: model.new_task_component.widget()
 			},
 		}
 	}
 
-	async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+	async fn init(
+		_init: Self::Init,
+		root: Self::Root,
+		sender: AsyncComponentSender<Self>,
+	) -> AsyncComponentParts<Self> {
 		view! {
 			list_box = &gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
+				set_orientation: gtk::Orientation::Vertical,
 			}
 		}
 		let model = ContentModel {
@@ -122,19 +119,107 @@ impl AsyncComponent for ContentModel {
 				list_box.clone(),
 				sender.input_sender(),
 			),
+			new_task_component: NewTask::builder().launch(None).forward(
+				sender.input_sender(),
+				|message| match message {
+					NewTaskOutput::AddTask(task) => ContentInput::AddTask(task),
+				},
+			),
 		};
 		let widgets = view_output!();
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update(&mut self, message: Self::Input, _sender: AsyncComponentSender<Self>) {
+	async fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: AsyncComponentSender<Self>,
+	) {
+		let mut service: Option<ProviderClient<Channel>> = None;
+		if let Some(parent) = &self.parent_list {
+			if let Ok(provider) = Plugin::from_str(&parent.provider) {
+				match provider.connect().await {
+					Ok(connection) => service = Some(connection),
+					Err(_) => widgets.toasts.add_toast(&toast(format!(
+						"Failed to connect to {} service.",
+						&parent.provider
+					))),
+				}
+			} else {
+				widgets.toasts.add_toast(&toast(format!(
+					"Failed to find plugin with name: {}.",
+					&parent.provider
+				)))
+			}
+		}
 		match message {
-			ContentInput::SetProvider(provider) => {
-				self.current_provider = provider;
-				self.parent_list = None;
+			ContentInput::AddTask(task) => {
+				if let Some(mut service) = service {
+					match service.create_task(task.clone()).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								self
+									.tasks_factory
+									.guard()
+									.push_back(TaskData { data: task });
+								widgets.toasts.add_toast(&toast_str("Task added"))
+							} else {
+								widgets.toasts.add_toast(&toast_str(&response.message))
+							}
+						},
+						Err(err) => widgets.toasts.add_toast(&toast(format!("{:?}", err))),
+					}
+				}
+			},
+			ContentInput::RemoveTask(index) => {
+				if let Some(mut service) = service {
+					let mut guard = self.tasks_factory.guard();
+					let task = guard.get(index.current_index()).unwrap();
+					match service.delete_task(task.clone().data.id).await {
+						Ok(response) => {
+							if response.into_inner().successful {
+								guard.remove(index.current_index());
+								widgets.toasts.add_toast(&toast_str("Task removed."))
+							} else {
+								widgets
+									.toasts
+									.add_toast(&toast_str("Failed to remove task."))
+							}
+						},
+						Err(err) => widgets.toasts.add_toast(&toast(format!("{:?}", err))),
+					}
+				}
+			},
+			ContentInput::UpdateTask(index, task) => {
+				if let Some(mut service) = service {
+					match service.update_task(task).await {
+						Ok(response) => {
+							if response.into_inner().successful {
+								if let Some(index) = index {
+									if self.parent_list.as_ref().unwrap().provider == "starred" {
+										self.tasks_factory.guard().remove(index.current_index());
+									}
+								}
+								widgets.toasts.add_toast(&toast_str("Task updated."))
+							} else {
+								widgets
+									.toasts
+									.add_toast(&toast_str("Failed to update task."))
+							}
+						},
+						Err(err) => widgets.toasts.add_toast(&toast(format!("{:?}", err))),
+					}
+				}
 			},
 			ContentInput::SetTaskList(list) => {
 				self.parent_list = Some(list.clone());
+				self
+					.new_task_component
+					.sender()
+					.send(NewTaskEvent::SetParentList(self.parent_list.clone()));
+
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
 					let mut service = provider.connect().await.unwrap();
 
@@ -166,68 +251,32 @@ impl AsyncComponent for ContentModel {
 									.guard()
 									.push_back(TaskData { data: task });
 							},
-							None => ()
+							None => (),
 						}
-
 					}
 				} else {
-					todo!("Display connection error")
+					widgets
+						.toasts
+						.add_toast(&toast_str("Failed to identify the provider."))
 				}
 			},
-			_ => {
-				let parent_list = &self.parent_list;
-				if let Some(parent) = parent_list {
-					if let Ok(provider) = Plugin::from_str(&parent.provider) {
-						let mut service = provider.connect().await.unwrap();
-						match message {
-							ContentInput::AddTask(title) => {
-								let task = Task::new(title, parent.id.to_owned());
-								let response = service
-									.create_task(task.clone())
-									.await
-									.unwrap();
-
-								if response.into_inner().successful {
-									self
-										.tasks_factory
-										.guard()
-										.push_back(TaskData { data: task });
-								}
-							},
-							ContentInput::RemoveTask(index) => {
-								let mut guard = self.tasks_factory.guard();
-								let task = guard.get(index.current_index()).unwrap();
-								let response = service
-									.delete_task(task.clone().data.id)
-									.await
-									.unwrap();
-
-								if response.into_inner().successful {
-									guard.remove(index.current_index());
-								}
-							},
-							ContentInput::UpdateTask(index, task) => {
-								let response = service
-									.update_task(task)
-									.await
-									.unwrap();
-
-								if response.into_inner().successful {
-									if let Some(index) = index {
-										if self.parent_list.as_ref().unwrap().provider == "starred" {
-											self.tasks_factory.guard().remove(index.current_index());
-										}
-									}
-								}
-							},
-							_ => {},
-						}
-					}
-					else {
-						todo!("Display connection error")
-					}
-				}
+			ContentInput::SetProvider(provider) => {
+				self.current_provider = provider;
+				self.parent_list = None;
+				self
+					.new_task_component
+					.sender()
+					.send(NewTaskEvent::SetParentList(None));
 			},
 		}
+		self.update_view(widgets, sender)
 	}
+}
+
+pub fn toast_str(title: &str) -> adw::Toast {
+	Toast::builder().title(&*title).timeout(1).build()
+}
+
+pub fn toast(title: String) -> adw::Toast {
+	Toast::builder().title(&*title).timeout(1).build()
 }

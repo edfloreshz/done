@@ -153,8 +153,7 @@ impl Provider for LocalService {
 
 			diesel::insert_into(tasks)
 				.values(&task)
-				.execute(&mut establish_connection()?)
-				.context("Failed to create task.")?;
+				.execute(&mut establish_connection()?)?;
 
 			Ok(())
 		};
