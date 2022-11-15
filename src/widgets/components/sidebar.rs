@@ -18,7 +18,6 @@ use crate::widgets::factory::list::ListData;
 #[derive(Debug)]
 pub struct SidebarModel {
 	provider_factory: AsyncFactoryVecDeque<ProviderModel>,
-	is_empty: bool
 }
 
 #[allow(dead_code)]
@@ -64,7 +63,7 @@ impl SimpleAsyncComponent for SidebarModel {
 						set_css_classes: &["navigation-sidebar"],
 						gtk::CenterBox {
 							#[watch]
-							set_visible: model.is_empty,
+							set_visible: false, // TODO: Show when no provider is enabled.
 							set_orientation: gtk::Orientation::Vertical,
 							set_halign: gtk::Align::Center,
 							set_valign: gtk::Align::Center,
@@ -104,7 +103,6 @@ impl SimpleAsyncComponent for SidebarModel {
 				gtk::Box::default(),
 				sender.input_sender(),
 			),
-			is_empty: Plugin::connected_count().await == 0
 		};
 
 		let providers_container = model.provider_factory.widget();
@@ -112,11 +110,8 @@ impl SimpleAsyncComponent for SidebarModel {
 		let widgets = view_output!();
 
 		for provider in Plugin::list() {
-			if provider.connect().await.is_ok()  {
-				info!("Connected to {:?} plug-in.", provider);
-				model.provider_factory.guard().push_back(provider);
-				info!("Added {:?} provider to the sidebar", provider)
-			}
+			model.provider_factory.guard().push_back(provider);
+			info!("Added {:?} provider to the sidebar", provider)
 		}
 
 		AsyncComponentParts { model, widgets }
