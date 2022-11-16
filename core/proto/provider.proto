@@ -10,7 +10,7 @@ service Provider {
     rpc GetDescription (Empty) returns (google.protobuf.StringValue);
     rpc GetIconName (Empty) returns (google.protobuf.StringValue);
 
-    rpc ReadAllTasks (Empty) returns (TaskResponse);
+    rpc ReadAllTasks (Empty) returns (stream TaskResponse);
     rpc ReadTasksFromList(google.protobuf.StringValue) returns (stream TaskResponse);
     rpc ReadTaskCountFromList(google.protobuf.StringValue) returns (CountResponse);
     rpc CreateTask (Task) returns (TaskResponse);

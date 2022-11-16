@@ -1,9 +1,9 @@
 use crate::services::provider::provider_client::ProviderClient;
+use crate::services::provider::{Empty, List};
 use anyhow::Result;
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
 use tonic::transport::Channel;
-use crate::services::provider::{Empty, List};
 
 #[derive(Debug, Clone)]
 pub struct PluginData {
@@ -12,7 +12,7 @@ pub struct PluginData {
 	pub name: String,
 	pub description: String,
 	pub icon: String,
-	pub lists: Vec<List>
+	pub lists: Vec<List>,
 }
 
 #[derive(Debug, EnumIter, EnumString, Display, Copy, Clone)]
@@ -58,19 +58,8 @@ impl Plugin {
 			name: connector.get_name(Empty {}).await?.into_inner(),
 			description: connector.get_description(Empty {}).await?.into_inner(),
 			icon: connector.get_icon_name(Empty {}).await?.into_inner(),
-			lists
+			lists,
 		};
 		Ok(data)
-	}
-
-	pub fn dummy(&self) -> PluginData {
-		PluginData {
-			plugin: self.clone(),
-			id: "".to_string(),
-			name: self.to_string(),
-			description: "".to_string(),
-			icon: "".to_string(),
-			lists: vec![]
-		}
 	}
 }

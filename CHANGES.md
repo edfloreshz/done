@@ -6,7 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added Brazilian Portugese 🇧🇷 translation
+- Added Brazilian Portuguese 🇧🇷 translation
+- Moved Development banner to the bottom.
+- Added support for providers using gRPC.
+- Enabled logging.
+- Moved app logic to a different crate.
+- Implemented local service.
+- Updated `Relm4` to use async components and factories.
+- Added two new icons.
+- Added a new screen to the sidebar to show when it's empty.
+- Added two new strings to localization files.
+- Missing translations in German, Italian and Portuguese.
+- The app makes use of `adw::Toast` to display notifications.
 
 ## [0.1.2] - 2022-08-22
 

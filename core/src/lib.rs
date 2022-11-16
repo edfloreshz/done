@@ -13,7 +13,7 @@ impl List {
 			id: Uuid::new_v4().to_string(),
 			name: name.to_string(),
 			is_owner: true,
-            icon: Some("✍️".to_string()),
+			icon: Some("✍️".to_string()),
 			provider: provider.to_string(),
 		}
 	}
