@@ -104,6 +104,12 @@ Arch Linux:
 sudo pacman -S libadwaita gtk4 sqlite
 ```
 
+## Debug
+To enable logging set `RUST_LOG` to `done=info`
+```bash
+RUST_LOG=done=info
+```
+
 Copyright and licensing
 -----------------------
 

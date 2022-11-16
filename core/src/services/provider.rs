@@ -261,7 +261,10 @@ pub mod provider_client {
         pub async fn read_all_tasks(
             &mut self,
             request: impl tonic::IntoRequest<super::Empty>,
-        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status> {
+        ) -> Result<
+            tonic::Response<tonic::codec::Streaming<super::TaskResponse>>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -275,7 +278,7 @@ pub mod provider_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/provider.Provider/ReadAllTasks",
             );
-            self.inner.unary(request.into_request(), path, codec).await
+            self.inner.server_streaming(request.into_request(), path, codec).await
         }
         pub async fn read_tasks_from_list(
             &mut self,
@@ -517,10 +520,16 @@ pub mod provider_server {
             &self,
             request: tonic::Request<super::Empty>,
         ) -> Result<tonic::Response<::prost::alloc::string::String>, tonic::Status>;
+        ///Server streaming response type for the ReadAllTasks method.
+        type ReadAllTasksStream: futures_core::Stream<
+                Item = Result<super::TaskResponse, tonic::Status>,
+            >
+            + Send
+            + 'static;
         async fn read_all_tasks(
             &self,
             request: tonic::Request<super::Empty>,
-        ) -> Result<tonic::Response<super::TaskResponse>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::ReadAllTasksStream>, tonic::Status>;
         ///Server streaming response type for the ReadTasksFromList method.
         type ReadTasksFromListStream: futures_core::Stream<
                 Item = Result<super::TaskResponse, tonic::Status>,
@@ -788,11 +797,12 @@ pub mod provider_server {
                 "/provider.Provider/ReadAllTasks" => {
                     #[allow(non_camel_case_types)]
                     struct ReadAllTasksSvc<T: Provider>(pub Arc<T>);
-                    impl<T: Provider> tonic::server::UnaryService<super::Empty>
+                    impl<T: Provider> tonic::server::ServerStreamingService<super::Empty>
                     for ReadAllTasksSvc<T> {
                         type Response = super::TaskResponse;
+                        type ResponseStream = T::ReadAllTasksStream;
                         type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
+                            tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
                         fn call(
@@ -818,7 +828,7 @@ pub mod provider_server {
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             );
-                        let res = grpc.unary(method, req).await;
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

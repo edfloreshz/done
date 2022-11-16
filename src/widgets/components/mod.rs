@@ -1,3 +1,3 @@
 pub mod content;
-pub mod sidebar;
 pub mod new_task;
+pub mod sidebar;

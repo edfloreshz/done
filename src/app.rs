@@ -1,20 +1,23 @@
 use crate::config::PROFILE;
 use crate::fl;
-use crate::widgets::components::content::{ContentInput, ContentModel};
+use crate::setup::main_app;
+use crate::widgets::components::content::{
+	ContentInput, ContentModel, ContentOutput,
+};
 use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
 use crate::widgets::modals::about::AboutDialog;
-use crate::setup::main_app;
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
 use gtk::prelude::*;
+use relm4::adw::Toast;
+use relm4::component::AsyncController;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
 	component::{AsyncComponent, AsyncComponentController},
-	gtk, ComponentBuilder, ComponentController, ComponentParts, ComponentSender,
-	Controller, SimpleComponent,
+	gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
+	ComponentSender, Controller,
 };
-use relm4::component::AsyncController;
 
 pub struct App {
 	message: Option<AppMsg>,
@@ -44,9 +47,10 @@ impl App {
 
 #[derive(Debug)]
 pub enum AppMsg {
-	ListSelected(List),
-	ProviderSelected(Plugin),
+	SelectList(List),
+	SelectProvider(Plugin),
 	CloseWarning,
+	Notify(String),
 	Folded,
 	Unfolded,
 	Forward,
@@ -65,7 +69,8 @@ relm4::new_stateless_action!(AboutAction, WindowActionGroup, "about");
 relm4::new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
 #[relm4::component(pub)]
-impl SimpleComponent for App {
+impl Component for App {
+	type CommandOutput = ();
 	type Input = AppMsg;
 	type Output = ();
 	type Widgets = AppWidgets;
@@ -112,8 +117,9 @@ impl SimpleComponent for App {
 				}
 			},
 
+
 			#[name = "overlay"]
-			gtk::Overlay {
+			adw::ToastOverlay {
 				#[wrap(Some)]
 				set_child: stack = &gtk::Stack {
 					set_hexpand: true,
@@ -201,9 +207,37 @@ impl SimpleComponent for App {
 				},
 				AppMsg::Forward => leaflet.set_visible_child(content),
 				AppMsg::Back => leaflet.set_visible_child(sidebar),
-				_ => {},
+				_ => (),
 			}
 		}
+	}
+
+	fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: ComponentSender<Self>,
+	) {
+		match message {
+			AppMsg::Quit => main_app().quit(),
+			AppMsg::CloseWarning => self.warning_revealed = false,
+			AppMsg::SelectList(list) => {
+				self.content_title = Some(list.name.clone());
+				self
+					.content_controller
+					.sender()
+					.send(ContentInput::SetTaskList(list))
+			},
+			AppMsg::SelectProvider(provider) => self
+				.content_controller
+				.sender()
+				.send(ContentInput::SetProvider(provider)),
+			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
+			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
+				self.message = Some(message)
+			},
+		}
+		self.update_view(widgets, sender)
 	}
 
 	fn init(
@@ -212,22 +246,27 @@ impl SimpleComponent for App {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
-		let mut model = App::new(
-			SidebarModel::builder().launch(()).forward(
-				sender.input_sender(),
-				|message| match message {
-					SidebarOutput::ListSelected(list) => AppMsg::ListSelected(list),
-					SidebarOutput::Forward => AppMsg::Forward,
-					SidebarOutput::ProviderSelected(plugin) => {
-						AppMsg::ProviderSelected(plugin)
-					},
+
+		let sidebar_controller = SidebarModel::builder().launch(()).forward(
+			sender.input_sender(),
+			|message| match message {
+				SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
+				SidebarOutput::Forward => AppMsg::Forward,
+				SidebarOutput::ProviderSelected(plugin) => {
+					AppMsg::SelectProvider(plugin)
 				},
-			),
-			ContentModel::builder()
-				.launch(None)
-				.forward(sender.input_sender(), |message| match message {}),
-			None,
+				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
+			},
 		);
+
+		let content_controller = ContentModel::builder().launch(None).forward(
+			sender.input_sender(),
+			|message| match message {
+				ContentOutput::Notify(msg) => AppMsg::Notify(msg),
+			},
+		);
+
+		let mut model = App::new(sidebar_controller, content_controller, None);
 
 		let widgets = view_output!();
 
@@ -268,24 +307,11 @@ impl SimpleComponent for App {
 
 		ComponentParts { model, widgets }
 	}
+}
 
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-		match message {
-			AppMsg::Quit => main_app().quit(),
-			AppMsg::ListSelected(list) => {
-				self.warning_revealed = false;
-				self.content_title = Some(list.name.clone());
-				self
-					.content_controller
-					.sender()
-					.send(ContentInput::SetTaskList(list))
-			},
-			AppMsg::CloseWarning => self.warning_revealed = false,
-			AppMsg::ProviderSelected(provider) => self
-				.content_controller
-				.sender()
-				.send(ContentInput::SetProvider(provider)),
-			_ => self.message = Some(message),
-		}
-	}
+pub fn toast(title: impl ToString) -> Toast {
+	Toast::builder()
+		.title(title.to_string().as_str())
+		.timeout(1)
+		.build()
 }

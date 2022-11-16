@@ -1,5 +1,5 @@
 use done_core::services::provider::TaskStatus;
-use relm4::factory::r#async::traits::AsyncFactoryComponent;
+use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
 use relm4::{
 	gtk,
@@ -29,6 +29,7 @@ pub enum TaskOutput {
 #[derive(Debug, Clone)]
 pub struct TaskData {
 	pub data: Task,
+	pub loaded: bool,
 }
 
 #[relm4::factory(pub async)]
@@ -133,15 +134,17 @@ impl AsyncFactoryComponent for TaskData {
 		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		match message {
-			TaskInput::SetCompleted(completed) => {
-				self.data.status = if completed {
+			TaskInput::SetCompleted(toggled) => {
+				self.data.status = if toggled {
 					TaskStatus::Completed as i32
 				} else {
 					TaskStatus::NotStarted as i32
 				};
-				sender
-					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.data.clone()));
+				if self.loaded {
+					sender
+						.output_sender()
+						.send(TaskOutput::UpdateTask(None, self.data.clone()));
+				}
 			},
 			TaskInput::Favorite(index) => {
 				self.data.favorite = !self.data.favorite;
@@ -157,6 +160,7 @@ impl AsyncFactoryComponent for TaskData {
 					.send(TaskOutput::UpdateTask(None, self.data.clone()));
 			},
 		}
+		self.loaded = true;
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {

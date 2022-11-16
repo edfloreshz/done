@@ -1,14 +1,13 @@
-use std::time::Duration;
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
+use done_core::plugins::{Plugin, PluginData};
+use done_core::services::provider::List;
+use relm4::factory::AsyncFactoryComponent;
+use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
-use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
-use relm4::factory::r#async::traits::AsyncFactoryComponent;
-use done_core::plugins::{Plugin, PluginData};
-use done_core::services::provider::List;
 
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::factory::list::ListData;
@@ -23,21 +22,15 @@ pub struct ProviderModel {
 	pub new_list_controller: Controller<NewListModel>,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ProviderStatus {
-	Connected,
-	Disconnected
-}
-
 #[derive(Debug)]
 pub enum ProviderInput {
 	RequestAddList(usize, String, String),
 	AddList(ListData),
 	DeleteTaskList(DynamicIndex, String),
-	Forward(bool),
+	Forward,
 	ListSelected(List),
 	SelectSmartProvider,
-	SetStatus(ProviderStatus)
+	Notify(String),
 }
 
 #[derive(Debug)]
@@ -45,7 +38,8 @@ pub enum ProviderOutput {
 	ListSelected(List),
 	ProviderSelected(Plugin),
 	Forward,
-	AddListToProvider(usize, String, String)
+	AddListToProvider(usize, String, String),
+	Notify(String),
 }
 
 #[relm4::factory(pub async)]
@@ -64,8 +58,11 @@ impl AsyncFactoryComponent for ProviderModel {
 		adw::PreferencesGroup {
 			#[name(expander)]
 			add = &adw::ExpanderRow {
+				#[watch]
 				set_title: self.provider.name.as_str(),
+				#[watch]
 				set_subtitle: self.provider.description.as_str(),
+				#[watch]
 				set_icon_name: Some(self.provider.icon.as_str()),
 				#[watch]
 				set_enable_expansion: !self.provider.lists.is_empty() && self.is_connected,
@@ -78,43 +75,33 @@ impl AsyncFactoryComponent for ProviderModel {
 						set_direction: gtk::ArrowType::Right,
 						set_popover: Some(self.new_list_controller.widget())
 					}
-                } else {
-                    gtk::Spinner {
-		                start: (),
-		                set_hexpand: false,
-	                }
-                },
+								} else {
+										gtk::Spinner {
+										start: (),
+										set_hexpand: false,
+									}
+								},
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender, index] => move |_, _, _, _| {
 					if index.clone().current_index() <= 3 {
 						sender.input(ProviderInput::SelectSmartProvider);
+						sender.input(ProviderInput::Forward)
 					}
-					sender.input(ProviderInput::Forward(index.clone().current_index() <= 3))
 				}
 			}
 		}
 	}
 
-	async fn init_model(init: Self::Init, index: &DynamicIndex, sender: AsyncFactoryComponentSender<Self>) -> Self {
-		let provider = if let Ok(data) = init.data().await {
-			data
-		} else {
-			init.dummy()
-		};
-		let input = sender.clone();
-		tokio::spawn(async move {
-			loop {
-				async_std::task::sleep(Duration::from_secs(1)).await;
-				match provider.plugin.connect().await {
-					Ok(_) => input.input_sender().send(ProviderInput::SetStatus(ProviderStatus::Connected)),
-					Err(_) => input.input_sender().send(ProviderInput::SetStatus(ProviderStatus::Disconnected))
-				}
-			}
-		});
+	async fn init_model(
+		init: Self::Init,
+		index: &DynamicIndex,
+		sender: AsyncFactoryComponentSender<Self>,
+	) -> Self {
+		let provider = init.data().await.unwrap();
 		let index = index.current_index();
 		Self {
-			is_connected: false,
+			is_connected: true,
 			provider: provider.clone(),
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
@@ -131,14 +118,25 @@ impl AsyncFactoryComponent for ProviderModel {
 		}
 	}
 
-	fn init_widgets(&mut self, index: &DynamicIndex, root: &Self::Root, _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget, sender: AsyncFactoryComponentSender<Self>) -> Self::Widgets {
+	fn init_widgets(
+		&mut self,
+		index: &DynamicIndex,
+		root: &Self::Root,
+		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+		sender: AsyncFactoryComponentSender<Self>,
+	) -> Self::Widgets {
 		let widgets = view_output!();
 
-		self.list_factory =
-			AsyncFactoryVecDeque::new(widgets.expander.clone(), sender.input_sender());
+		self.list_factory = AsyncFactoryVecDeque::new(
+			widgets.expander.clone(),
+			sender.input_sender(),
+		);
 
 		for list in &self.provider.lists {
-			self.list_factory.guard().push_back(ListData { data: list.clone() });
+			self
+				.list_factory
+				.guard()
+				.push_back(ListData { data: list.clone() });
 		}
 
 		widgets
@@ -152,24 +150,24 @@ impl AsyncFactoryComponent for ProviderModel {
 		match message {
 			ProviderInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());
-				let index = self.provider.lists.iter().position(|list| list.id == list_id).unwrap();
+				let index = self
+					.provider
+					.lists
+					.iter()
+					.position(|list| list.id == list_id)
+					.unwrap();
 				self.provider.lists.remove(index);
 				self.provider = self.provider.plugin.data().await.unwrap();
 				info!("Deleted task list with id: {}", list_id);
 			},
-			ProviderInput::RequestAddList(index, provider_id, name) => {
-				sender.output(ProviderOutput::AddListToProvider(index, provider_id, name))
-			},
+			ProviderInput::RequestAddList(index, provider_id, name) => sender
+				.output(ProviderOutput::AddListToProvider(index, provider_id, name)),
 			ProviderInput::AddList(list) => {
 				self.list_factory.guard().push_back(list);
 				self.provider = self.provider.plugin.data().await.unwrap();
 				info!("List added to {}", self.provider.name)
-			}
-			ProviderInput::Forward(forward) => {
-				if forward {
-					sender.output(ProviderOutput::Forward)
-				}
 			},
+			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
 			ProviderInput::ListSelected(list) => {
 				sender.output(ProviderOutput::ListSelected(list.clone()));
 				info!("List selected: {}", list.name)
@@ -178,9 +176,7 @@ impl AsyncFactoryComponent for ProviderModel {
 				sender.output(ProviderOutput::ProviderSelected(self.provider.plugin));
 				info!("Provider selected: {}", self.provider.name)
 			},
-			ProviderInput::SetStatus(status) => {
-				self.is_connected = status == ProviderStatus::Connected;
-			}
+			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
 		}
 	}
 
@@ -188,10 +184,13 @@ impl AsyncFactoryComponent for ProviderModel {
 		let output = match output {
 			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
 			ProviderOutput::Forward => SidebarInput::Forward,
-			ProviderOutput::ProviderSelected(provider) => SidebarInput::ProviderSelected(provider),
+			ProviderOutput::ProviderSelected(provider) => {
+				SidebarInput::ProviderSelected(provider)
+			},
 			ProviderOutput::AddListToProvider(index, provider_id, name) => {
 				SidebarInput::AddListToProvider(index, provider_id, name)
-			}
+			},
+			ProviderOutput::Notify(msg) => SidebarInput::Notify(msg),
 		};
 		Some(output)
 	}
