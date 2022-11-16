@@ -1,19 +1,19 @@
+use crate::fl;
+use crate::widgets::factory::list::ListData;
+use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
+use done_core::plugins::Plugin;
+use done_core::services::provider::List;
 use relm4::adw;
 use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
 };
+use relm4::factory::AsyncFactoryVecDeque;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	RelmWidgetExt,
 };
 use std::str::FromStr;
-use relm4::factory::r#async::collections::AsyncFactoryVecDeque;
-use crate::fl;
-use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
-use done_core::plugins::Plugin;
-use done_core::services::provider::List;
-use crate::widgets::factory::list::ListData;
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -28,6 +28,7 @@ pub enum SidebarInput {
 	ProviderSelected(Plugin),
 	RemoveService(String),
 	Forward,
+	Notify(String),
 }
 
 #[allow(dead_code)]
@@ -36,6 +37,7 @@ pub enum SidebarOutput {
 	ListSelected(List),
 	ProviderSelected(Plugin),
 	Forward,
+	Notify(String),
 }
 
 #[relm4::component(pub async)]
@@ -110,29 +112,45 @@ impl SimpleAsyncComponent for SidebarModel {
 		let widgets = view_output!();
 
 		for provider in Plugin::list() {
-			model.provider_factory.guard().push_back(provider);
-			info!("Added {:?} provider to the sidebar", provider)
+			if provider.connect().await.is_ok() {
+				model.provider_factory.guard().push_back(provider);
+				info!("Added {:?} provider to the sidebar", provider)
+			}
 		}
 
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
+	async fn update(
+		&mut self,
+		message: Self::Input,
+		sender: AsyncComponentSender<Self>,
+	) {
 		match message {
 			SidebarInput::AddListToProvider(index, provider_id, name) => {
 				match Plugin::from_str(&provider_id) {
-					Ok(provider) => {
-						let mut service = provider.connect().await.unwrap();
-						let list = List::new(&name, &provider_id);
-						let response = service.create_list(list.clone()).await.unwrap();
-
-						if response.into_inner().successful {
-							self
-								.provider_factory
-								.send(index, ProviderInput::AddList(ListData { data: list }));
-						}
+					Ok(provider) => match provider.connect().await {
+						Ok(mut service) => {
+							let list = List::new(&name, &provider_id);
+							match service.create_list(list.clone()).await {
+								Ok(response) => {
+									let response = response.into_inner();
+									if response.successful {
+										self.provider_factory.send(
+											index,
+											ProviderInput::AddList(ListData { data: list }),
+										);
+									}
+									sender.output(SidebarOutput::Notify(response.message))
+								},
+								Err(err) => {
+									sender.output(SidebarOutput::Notify(err.to_string()))
+								},
+							}
+						},
+						Err(err) => sender.output(SidebarOutput::Notify(err.to_string())),
 					},
-					Err(err) => eprintln!("{}", err),
+					Err(err) => sender.output(SidebarOutput::Notify(err.to_string())),
 				}
 			},
 			SidebarInput::RemoveService(_) => todo!(),
@@ -143,6 +161,7 @@ impl SimpleAsyncComponent for SidebarModel {
 			SidebarInput::ProviderSelected(provider) => {
 				sender.output(SidebarOutput::ProviderSelected(provider))
 			},
+			SidebarInput::Notify(msg) => sender.output(SidebarOutput::Notify(msg)),
 		}
 	}
 }

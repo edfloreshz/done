@@ -74,30 +74,40 @@ impl Provider for LocalService {
 		Ok(Response::new(response))
 	}
 
-	async fn read_all_tasks(
-		&self,
-		_request: Request<Empty>,
-	) -> Result<Response<TaskResponse>, Status> {
-		todo!();
-		// let mut response = TaskResponse::default();
-		//
-		// let send_request = || -> anyhow::Result<Vec<Task>> {
-		// 	let result: Vec<QueryableTask> = tasks
-		// 		.load::<QueryableTask>(&mut establish_connection()?)
-		// 		.context("Failed to fetch list of tasks.")?;
-		// 	let results: Vec<Task> =
-		// 		result.iter().map(|t| t.clone().into()).collect();
-		// 	Ok(results)
-		// };
-		//
-		// match send_request() {
-		// 	Ok(value) => {
-		// 		response.task = Some(value);
-		// 		response.successful = true;
-		// 	},
-		// 	Err(err) => response.message = err.to_string(),
-		// }
-		// Ok(Response::new(response))
+	type ReadAllTasksStream = ReceiverStream<Result<TaskResponse, Status>>;
+
+	async fn read_all_tasks(&self, _request: Request<Empty>) -> Result<Response<Self::ReadAllTasksStream>, Status> {
+		let (tx, rx) = tokio::sync::mpsc::channel(4);
+
+		let send_request = || -> anyhow::Result<Vec<Task>> {
+			let result: Vec<QueryableTask> = tasks
+				.load::<QueryableTask>(&mut establish_connection()?)
+				.context("Failed to fetch list of tasks.")?;
+			let results: Vec<Task> =
+				result.iter().map(|t| t.clone().into()).collect();
+			Ok(results)
+		};
+
+		let mut response = TaskResponse::default();
+
+		tokio::spawn(async move {
+			match send_request() {
+				Ok(value) => {
+					response.successful = true;
+					for task in &value[..] {
+						let response = TaskResponse {
+							successful: true,
+							message: "Task fetched succesfully.".to_string(),
+							task: Some(task.clone()),
+						};
+						tx.send(Ok(response)).await.unwrap();
+					}
+				},
+				Err(err) => response.message = err.to_string(),
+			}
+		});
+
+		Ok(Response::new(ReceiverStream::new(rx)))
 	}
 
 	type ReadTasksFromListStream = ReceiverStream<Result<TaskResponse, Status>>;
@@ -128,7 +138,7 @@ impl Provider for LocalService {
 					for task in &value[..] {
 						let response = TaskResponse {
 							successful: true,
-							message: "".to_string(),
+							message: "Task fetched successfully".to_string(),
 							task: Some(task.clone()),
 						};
 						tx.send(Ok(response)).await.unwrap();
@@ -162,6 +172,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.task = None;
 				response.successful = true;
+				response.message = "Task added successfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -187,6 +198,7 @@ impl Provider for LocalService {
 			Ok(value) => {
 				response.task = Some(value);
 				response.successful = true;
+				response.message = "Task fetched successfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -228,6 +240,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.task = None;
 				response.successful = true;
+				response.message = "Task updated successfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -243,8 +256,7 @@ impl Provider for LocalService {
 
 		let send_request = || -> anyhow::Result<()> {
 			diesel::delete(tasks.filter(id_task.eq(id)))
-				.execute(&mut establish_connection()?)
-				.context("Failed to delete task")?;
+				.execute(&mut establish_connection()?)?;
 
 			Ok(())
 		};
@@ -253,6 +265,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.task = None;
 				response.successful = true;
+				response.message = "Task removed successfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -269,8 +282,8 @@ impl Provider for LocalService {
 
 		let send_request = || -> anyhow::Result<Vec<List>> {
 			let results = lists
-				.load::<QueryableList>(&mut establish_connection()?)
-				.context("Failed to read all lists")?;
+				.load::<QueryableList>(&mut establish_connection()?)?;
+
 			let results: Vec<List> =
 				results.iter().map(|t| t.clone().into()).collect();
 			Ok(results)
@@ -285,7 +298,7 @@ impl Provider for LocalService {
 					for list in &value[..] {
 						let response = ListResponse {
 							successful: true,
-							message: "".to_string(),
+							message: "List fetched succesfully.".to_string(),
 							list: Some(list.clone()),
 						};
 						tx.send(Ok(response)).await.unwrap();
@@ -310,8 +323,7 @@ impl Provider for LocalService {
 
 			diesel::insert_into(lists)
 				.values(&list)
-				.execute(&mut establish_connection()?)
-				.context("Failed to create list.")?;
+				.execute(&mut establish_connection()?)?;
 
 			Ok(())
 		};
@@ -320,6 +332,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.list = None;
 				response.successful = true;
+				response.message = "List added succesfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -343,6 +356,7 @@ impl Provider for LocalService {
 			Ok(value) => {
 				response.list = Some(value);
 				response.successful = true;
+				response.message = "List fetched succesfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -376,6 +390,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.list = None;
 				response.successful = true;
+				response.message = "List updated succesfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}
@@ -400,6 +415,7 @@ impl Provider for LocalService {
 			Ok(()) => {
 				response.list = None;
 				response.successful = true;
+				response.message = "List removed succesfully.".to_string()
 			},
 			Err(err) => response.message = err.to_string(),
 		}

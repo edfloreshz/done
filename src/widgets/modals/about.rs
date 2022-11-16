@@ -1,6 +1,6 @@
 use gettextrs::gettext;
 use gtk::prelude::GtkWindowExt;
-use relm4::{ gtk, ComponentParts, ComponentSender, SimpleComponent };
+use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::config::{APP_ID, VERSION};
 
@@ -17,9 +17,7 @@ impl SimpleComponent for AboutDialog {
 	type Root = ();
 	type Widgets = AboutDialogWidgets;
 
-	fn init_root() -> Self::Root {
-
-	}
+	fn init_root() -> Self::Root {}
 
 	fn init(
 		main_window: Self::Init,
@@ -43,7 +41,7 @@ impl SimpleComponent for AboutDialog {
 			.program_name("Done")
 			.website_label("Website")
 			.copyright("© 2022 Eduardo Flores")
-			.license_type(gtk::License::Gpl20Only)
+			.license_type(gtk::License::Mpl20)
 			.website("https://done.edfloreshz.dev/")
 			.version(VERSION)
 			.translator_credits(&gettext("translator-credits"))

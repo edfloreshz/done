@@ -1,10 +1,8 @@
 use relm4::adw::prelude::ActionRowExt;
-use relm4::factory::r#async::traits::AsyncFactoryComponent;
-use relm4::factory::{
-	AsyncFactoryComponentSender, DynamicIndex, FactoryView,
-};
-use std::str::FromStr;
+use relm4::factory::AsyncFactoryComponent;
+use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
 use relm4::view;
+use std::str::FromStr;
 
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
@@ -28,6 +26,7 @@ pub enum ListOutput {
 	Select(List),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
+	Notify(String),
 }
 
 #[derive(Debug, Clone)]
@@ -103,15 +102,15 @@ impl AsyncFactoryComponent for ListData {
 		}
 	}
 
-	fn temporary_init(root: &mut Self::Root) {
+	fn init_loading_widgets(root: &mut Self::Root) {
 		view! {
 			#[local_ref]
 			root {
 				adw::ActionRow {
 					add_prefix = &gtk::Spinner {
-		                start: (),
-		                set_hexpand: false,
-	                }
+										start: (),
+										set_hexpand: false,
+									}
 				}
 			}
 		}
@@ -142,40 +141,57 @@ impl AsyncFactoryComponent for ListData {
 		sender: AsyncFactoryComponentSender<Self>,
 	) {
 		if let Ok(provider) = Plugin::from_str(&self.data.provider) {
-			let mut service = provider.connect().await.unwrap();
 			match message {
 				ListInput::Rename(name) => {
 					let mut list = self.data.clone();
 					list.name = name.clone();
-					let response = service
-						.update_list(list)
-						.await
-						.unwrap()
-						.into_inner();
-					if response.successful {
-						self.data.name = name;
+					match provider.connect().await {
+						Ok(mut service) => match service.update_list(list).await {
+							Ok(response) => {
+								let response = response.into_inner();
+								if response.successful {
+									self.data.name = name;
+								}
+								sender.output(ListOutput::Notify(response.message))
+							},
+							Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+						},
+						Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 					}
 				},
-				ListInput::Delete(index) => {
-					let response = service
-						.delete_list(self.clone().data.id)
-						.await
-						.unwrap()
-						.into_inner();
-					if response.successful {
-						sender.output(ListOutput::DeleteTaskList(index, self.data.id.clone()))
-					}
+				ListInput::Delete(index) => match provider.connect().await {
+					Ok(mut service) => {
+						match service.delete_list(self.clone().data.id).await {
+							Ok(response) => {
+								let response = response.into_inner();
+								if response.successful {
+									sender.output(ListOutput::DeleteTaskList(
+										index,
+										self.data.id.clone(),
+									));
+								}
+								sender.output(ListOutput::Notify(response.message))
+							},
+							Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+						}
+					},
+					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 				},
 				ListInput::ChangeIcon(icon) => {
 					let mut list = self.data.clone();
 					list.icon = Some(icon.clone());
-					let response = service
-						.update_list(list)
-						.await
-						.unwrap()
-						.into_inner();
-					if response.successful {
-						self.data.icon = Some(icon);
+					match provider.connect().await {
+						Ok(mut service) => match service.update_list(list).await {
+							Ok(response) => {
+								let response = response.into_inner();
+								if response.successful {
+									self.data.icon = Some(icon);
+								}
+								sender.output(ListOutput::Notify(response.message))
+							},
+							Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+						},
+						Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 					}
 				},
 				ListInput::Select => {
@@ -193,7 +209,8 @@ impl AsyncFactoryComponent for ListData {
 			ListOutput::DeleteTaskList(index, list_id) => {
 				Some(ProviderInput::DeleteTaskList(index, list_id))
 			},
-			ListOutput::Forward => Some(ProviderInput::Forward(true)),
+			ListOutput::Forward => Some(ProviderInput::Forward),
+			ListOutput::Notify(msg) => Some(ProviderInput::Notify(msg)),
 		}
 	}
 }
