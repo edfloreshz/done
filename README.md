@@ -109,4 +109,4 @@ Copyright and licensing
 
 Copyright 2022 © Eduardo Flores
 
-Done is released under the terms of the [GNU General Public License version 2.0.](https://github.com/edfloreshz/done/blob/main/LICENSE)
+Done is released under the terms of the [Mozilla Public License v2](https://github.com/edfloreshz/done/blob/main/LICENSE)
