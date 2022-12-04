@@ -3,7 +3,7 @@ use done_core::plugins::{Plugin, PluginData};
 use done_core::services::provider::List;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
-use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
+use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
@@ -96,7 +96,7 @@ impl AsyncFactoryComponent for ProviderModel {
 	async fn init_model(
 		init: Self::Init,
 		index: &DynamicIndex,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let provider = init.data().await.unwrap();
 		let index = index.current_index();
@@ -123,7 +123,7 @@ impl AsyncFactoryComponent for ProviderModel {
 		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 
@@ -145,7 +145,7 @@ impl AsyncFactoryComponent for ProviderModel {
 	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
 			ProviderInput::DeleteTaskList(index, list_id) => {

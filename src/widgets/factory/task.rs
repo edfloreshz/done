@@ -1,6 +1,6 @@
 use done_core::services::provider::TaskStatus;
 use relm4::factory::AsyncFactoryComponent;
-use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
+use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -112,7 +112,7 @@ impl AsyncFactoryComponent for TaskData {
 	async fn init_model(
 		init: Self::Init,
 		_index: &DynamicIndex,
-		_sender: AsyncFactoryComponentSender<Self>,
+		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		init
 	}
@@ -122,7 +122,7 @@ impl AsyncFactoryComponent for TaskData {
 		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -131,7 +131,7 @@ impl AsyncFactoryComponent for TaskData {
 	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
 			TaskInput::SetCompleted(toggled) => {
