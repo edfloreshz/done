@@ -221,13 +221,13 @@ impl Component for App {
 				self
 					.content_controller
 					.sender()
-					.send(ContentInput::SetTaskList(list));
+					.send(ContentInput::SetTaskList(list)).unwrap_or_default();
 			},
 			AppMsg::SelectProvider(provider) => {
 				self
 					.content_controller
 					.sender()
-					.send(ContentInput::SetProvider(provider));
+					.send(ContentInput::SetProvider(provider)).unwrap_or_default();
 			},
 			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
 			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
@@ -283,13 +283,13 @@ impl Component for App {
 		let about_action = {
 			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
 			RelmAction::<AboutAction>::new_stateless(move |_| {
-				sender.send(());
+				sender.send(()).unwrap_or_default();
 			})
 		};
 
 		let quit_action = {
 			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender.input_sender().send(AppMsg::Quit);
+				sender.input_sender().send(AppMsg::Quit).unwrap_or_default();
 			})
 		};
 
