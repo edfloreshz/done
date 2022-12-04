@@ -113,12 +113,7 @@ impl Component for NewTask {
 		ComponentParts { model, widgets }
 	}
 
-	fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: ComponentSender<Self>,
-	) {
+	fn update_with_view(&mut self, widgets: &mut Self::Widgets, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
 		match message {
 			NewTaskEvent::AddToMyDay => (), // TODO: Add to my day.
 			NewTaskEvent::SetTitle(title) => self.task.title = title,

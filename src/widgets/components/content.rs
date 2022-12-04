@@ -130,27 +130,24 @@ impl AsyncComponent for ContentModel {
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: AsyncComponentSender<Self>,
-	) {
+	async fn update_with_view(&mut self, widgets: &mut Self::Widgets, message: Self::Input, sender: AsyncComponentSender<Self>, _root: &Self::Root) {
 		let mut service: Option<ProviderClient<Channel>> = None;
 		if let Some(parent) = &self.parent_list {
 			if let Ok(provider) = Plugin::from_str(&parent.provider) {
 				match provider.connect().await {
 					Ok(connection) => service = Some(connection),
-					Err(_) => sender.output(ContentOutput::Notify(format!(
-						"Failed to connect to {} service.",
-						&parent.provider
-					))),
+					Err(_) => {
+						sender.output(ContentOutput::Notify(format!(
+							"Failed to connect to {} service.",
+							&parent.provider
+						)));
+					},
 				}
 			} else {
 				sender.output(ContentOutput::Notify(format!(
 					"Failed to find plugin with name: {}.",
 					&parent.provider
-				)))
+				)));
 			}
 		}
 		match message {
@@ -165,9 +162,11 @@ impl AsyncComponent for ContentModel {
 									loaded: false,
 								});
 							}
-							sender.output(ContentOutput::Notify(response.message))
+							sender.output(ContentOutput::Notify(response.message));
 						},
-						Err(err) => sender.output(ContentOutput::Notify(err.to_string())),
+						Err(err) => {
+							sender.output(ContentOutput::Notify(err.to_string()));
+						},
 					}
 				}
 			},
@@ -181,9 +180,11 @@ impl AsyncComponent for ContentModel {
 							if response.successful {
 								guard.remove(index.current_index());
 							}
-							sender.output(ContentOutput::Notify(response.message))
+							sender.output(ContentOutput::Notify(response.message));
 						},
-						Err(err) => sender.output(ContentOutput::Notify(err.to_string())),
+						Err(err) => {
+							sender.output(ContentOutput::Notify(err.to_string()));
+						},
 					}
 				}
 			},
@@ -199,9 +200,11 @@ impl AsyncComponent for ContentModel {
 									}
 								}
 							}
-							sender.output(ContentOutput::Notify(response.message))
+							sender.output(ContentOutput::Notify(response.message));
 						},
-						Err(err) => sender.output(ContentOutput::Notify(err.to_string())),
+						Err(err) => {
+							sender.output(ContentOutput::Notify(err.to_string()));
+						},
 					}
 				}
 			},
@@ -249,7 +252,7 @@ impl AsyncComponent for ContentModel {
 				} else {
 					sender.output(ContentOutput::Notify(String::from(
 						"Failed to identify the provider.",
-					)))
+					)));
 				}
 			},
 			ContentInput::SetProvider(provider) => {
