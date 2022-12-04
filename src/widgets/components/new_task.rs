@@ -127,7 +127,7 @@ impl Component for NewTask {
 			NewTaskEvent::AddNote(note) => self.task.body = Some(note),
 			NewTaskEvent::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
-					sender.output(NewTaskOutput::AddTask(self.task.clone()));
+					sender.output(NewTaskOutput::AddTask(self.task.clone())).unwrap_or_default();
 					self.task = Task::new(
 						String::new(),
 						self.parent_list.as_ref().unwrap().id.clone(),

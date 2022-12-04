@@ -143,7 +143,7 @@ impl AsyncFactoryComponent for TaskData {
 				if self.loaded {
 					sender
 						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.data.clone()));
+						.send(TaskOutput::UpdateTask(None, self.data.clone())).unwrap_or_default();
 				}
 			},
 			TaskInput::Favorite(index) => {
@@ -151,13 +151,13 @@ impl AsyncFactoryComponent for TaskData {
 
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(Some(index), self.data.clone()));
+					.send(TaskOutput::UpdateTask(Some(index), self.data.clone())).unwrap_or_default();
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.data.title = title;
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.data.clone()));
+					.send(TaskOutput::UpdateTask(None, self.data.clone())).unwrap_or_default();
 			},
 		}
 		self.loaded = true;
