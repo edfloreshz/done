@@ -212,12 +212,7 @@ impl Component for App {
 		}
 	}
 
-	fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: ComponentSender<Self>,
-	) {
+	fn update_with_view(&mut self, widgets: &mut Self::Widgets, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::CloseWarning => self.warning_revealed = false,
@@ -226,12 +221,14 @@ impl Component for App {
 				self
 					.content_controller
 					.sender()
-					.send(ContentInput::SetTaskList(list))
+					.send(ContentInput::SetTaskList(list));
 			},
-			AppMsg::SelectProvider(provider) => self
-				.content_controller
-				.sender()
-				.send(ContentInput::SetProvider(provider)),
+			AppMsg::SelectProvider(provider) => {
+				self
+					.content_controller
+					.sender()
+					.send(ContentInput::SetProvider(provider));
+			},
 			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
 			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
 				self.message = Some(message)
@@ -292,7 +289,7 @@ impl Component for App {
 
 		let quit_action = {
 			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender.input_sender().send(AppMsg::Quit)
+				sender.input_sender().send(AppMsg::Quit);
 			})
 		};
 

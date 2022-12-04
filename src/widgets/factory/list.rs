@@ -1,7 +1,7 @@
 use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::AsyncFactoryComponent;
-use relm4::factory::{AsyncFactoryComponentSender, DynamicIndex, FactoryView};
-use relm4::view;
+use relm4::factory::{DynamicIndex, FactoryView};
+use relm4::{AsyncFactorySender, view};
 use std::str::FromStr;
 
 use crate::gtk::prelude::{
@@ -10,6 +10,7 @@ use crate::gtk::prelude::{
 use crate::widgets::factory::provider::ProviderInput;
 use done_core::plugins::Plugin;
 use done_core::services::provider::List;
+use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};
 
@@ -102,18 +103,20 @@ impl AsyncFactoryComponent for ListData {
 		}
 	}
 
-	fn init_loading_widgets(root: &mut Self::Root) {
+	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
 		view! {
 			#[local_ref]
 			root {
+				#[name(spinner)]
 				adw::ActionRow {
 					add_prefix = &gtk::Spinner {
-										start: (),
-										set_hexpand: false,
-									}
+						start: (),
+						set_hexpand: false,
+					}
 				}
 			}
 		}
+		Some(LoadingWidgets::new(root, spinner))
 	}
 
 	fn init_widgets(
@@ -121,7 +124,7 @@ impl AsyncFactoryComponent for ListData {
 		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -130,7 +133,7 @@ impl AsyncFactoryComponent for ListData {
 	async fn init_model(
 		params: Self::Init,
 		_index: &DynamicIndex,
-		_sender: AsyncFactoryComponentSender<Self>,
+		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		params
 	}
@@ -138,7 +141,7 @@ impl AsyncFactoryComponent for ListData {
 	async fn update(
 		&mut self,
 		message: Self::Input,
-		sender: AsyncFactoryComponentSender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) {
 		if let Ok(provider) = Plugin::from_str(&self.data.provider) {
 			match message {
