@@ -141,34 +141,34 @@ impl SimpleAsyncComponent for SidebarModel {
 											ProviderInput::AddList(ListData { data: list }),
 										);
 									}
-									sender.output(SidebarOutput::Notify(response.message));
+									sender.output(SidebarOutput::Notify(response.message)).unwrap_or_default();
 								},
 								Err(err) => {
-									sender.output(SidebarOutput::Notify(err.to_string()));
+									sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
 								},
 							}
 						},
 						Err(err) => {
-							sender.output(SidebarOutput::Notify(err.to_string()));
+							sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
 						},
 					},
 					Err(err) => {
-						sender.output(SidebarOutput::Notify(err.to_string()));
+						sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
 					},
 				}
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 			SidebarInput::ListSelected(list) => {
-				sender.output(SidebarOutput::ListSelected(list));
+				sender.output(SidebarOutput::ListSelected(list)).unwrap_or_default();
 			},
 			SidebarInput::Forward => {
-				sender.output(SidebarOutput::Forward);
+				sender.output(SidebarOutput::Forward).unwrap_or_default();
 			},
 			SidebarInput::ProviderSelected(provider) => {
-				sender.output(SidebarOutput::ProviderSelected(provider));
+				sender.output(SidebarOutput::ProviderSelected(provider)).unwrap_or_default();
 			},
 			SidebarInput::Notify(msg) => {
-				sender.output(SidebarOutput::Notify(msg));
+				sender.output(SidebarOutput::Notify(msg)).unwrap_or_default();
 			},
 		}
 	}

@@ -140,14 +140,14 @@ impl AsyncComponent for ContentModel {
 						sender.output(ContentOutput::Notify(format!(
 							"Failed to connect to {} service.",
 							&parent.provider
-						)));
+						))).unwrap_or_default();
 					},
 				}
 			} else {
 				sender.output(ContentOutput::Notify(format!(
 					"Failed to find plugin with name: {}.",
 					&parent.provider
-				)));
+				))).unwrap_or_default();
 			}
 		}
 		match message {
@@ -162,10 +162,10 @@ impl AsyncComponent for ContentModel {
 									loaded: false,
 								});
 							}
-							sender.output(ContentOutput::Notify(response.message));
+							sender.output(ContentOutput::Notify(response.message)).unwrap_or_default();
 						},
 						Err(err) => {
-							sender.output(ContentOutput::Notify(err.to_string()));
+							sender.output(ContentOutput::Notify(err.to_string())).unwrap_or_default();
 						},
 					}
 				}
@@ -180,10 +180,10 @@ impl AsyncComponent for ContentModel {
 							if response.successful {
 								guard.remove(index.current_index());
 							}
-							sender.output(ContentOutput::Notify(response.message));
+							sender.output(ContentOutput::Notify(response.message)).unwrap_or_default();
 						},
 						Err(err) => {
-							sender.output(ContentOutput::Notify(err.to_string()));
+							sender.output(ContentOutput::Notify(err.to_string())).unwrap_or_default();
 						},
 					}
 				}
@@ -200,10 +200,10 @@ impl AsyncComponent for ContentModel {
 									}
 								}
 							}
-							sender.output(ContentOutput::Notify(response.message));
+							sender.output(ContentOutput::Notify(response.message)).unwrap_or_default();
 						},
 						Err(err) => {
-							sender.output(ContentOutput::Notify(err.to_string()));
+							sender.output(ContentOutput::Notify(err.to_string())).unwrap_or_default();
 						},
 					}
 				}
@@ -213,7 +213,7 @@ impl AsyncComponent for ContentModel {
 				self
 					.new_task_component
 					.sender()
-					.send(NewTaskEvent::SetParentList(self.parent_list.clone()));
+					.send(NewTaskEvent::SetParentList(self.parent_list.clone())).unwrap_or_default();
 
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
 					let mut service = provider.connect().await.unwrap(); //TODO: Handle this
@@ -252,7 +252,7 @@ impl AsyncComponent for ContentModel {
 				} else {
 					sender.output(ContentOutput::Notify(String::from(
 						"Failed to identify the provider.",
-					)));
+					))).unwrap_or_default();
 				}
 			},
 			ContentInput::SetProvider(provider) => {
@@ -261,7 +261,7 @@ impl AsyncComponent for ContentModel {
 				self
 					.new_task_component
 					.sender()
-					.send(NewTaskEvent::SetParentList(None));
+					.send(NewTaskEvent::SetParentList(None)).unwrap_or_default();
 			},
 		}
 		self.update_view(widgets, sender)
