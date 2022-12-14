@@ -34,7 +34,7 @@ impl Default for Next7DaysProvider {
 		Self {
 			id: "next7days".to_string(),
 			name: String::from(fl!("next-7-days")),
-			description: "Tasks due the next 7 days".to_string(),
+			description: String::from(fl!("next-7-days-desc")),
 			enabled: true,
 			smart: true,
 			icon: "org.gnome.Calendar.Devel-symbolic".to_string(),

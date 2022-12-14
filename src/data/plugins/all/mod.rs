@@ -32,7 +32,7 @@ impl Default for AllProvider {
 		Self {
 			id: "all".to_string(),
 			name: String::from(fl!("all")),
-			description: "All tasks".to_string(),
+			description: String::from(fl!("all-desc")),
 			enabled: true,
 			smart: true,
 			icon: "edit-paste-symbolic".to_string(),

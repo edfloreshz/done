@@ -32,7 +32,7 @@ impl Default for StarredProvider {
 		Self {
 			id: "starred".to_string(),
 			name: String::from(fl!("starred")),
-			description: "Starred task".to_string(),
+			description: String::from(fl!("starred-desc")),
 			enabled: true,
 			smart: true,
 			icon: "star-outline-rounded-symbolic".to_string(),
