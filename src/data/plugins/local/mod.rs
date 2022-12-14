@@ -11,8 +11,9 @@ use crate::data::models::queryable::list::QueryableList;
 use crate::data::models::queryable::task::QueryableTask;
 
 use crate::data::traits::provider::Provider;
-use crate::embedded_migrations;
 use crate::gtk::Image;
+use crate::{embedded_migrations, fl};
+
 pub mod models;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Reflect)]
@@ -30,8 +31,8 @@ impl Default for LocalProvider {
 	fn default() -> Self {
 		Self {
 			id: "local".to_string(),
-			name: "Local".to_string(),
-			description: "Local storage".to_string(),
+			name: String::from(fl!("local")),
+			description: String::from(fl!("local-desc")),
 			enabled: true,
 			smart: false,
 			icon: "user-home-symbolic".to_string(),

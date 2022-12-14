@@ -34,7 +34,7 @@ impl Default for TodayProvider {
 		Self {
 			id: "today".to_string(),
 			name: String::from(fl!("today")),
-			description: "Tasks due today".to_string(),
+			description: String::from(fl!("today-desc")),
 			enabled: true,
 			smart: true,
 			icon: "sun-alt-symbolic".to_string(),
