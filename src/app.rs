@@ -151,7 +151,7 @@ impl SimpleComponent for App {
 								#[name = "content_header"]
 							append = &adw::HeaderBar {
 								set_hexpand: true,
-								set_show_start_title_buttons: true,
+								set_show_start_title_buttons: false,
 								#[watch]
 								set_title_widget: Some(&gtk::Label::new(Some(&model.content_title))),
 								pack_start: go_back_button = &gtk::Button {
