@@ -4,6 +4,7 @@ use crate::setup::main_app;
 use crate::widgets::components::content::{
 	ContentInput, ContentModel, ContentOutput,
 };
+use crate::widgets::components::preferences::Preferences;
 use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
 use crate::widgets::modals::about::AboutDialog;
 use done_core::plugins::Plugin;
@@ -23,8 +24,9 @@ pub struct App {
 	message: Option<AppMsg>,
 	sidebar_controller: AsyncController<SidebarModel>,
 	content_controller: AsyncController<ContentModel>,
-	about_dialog: Option<Controller<AboutDialog>>,
-	content_title: Option<String>,
+    preferences_controller: Controller<Preferences>,
+    about_dialog: Option<Controller<AboutDialog>>,
+    content_title: Option<String>,
 	warning_revealed: bool,
 }
 
@@ -32,12 +34,14 @@ impl App {
 	pub fn new(
 		sidebar: AsyncController<SidebarModel>,
 		content: AsyncController<ContentModel>,
+        preferences: Controller<Preferences>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
 			message: None,
 			sidebar_controller: sidebar,
 			content_controller: content,
+            preferences_controller: preferences,
 			about_dialog,
 			content_title: None,
 			warning_revealed: true,
@@ -242,30 +246,41 @@ impl Component for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let actions = RelmActionGroup::<WindowActionGroup>::new();
+        let actions = RelmActionGroup::<WindowActionGroup>::new();
 
-		let sidebar_controller = SidebarModel::builder().launch(()).forward(
-			sender.input_sender(),
+        let sidebar_controller = SidebarModel::builder().launch(()).forward(
+                sender.input_sender(),
 			|message| match message {
-				SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
-				SidebarOutput::Forward => AppMsg::Forward,
-				SidebarOutput::ProviderSelected(plugin) => {
-					AppMsg::SelectProvider(plugin)
-				},
-				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
-			},
+                    SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
+                SidebarOutput::Forward => AppMsg::Forward,
+                SidebarOutput::ProviderSelected(plugin) => {
+                        AppMsg::SelectProvider(plugin)
+                    },
+                SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
+            },
 		);
 
-		let content_controller = ContentModel::builder().launch(None).forward(
-			sender.input_sender(),
+        let content_controller = ContentModel::builder().launch(None).forward(
+                sender.input_sender(),
 			|message| match message {
-				ContentOutput::Notify(msg) => AppMsg::Notify(msg),
-			},
+                    ContentOutput::Notify(msg) => AppMsg::Notify(msg),
+            },
 		);
 
-		let mut model = App::new(sidebar_controller, content_controller, None);
+        let preferences_controller = Preferences::builder().launch(())
+            .forward(sender.input_sender(), |_| AppMsg::CloseWarning
+        );
 
-		let widgets = view_output!();
+        let mut model = App::new(sidebar_controller, content_controller, preferences_controller, None);
+
+        let widgets = view_output!();
+
+        let preferences_action = {
+            let preferences = model.preferences_controller.widget().clone();
+            RelmAction::<PreferencesAction>::new_stateless(move |_| {
+                preferences.present();
+            })
+        };
 
 		let shortcuts_action = {
 			let shortcuts = widgets.shortcuts.clone();
@@ -293,8 +308,9 @@ impl Component for App {
 			})
 		};
 
-		actions.add_action(&shortcuts_action);
-		actions.add_action(&about_action);
+        actions.add_action(&preferences_action);
+        actions.add_action(&shortcuts_action);
+        actions.add_action(&about_action);
 		actions.add_action(&quit_action);
 
 		widgets.main_window.insert_action_group(
