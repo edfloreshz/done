@@ -527,7 +527,7 @@ dependencies = [
  "async-std",
  "chrono",
  "dirs",
- "done_core",
+ "done_provider",
  "gettext-rs",
  "glib",
  "glib-build-tools",
@@ -544,8 +544,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "done_core"
+name = "done_provider"
 version = "0.1.0"
+source = "git+https://github.com/done-devel/done-provider#343d0a7c0cae356e87cb58db015815766ae876fa"
 dependencies = [
  "anyhow",
  "chrono",

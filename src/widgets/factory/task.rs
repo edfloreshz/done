@@ -1,4 +1,4 @@
-use done_core::services::provider::TaskStatus;
+use done_provider::services::provider::TaskStatus;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
@@ -11,7 +11,7 @@ use relm4::{
 };
 
 use crate::widgets::components::content::ContentInput;
-use done_core::services::provider::Task;
+use done_provider::services::provider::Task;
 
 #[derive(Debug)]
 pub enum TaskInput {
@@ -143,7 +143,8 @@ impl AsyncFactoryComponent for TaskData {
 				if self.loaded {
 					sender
 						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.data.clone())).unwrap_or_default();
+						.send(TaskOutput::UpdateTask(None, self.data.clone()))
+						.unwrap_or_default();
 				}
 			},
 			TaskInput::Favorite(index) => {
@@ -151,13 +152,15 @@ impl AsyncFactoryComponent for TaskData {
 
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(Some(index), self.data.clone())).unwrap_or_default();
+					.send(TaskOutput::UpdateTask(Some(index), self.data.clone()))
+					.unwrap_or_default();
 			},
 			TaskInput::ModifyTitle(title) => {
 				self.data.title = title;
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.data.clone())).unwrap_or_default();
+					.send(TaskOutput::UpdateTask(None, self.data.clone()))
+					.unwrap_or_default();
 			},
 		}
 		self.loaded = true;

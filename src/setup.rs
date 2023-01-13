@@ -1,8 +1,10 @@
+use std::process::Command;
+
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
 };
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gdk, gio, glib};
 use libset::{config::Config, new_dir, new_file};
@@ -35,6 +37,8 @@ pub fn setup_app() -> Result<adw::Application> {
 	gio::resources_register_include!("resources.gresource")?;
 	setup_css();
 	gtk::Window::set_default_icon_name(APP_ID);
+
+	start_services()?;
 
 	let app = main_app();
 
@@ -98,4 +102,12 @@ fn get_config() -> Config {
 		.version(VERSION)
 		.add(new_file!("dev.edfloreshz.Done.db"))
 		.add(new_dir!("providers"))
+}
+
+fn start_services() -> Result<()> {
+	Command::new("local-plugin").spawn().ok();
+	Command::new("google-plugin").spawn().ok();
+	Command::new("microsoft-plugin").spawn().ok();
+	Command::new("nextcloud-plugin").spawn().ok();
+	Ok(())
 }

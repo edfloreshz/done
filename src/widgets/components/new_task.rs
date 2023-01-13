@@ -1,6 +1,6 @@
 use crate::fl;
 use chrono::NaiveDateTime;
-use done_core::services::provider::{List, Task};
+use done_provider::services::provider::{List, Task};
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -113,7 +113,13 @@ impl Component for NewTask {
 		ComponentParts { model, widgets }
 	}
 
-	fn update_with_view(&mut self, widgets: &mut Self::Widgets, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+	fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: ComponentSender<Self>,
+		_root: &Self::Root,
+	) {
 		match message {
 			NewTaskEvent::AddToMyDay => (), // TODO: Add to my day.
 			NewTaskEvent::SetTitle(title) => self.task.title = title,
@@ -127,7 +133,9 @@ impl Component for NewTask {
 			NewTaskEvent::AddNote(note) => self.task.body = Some(note),
 			NewTaskEvent::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
-					sender.output(NewTaskOutput::AddTask(self.task.clone())).unwrap_or_default();
+					sender
+						.output(NewTaskOutput::AddTask(self.task.clone()))
+						.unwrap_or_default();
 					self.task = Task::new(
 						String::new(),
 						self.parent_list.as_ref().unwrap().id.clone(),
