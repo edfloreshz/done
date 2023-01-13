@@ -98,7 +98,6 @@ impl AsyncComponent for ContentModel {
 				},
 				append: model.new_task_component.widget()
 			},
-
 		}
 	}
 
@@ -262,14 +261,11 @@ impl AsyncComponent for ContentModel {
 					}
 
 					while let Some(task) = rx.recv().await {
-						match task.task {
-							Some(task) => {
-								self.tasks_factory.guard().push_back(TaskData {
-									data: task,
-									loaded: false,
-								});
-							},
-							None => (),
+						if let Some(task) = task.task {
+							self.tasks_factory.guard().push_back(TaskData {
+								data: task,
+								loaded: false,
+							});
 						}
 					}
 				} else {
