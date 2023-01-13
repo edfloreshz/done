@@ -1,15 +1,15 @@
 use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
-use relm4::{AsyncFactorySender, view};
+use relm4::{view, AsyncFactorySender};
 use std::str::FromStr;
 
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use done_core::plugins::Plugin;
-use done_core::services::provider::List;
+use done_provider::plugin::Plugin;
+use done_provider::services::provider::List;
 use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};

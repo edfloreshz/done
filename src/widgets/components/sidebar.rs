@@ -1,8 +1,8 @@
 use crate::fl;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
-use done_core::plugins::Plugin;
-use done_core::services::provider::List;
+use done_provider::plugin::Plugin;
+use done_provider::services::provider::List;
 use relm4::adw;
 use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
@@ -141,34 +141,48 @@ impl SimpleAsyncComponent for SidebarModel {
 											ProviderInput::AddList(ListData { data: list }),
 										);
 									}
-									sender.output(SidebarOutput::Notify(response.message)).unwrap_or_default();
+									sender
+										.output(SidebarOutput::Notify(response.message))
+										.unwrap_or_default();
 								},
 								Err(err) => {
-									sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
+									sender
+										.output(SidebarOutput::Notify(err.to_string()))
+										.unwrap_or_default();
 								},
 							}
 						},
 						Err(err) => {
-							sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
+							sender
+								.output(SidebarOutput::Notify(err.to_string()))
+								.unwrap_or_default();
 						},
 					},
 					Err(err) => {
-						sender.output(SidebarOutput::Notify(err.to_string())).unwrap_or_default();
+						sender
+							.output(SidebarOutput::Notify(err.to_string()))
+							.unwrap_or_default();
 					},
 				}
 			},
 			SidebarInput::RemoveService(_) => todo!(),
 			SidebarInput::ListSelected(list) => {
-				sender.output(SidebarOutput::ListSelected(list)).unwrap_or_default();
+				sender
+					.output(SidebarOutput::ListSelected(list))
+					.unwrap_or_default();
 			},
 			SidebarInput::Forward => {
 				sender.output(SidebarOutput::Forward).unwrap_or_default();
 			},
 			SidebarInput::ProviderSelected(provider) => {
-				sender.output(SidebarOutput::ProviderSelected(provider)).unwrap_or_default();
+				sender
+					.output(SidebarOutput::ProviderSelected(provider))
+					.unwrap_or_default();
 			},
 			SidebarInput::Notify(msg) => {
-				sender.output(SidebarOutput::Notify(msg)).unwrap_or_default();
+				sender
+					.output(SidebarOutput::Notify(msg))
+					.unwrap_or_default();
 			},
 		}
 	}

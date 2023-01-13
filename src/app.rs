@@ -7,8 +7,8 @@ use crate::widgets::components::content::{
 use crate::widgets::components::preferences::Preferences;
 use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
 use crate::widgets::modals::about::AboutDialog;
-use done_core::plugins::Plugin;
-use done_core::services::provider::List;
+use done_provider::plugin::Plugin;
+use done_provider::services::provider::List;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::AsyncController;
@@ -24,9 +24,9 @@ pub struct App {
 	message: Option<AppMsg>,
 	sidebar_controller: AsyncController<SidebarModel>,
 	content_controller: AsyncController<ContentModel>,
-    preferences_controller: Controller<Preferences>,
-    about_dialog: Option<Controller<AboutDialog>>,
-    content_title: Option<String>,
+	preferences_controller: Controller<Preferences>,
+	about_dialog: Option<Controller<AboutDialog>>,
+	content_title: Option<String>,
 	warning_revealed: bool,
 }
 
@@ -34,14 +34,14 @@ impl App {
 	pub fn new(
 		sidebar: AsyncController<SidebarModel>,
 		content: AsyncController<ContentModel>,
-        preferences: Controller<Preferences>,
+		preferences: Controller<Preferences>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
 			message: None,
 			sidebar_controller: sidebar,
 			content_controller: content,
-            preferences_controller: preferences,
+			preferences_controller: preferences,
 			about_dialog,
 			content_title: None,
 			warning_revealed: true,
@@ -216,7 +216,13 @@ impl Component for App {
 		}
 	}
 
-	fn update_with_view(&mut self, widgets: &mut Self::Widgets, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+	fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: ComponentSender<Self>,
+		_root: &Self::Root,
+	) {
 		match message {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::CloseWarning => self.warning_revealed = false,
@@ -225,13 +231,15 @@ impl Component for App {
 				self
 					.content_controller
 					.sender()
-					.send(ContentInput::SetTaskList(list)).unwrap_or_default();
+					.send(ContentInput::SetTaskList(list))
+					.unwrap_or_default();
 			},
 			AppMsg::SelectProvider(provider) => {
 				self
 					.content_controller
 					.sender()
-					.send(ContentInput::SetProvider(provider)).unwrap_or_default();
+					.send(ContentInput::SetProvider(provider))
+					.unwrap_or_default();
 			},
 			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
 			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
@@ -246,41 +254,46 @@ impl Component for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-        let actions = RelmActionGroup::<WindowActionGroup>::new();
+		let actions = RelmActionGroup::<WindowActionGroup>::new();
 
-        let sidebar_controller = SidebarModel::builder().launch(()).forward(
-                sender.input_sender(),
+		let sidebar_controller = SidebarModel::builder().launch(()).forward(
+			sender.input_sender(),
 			|message| match message {
-                    SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
-                SidebarOutput::Forward => AppMsg::Forward,
-                SidebarOutput::ProviderSelected(plugin) => {
-                        AppMsg::SelectProvider(plugin)
-                    },
-                SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
-            },
+				SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
+				SidebarOutput::Forward => AppMsg::Forward,
+				SidebarOutput::ProviderSelected(plugin) => {
+					AppMsg::SelectProvider(plugin)
+				},
+				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
+			},
 		);
 
-        let content_controller = ContentModel::builder().launch(None).forward(
-                sender.input_sender(),
+		let content_controller = ContentModel::builder().launch(None).forward(
+			sender.input_sender(),
 			|message| match message {
-                    ContentOutput::Notify(msg) => AppMsg::Notify(msg),
-            },
+				ContentOutput::Notify(msg) => AppMsg::Notify(msg),
+			},
 		);
 
-        let preferences_controller = Preferences::builder().launch(())
-            .forward(sender.input_sender(), |_| AppMsg::CloseWarning
-        );
+		let preferences_controller = Preferences::builder()
+			.launch(())
+			.forward(sender.input_sender(), |_| AppMsg::CloseWarning);
 
-        let mut model = App::new(sidebar_controller, content_controller, preferences_controller, None);
+		let mut model = App::new(
+			sidebar_controller,
+			content_controller,
+			preferences_controller,
+			None,
+		);
 
-        let widgets = view_output!();
+		let widgets = view_output!();
 
-        let preferences_action = {
-            let preferences = model.preferences_controller.widget().clone();
-            RelmAction::<PreferencesAction>::new_stateless(move |_| {
-                preferences.present();
-            })
-        };
+		let preferences_action = {
+			let preferences = model.preferences_controller.widget().clone();
+			RelmAction::<PreferencesAction>::new_stateless(move |_| {
+				preferences.present();
+			})
+		};
 
 		let shortcuts_action = {
 			let shortcuts = widgets.shortcuts.clone();
@@ -308,9 +321,9 @@ impl Component for App {
 			})
 		};
 
-        actions.add_action(&preferences_action);
-        actions.add_action(&shortcuts_action);
-        actions.add_action(&about_action);
+		actions.add_action(&preferences_action);
+		actions.add_action(&shortcuts_action);
+		actions.add_action(&about_action);
 		actions.add_action(&quit_action);
 
 		widgets.main_window.insert_action_group(
