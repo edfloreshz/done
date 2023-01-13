@@ -156,7 +156,7 @@ impl Component for App {
 									set_hexpand: true,
 									set_show_start_title_buttons: true,
 									#[watch]
-									set_title_widget: Some(&gtk::Label::new(model.content_title.as_ref().map(|x| x.as_str()))),
+									set_title_widget: Some(&gtk::Label::new(model.content_title.as_deref())),
 									pack_start: go_back_button = &gtk::Button {
 										set_icon_name: "go-previous-symbolic",
 										set_visible: false,
