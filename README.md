@@ -51,7 +51,7 @@ Done is a simple to do app that lets you combine your existing set of task provi
 
 ### Accounts
 
-- [-] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
+- [ ] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
 
 ### Lists
 
