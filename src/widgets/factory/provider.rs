@@ -195,7 +195,19 @@ impl AsyncFactoryComponent for ProviderModel {
                 info!("Provider selected: {}", self.data.name)
 			},
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
-            ProviderInput::Enable => self.enabled = true,
+            ProviderInput::Enable => {
+                self.enabled = true;
+                self.data = self.plugin.data().await.unwrap();
+                loop {
+                    let list = self.list_factory.guard().pop_front();
+                    if list.is_none() {
+                        break;
+                    }
+                }
+                for list in &self.data.lists {
+                    self.list_factory.guard().push_back(ListData { data: list.clone() });
+                }
+            },
             ProviderInput::Disable => self.enabled = false,
         }
 	}
