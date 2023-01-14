@@ -31,6 +31,7 @@ log = "0.4.17"
 chrono = { version = "0.4.23", features = ["serde"] }
 async-std = "1.12.0"
 directories = { git = "https://github.com/edfloreshz/directories-rs" }
+serde = { version = "1.0.126", features = ["derive"] }
 
 [build-dependencies]
 glib-build-tools = { git = "https://github.com/gtk-rs/gtk-rs-core" }

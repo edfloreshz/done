@@ -20,13 +20,13 @@ pub struct SidebarModel {
 	provider_factory: AsyncFactoryVecDeque<ProviderModel>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddListToProvider(usize, String, String),
 	ListSelected(List),
 	ProviderSelected(Plugin),
-	RemoveService(String),
+	EnableService(Plugin),
+	DisableService(Plugin),
 	Forward,
 	Notify(String),
 }
@@ -112,10 +112,8 @@ impl SimpleAsyncComponent for SidebarModel {
 		let widgets = view_output!();
 
 		for provider in Plugin::list() {
-			if provider.connect().await.is_ok() {
-				model.provider_factory.guard().push_back(provider);
-				info!("Added {:?} provider to the sidebar", provider)
-			}
+            model.provider_factory.guard().push_back(provider);
+            info!("Added {:?} provider to the sidebar", provider)
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -165,8 +163,25 @@ impl SimpleAsyncComponent for SidebarModel {
 					},
 				}
 			},
-			SidebarInput::RemoveService(_) => todo!(),
-			SidebarInput::ListSelected(list) => {
+            SidebarInput::EnableService(plugin) => if plugin.is_running() {
+                let index = match plugin {
+                    Plugin::Local => 0,
+                    Plugin::Google => 1,
+                    Plugin::Microsoft => 2,
+                    Plugin::Nextcloud => 3,
+                };
+                self.provider_factory.send(index, ProviderInput::Enable)
+            },
+            SidebarInput::DisableService(plugin) => {
+                let index = match plugin {
+                    Plugin::Local => 0,
+                    Plugin::Google => 1,
+                    Plugin::Microsoft => 2,
+                    Plugin::Nextcloud => 3,
+                };
+                self.provider_factory.send(index, ProviderInput::Disable)
+            },
+            SidebarInput::ListSelected(list) => {
 				sender
 					.output(SidebarOutput::ListSelected(list))
 					.unwrap_or_default();
