@@ -1,0 +1,3 @@
+[submodule "done-provider"]
+	path = done-provider
+	url = https://github.com/done-devel/done-provider
