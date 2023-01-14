@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
@@ -7,7 +5,7 @@ use crate::{
 use anyhow::{Ok, Result};
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gdk, gio, glib};
-use libset::{config::Config, new_dir, new_file};
+use libset::{project::Project, new_file, format::FileFormat};
 use once_cell::unsync::Lazy;
 use relm4::actions::AccelsPlus;
 use relm4::actions::{RelmAction, RelmActionGroup};
@@ -87,27 +85,26 @@ fn setup_css() {
 }
 
 pub fn verify_data_integrity() -> Result<()> {
-	let config = get_config();
-	let app_data_dir = dirs::data_dir().unwrap().join("done");
-	if !app_data_dir.exists() {
-		config.write()?;
-	}
-	Ok(())
-}
-
-fn get_config() -> Config {
-	Config::new("done")
-		.about("Done is a To Do app for Linux built with Rust and GTK.")
+    Project::new("dev", "edfloreshz", "done")
+		.about("Done is a simple to do app.")
 		.author("Eduardo Flores")
 		.version(VERSION)
-		.add(new_file!("dev.edfloreshz.Done.db"))
-		.add(new_dir!("providers"))
+		.add_files(&[new_file!("providers"), new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain)])?;
+    Ok(())
 }
 
 fn start_services() -> Result<()> {
-	Command::new("local-plugin").spawn().ok();
-	Command::new("google-plugin").spawn().ok();
-	Command::new("microsoft-plugin").spawn().ok();
-	Command::new("nextcloud-plugin").spawn().ok();
+//    if !Plugin::Local.is_running() {
+//        Plugin::Local.start().map_err(|err| info!("{:?}", err));
+//    }
+//    if !Plugin::Google.is_running() {
+//        Plugin::Google.start().map_err(|err| info!("{:?}", err));
+//    }
+//    if !Plugin::Microsoft.is_running() {
+//        Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
+//    }
+//    if !Plugin::Nextcloud.is_running() {
+//        Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
+//    }
 	Ok(())
 }
