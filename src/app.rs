@@ -4,8 +4,10 @@ use crate::setup::main_app;
 use crate::widgets::components::content::{
 	ContentInput, ContentModel, ContentOutput,
 };
-use crate::widgets::components::preferences::Preferences;
-use crate::widgets::components::sidebar::{SidebarModel, SidebarOutput};
+use crate::widgets::components::preferences::{Preferences, PreferencesOutput};
+use crate::widgets::components::sidebar::{
+	SidebarInput, SidebarModel, SidebarOutput,
+};
 use crate::widgets::modals::about::AboutDialog;
 use done_provider::plugin::Plugin;
 use done_provider::services::provider::List;
@@ -53,8 +55,10 @@ impl App {
 pub enum AppMsg {
 	SelectList(List),
 	SelectProvider(Plugin),
-	CloseWarning,
 	Notify(String),
+	EnablePluginOnSidebar(Plugin),
+	DisablePluginOnSidebar(Plugin),
+	CloseWarning,
 	Folded,
 	Unfolded,
 	Forward,
@@ -245,6 +249,16 @@ impl Component for App {
 			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
 				self.message = Some(message)
 			},
+			AppMsg::EnablePluginOnSidebar(plugin) => self
+				.sidebar_controller
+				.sender()
+				.send(SidebarInput::EnableService(plugin))
+				.unwrap_or_default(),
+			AppMsg::DisablePluginOnSidebar(plugin) => self
+				.sidebar_controller
+				.sender()
+				.send(SidebarInput::DisableService(plugin))
+				.unwrap_or_default(),
 		}
 		self.update_view(widgets, sender)
 	}
@@ -275,9 +289,17 @@ impl Component for App {
 			},
 		);
 
-		let preferences_controller = Preferences::builder()
-			.launch(())
-			.forward(sender.input_sender(), |_| AppMsg::CloseWarning);
+		let preferences_controller = Preferences::builder().launch(()).forward(
+			sender.input_sender(),
+			|message| match message {
+				PreferencesOutput::EnablePluginOnSidebar(plugin) => {
+					AppMsg::EnablePluginOnSidebar(plugin)
+				},
+				PreferencesOutput::DisablePluginOnSidebar(plugin) => {
+					AppMsg::DisablePluginOnSidebar(plugin)
+				},
+			},
+		);
 
 		let mut model = App::new(
 			sidebar_controller,

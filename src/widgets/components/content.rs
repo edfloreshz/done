@@ -238,9 +238,8 @@ impl AsyncComponent for ContentModel {
 					.unwrap_or_default();
 
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
-					let mut service = provider.connect().await.unwrap(); //TODO: Handle this
-
-					let (tx, mut rx) = tokio::sync::mpsc::channel(4);
+					let mut service = provider.connect().await.unwrap();
+					let (tx, mut rx) = 	tokio::sync::mpsc::channel(4);
 
 					tokio::spawn(async move {
 						let mut stream = service
