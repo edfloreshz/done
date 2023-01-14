@@ -1,11 +1,12 @@
 use crate::{
 	application::fluent::setup_fluent,
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
+	widgets::components::preferences::Preferences,
 };
 use anyhow::{Ok, Result};
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gdk, gio, glib};
-use libset::{project::Project, new_file, format::FileFormat};
+use libset::{format::FileFormat, new_file, project::Project};
 use once_cell::unsync::Lazy;
 use relm4::actions::AccelsPlus;
 use relm4::actions::{RelmAction, RelmActionGroup};
@@ -25,7 +26,7 @@ pub fn main_app() -> adw::Application {
 }
 
 pub fn setup_app() -> Result<adw::Application> {
-	gtk::init().unwrap();
+	gtk::init()?;
 	setup_gettext();
 	setup_fluent()?;
 	verify_data_integrity()?;
@@ -85,26 +86,35 @@ fn setup_css() {
 }
 
 pub fn verify_data_integrity() -> Result<()> {
-    Project::new("dev", "edfloreshz", "done")
+	let project = Project::new("dev", "edfloreshz", "done")
 		.about("Done is a simple to do app.")
 		.author("Eduardo Flores")
 		.version(VERSION)
-		.add_files(&[new_file!("providers"), new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain)])?;
-    Ok(())
+		.add_files(&[
+			new_file!("preferences"),
+			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
+		])?;
+	if !project.integrity_ok::<Preferences>("preferences", FileFormat::TOML) {
+		project
+			.get_file("preferences", FileFormat::TOML)?
+			.set_content(Preferences::default())?
+			.write()?;
+	}
+	Ok(())
 }
 
 fn start_services() -> Result<()> {
-//    if !Plugin::Local.is_running() {
-//        Plugin::Local.start().map_err(|err| info!("{:?}", err));
-//    }
-//    if !Plugin::Google.is_running() {
-//        Plugin::Google.start().map_err(|err| info!("{:?}", err));
-//    }
-//    if !Plugin::Microsoft.is_running() {
-//        Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
-//    }
-//    if !Plugin::Nextcloud.is_running() {
-//        Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
-//    }
+	//    if !Plugin::Local.is_running() {
+	//        Plugin::Local.start().map_err(|err| info!("{:?}", err));
+	//    }
+	//    if !Plugin::Google.is_running() {
+	//        Plugin::Google.start().map_err(|err| info!("{:?}", err));
+	//    }
+	//    if !Plugin::Microsoft.is_running() {
+	//        Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
+	//    }
+	//    if !Plugin::Nextcloud.is_running() {
+	//        Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
+	//    }
 	Ok(())
 }

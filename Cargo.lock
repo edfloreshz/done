@@ -27,6 +27,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 
 [[package]]
+name = "arc-swap"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
+
+[[package]]
 name = "async-channel"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -569,6 +575,7 @@ dependencies = [
  "pretty_env_logger",
  "relm4",
  "rust-embed",
+ "serde",
  "serde_json",
  "tokio",
 ]
@@ -576,7 +583,7 @@ dependencies = [
 [[package]]
 name = "done_provider"
 version = "0.1.0"
-source = "git+https://github.com/done-devel/done-provider#b136d42d2740d8a343dcf17d71face1990759ddb"
+source = "git+https://github.com/done-devel/done-provider#eed2c3b8848729f3e545bafd480e04d2ef9954ab"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1000,7 +1007,7 @@ dependencies = [
 [[package]]
 name = "glib-build-tools"
 version = "0.17.0"
-source = "git+https://github.com/gtk-rs/gtk-rs-core#f43e8cea0001f83ad628045eb239a1f1e8ecf079"
+source = "git+https://github.com/gtk-rs/gtk-rs-core#3a7bf738457f7440d82e66711f386101ef935742"
 
 [[package]]
 name = "glib-macros"
@@ -1311,10 +1318,11 @@ dependencies = [
 
 [[package]]
 name = "i18n-embed"
-version = "0.13.5"
+version = "0.13.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79ff7e6b37b61834ec97fc945d391315188d8bb87aa1d48f10f295e73a5f5bec"
+checksum = "2653dd1a8be0726315603f1c180b29f90e5b2a58f8b943d949d5170d9ad81101"
 dependencies = [
+ "arc-swap",
  "fluent",
  "fluent-langneg",
  "fluent-syntax",
@@ -1509,7 +1517,7 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 [[package]]
 name = "libset"
 version = "0.1.2"
-source = "git+https://github.com/edfloreshz/libset?branch=beta#26ca168ce742dad144ad490a75ffbc47734785b8"
+source = "git+https://github.com/edfloreshz/libset?branch=beta#ed8417da7222b368bab1618cc0007d4d1f8ffe75"
 dependencies = [
  "anyhow",
  "directories",
