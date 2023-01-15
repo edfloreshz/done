@@ -6,8 +6,15 @@
             "cargoArgs": ["run"],
             "environment": {
                 "RUST_LOG": "info"
-            },
+            }
         },
-
+        {
+            "type": "cargo",
+            "name": "Run done release",
+            "cargoArgs": ["run", "--release"],
+            "environment": {
+                "RUST_LOG": "info"
+            }
+        }
     ]
 }
