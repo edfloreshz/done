@@ -1,4 +1,4 @@
-use done_provider::services::provider::TaskStatus;
+use proto_rust::provider::TaskStatus;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
@@ -11,7 +11,7 @@ use relm4::{
 };
 
 use crate::widgets::components::content::ContentInput;
-use done_provider::services::provider::Task;
+use proto_rust::provider::Task;
 
 #[derive(Debug)]
 pub enum TaskInput {

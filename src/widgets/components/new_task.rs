@@ -1,6 +1,6 @@
 use crate::fl;
 use chrono::NaiveDateTime;
-use done_provider::services::provider::{List, Task};
+use proto_rust::provider::{List, Task};
 use relm4::{
 	gtk,
 	gtk::prelude::{
