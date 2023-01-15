@@ -86,6 +86,7 @@ impl Plugin {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_installed(&self) -> bool {
         match self {
             Plugin::Local => Command::new("local-plugin").spawn().ok().is_some(),
@@ -100,16 +101,6 @@ impl Plugin {
         let url = format!("http://[::1]:{port}");
         let plugin = ProviderClient::connect(url).await?;
         Ok(plugin)
-    }
-
-    pub async fn connected_count() -> i64 {
-        let mut count = 0;
-        for plugin in Plugin::list() {
-            if plugin.connect().await.is_ok() {
-                count += 1;
-            }
-        }
-        count
     }
 
     pub async fn data(&self) -> Result<PluginData> {
