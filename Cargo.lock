@@ -1756,7 +1756,7 @@ dependencies = [
 [[package]]
 name = "proto_rust"
 version = "0.1.0"
-source = "git+https://github.com/done-devel/proto-rust#5250ae4b2df3cc70fa43f009e2f34688c72bd839"
+source = "git+https://github.com/done-devel/proto-rust#e97749620741317a5ffa3ab9a9b88b245504ba84"
 dependencies = [
  "bytes",
  "chrono",
