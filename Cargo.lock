@@ -563,7 +563,6 @@ dependencies = [
  "chrono",
  "directories",
  "dirs",
- "done_provider",
  "gettext-rs",
  "glib",
  "glib-build-tools",
@@ -573,31 +572,16 @@ dependencies = [
  "log",
  "once_cell",
  "pretty_env_logger",
+ "proto_rust",
  "relm4",
  "rust-embed",
  "serde",
  "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "done_provider"
-version = "0.1.0"
-source = "git+https://github.com/done-devel/done-provider#eed2c3b8848729f3e545bafd480e04d2ef9954ab"
-dependencies = [
- "anyhow",
- "chrono",
- "log",
- "pretty_env_logger",
- "prost",
- "serde",
  "strum",
  "strum_macros",
  "sysinfo",
  "tokio",
  "tonic",
- "tonic-build",
- "uuid",
 ]
 
 [[package]]
@@ -1973,6 +1957,20 @@ checksum = "a5e0526209433e96d83d750dd81a99118edbc55739e7e61a46764fd2ad537788"
 dependencies = [
  "bytes",
  "prost",
+]
+
+[[package]]
+name = "proto_rust"
+version = "0.1.0"
+source = "git+https://github.com/done-devel/proto-rust#5250ae4b2df3cc70fa43f009e2f34688c72bd839"
+dependencies = [
+ "bytes",
+ "chrono",
+ "prost",
+ "serde",
+ "tonic",
+ "tonic-build",
+ "uuid",
 ]
 
 [[package]]
