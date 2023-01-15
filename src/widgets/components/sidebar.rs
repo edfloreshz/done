@@ -1,7 +1,7 @@
+use crate::application::plugin::Plugin;
 use crate::fl;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
-use crate::application::plugin::Plugin;
 use proto_rust::provider::List;
 use relm4::adw;
 use relm4::component::{
@@ -110,8 +110,8 @@ impl SimpleAsyncComponent for SidebarModel {
 		let widgets = view_output!();
 
 		for provider in Plugin::list() {
-            model.provider_factory.guard().push_back(provider);
-            info!("Added {:?} provider to the sidebar", provider)
+			model.provider_factory.guard().push_back(provider);
+			info!("Added {:?} provider to the sidebar", provider)
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -132,10 +132,9 @@ impl SimpleAsyncComponent for SidebarModel {
 								Ok(response) => {
 									let response = response.into_inner();
 									if response.successful {
-										self.provider_factory.send(
-											index,
-											ProviderInput::AddList(list),
-										);
+										self
+											.provider_factory
+											.send(index, ProviderInput::AddList(list));
 									}
 									sender
 										.output(SidebarOutput::Notify(response.message))
@@ -161,25 +160,27 @@ impl SimpleAsyncComponent for SidebarModel {
 					},
 				}
 			},
-            SidebarInput::EnableService(plugin) => if plugin.is_running() {
-                let index = match plugin {
-                    Plugin::Local => 0,
-                    Plugin::Google => 1,
-                    Plugin::Microsoft => 2,
-                    Plugin::Nextcloud => 3,
-                };
-                self.provider_factory.send(index, ProviderInput::Enable)
-            },
-            SidebarInput::DisableService(plugin) => {
-                let index = match plugin {
-                    Plugin::Local => 0,
-                    Plugin::Google => 1,
-                    Plugin::Microsoft => 2,
-                    Plugin::Nextcloud => 3,
-                };
-                self.provider_factory.send(index, ProviderInput::Disable)
-            },
-            SidebarInput::ListSelected(list) => {
+			SidebarInput::EnableService(plugin) => {
+				if plugin.is_running() {
+					let index = match plugin {
+						Plugin::Local => 0,
+						Plugin::Google => 1,
+						Plugin::Microsoft => 2,
+						Plugin::Nextcloud => 3,
+					};
+					self.provider_factory.send(index, ProviderInput::Enable)
+				}
+			},
+			SidebarInput::DisableService(plugin) => {
+				let index = match plugin {
+					Plugin::Local => 0,
+					Plugin::Google => 1,
+					Plugin::Microsoft => 2,
+					Plugin::Nextcloud => 3,
+				};
+				self.provider_factory.send(index, ProviderInput::Disable)
+			},
+			SidebarInput::ListSelected(list) => {
 				sender
 					.output(SidebarOutput::ListSelected(list))
 					.unwrap_or_default();

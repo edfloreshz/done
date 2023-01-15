@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::application::plugin::Plugin;
+use anyhow::Result;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::prelude::{
@@ -20,9 +20,9 @@ pub struct Preferences {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProviderPreferences {
 	pub local_enabled: bool,
-    pub google_enabled: bool,
-    pub microsoft_enabled: bool,
-    pub nextcloud_enabled: bool,
+	pub google_enabled: bool,
+	pub microsoft_enabled: bool,
+	pub nextcloud_enabled: bool,
 }
 
 impl Default for ProviderPreferences {
@@ -192,7 +192,7 @@ impl Component for Preferences {
 						Plugin::Microsoft => self.plugins.microsoft_enabled = true,
 						Plugin::Nextcloud => self.plugins.nextcloud_enabled = true,
 					}
-					match update_preferences(&self) {
+					match update_preferences(self) {
 						Ok(()) => sender
 							.output(PreferencesOutput::EnablePluginOnSidebar(plugin))
 							.unwrap(),
@@ -210,7 +210,7 @@ impl Component for Preferences {
 						Plugin::Microsoft => self.plugins.microsoft_enabled = false,
 						Plugin::Nextcloud => self.plugins.nextcloud_enabled = false,
 					}
-					match update_preferences(&self) {
+					match update_preferences(self) {
 						Ok(()) => sender
 							.output(PreferencesOutput::DisablePluginOnSidebar(plugin))
 							.unwrap(),

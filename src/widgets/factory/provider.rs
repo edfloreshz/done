@@ -1,28 +1,28 @@
-use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use relm4::loading_widgets::LoadingWidgets;
 use crate::application::plugin::{Plugin, PluginData};
-use proto_rust::provider::List;
+use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use libset::format::FileFormat;
 use libset::project::Project;
+use proto_rust::provider::List;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
+use relm4::loading_widgets::LoadingWidgets;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 
+use crate::widgets::components::preferences::Preferences;
 use crate::widgets::components::sidebar::SidebarInput;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
-use crate::widgets::components::preferences::Preferences;
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProviderModel {
-    pub plugin: Plugin,
-    pub enabled: bool,
-    pub data: PluginData,
+	pub plugin: Plugin,
+	pub enabled: bool,
+	pub data: PluginData,
 	pub list_factory: AsyncFactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
 }
@@ -35,8 +35,8 @@ pub enum ProviderInput {
 	Forward,
 	ListSelected(ListData),
 	Notify(String),
-    Enable,
-    Disable
+	Enable,
+	Disable,
 }
 
 #[derive(Debug)]
@@ -44,7 +44,7 @@ pub enum ProviderOutput {
 	AddListToProvider(usize, String, String),
 	ListSelected(ListData),
 	Notify(String),
-	Forward
+	Forward,
 }
 
 #[relm4::factory(pub async)]
@@ -80,63 +80,69 @@ impl AsyncFactoryComponent for ProviderModel {
 						set_direction: gtk::ArrowType::Right,
 						set_popover: Some(self.new_list_controller.widget())
 					}
-                } else {
-                    gtk::Box {
+								} else {
+										gtk::Box {
 
-                    }
-                },
+										}
+								},
 			},
 		}
 	}
 
-    fn init_loading_widgets(root: &mut Self::Root) -> Option<relm4::loading_widgets::LoadingWidgets> {
-        relm4::view! {
-            #[local_ref]
-            root {
-                #[name(expander)]
-                add = &adw::ExpanderRow {
+	fn init_loading_widgets(
+		root: &mut Self::Root,
+	) -> Option<relm4::loading_widgets::LoadingWidgets> {
+		relm4::view! {
+				#[local_ref]
+				root {
+						#[name(expander)]
+						add = &adw::ExpanderRow {
 
-                }
-            }
-        }
-        Some(LoadingWidgets::new(root, expander))
-    }
+						}
+				}
+		}
+		Some(LoadingWidgets::new(root, expander))
+	}
 
 	async fn init_model(
 		plugin: Self::Init,
 		index: &DynamicIndex,
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
-        let plugin_preferences = Project::open("dev", "edfloreshz", "done").unwrap().get_file_as::<Preferences>("preferences", FileFormat::TOML).unwrap().plugins;
-        let data = if plugin.is_running() {
-            plugin.data().await.unwrap()
-        } else {
-            plugin.placeholder()
-        };
-        let enabled = match plugin {
-            Plugin::Local => plugin_preferences.local_enabled,
-            Plugin::Google => plugin_preferences.google_enabled,
-            Plugin::Microsoft => plugin_preferences.microsoft_enabled,
-            Plugin::Nextcloud => plugin_preferences.nextcloud_enabled,
-        };
-        let index = index.current_index();
-        Self {
-            plugin,
-            enabled,
-            data,
-            list_factory: AsyncFactoryVecDeque::new(
-                adw::ExpanderRow::default(),
+		let plugin_preferences = Project::open("dev", "edfloreshz", "done")
+			.unwrap()
+			.get_file_as::<Preferences>("preferences", FileFormat::TOML)
+			.unwrap()
+			.plugins;
+		let data = if plugin.is_running() {
+			plugin.data().await.unwrap()
+		} else {
+			plugin.placeholder()
+		};
+		let enabled = match plugin {
+			Plugin::Local => plugin_preferences.local_enabled,
+			Plugin::Google => plugin_preferences.google_enabled,
+			Plugin::Microsoft => plugin_preferences.microsoft_enabled,
+			Plugin::Nextcloud => plugin_preferences.nextcloud_enabled,
+		};
+		let index = index.current_index();
+		Self {
+			plugin,
+			enabled,
+			data,
+			list_factory: AsyncFactoryVecDeque::new(
+				adw::ExpanderRow::default(),
 				sender.input_sender(),
 			),
-            new_list_controller: NewListModel::builder().launch(()).forward(
-                    sender.input_sender(),
-    				move |message| match message {
-                        NewListOutput::AddTaskListToSidebar(name) => {
-                            ProviderInput::RequestAddList(index, name)
-                        },
-                    },
-    			),
-        }
+			new_list_controller: NewListModel::builder().launch(()).forward(
+				sender.input_sender(),
+				move |message| match message {
+					NewListOutput::AddTaskListToSidebar(name) => {
+						ProviderInput::RequestAddList(index, name)
+					},
+				},
+			),
+		}
 	}
 
 	fn init_widgets(
@@ -154,10 +160,7 @@ impl AsyncFactoryComponent for ProviderModel {
 		);
 
 		for list in &self.data.lists {
-			self
-				.list_factory
-				.guard()
-				.push_back(list.clone());
+			self.list_factory.guard().push_back(list.clone());
 		}
 
 		widgets
@@ -178,15 +181,20 @@ impl AsyncFactoryComponent for ProviderModel {
 					.position(|list| list.id == list_id)
 					.unwrap();
 				self.data.lists.remove(index);
-                self.data = self.plugin.data().await.unwrap();
+				self.data = self.plugin.data().await.unwrap();
 				info!("Deleted task list with id: {}", list_id);
 			},
-			ProviderInput::RequestAddList(index, name) => sender
-				.output(ProviderOutput::AddListToProvider(index, self.plugin.data().await.unwrap().id, name)),
+			ProviderInput::RequestAddList(index, name) => {
+				sender.output(ProviderOutput::AddListToProvider(
+					index,
+					self.plugin.data().await.unwrap().id,
+					name,
+				))
+			},
 			ProviderInput::AddList(list) => {
 				self.list_factory.guard().push_back(list);
-                self.data = self.plugin.data().await.unwrap();
-                info!("List added to {}", self.data.name)
+				self.data = self.plugin.data().await.unwrap();
+				info!("List added to {}", self.data.name)
 			},
 			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
 			ProviderInput::ListSelected(list) => {
@@ -194,21 +202,21 @@ impl AsyncFactoryComponent for ProviderModel {
 				info!("List selected: {}", list.data.name)
 			},
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
-            ProviderInput::Enable => {
-                self.enabled = true;
-                self.data = self.plugin.data().await.unwrap();
-                loop {
-                    let list = self.list_factory.guard().pop_front();
-                    if list.is_none() {
-                        break;
-                    }
-                }
-                for list in &self.data.lists {
-                    self.list_factory.guard().push_back(list.clone());
-                }
-            },
-            ProviderInput::Disable => self.enabled = false,
-        }
+			ProviderInput::Enable => {
+				self.enabled = true;
+				self.data = self.plugin.data().await.unwrap();
+				loop {
+					let list = self.list_factory.guard().pop_front();
+					if list.is_none() {
+						break;
+					}
+				}
+				for list in &self.data.lists {
+					self.list_factory.guard().push_back(list.clone());
+				}
+			},
+			ProviderInput::Disable => self.enabled = false,
+		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
