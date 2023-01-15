@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use proto_rust::provider::TaskStatus;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -11,6 +13,7 @@ use relm4::{
 	RelmWidgetExt,
 };
 
+use crate::application::plugin::Plugin;
 use crate::widgets::components::content::ContentInput;
 use proto_rust::provider::Task;
 
@@ -29,8 +32,7 @@ pub enum TaskOutput {
 
 #[derive(Debug, Clone)]
 pub struct TaskData {
-	pub data: Task,
-	pub loaded: bool,
+	pub task: Task,
 }
 
 #[relm4::factory(pub async)]
@@ -40,7 +42,7 @@ impl AsyncFactoryComponent for TaskData {
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type Init = TaskData;
+    type Init = (String, String);
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -57,7 +59,7 @@ impl AsyncFactoryComponent for TaskData {
 					set_margin_end: 10,
 					#[name = "check_button"]
 					gtk::CheckButton {
-						set_active: self.data.status == 1,
+						set_active: self.task.status == 1,
 						connect_toggled[sender] => move |checkbox| {
 							sender.input(TaskInput::SetCompleted(checkbox.is_active()));
 						}
@@ -70,7 +72,7 @@ impl AsyncFactoryComponent for TaskData {
 							add_css_class: "flat",
 							add_css_class: "no-border",
 							set_hexpand: true,
-							set_text: &self.data.title,
+							set_text: &self.task.title,
 							connect_activate[sender] => move |entry| {
 								let buffer = entry.buffer();
 								sender.input(TaskInput::ModifyTitle(buffer.text()));
@@ -89,7 +91,7 @@ impl AsyncFactoryComponent for TaskData {
 							add_css_class: "opaque",
 							add_css_class: "circular",
 							#[watch]
-							set_class_active: ("favorite", self.data.favorite),
+							set_class_active: ("favorite", self.task.favorite),
 							set_icon_name: "star-filled-rounded-symbolic",
 							connect_toggled[sender, index] => move |_| {
 								sender.input(TaskInput::Favorite(index.clone()));
@@ -129,7 +131,17 @@ impl AsyncFactoryComponent for TaskData {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		init
+        let mut model = Self { task: Task::default() };
+        if let Ok(provider) = Plugin::from_str(&init.1) {
+            match provider.connect().await {
+                Ok(mut service) => match service.read_task(init.0.clone()).await {
+                    Ok(response) => model.task = response.into_inner().task.unwrap(),
+                    Err(e) => error!("Failed to find tasks. {:?}", e)
+                },
+                Err(e) => error!("Failed to connect to service. {:?}", e)
+            }
+        };
+        model
 	}
 
 	fn init_widgets(
@@ -150,35 +162,32 @@ impl AsyncFactoryComponent for TaskData {
 	) {
 		match message {
 			TaskInput::SetCompleted(toggled) => {
-				self.data.status = if toggled {
+				self.task.status = if toggled {
 					TaskStatus::Completed as i32
 				} else {
 					TaskStatus::NotStarted as i32
 				};
-				if self.loaded {
-					sender
-						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.data.clone()))
-						.unwrap_or_default();
-				}
+				sender
+					.output_sender()
+					.send(TaskOutput::UpdateTask(None, self.task.clone()))
+					.unwrap_or_default();
 			},
 			TaskInput::Favorite(index) => {
-				self.data.favorite = !self.data.favorite;
+				self.task.favorite = !self.task.favorite;
 
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(Some(index), self.data.clone()))
+					.send(TaskOutput::UpdateTask(Some(index), self.task.clone()))
 					.unwrap_or_default();
 			},
 			TaskInput::ModifyTitle(title) => {
-				self.data.title = title;
+				self.task.title = title;
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.data.clone()))
+					.send(TaskOutput::UpdateTask(None, self.task.clone()))
 					.unwrap_or_default();
 			},
 		}
-		self.loaded = true;
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {

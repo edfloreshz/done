@@ -23,7 +23,7 @@ pub struct SidebarModel {
 #[derive(Debug)]
 pub enum SidebarInput {
 	AddListToProvider(usize, String, String),
-	ListSelected(List),
+	ListSelected(ListData),
 	EnableService(Plugin),
 	DisableService(Plugin),
 	Forward,
@@ -33,7 +33,7 @@ pub enum SidebarInput {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarOutput {
-	ListSelected(List),
+	ListSelected(ListData),
 	Forward,
 	Notify(String),
 }
@@ -134,7 +134,7 @@ impl SimpleAsyncComponent for SidebarModel {
 									if response.successful {
 										self.provider_factory.send(
 											index,
-											ProviderInput::AddList(ListData { data: list }),
+											ProviderInput::AddList(list),
 										);
 									}
 									sender
