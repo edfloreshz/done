@@ -1,6 +1,6 @@
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
-use done_provider::plugin::{Plugin, PluginData};
-use done_provider::services::provider::List;
+use crate::application::plugin::{Plugin, PluginData};
+use proto_rust::provider::List;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::factory::AsyncFactoryComponent;

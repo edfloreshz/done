@@ -1,5 +1,5 @@
 use anyhow::Result;
-use done_provider::plugin::Plugin;
+use crate::application::plugin::Plugin;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::prelude::{

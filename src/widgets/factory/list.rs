@@ -8,8 +8,8 @@ use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use done_provider::plugin::Plugin;
-use done_provider::services::provider::List;
+use crate::application::plugin::Plugin;
+use proto_rust::provider::List;
 use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};

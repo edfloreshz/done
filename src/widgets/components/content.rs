@@ -3,10 +3,10 @@ use crate::widgets::components::new_task::{
 	NewTask, NewTaskEvent, NewTaskOutput,
 };
 use crate::widgets::factory::task::TaskData;
-use done_provider::plugin::Plugin;
-use done_provider::services::provider::provider_client::ProviderClient;
-use done_provider::services::provider::{List, Task};
-use done_provider::Channel;
+use crate::application::plugin::Plugin;
+use proto_rust::provider::provider_client::ProviderClient;
+use proto_rust::provider::{List, Task};
+
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
@@ -19,6 +19,7 @@ use relm4::{
 };
 use relm4::{Component, ComponentController};
 use std::str::FromStr;
+use tonic::transport::Channel;
 
 pub struct ContentModel {
 	current_provider: Plugin,

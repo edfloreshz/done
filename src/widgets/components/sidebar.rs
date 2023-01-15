@@ -1,8 +1,8 @@
 use crate::fl;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
-use done_provider::plugin::Plugin;
-use done_provider::services::provider::List;
+use crate::application::plugin::Plugin;
+use proto_rust::provider::List;
 use relm4::adw;
 use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,

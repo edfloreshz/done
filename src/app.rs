@@ -9,8 +9,8 @@ use crate::widgets::components::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
 use crate::widgets::modals::about::AboutDialog;
-use done_provider::plugin::Plugin;
-use done_provider::services::provider::List;
+use crate::application::plugin::Plugin;
+use proto_rust::provider::List;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::AsyncController;
