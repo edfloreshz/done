@@ -2,6 +2,7 @@ use crate::fl;
 use crate::widgets::components::new_task::{
 	NewTask, NewTaskEvent, NewTaskOutput,
 };
+use crate::widgets::factory::list::ListData;
 use crate::widgets::factory::task::TaskData;
 use crate::application::plugin::Plugin;
 use proto_rust::provider::provider_client::ProviderClient;
@@ -32,7 +33,7 @@ pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
-	SetTaskList(List),
+	SetTaskList(ListData),
 }
 
 #[derive(Debug)]
@@ -135,10 +136,14 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		let mut service: Option<ProviderClient<Channel>> = None;
+		let mut plugin = None;
 		if let Some(parent) = &self.parent_list {
 			if let Ok(provider) = Plugin::from_str(&parent.provider) {
 				match provider.connect().await {
-					Ok(connection) => service = Some(connection),
+					Ok(connection) => {
+						plugin = Some(provider.data().await.unwrap());
+						service = Some(connection)
+					},
 					Err(_) => {
 						sender
 							.output(ContentOutput::Notify(format!(
@@ -163,11 +168,9 @@ impl AsyncComponent for ContentModel {
 					match service.create_task(task.clone()).await {
 						Ok(response) => {
 							let response = response.into_inner();
-							if response.successful {
-								self.tasks_factory.guard().push_back(TaskData {
-									data: task,
-									loaded: false,
-								});
+                            if response.successful && response.task.is_some() {
+                                let task = response.task.unwrap();
+                                self.tasks_factory.guard().push_back((task.id, plugin.unwrap().id));
 							}
 							sender
 								.output(ContentOutput::Notify(response.message))
@@ -185,7 +188,7 @@ impl AsyncComponent for ContentModel {
 				if let Some(mut service) = service {
 					let mut guard = self.tasks_factory.guard();
 					let task = guard.get(index.current_index()).unwrap();
-					match service.delete_task(task.clone().data.id).await {
+					match service.delete_task(task.clone().task.id).await {
 						Ok(response) => {
 							let response = response.into_inner();
 							if response.successful {
@@ -228,50 +231,23 @@ impl AsyncComponent for ContentModel {
 				}
 			},
 			ContentInput::SetTaskList(list) => {
-				self.parent_list = Some(list.clone());
+				self.parent_list = Some(list.data.clone());
 				self
 					.new_task_component
 					.sender()
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
 
-				if let Ok(provider) = Plugin::from_str(&list.provider) {
-					let mut service = provider.connect().await.unwrap();
-					let (tx, mut rx) = tokio::sync::mpsc::channel(100);
+                loop {
+                    let list = self.tasks_factory.guard().pop_front();
+                    if list.is_none() {
+                        break;
+                    }
+                }
 
-					tokio::spawn(async move {
-						let mut stream = service
-							.read_tasks_from_list(list.id)
-							.await
-							.unwrap()
-							.into_inner();
-						while let Some(task) = stream.message().await.unwrap() {
-							tx.send(task).await.unwrap()
-						}
-					});
-
-					loop {
-						let task = self.tasks_factory.guard().pop_front();
-						if task.is_none() {
-							break;
-						}
-					}
-
-					while let Some(task) = rx.recv().await {
-						if let Some(task) = task.task {
-							self.tasks_factory.guard().push_back(TaskData {
-								data: task,
-								loaded: false,
-							});
-						}
-					}
-				} else {
-					sender
-						.output(ContentOutput::Notify(String::from(
-							"Failed to identify the provider.",
-						)))
-						.unwrap_or_default();
-				}
+                for task in list.tasks {
+                    self.tasks_factory.guard().push_back((task, list.data.provider.clone()));
+                }
 			}
 		}
 		self.update_view(widgets, sender)

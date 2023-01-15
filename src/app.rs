@@ -8,9 +8,9 @@ use crate::widgets::components::preferences::{Preferences, PreferencesOutput};
 use crate::widgets::components::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
+use crate::widgets::factory::list::ListData;
 use crate::widgets::modals::about::AboutDialog;
 use crate::application::plugin::Plugin;
-use proto_rust::provider::List;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::AsyncController;
@@ -53,7 +53,7 @@ impl App {
 
 #[derive(Debug)]
 pub enum AppMsg {
-	SelectList(List),
+	SelectList(ListData),
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -230,7 +230,7 @@ impl Component for App {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::CloseWarning => self.warning_revealed = false,
 			AppMsg::SelectList(list) => {
-				self.content_title = Some(list.name.clone());
+				self.content_title = Some(list.data.name.clone());
 				self
 					.content_controller
 					.sender()

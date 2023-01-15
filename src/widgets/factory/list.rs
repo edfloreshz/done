@@ -24,7 +24,7 @@ pub enum ListInput {
 
 #[derive(Debug)]
 pub enum ListOutput {
-	Select(List),
+    Select(ListData),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),
@@ -33,6 +33,7 @@ pub enum ListOutput {
 #[derive(Debug, Clone)]
 pub struct ListData {
 	pub data: List,
+    pub tasks: Vec<String>
 }
 
 #[relm4::factory(pub async)]
@@ -42,7 +43,7 @@ impl AsyncFactoryComponent for ListData {
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-	type Init = ListData;
+    type Init = List;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -135,7 +136,17 @@ impl AsyncFactoryComponent for ListData {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		params
+        let mut tasks = vec![];
+        if let Ok(provider) = Plugin::from_str(&params.provider) {
+            match provider.connect().await {
+                Ok(mut service) => match service.read_task_ids_from_list(params.id.clone()).await {
+                    Ok(response) => tasks = response.into_inner().tasks,
+                    Err(e) => error!("Failed to find tasks. {:?}", e)
+                },
+                Err(e) => error!("Failed to connect to service. {:?}", e)
+            }
+        };
+        Self { data: params, tasks }
 	}
 
 	async fn update(
@@ -198,17 +209,17 @@ impl AsyncFactoryComponent for ListData {
 					}
 				},
 				ListInput::Select => {
-					sender.output(ListOutput::Select(self.data.clone()))
+					sender.output(ListOutput::Select(self.clone()))
 				},
 			}
 		} else if let ListInput::Select = message {
-			sender.output(ListOutput::Select(self.data.clone()))
+			sender.output(ListOutput::Select(self.clone()))
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
-			ListOutput::Select(list) => Some(ProviderInput::ListSelected(list)),
+            ListOutput::Select(data) => Some(ProviderInput::ListSelected(data)),
 			ListOutput::DeleteTaskList(index, list_id) => {
 				Some(ProviderInput::DeleteTaskList(index, list_id))
 			},

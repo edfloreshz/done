@@ -30,10 +30,10 @@ pub struct ProviderModel {
 #[derive(Debug)]
 pub enum ProviderInput {
 	RequestAddList(usize, String),
-	AddList(ListData),
+	AddList(List),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
-	ListSelected(List),
+	ListSelected(ListData),
 	Notify(String),
     Enable,
     Disable
@@ -42,7 +42,7 @@ pub enum ProviderInput {
 #[derive(Debug)]
 pub enum ProviderOutput {
 	AddListToProvider(usize, String, String),
-	ListSelected(List),
+	ListSelected(ListData),
 	Notify(String),
 	Forward
 }
@@ -157,7 +157,7 @@ impl AsyncFactoryComponent for ProviderModel {
 			self
 				.list_factory
 				.guard()
-				.push_back(ListData { data: list.clone() });
+				.push_back(list.clone());
 		}
 
 		widgets
@@ -191,7 +191,7 @@ impl AsyncFactoryComponent for ProviderModel {
 			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
 			ProviderInput::ListSelected(list) => {
 				sender.output(ProviderOutput::ListSelected(list.clone()));
-				info!("List selected: {}", list.name)
+				info!("List selected: {}", list.data.name)
 			},
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
             ProviderInput::Enable => {
@@ -204,7 +204,7 @@ impl AsyncFactoryComponent for ProviderModel {
                     }
                 }
                 for list in &self.data.lists {
-                    self.list_factory.guard().push_back(ListData { data: list.clone() });
+                    self.list_factory.guard().push_back(list.clone());
                 }
             },
             ProviderInput::Disable => self.enabled = false,
