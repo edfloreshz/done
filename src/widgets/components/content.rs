@@ -189,13 +189,13 @@ impl AsyncComponent for ContentModel {
 				}
 			},
 			ContentInput::TaskListSelected(list) => {
-				self.parent_list = Some(list.data.clone());
+				self.parent_list = Some(list.list.clone());
 				self
 					.create_task_controller
 					.sender()
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
-				self.plugin = Some(Plugin::from_str(&list.data.provider).unwrap());
+				self.plugin = Some(Plugin::from_str(&list.list.provider).unwrap());
 				self.service = Some(self.plugin.unwrap().connect().await.unwrap());
 
 				loop {
