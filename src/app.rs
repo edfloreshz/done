@@ -170,12 +170,16 @@ impl Component for App {
 										}
 									}
 								},
-								#[watch]
-								append: if model.page_title.is_some() {
-									model.content.widget()
-								} else {
-									model.welcome.widget()
-								}
+								append = &gtk::Box {
+									#[watch]
+									set_visible: model.page_title.is_none(),
+									append: model.welcome.widget()
+								},
+								append = &gtk::Box {
+									#[watch]
+									set_visible: model.page_title.is_some(),
+									append: model.content.widget()
+								},
 							},
 							connect_folded_notify[sender] => move |leaflet| {
 								if leaflet.is_folded() {

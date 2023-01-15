@@ -50,27 +50,25 @@ impl AsyncComponent for ContentModel {
 
 	view! {
 		#[root]
-		gtk::Box {
-			#[name(tasks)]
-			gtk::Stack {
-				set_vexpand: true,
-				set_transition_duration: 250,
-				set_transition_type: gtk::StackTransitionType::Crossfade,
-				gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					#[name(task_container)]
-					gtk::Stack {
-						set_transition_duration: 250,
-						set_transition_type: gtk::StackTransitionType::Crossfade,
-						gtk::ScrolledWindow {
-							set_vexpand: true,
-							set_hexpand: true,
-							set_child: Some(&list_box)
-						},
+		#[name(tasks)]
+		gtk::Stack {
+			set_vexpand: true,
+			set_transition_duration: 250,
+			set_transition_type: gtk::StackTransitionType::Crossfade,
+			gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
+				#[name(task_container)]
+				gtk::Stack {
+					set_transition_duration: 250,
+					set_transition_type: gtk::StackTransitionType::Crossfade,
+					gtk::ScrolledWindow {
+						set_vexpand: true,
+						set_hexpand: true,
+						set_child: Some(&list_box)
 					},
-					append: model.create_task_controller.widget()
 				},
-			}
+				append: model.create_task_controller.widget()
+			},
 		}
 	}
 
