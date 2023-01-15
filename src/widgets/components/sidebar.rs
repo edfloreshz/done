@@ -24,7 +24,6 @@ pub struct SidebarModel {
 pub enum SidebarInput {
 	AddListToProvider(usize, String, String),
 	ListSelected(List),
-	ProviderSelected(Plugin),
 	EnableService(Plugin),
 	DisableService(Plugin),
 	Forward,
@@ -35,7 +34,6 @@ pub enum SidebarInput {
 #[derive(Debug)]
 pub enum SidebarOutput {
 	ListSelected(List),
-	ProviderSelected(Plugin),
 	Forward,
 	Notify(String),
 }
@@ -188,11 +186,6 @@ impl SimpleAsyncComponent for SidebarModel {
 			},
 			SidebarInput::Forward => {
 				sender.output(SidebarOutput::Forward).unwrap_or_default();
-			},
-			SidebarInput::ProviderSelected(provider) => {
-				sender
-					.output(SidebarOutput::ProviderSelected(provider))
-					.unwrap_or_default();
 			},
 			SidebarInput::Notify(msg) => {
 				sender

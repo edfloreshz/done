@@ -34,7 +34,6 @@ pub enum ProviderInput {
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	ListSelected(List),
-	SelectSmartProvider,
 	Notify(String),
     Enable,
     Disable
@@ -42,11 +41,10 @@ pub enum ProviderInput {
 
 #[derive(Debug)]
 pub enum ProviderOutput {
-	ListSelected(List),
-	ProviderSelected(Plugin),
-	Forward,
 	AddListToProvider(usize, String, String),
+	ListSelected(List),
 	Notify(String),
+	Forward
 }
 
 #[relm4::factory(pub async)]
@@ -88,14 +86,6 @@ impl AsyncFactoryComponent for ProviderModel {
                     }
                 },
 			},
-			add_controller = &gtk::GestureClick {
-				connect_pressed[sender, index] => move |_, _, _, _| {
-					if index.clone().current_index() <= 3 {
-						sender.input(ProviderInput::SelectSmartProvider);
-						sender.input(ProviderInput::Forward)
-					}
-				}
-			}
 		}
 	}
 
@@ -151,7 +141,7 @@ impl AsyncFactoryComponent for ProviderModel {
 
 	fn init_widgets(
 		&mut self,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
@@ -203,10 +193,6 @@ impl AsyncFactoryComponent for ProviderModel {
 				sender.output(ProviderOutput::ListSelected(list.clone()));
 				info!("List selected: {}", list.name)
 			},
-			ProviderInput::SelectSmartProvider => {
-                sender.output(ProviderOutput::ProviderSelected(self.plugin));
-                info!("Provider selected: {}", self.data.name)
-			},
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
             ProviderInput::Enable => {
                 self.enabled = true;
@@ -229,9 +215,6 @@ impl AsyncFactoryComponent for ProviderModel {
 		let output = match output {
 			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
 			ProviderOutput::Forward => SidebarInput::Forward,
-			ProviderOutput::ProviderSelected(provider) => {
-				SidebarInput::ProviderSelected(provider)
-			},
 			ProviderOutput::AddListToProvider(index, provider_id, name) => {
 				SidebarInput::AddListToProvider(index, provider_id, name)
 			},
