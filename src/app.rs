@@ -309,7 +309,7 @@ impl Component for App {
 			AppMsg::Quit => main_app().quit(),
 			AppMsg::CloseWarning => self.warning_revealed = false,
 			AppMsg::TaskListSelected(list) => {
-				self.page_title = Some(list.data.name.clone());
+				self.page_title = Some(list.list.name.clone());
 				self
 					.content
 					.sender()
