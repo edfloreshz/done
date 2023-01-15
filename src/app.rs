@@ -9,6 +9,7 @@ use crate::widgets::components::preferences::{Preferences, PreferencesOutput};
 use crate::widgets::components::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
+use crate::widgets::components::welcome::Welcome;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::modals::about::AboutDialog;
 use gtk::prelude::*;
@@ -23,12 +24,12 @@ use relm4::{
 };
 
 pub struct App {
-	message: Option<AppMsg>,
-	sidebar_controller: AsyncController<SidebarModel>,
-	content_controller: AsyncController<ContentModel>,
-	preferences_controller: Controller<Preferences>,
+	sidebar: AsyncController<SidebarModel>,
+	content: AsyncController<ContentModel>,
+	preferences: Controller<Preferences>,
+	welcome: Controller<Welcome>,
 	about_dialog: Option<Controller<AboutDialog>>,
-	content_title: Option<String>,
+	page_title: Option<String>,
 	warning_revealed: bool,
 }
 
@@ -37,15 +38,16 @@ impl App {
 		sidebar: AsyncController<SidebarModel>,
 		content: AsyncController<ContentModel>,
 		preferences: Controller<Preferences>,
+		welcome: Controller<Welcome>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
-			message: None,
-			sidebar_controller: sidebar,
-			content_controller: content,
-			preferences_controller: preferences,
+			sidebar,
+			content,
+			preferences,
+			welcome,
 			about_dialog,
-			content_title: None,
+			page_title: None,
 			warning_revealed: true,
 		}
 	}
@@ -53,7 +55,7 @@ impl App {
 
 #[derive(Debug)]
 pub enum AppMsg {
-	SelectList(ListData),
+	TaskListSelected(ListData),
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -80,8 +82,8 @@ impl Component for App {
 	type CommandOutput = ();
 	type Input = AppMsg;
 	type Output = ();
-	type Widgets = AppWidgets;
 	type Init = ();
+	type Widgets = AppWidgets;
 
 	menu! {
 		primary_menu: {
@@ -149,7 +151,7 @@ impl Component for App {
 										set_menu_model: Some(&primary_menu),
 									},
 								},
-								append: model.sidebar_controller.widget(),
+								append: model.sidebar.widget(),
 							},
 							append: &gtk::Separator::default(),
 							append: content = &gtk::Box {
@@ -159,7 +161,7 @@ impl Component for App {
 									set_hexpand: true,
 									set_show_start_title_buttons: true,
 									#[watch]
-									set_title_widget: Some(&gtk::Label::new(model.content_title.as_deref())),
+									set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
 									pack_start: go_back_button = &gtk::Button {
 										set_icon_name: "go-previous-symbolic",
 										set_visible: false,
@@ -168,7 +170,12 @@ impl Component for App {
 										}
 									}
 								},
-								append: model.content_controller.widget()
+								#[watch]
+								append: if model.page_title.is_some() {
+									model.content.widget()
+								} else {
+									model.welcome.widget()
+								}
 							},
 							connect_folded_notify[sender] => move |leaflet| {
 								if leaflet.is_folded() {
@@ -194,67 +201,6 @@ impl Component for App {
 		}
 	}
 
-	fn post_view() {
-		if let Some(msg) = &model.message {
-			match msg {
-				AppMsg::Folded => {
-					if model.content_title.is_some() {
-						leaflet.set_visible_child(content);
-					} else {
-						leaflet.set_visible_child(sidebar);
-					}
-					go_back_button.set_visible(true);
-					sidebar_header.set_show_start_title_buttons(true);
-					sidebar_header.set_show_end_title_buttons(true);
-				},
-				AppMsg::Unfolded => {
-					go_back_button.set_visible(false);
-					sidebar_header.set_show_start_title_buttons(false);
-					sidebar_header.set_show_end_title_buttons(false);
-				},
-				AppMsg::Forward => leaflet.set_visible_child(content),
-				AppMsg::Back => leaflet.set_visible_child(sidebar),
-				_ => (),
-			}
-		}
-	}
-
-	fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: ComponentSender<Self>,
-		_root: &Self::Root,
-	) {
-		match message {
-			AppMsg::Quit => main_app().quit(),
-			AppMsg::CloseWarning => self.warning_revealed = false,
-			AppMsg::SelectList(list) => {
-				self.content_title = Some(list.data.name.clone());
-				self
-					.content_controller
-					.sender()
-					.send(ContentInput::SetTaskList(list))
-					.unwrap_or_default();
-			},
-			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
-			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
-				self.message = Some(message)
-			},
-			AppMsg::EnablePluginOnSidebar(plugin) => self
-				.sidebar_controller
-				.sender()
-				.send(SidebarInput::EnableService(plugin))
-				.unwrap_or_default(),
-			AppMsg::DisablePluginOnSidebar(plugin) => self
-				.sidebar_controller
-				.sender()
-				.send(SidebarInput::DisableService(plugin))
-				.unwrap_or_default(),
-		}
-		self.update_view(widgets, sender)
-	}
-
 	fn init(
 		_init: Self::Init,
 		root: &Self::Root,
@@ -265,7 +211,7 @@ impl Component for App {
 		let sidebar_controller = SidebarModel::builder().launch(()).forward(
 			sender.input_sender(),
 			|message| match message {
-				SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
+				SidebarOutput::ListSelected(list) => AppMsg::TaskListSelected(list),
 				SidebarOutput::Forward => AppMsg::Forward,
 				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
 			},
@@ -290,17 +236,20 @@ impl Component for App {
 			},
 		);
 
+		let welcome_controller = Welcome::builder().launch(()).detach();
+
 		let mut model = App::new(
 			sidebar_controller,
 			content_controller,
 			preferences_controller,
+			welcome_controller,
 			None,
 		);
 
 		let widgets = view_output!();
 
 		let preferences_action = {
-			let preferences = model.preferences_controller.widget().clone();
+			let preferences = model.preferences.widget().clone();
 			RelmAction::<PreferencesAction>::new_stateless(move |_| {
 				preferences.present();
 			})
@@ -343,6 +292,56 @@ impl Component for App {
 		);
 
 		ComponentParts { model, widgets }
+	}
+
+	fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: ComponentSender<Self>,
+		_root: &Self::Root,
+	) {
+		match message {
+			AppMsg::Quit => main_app().quit(),
+			AppMsg::CloseWarning => self.warning_revealed = false,
+			AppMsg::TaskListSelected(list) => {
+				self.page_title = Some(list.data.name.clone());
+				self
+					.content
+					.sender()
+					.send(ContentInput::TaskListSelected(list))
+					.unwrap_or_default();
+			},
+			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
+			AppMsg::Folded => {
+				if self.page_title.is_some() {
+					widgets.leaflet.set_visible_child(&widgets.content);
+				} else {
+					widgets.leaflet.set_visible_child(&widgets.sidebar);
+				}
+				widgets.go_back_button.set_visible(true);
+				widgets.sidebar_header.set_show_start_title_buttons(true);
+				widgets.sidebar_header.set_show_end_title_buttons(true);
+			},
+			AppMsg::Unfolded => {
+				widgets.go_back_button.set_visible(false);
+				widgets.sidebar_header.set_show_start_title_buttons(false);
+				widgets.sidebar_header.set_show_end_title_buttons(false);
+			},
+			AppMsg::Forward => widgets.leaflet.set_visible_child(&widgets.content),
+			AppMsg::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
+			AppMsg::EnablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarInput::EnableService(plugin))
+				.unwrap_or_default(),
+			AppMsg::DisablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarInput::DisableService(plugin))
+				.unwrap_or_default(),
+		}
+		self.update_view(widgets, sender)
 	}
 }
 
