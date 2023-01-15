@@ -41,75 +41,75 @@ impl Component for NewTask {
 	type Widgets = NewTaskWidgets;
 
 	view! {
-			#[root]
-						gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								gtk::Box {
-										set_orientation: gtk::Orientation::Horizontal,
-					set_margin_end: 12,
-					set_margin_start: 12,
-					set_margin_top: 12,
-					set_spacing: 5,
-										set_halign: gtk::Align::Center,
-										gtk::Button {
-												set_tooltip_text: Some("Add to My Day"),
-												set_icon_name: "daytime-sunrise-symbolic",
-						connect_clicked[sender] => move |_| {
-														sender.input(NewTaskEvent::AddToMyDay)
-												}
-										},
-					gtk::Button {
-												set_tooltip_text: Some("Set time"),
-												set_icon_name: "appointment-soon-symbolic",
-												connect_clicked[sender] => move |_| {
-														sender.input(NewTaskEvent::SetReminder(chrono::Utc::now().naive_utc()))
-												}
-										},
-					gtk::Button {
-												set_tooltip_text: Some("Set due date"),
-												set_icon_name: "office-calendar-symbolic",
-												connect_clicked[sender] => move |_| {
-														sender.input(NewTaskEvent::SetDueDate(chrono::Utc::now().naive_utc()))
-												}
-										},
-					gtk::Button {
-												set_tooltip_text: Some("More details"),
-												set_icon_name: "text-editor-symbolic",
-												connect_clicked[sender] => move |_| {
-														sender.input(NewTaskEvent::AddNote(String::new()))
-												}
-										},
-								},
-								gtk::Box {
-										set_orientation: gtk::Orientation::Horizontal,
-					set_margin_all: 12,
-					set_spacing: 5,
-					#[name(entry)]
-					gtk::Entry {
-												set_hexpand: true,
-						#[watch]
-						set_visible: true,
-						set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
-						set_placeholder_text: Some(fl!("new-task")),
-						set_height_request: 42,
-						connect_changed[sender] => move |entry| {
-														let buffer = entry.buffer();
-														sender.input(NewTaskEvent::SetTitle(buffer.text()));
-												},
-						connect_activate[sender] => move |entry| {
-														let buffer = entry.buffer();
-														sender.input(NewTaskEvent::SetTitle(buffer.text()));
-														sender.input(NewTaskEvent::AddTask);
-												}
-										},
-					gtk::Button {
-												set_icon_name: "mail-send-symbolic",
-							connect_clicked[sender] => move |_| {
-														sender.input(NewTaskEvent::AddTask)
-												}
-										}
-								}
-						}
+		#[root]
+		gtk::Box {
+			set_orientation: gtk::Orientation::Vertical,
+			gtk::Box {
+				set_orientation: gtk::Orientation::Horizontal,
+				set_margin_end: 12,
+				set_margin_start: 12,
+				set_margin_top: 12,
+				set_spacing: 5,
+				set_halign: gtk::Align::Center,
+				gtk::Button {
+					set_tooltip_text: Some("Add to My Day"),
+					set_icon_name: "daytime-sunrise-symbolic",
+					connect_clicked[sender] => move |_| {
+						sender.input(NewTaskEvent::AddToMyDay)
+					}
+				},
+				gtk::Button {
+					set_tooltip_text: Some("Set time"),
+					set_icon_name: "appointment-soon-symbolic",
+					connect_clicked[sender] => move |_| {
+						sender.input(NewTaskEvent::SetReminder(chrono::Utc::now().naive_utc()))
+					}
+				},
+				gtk::Button {
+					set_tooltip_text: Some("Set due date"),
+					set_icon_name: "office-calendar-symbolic",
+					connect_clicked[sender] => move |_| {
+						sender.input(NewTaskEvent::SetDueDate(chrono::Utc::now().naive_utc()))
+					}
+				},
+				gtk::Button {
+					set_tooltip_text: Some("More details"),
+					set_icon_name: "text-editor-symbolic",
+					connect_clicked[sender] => move |_| {
+						sender.input(NewTaskEvent::AddNote(String::new()))
+					}
+				},
+			},
+			gtk::Box {
+				set_orientation: gtk::Orientation::Horizontal,
+				set_margin_all: 12,
+				set_spacing: 5,
+				#[name(entry)]
+				gtk::Entry {
+					set_hexpand: true,
+					#[watch]
+					set_visible: true,
+					set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
+					set_placeholder_text: Some(fl!("new-task")),
+					set_height_request: 42,
+					connect_changed[sender] => move |entry| {
+						let buffer = entry.buffer();
+						sender.input(NewTaskEvent::SetTitle(buffer.text()));
+					},
+					connect_activate[sender] => move |entry| {
+						let buffer = entry.buffer();
+						sender.input(NewTaskEvent::SetTitle(buffer.text()));
+						sender.input(NewTaskEvent::AddTask);
+					}
+				},
+				gtk::Button {
+					set_icon_name: "mail-send-symbolic",
+					connect_clicked[sender] => move |_| {
+						sender.input(NewTaskEvent::AddTask)
+					}
+				}
+			}
+		}
 	}
 
 	fn init(
