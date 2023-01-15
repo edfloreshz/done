@@ -1,4 +1,5 @@
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
+use relm4::loading_widgets::LoadingWidgets;
 use crate::application::plugin::{Plugin, PluginData};
 use proto_rust::provider::List;
 use libset::format::FileFormat;
@@ -82,9 +83,8 @@ impl AsyncFactoryComponent for ProviderModel {
 						set_popover: Some(self.new_list_controller.widget())
 					}
                 } else {
-                    gtk::Spinner {
-                        start: (),
-                        set_hexpand: false,
+                    gtk::Box {
+
                     }
                 },
 			},
@@ -99,6 +99,19 @@ impl AsyncFactoryComponent for ProviderModel {
 		}
 	}
 
+    fn init_loading_widgets(root: &mut Self::Root) -> Option<relm4::loading_widgets::LoadingWidgets> {
+        relm4::view! {
+            #[local_ref]
+            root {
+                #[name(expander)]
+                add = &adw::ExpanderRow {
+
+                }
+            }
+        }
+        Some(LoadingWidgets::new(root, expander))
+    }
+
 	async fn init_model(
 		plugin: Self::Init,
 		index: &DynamicIndex,
@@ -112,9 +125,9 @@ impl AsyncFactoryComponent for ProviderModel {
         };
         let enabled = match plugin {
             Plugin::Local => plugin_preferences.local_enabled,
-            Plugin::Google => plugin_preferences.local_enabled,
-            Plugin::Microsoft => plugin_preferences.local_enabled,
-            Plugin::Nextcloud => plugin_preferences.local_enabled,
+            Plugin::Google => plugin_preferences.google_enabled,
+            Plugin::Microsoft => plugin_preferences.microsoft_enabled,
+            Plugin::Nextcloud => plugin_preferences.nextcloud_enabled,
         };
         let index = index.current_index();
         Self {
