@@ -1,8 +1,11 @@
 use crate::application::plugin::{Plugin, PluginData};
+use crate::widgets::factory::list::ListInit;
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use libset::format::FileFormat;
 use libset::project::Project;
+use proto_rust::Channel;
 use proto_rust::provider::List;
+use proto_rust::provider_client::ProviderClient;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -21,10 +24,17 @@ use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
 #[derive(Debug)]
 pub struct ProviderModel {
 	pub plugin: Plugin,
+	pub service: ProviderClient<Channel>,
 	pub enabled: bool,
 	pub data: PluginData,
 	pub list_factory: AsyncFactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
+}
+
+#[derive(derive_new::new)]
+pub struct PluginInit {
+	plugin: Plugin, 
+	service: ProviderClient<Channel>
 }
 
 #[derive(Debug)]
@@ -54,7 +64,7 @@ impl AsyncFactoryComponent for ProviderModel {
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
-	type Init = Plugin;
+	type Init = PluginInit;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -80,11 +90,11 @@ impl AsyncFactoryComponent for ProviderModel {
 						set_direction: gtk::ArrowType::Right,
 						set_popover: Some(self.new_list_controller.widget())
 					}
-								} else {
-										gtk::Box {
+				} else {
+					gtk::Box {
 
-										}
-								},
+					}
+				},
 			},
 		}
 	}
@@ -93,19 +103,19 @@ impl AsyncFactoryComponent for ProviderModel {
 		root: &mut Self::Root,
 	) -> Option<relm4::loading_widgets::LoadingWidgets> {
 		relm4::view! {
-				#[local_ref]
-				root {
-						#[name(expander)]
-						add = &adw::ExpanderRow {
+			#[local_ref]
+			root {
+				#[name(expander)]
+				add = &adw::ExpanderRow {
 
-						}
 				}
+			}
 		}
 		Some(LoadingWidgets::new(root, expander))
 	}
 
 	async fn init_model(
-		plugin: Self::Init,
+		init: Self::Init,
 		index: &DynamicIndex,
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
@@ -114,12 +124,12 @@ impl AsyncFactoryComponent for ProviderModel {
 			.get_file_as::<Preferences>("preferences", FileFormat::TOML)
 			.unwrap()
 			.plugins;
-		let data = if plugin.is_running() {
-			plugin.data().await.unwrap()
+		let data = if init.plugin.is_running() {
+			init.plugin.data().await.unwrap()
 		} else {
-			plugin.placeholder()
+			init.plugin.placeholder()
 		};
-		let enabled = match plugin {
+		let enabled = match init.plugin {
 			Plugin::Local => plugin_preferences.local_enabled,
 			Plugin::Google => plugin_preferences.google_enabled,
 			Plugin::Microsoft => plugin_preferences.microsoft_enabled,
@@ -127,7 +137,8 @@ impl AsyncFactoryComponent for ProviderModel {
 		};
 		let index = index.current_index();
 		Self {
-			plugin,
+			plugin: init.plugin,
+			service: init.service,
 			enabled,
 			data,
 			list_factory: AsyncFactoryVecDeque::new(
@@ -160,7 +171,7 @@ impl AsyncFactoryComponent for ProviderModel {
 		);
 
 		for list in &self.data.lists {
-			self.list_factory.guard().push_back(list.clone());
+			self.list_factory.guard().push_back(ListInit::new(list.clone(), self.service.clone()));
 		}
 
 		widgets
@@ -192,14 +203,14 @@ impl AsyncFactoryComponent for ProviderModel {
 				))
 			},
 			ProviderInput::AddList(list) => {
-				self.list_factory.guard().push_back(list);
+				self.list_factory.guard().push_back(ListInit::new(list, self.service.clone()));
 				self.data = self.plugin.data().await.unwrap();
 				info!("List added to {}", self.data.name)
 			},
 			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
 			ProviderInput::ListSelected(list) => {
 				sender.output(ProviderOutput::ListSelected(list.clone()));
-				info!("List selected: {}", list.data.name)
+				info!("List selected: {}", list.list.name)
 			},
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
 			ProviderInput::Enable => {
@@ -212,7 +223,7 @@ impl AsyncFactoryComponent for ProviderModel {
 					}
 				}
 				for list in &self.data.lists {
-					self.list_factory.guard().push_back(list.clone());
+					self.list_factory.guard().push_back(ListInit::new(list.clone(), self.service.clone()));
 				}
 			},
 			ProviderInput::Disable => self.enabled = false,

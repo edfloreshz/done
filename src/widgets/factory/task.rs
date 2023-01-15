@@ -35,15 +35,10 @@ pub struct TaskData {
 	pub service: ProviderClient<Channel>,
 }
 
+#[derive(derive_new::new)]
 pub struct TaskInit {
 	id: String,
 	service: ProviderClient<Channel>,
-}
-
-impl TaskInit {
-	pub fn new(id: String, service: ProviderClient<Channel>) -> Self {
-		Self { id, service }
-	}
 }
 
 #[relm4::factory(pub async)]
@@ -59,7 +54,7 @@ impl AsyncFactoryComponent for TaskData {
 	view! {
 		root = gtk::ListBoxRow {
 			set_selectable: false,
-			#[name = "container"]
+			#[name(container)]
 			gtk::Box {
 				append = &gtk::Box {
 					set_orientation: gtk::Orientation::Horizontal,
@@ -68,7 +63,7 @@ impl AsyncFactoryComponent for TaskData {
 					set_margin_bottom: 10,
 					set_margin_start: 10,
 					set_margin_end: 10,
-					#[name = "check_button"]
+					#[name(check_button)]
 					gtk::CheckButton {
 						set_active: self.task.status == 1,
 						connect_toggled[sender] => move |checkbox| {
@@ -78,7 +73,7 @@ impl AsyncFactoryComponent for TaskData {
 					gtk::Box {
 						set_orientation: gtk::Orientation::Horizontal,
 						set_spacing: 15,
-						#[name = "entry"]
+						#[name(entry)]
 						gtk::Entry {
 							add_css_class: "flat",
 							add_css_class: "no-border",
@@ -97,7 +92,7 @@ impl AsyncFactoryComponent for TaskData {
 							// 	sender.input(TaskInput::ModifyTitle(buffer.text()));
 							// }
 						},
-						#[name = "favorite"]
+						#[name(favorite)]
 						gtk::ToggleButton {
 							add_css_class: "opaque",
 							add_css_class: "circular",
@@ -108,7 +103,7 @@ impl AsyncFactoryComponent for TaskData {
 								sender.input(TaskInput::Favorite(index.clone()));
 							}
 						},
-						#[name = "delete"]
+						#[name(delete)]
 						gtk::Button {
 							add_css_class: "destructive-action",
 							add_css_class: "circular",

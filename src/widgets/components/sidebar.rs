@@ -1,7 +1,7 @@
 use crate::application::plugin::Plugin;
 use crate::fl;
 use crate::widgets::factory::list::ListData;
-use crate::widgets::factory::provider::{ProviderInput, ProviderModel};
+use crate::widgets::factory::provider::{ProviderInput, ProviderModel, PluginInit};
 use proto_rust::provider::List;
 use relm4::adw;
 use relm4::component::{
@@ -109,9 +109,13 @@ impl SimpleAsyncComponent for SidebarModel {
 
 		let widgets = view_output!();
 
-		for provider in Plugin::list() {
-			model.provider_factory.guard().push_back(provider);
-			info!("Added {:?} provider to the sidebar", provider)
+		for plugin in Plugin::list() {
+			if let Ok(service) = plugin.connect().await {
+				model.provider_factory.guard().push_back(PluginInit::new(plugin, service));
+				info!("Added {:?} provider to the sidebar", plugin)
+			} else {
+				error!("Plug-in {plugin:?} failed to connect.")
+			}
 		}
 
 		AsyncComponentParts { model, widgets }

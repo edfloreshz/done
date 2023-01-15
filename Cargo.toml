@@ -34,6 +34,7 @@ strum = "0.24.1"
 tonic = "0.8.2"
 glib = "0.16.2"
 log = "0.4.17"
+derive-new = "0.5.9"
 
 [build-dependencies]
 glib-build-tools = { git = "https://github.com/gtk-rs/gtk-rs-core" }
