@@ -1,10 +1,10 @@
+use crate::application::plugin::Plugin;
 use crate::fl;
 use crate::widgets::components::new_task::{
 	NewTask, NewTaskEvent, NewTaskOutput,
 };
 use crate::widgets::factory::list::ListData;
 use crate::widgets::factory::task::TaskData;
-use crate::application::plugin::Plugin;
 use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::{List, Task};
 
@@ -128,13 +128,13 @@ impl AsyncComponent for ContentModel {
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update_with_view(
+	async fn update(
 		&mut self,
-		widgets: &mut Self::Widgets,
 		message: Self::Input,
 		sender: AsyncComponentSender<Self>,
 		_root: &Self::Root,
 	) {
+		//TODO: The freezing issue is somewhere here...
 		let mut service: Option<ProviderClient<Channel>> = None;
 		let mut plugin = None;
 		if let Some(parent) = &self.parent_list {
@@ -168,9 +168,12 @@ impl AsyncComponent for ContentModel {
 					match service.create_task(task.clone()).await {
 						Ok(response) => {
 							let response = response.into_inner();
-                            if response.successful && response.task.is_some() {
-                                let task = response.task.unwrap();
-                                self.tasks_factory.guard().push_back((task.id, plugin.unwrap().id));
+							if response.successful && response.task.is_some() {
+								let task = response.task.unwrap();
+								self
+									.tasks_factory
+									.guard()
+									.push_back((task.id, plugin.unwrap().id));
 							}
 							sender
 								.output(ContentOutput::Notify(response.message))
@@ -238,18 +241,20 @@ impl AsyncComponent for ContentModel {
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
 
-                loop {
-                    let list = self.tasks_factory.guard().pop_front();
-                    if list.is_none() {
-                        break;
-                    }
-                }
+				loop {
+					let list = self.tasks_factory.guard().pop_front();
+					if list.is_none() {
+						break;
+					}
+				}
 
-                for task in list.tasks {
-                    self.tasks_factory.guard().push_back((task, list.data.provider.clone()));
-                }
-			}
+				for task in list.tasks {
+					self
+						.tasks_factory
+						.guard()
+						.push_back((task, list.data.provider.clone()));
+				}
+			},
 		}
-		self.update_view(widgets, sender)
 	}
 }

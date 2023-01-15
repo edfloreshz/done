@@ -4,11 +4,11 @@ use relm4::factory::{DynamicIndex, FactoryView};
 use relm4::{view, AsyncFactorySender};
 use std::str::FromStr;
 
+use crate::application::plugin::Plugin;
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
 use crate::widgets::factory::provider::ProviderInput;
-use crate::application::plugin::Plugin;
 use proto_rust::provider::List;
 use relm4::loading_widgets::LoadingWidgets;
 
@@ -24,7 +24,7 @@ pub enum ListInput {
 
 #[derive(Debug)]
 pub enum ListOutput {
-    Select(ListData),
+	Select(ListData),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),
@@ -33,7 +33,7 @@ pub enum ListOutput {
 #[derive(Debug, Clone)]
 pub struct ListData {
 	pub data: List,
-    pub tasks: Vec<String>
+	pub tasks: Vec<String>,
 }
 
 #[relm4::factory(pub async)]
@@ -43,7 +43,7 @@ impl AsyncFactoryComponent for ListData {
 	type CommandOutput = ();
 	type Input = ListInput;
 	type Output = ListOutput;
-    type Init = List;
+	type Init = List;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -136,17 +136,22 @@ impl AsyncFactoryComponent for ListData {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-        let mut tasks = vec![];
-        if let Ok(provider) = Plugin::from_str(&params.provider) {
-            match provider.connect().await {
-                Ok(mut service) => match service.read_task_ids_from_list(params.id.clone()).await {
-                    Ok(response) => tasks = response.into_inner().tasks,
-                    Err(e) => error!("Failed to find tasks. {:?}", e)
-                },
-                Err(e) => error!("Failed to connect to service. {:?}", e)
-            }
-        };
-        Self { data: params, tasks }
+		let mut tasks = vec![];
+		if let Ok(provider) = Plugin::from_str(&params.provider) {
+			match provider.connect().await {
+				Ok(mut service) => {
+					match service.read_task_ids_from_list(params.id.clone()).await {
+						Ok(response) => tasks = response.into_inner().tasks,
+						Err(e) => error!("Failed to find tasks. {:?}", e),
+					}
+				},
+				Err(e) => error!("Failed to connect to service. {:?}", e),
+			}
+		};
+		Self {
+			data: params,
+			tasks,
+		}
 	}
 
 	async fn update(
@@ -208,9 +213,7 @@ impl AsyncFactoryComponent for ListData {
 						Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 					}
 				},
-				ListInput::Select => {
-					sender.output(ListOutput::Select(self.clone()))
-				},
+				ListInput::Select => sender.output(ListOutput::Select(self.clone())),
 			}
 		} else if let ListInput::Select = message {
 			sender.output(ListOutput::Select(self.clone()))
@@ -219,7 +222,7 @@ impl AsyncFactoryComponent for ListData {
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
-            ListOutput::Select(data) => Some(ProviderInput::ListSelected(data)),
+			ListOutput::Select(data) => Some(ProviderInput::ListSelected(data)),
 			ListOutput::DeleteTaskList(index, list_id) => {
 				Some(ProviderInput::DeleteTaskList(index, list_id))
 			},

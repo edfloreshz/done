@@ -42,7 +42,7 @@ impl AsyncFactoryComponent for TaskData {
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-    type Init = (String, String);
+	type Init = (String, String);
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -131,17 +131,19 @@ impl AsyncFactoryComponent for TaskData {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-        let mut model = Self { task: Task::default() };
-        if let Ok(provider) = Plugin::from_str(&init.1) {
-            match provider.connect().await {
-                Ok(mut service) => match service.read_task(init.0.clone()).await {
-                    Ok(response) => model.task = response.into_inner().task.unwrap(),
-                    Err(e) => error!("Failed to find tasks. {:?}", e)
-                },
-                Err(e) => error!("Failed to connect to service. {:?}", e)
-            }
-        };
-        model
+		let mut model = Self {
+			task: Task::default(),
+		};
+		if let Ok(provider) = Plugin::from_str(&init.1) {
+			match provider.connect().await {
+				Ok(mut service) => match service.read_task(init.0.clone()).await {
+					Ok(response) => model.task = response.into_inner().task.unwrap(),
+					Err(e) => error!("Failed to find tasks. {:?}", e),
+				},
+				Err(e) => error!("Failed to connect to service. {:?}", e),
+			}
+		};
+		model
 	}
 
 	fn init_widgets(

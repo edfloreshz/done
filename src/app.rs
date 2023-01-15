@@ -1,3 +1,4 @@
+use crate::application::plugin::Plugin;
 use crate::config::PROFILE;
 use crate::fl;
 use crate::setup::main_app;
@@ -10,7 +11,6 @@ use crate::widgets::components::sidebar::{
 };
 use crate::widgets::factory::list::ListData;
 use crate::widgets::modals::about::AboutDialog;
-use crate::application::plugin::Plugin;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::AsyncController;
