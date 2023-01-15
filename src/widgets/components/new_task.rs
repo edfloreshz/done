@@ -48,6 +48,7 @@ impl Component for NewTask {
                     set_orientation: gtk::Orientation::Horizontal,
 					set_margin_end: 12,
 					set_margin_start: 12,
+					set_margin_top: 12,
 					set_spacing: 5,
                     set_halign: gtk::Align::Center,
                     gtk::Button {
