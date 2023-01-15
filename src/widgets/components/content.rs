@@ -22,7 +22,6 @@ use std::str::FromStr;
 use tonic::transport::Channel;
 
 pub struct ContentModel {
-	current_provider: Plugin,
 	parent_list: Option<List>,
 	tasks_factory: AsyncFactoryVecDeque<TaskData>,
 	new_task_component: Controller<NewTask>,
@@ -34,7 +33,6 @@ pub enum ContentInput {
 	RemoveTask(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
 	SetTaskList(List),
-	SetProvider(Plugin),
 }
 
 #[derive(Debug)]
@@ -113,7 +111,6 @@ impl AsyncComponent for ContentModel {
 			}
 		}
 		let model = ContentModel {
-			current_provider: Plugin::Local,
 			parent_list: None,
 			tasks_factory: AsyncFactoryVecDeque::new(
 				list_box.clone(),
@@ -240,7 +237,7 @@ impl AsyncComponent for ContentModel {
 
 				if let Ok(provider) = Plugin::from_str(&list.provider) {
 					let mut service = provider.connect().await.unwrap();
-					let (tx, mut rx) = 	tokio::sync::mpsc::channel(4);
+					let (tx, mut rx) = tokio::sync::mpsc::channel(100);
 
 					tokio::spawn(async move {
 						let mut stream = service
@@ -275,16 +272,7 @@ impl AsyncComponent for ContentModel {
 						)))
 						.unwrap_or_default();
 				}
-			},
-			ContentInput::SetProvider(provider) => {
-				self.current_provider = provider;
-				self.parent_list = None;
-				self
-					.new_task_component
-					.sender()
-					.send(NewTaskEvent::SetParentList(None))
-					.unwrap_or_default();
-			},
+			}
 		}
 		self.update_view(widgets, sender)
 	}

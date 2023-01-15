@@ -1,6 +1,7 @@
 use proto_rust::provider::TaskStatus;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
+use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
 	gtk,
 	gtk::prelude::{
@@ -107,6 +108,20 @@ impl AsyncFactoryComponent for TaskData {
 				}
 			}
 		}
+	}
+
+	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
+		relm4::view! {
+			#[local_ref]
+			root {
+				#[name(spinner)]
+				gtk::Spinner {
+					start: (),
+					set_hexpand: false,
+				}
+			}
+		}
+		Some(LoadingWidgets::new(root, spinner))
 	}
 
 	async fn init_model(

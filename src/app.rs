@@ -54,7 +54,6 @@ impl App {
 #[derive(Debug)]
 pub enum AppMsg {
 	SelectList(List),
-	SelectProvider(Plugin),
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -238,13 +237,6 @@ impl Component for App {
 					.send(ContentInput::SetTaskList(list))
 					.unwrap_or_default();
 			},
-			AppMsg::SelectProvider(provider) => {
-				self
-					.content_controller
-					.sender()
-					.send(ContentInput::SetProvider(provider))
-					.unwrap_or_default();
-			},
 			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
 			AppMsg::Forward | AppMsg::Back | AppMsg::Folded | AppMsg::Unfolded => {
 				self.message = Some(message)
@@ -275,9 +267,6 @@ impl Component for App {
 			|message| match message {
 				SidebarOutput::ListSelected(list) => AppMsg::SelectList(list),
 				SidebarOutput::Forward => AppMsg::Forward,
-				SidebarOutput::ProviderSelected(plugin) => {
-					AppMsg::SelectProvider(plugin)
-				},
 				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
 			},
 		);
