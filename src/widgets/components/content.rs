@@ -1,5 +1,4 @@
 use crate::application::plugin::Plugin;
-use crate::fl;
 use crate::widgets::components::new_task::{
 	NewTask, NewTaskEvent, NewTaskOutput,
 };
@@ -16,7 +15,7 @@ use relm4::factory::DynamicIndex;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	view, Controller, RelmWidgetExt,
+	view, Controller,
 };
 use relm4::{Component, ComponentController};
 use std::str::FromStr;
@@ -24,8 +23,8 @@ use tonic::transport::Channel;
 
 pub struct ContentModel {
 	parent_list: Option<List>,
-	tasks_factory: AsyncFactoryVecDeque<TaskData>,
-	new_task_component: Controller<NewTask>,
+	task_factory: AsyncFactoryVecDeque<TaskData>,
+	create_task_controller: Controller<NewTask>,
 }
 
 #[derive(Debug)]
@@ -33,7 +32,7 @@ pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
-	SetTaskList(ListData),
+	TaskListSelected(ListData),
 }
 
 #[derive(Debug)]
@@ -51,40 +50,14 @@ impl AsyncComponent for ContentModel {
 
 	view! {
 		#[root]
-		#[name(tasks)]
-		gtk::Stack {
-			set_vexpand: true,
-			set_transition_duration: 250,
-			set_transition_type: gtk::StackTransitionType::Crossfade,
-			gtk::CenterBox {
-				set_orientation: gtk::Orientation::Vertical,
-				#[watch]
-				set_visible: model.parent_list.is_none(),
-				set_halign: gtk::Align::Center,
-				set_valign: gtk::Align::Center,
-				#[wrap(Some)]
-				set_center_widget = &gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					set_margin_all: 24,
-					set_spacing: 24,
-					gtk::Picture {
-						set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/paper-plane.png"),
-						set_margin_all: 70
-					},
-					gtk::Label {
-						set_css_classes: &["title-2", "accent"],
-						set_text: fl!("select-list")
-					},
-					gtk::Label {
-						set_text: fl!("tasks-here")
-					}
-				}
-			},
-			gtk::Box {
-				set_orientation: gtk::Orientation::Vertical,
-				#[watch]
-				set_visible: model.parent_list.is_some(),
+		gtk::Box {
+			#[name(tasks)]
+			gtk::Stack {
+				set_vexpand: true,
+				set_transition_duration: 250,
+				set_transition_type: gtk::StackTransitionType::Crossfade,
 				gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
 					#[name(task_container)]
 					gtk::Stack {
 						set_transition_duration: 250,
@@ -94,10 +67,10 @@ impl AsyncComponent for ContentModel {
 							set_hexpand: true,
 							set_child: Some(&list_box)
 						},
-					}
+					},
+					append: model.create_task_controller.widget()
 				},
-				append: model.new_task_component.widget()
-			},
+			}
 		}
 	}
 
@@ -113,11 +86,11 @@ impl AsyncComponent for ContentModel {
 		}
 		let model = ContentModel {
 			parent_list: None,
-			tasks_factory: AsyncFactoryVecDeque::new(
+			task_factory: AsyncFactoryVecDeque::new(
 				list_box.clone(),
 				sender.input_sender(),
 			),
-			new_task_component: NewTask::builder().launch(None).forward(
+			create_task_controller: NewTask::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
 					NewTaskOutput::AddTask(task) => ContentInput::AddTask(task),
@@ -171,7 +144,7 @@ impl AsyncComponent for ContentModel {
 							if response.successful && response.task.is_some() {
 								let task = response.task.unwrap();
 								self
-									.tasks_factory
+									.task_factory
 									.guard()
 									.push_back((task.id, plugin.unwrap().id));
 							}
@@ -189,7 +162,7 @@ impl AsyncComponent for ContentModel {
 			},
 			ContentInput::RemoveTask(index) => {
 				if let Some(mut service) = service {
-					let mut guard = self.tasks_factory.guard();
+					let mut guard = self.task_factory.guard();
 					let task = guard.get(index.current_index()).unwrap();
 					match service.delete_task(task.clone().task.id).await {
 						Ok(response) => {
@@ -217,7 +190,7 @@ impl AsyncComponent for ContentModel {
 							if response.successful {
 								if let Some(index) = index {
 									if self.parent_list.as_ref().unwrap().provider == "starred" {
-										self.tasks_factory.guard().remove(index.current_index());
+										self.task_factory.guard().remove(index.current_index());
 									}
 								}
 							}
@@ -233,16 +206,16 @@ impl AsyncComponent for ContentModel {
 					}
 				}
 			},
-			ContentInput::SetTaskList(list) => {
+			ContentInput::TaskListSelected(list) => {
 				self.parent_list = Some(list.data.clone());
 				self
-					.new_task_component
+					.create_task_controller
 					.sender()
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
 
 				loop {
-					let list = self.tasks_factory.guard().pop_front();
+					let list = self.task_factory.guard().pop_front();
 					if list.is_none() {
 						break;
 					}
@@ -250,7 +223,7 @@ impl AsyncComponent for ContentModel {
 
 				for task in list.tasks {
 					self
-						.tasks_factory
+						.task_factory
 						.guard()
 						.push_back((task, list.data.provider.clone()));
 				}
