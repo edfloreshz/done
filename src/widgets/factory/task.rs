@@ -1,6 +1,6 @@
-use std::str::FromStr;
-
 use proto_rust::provider::TaskStatus;
+use proto_rust::provider_client::ProviderClient;
+use proto_rust::Channel;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::loading_widgets::LoadingWidgets;
@@ -13,7 +13,6 @@ use relm4::{
 	RelmWidgetExt,
 };
 
-use crate::application::plugin::Plugin;
 use crate::widgets::components::content::ContentInput;
 use proto_rust::provider::Task;
 
@@ -33,6 +32,18 @@ pub enum TaskOutput {
 #[derive(Debug, Clone)]
 pub struct TaskData {
 	pub task: Task,
+	pub service: ProviderClient<Channel>,
+}
+
+pub struct TaskInit {
+	id: String,
+	service: ProviderClient<Channel>,
+}
+
+impl TaskInit {
+	pub fn new(id: String, service: ProviderClient<Channel>) -> Self {
+		Self { id, service }
+	}
 }
 
 #[relm4::factory(pub async)]
@@ -42,7 +53,7 @@ impl AsyncFactoryComponent for TaskData {
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
-	type Init = (String, String);
+	type Init = TaskInit;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -133,16 +144,12 @@ impl AsyncFactoryComponent for TaskData {
 	) -> Self {
 		let mut model = Self {
 			task: Task::default(),
+			service: init.service,
 		};
-		if let Ok(provider) = Plugin::from_str(&init.1) {
-			match provider.connect().await {
-				Ok(mut service) => match service.read_task(init.0.clone()).await {
-					Ok(response) => model.task = response.into_inner().task.unwrap(),
-					Err(e) => error!("Failed to find tasks. {:?}", e),
-				},
-				Err(e) => error!("Failed to connect to service. {:?}", e),
-			}
-		};
+		match model.service.read_task(init.id.clone()).await {
+			Ok(response) => model.task = response.into_inner().task.unwrap(),
+			Err(e) => error!("Failed to find tasks. {:?}", e),
+		}
 		model
 	}
 

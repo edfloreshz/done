@@ -221,7 +221,7 @@ impl Component for App {
 			},
 		);
 
-		let content_controller = ContentModel::builder().launch(None).forward(
+		let content_controller = ContentModel::builder().launch(()).forward(
 			sender.input_sender(),
 			|message| match message {
 				ContentOutput::Notify(msg) => AppMsg::Notify(msg),
