@@ -1,5 +1,5 @@
-use proto_rust::Channel;
 use proto_rust::provider_client::ProviderClient;
+use proto_rust::Channel;
 use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
@@ -34,13 +34,13 @@ pub enum ListOutput {
 pub struct ListData {
 	pub list: List,
 	pub tasks: Vec<String>,
-	pub service: ProviderClient<Channel>
+	pub service: ProviderClient<Channel>,
 }
 
 #[derive(derive_new::new)]
 pub struct ListInit {
 	list: List,
-	service: ProviderClient<Channel>
+	service: ProviderClient<Channel>,
 }
 
 #[relm4::factory(pub async)]
@@ -145,14 +145,17 @@ impl AsyncFactoryComponent for ListData {
 	) -> Self {
 		let mut tasks = vec![];
 		let mut service = params.service.clone();
-		match service.read_task_ids_from_list(params.list.id.clone()).await {
+		match service
+			.read_task_ids_from_list(params.list.id.clone())
+			.await
+		{
 			Ok(response) => tasks = response.into_inner().tasks,
 			Err(e) => error!("Failed to find tasks. {:?}", e),
 		}
 		Self {
 			list: params.list,
 			tasks,
-			service: params.service
+			service: params.service,
 		}
 	}
 
@@ -176,18 +179,20 @@ impl AsyncFactoryComponent for ListData {
 					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 				}
 			},
-			ListInput::Delete(index) => match self.service.delete_list(self.clone().list.id).await {
-				Ok(response) => {
-					let response = response.into_inner();
-					if response.successful {
-						sender.output(ListOutput::DeleteTaskList(
-							index,
-							self.list.id.clone(),
-						));
-					}
-					sender.output(ListOutput::Notify(response.message))
-				},
-				Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+			ListInput::Delete(index) => {
+				match self.service.delete_list(self.clone().list.id).await {
+					Ok(response) => {
+						let response = response.into_inner();
+						if response.successful {
+							sender.output(ListOutput::DeleteTaskList(
+								index,
+								self.list.id.clone(),
+							));
+						}
+						sender.output(ListOutput::Notify(response.message))
+					},
+					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+				}
 			},
 			ListInput::ChangeIcon(icon) => {
 				let mut list = self.list.clone();
