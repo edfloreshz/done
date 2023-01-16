@@ -33,7 +33,7 @@ pub enum TaskOutput {
 pub struct TaskData {
 	pub task: Task,
 	pub service: ProviderClient<Channel>,
-	pub first_load: bool
+	pub first_load: bool,
 }
 
 #[derive(derive_new::new)]
@@ -139,7 +139,7 @@ impl AsyncFactoryComponent for TaskData {
 		let mut model = Self {
 			task: Task::default(),
 			service: init.service,
-			first_load: true
+			first_load: true,
 		};
 		match model.service.read_task(init.id.clone()).await {
 			Ok(response) => model.task = response.into_inner().task.unwrap(),

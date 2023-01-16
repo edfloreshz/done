@@ -59,6 +59,7 @@ pub enum AppMsg {
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
+	DisablePlugin,
 	CloseWarning,
 	Folded,
 	Unfolded,
@@ -215,6 +216,7 @@ impl Component for App {
 		let sidebar_controller = SidebarModel::builder().launch(()).forward(
 			sender.input_sender(),
 			|message| match message {
+				SidebarOutput::DisablePlugin => AppMsg::DisablePlugin,
 				SidebarOutput::ListSelected(list) => AppMsg::TaskListSelected(list),
 				SidebarOutput::Forward => AppMsg::Forward,
 				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
@@ -314,6 +316,14 @@ impl Component for App {
 					.content
 					.sender()
 					.send(ContentInput::TaskListSelected(list))
+					.unwrap_or_default();
+			},
+			AppMsg::DisablePlugin => {
+				self.page_title = None;
+				self
+					.content
+					.sender()
+					.send(ContentInput::DisablePlugin)
 					.unwrap_or_default();
 			},
 			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),

@@ -1,7 +1,9 @@
 use crate::application::plugin::Plugin;
 use crate::fl;
 use crate::widgets::factory::list::ListData;
-use crate::widgets::factory::provider::{ProviderInput, ProviderModel, PluginInit};
+use crate::widgets::factory::provider::{
+	PluginInit, ProviderInput, ProviderModel,
+};
 use proto_rust::provider::List;
 use relm4::adw;
 use relm4::component::{
@@ -36,6 +38,7 @@ pub enum SidebarOutput {
 	ListSelected(ListData),
 	Forward,
 	Notify(String),
+	DisablePlugin,
 }
 
 #[relm4::component(pub async)]
@@ -111,7 +114,10 @@ impl SimpleAsyncComponent for SidebarModel {
 
 		for plugin in Plugin::list() {
 			if let Ok(service) = plugin.connect().await {
-				model.provider_factory.guard().push_back(PluginInit::new(plugin, service));
+				model
+					.provider_factory
+					.guard()
+					.push_back(PluginInit::new(plugin, service));
 				info!("Added {:?} provider to the sidebar", plugin)
 			} else {
 				error!("Plug-in {plugin:?} failed to connect.")
@@ -182,7 +188,10 @@ impl SimpleAsyncComponent for SidebarModel {
 					Plugin::Microsoft => 2,
 					Plugin::Nextcloud => 3,
 				};
-				self.provider_factory.send(index, ProviderInput::Disable)
+				self.provider_factory.send(index, ProviderInput::Disable);
+				sender
+					.output(SidebarOutput::DisablePlugin)
+					.unwrap_or_default()
 			},
 			SidebarInput::ListSelected(list) => {
 				sender
