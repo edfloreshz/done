@@ -176,10 +176,11 @@ impl AsyncComponent for ContentModel {
 									self.task_factory.guard().remove(index.current_index());
 								}
 							}
-						}
-						sender
+						} else {
+							sender
 							.output(ContentOutput::Notify(response.message))
 							.unwrap_or_default();
+						}
 					},
 					Err(err) => {
 						sender
@@ -207,9 +208,9 @@ impl AsyncComponent for ContentModel {
 
 				for task in list.tasks {
 					self
-						.task_factory
-						.guard()
-						.push_back(TaskInit::new(task, self.service.clone().unwrap()));
+					.task_factory
+					.guard()
+					.push_back(TaskInit::new(task, self.service.clone().unwrap()));
 				}
 			},
 		}
