@@ -33,6 +33,7 @@ pub enum TaskOutput {
 pub struct TaskData {
 	pub task: Task,
 	pub service: ProviderClient<Channel>,
+	pub first_load: bool
 }
 
 #[derive(derive_new::new)]
@@ -56,61 +57,52 @@ impl AsyncFactoryComponent for TaskData {
 			set_selectable: false,
 			#[name(container)]
 			gtk::Box {
-				append = &gtk::Box {
+				set_orientation: gtk::Orientation::Horizontal,
+				set_spacing: 5,
+				set_margin_all: 10,
+				#[name(check_button)]
+				gtk::CheckButton {
+					set_active: self.task.status == 1,
+					connect_toggled[sender] => move |checkbox| {
+						sender.input(TaskInput::SetCompleted(checkbox.is_active()));
+					}
+				},
+				gtk::Box {
 					set_orientation: gtk::Orientation::Horizontal,
-					set_spacing: 5,
-					set_margin_top: 10,
-					set_margin_bottom: 10,
-					set_margin_start: 10,
-					set_margin_end: 10,
-					#[name(check_button)]
-					gtk::CheckButton {
-						set_active: self.task.status == 1,
-						connect_toggled[sender] => move |checkbox| {
-							sender.input(TaskInput::SetCompleted(checkbox.is_active()));
+					set_spacing: 15,
+					#[name(entry)]
+					gtk::Entry {
+						add_css_class: "flat",
+						add_css_class: "no-border",
+						set_hexpand: true,
+						set_text: &self.task.title,
+						connect_activate[sender] => move |entry| {
+							let buffer = entry.buffer();
+							sender.input(TaskInput::ModifyTitle(buffer.text()));
+						},
+						connect_changed[sender] => move |entry| {
+							let buffer = entry.buffer();
+							sender.input(TaskInput::ModifyTitle(buffer.text()));
+						},
+					},
+					#[name(favorite)]
+					gtk::ToggleButton {
+						add_css_class: "opaque",
+						add_css_class: "circular",
+						#[watch]
+						set_class_active: ("favorite", self.task.favorite),
+						set_icon_name: "star-filled-rounded-symbolic",
+						connect_toggled[sender, index] => move |_| {
+							sender.input(TaskInput::Favorite(index.clone()));
 						}
 					},
-					gtk::Box {
-						set_orientation: gtk::Orientation::Horizontal,
-						set_spacing: 15,
-						#[name(entry)]
-						gtk::Entry {
-							add_css_class: "flat",
-							add_css_class: "no-border",
-							set_hexpand: true,
-							set_text: &self.task.title,
-							connect_activate[sender] => move |entry| {
-								let buffer = entry.buffer();
-								sender.input(TaskInput::ModifyTitle(buffer.text()));
-							},
-							// connect_insert_text[sender] => move |entry, _, _| {
-							// 	let buffer = entry.buffer();
-							// 	sender.input(TaskInput::ModifyTitle(buffer.text()));
-							// },
-							// connect_delete_text[sender] => move |entry, _, _| {
-							// 	let buffer = entry.buffer();
-							// 	sender.input(TaskInput::ModifyTitle(buffer.text()));
-							// }
-						},
-						#[name(favorite)]
-						gtk::ToggleButton {
-							add_css_class: "opaque",
-							add_css_class: "circular",
-							#[watch]
-							set_class_active: ("favorite", self.task.favorite),
-							set_icon_name: "star-filled-rounded-symbolic",
-							connect_toggled[sender, index] => move |_| {
-								sender.input(TaskInput::Favorite(index.clone()));
-							}
-						},
-						#[name(delete)]
-						gtk::Button {
-							add_css_class: "destructive-action",
-							add_css_class: "circular",
-							set_icon_name: "user-trash-full-symbolic",
-							connect_clicked[sender, index] => move |_| {
-								sender.output(TaskOutput::Remove(index.clone()))
-							}
+					#[name(delete)]
+					gtk::Button {
+						add_css_class: "destructive-action",
+						add_css_class: "circular",
+						set_icon_name: "user-trash-full-symbolic",
+						connect_clicked[sender, index] => move |_| {
+							sender.output(TaskOutput::Remove(index.clone()))
 						}
 					}
 				}
@@ -123,9 +115,16 @@ impl AsyncFactoryComponent for TaskData {
 			#[local_ref]
 			root {
 				#[name(spinner)]
-				gtk::Spinner {
-					start: (),
-					set_hexpand: false,
+				gtk::Box {
+					set_halign: gtk::Align::Center,
+					set_valign: gtk::Align::Center,
+					set_hexpand: true,
+					set_vexpand: true,
+					set_margin_all: 10,
+					gtk::Spinner {
+						start: (),
+						set_hexpand: false,
+					}
 				}
 			}
 		}
@@ -140,6 +139,7 @@ impl AsyncFactoryComponent for TaskData {
 		let mut model = Self {
 			task: Task::default(),
 			service: init.service,
+			first_load: true
 		};
 		match model.service.read_task(init.id.clone()).await {
 			Ok(response) => model.task = response.into_inner().task.unwrap(),
@@ -171,10 +171,12 @@ impl AsyncFactoryComponent for TaskData {
 				} else {
 					TaskStatus::NotStarted as i32
 				};
-				sender
-					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.task.clone()))
-					.unwrap_or_default();
+				if !self.first_load {
+					sender
+						.output_sender()
+						.send(TaskOutput::UpdateTask(None, self.task.clone()))
+						.unwrap_or_default();
+				}
 			},
 			TaskInput::Favorite(index) => {
 				self.task.favorite = !self.task.favorite;
@@ -185,13 +187,16 @@ impl AsyncFactoryComponent for TaskData {
 					.unwrap_or_default();
 			},
 			TaskInput::ModifyTitle(title) => {
-				self.task.title = title;
-				sender
-					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.task.clone()))
-					.unwrap_or_default();
+				if title != self.task.title {
+					self.task.title = title;
+					sender
+						.output_sender()
+						.send(TaskOutput::UpdateTask(None, self.task.clone()))
+						.unwrap_or_default();
+				}
 			},
 		}
+		self.first_load = false;
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
