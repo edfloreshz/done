@@ -35,6 +35,7 @@ pub enum ContentInput {
 	RemoveTask(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
 	TaskListSelected(ListData),
+	DisablePlugin,
 }
 
 #[derive(Debug)]
@@ -178,8 +179,8 @@ impl AsyncComponent for ContentModel {
 							}
 						} else {
 							sender
-							.output(ContentOutput::Notify(response.message))
-							.unwrap_or_default();
+								.output(ContentOutput::Notify(response.message))
+								.unwrap_or_default();
 						}
 					},
 					Err(err) => {
@@ -208,10 +209,13 @@ impl AsyncComponent for ContentModel {
 
 				for task in list.tasks {
 					self
-					.task_factory
-					.guard()
-					.push_back(TaskInit::new(task, self.service.clone().unwrap()));
+						.task_factory
+						.guard()
+						.push_back(TaskInit::new(task, self.service.clone().unwrap()));
 				}
+			},
+			ContentInput::DisablePlugin => {
+				self.parent_list = None;
 			},
 		}
 	}

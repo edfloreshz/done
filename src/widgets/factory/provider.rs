@@ -3,9 +3,9 @@ use crate::widgets::factory::list::ListInit;
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
 use libset::format::FileFormat;
 use libset::project::Project;
-use proto_rust::Channel;
 use proto_rust::provider::List;
 use proto_rust::provider_client::ProviderClient;
+use proto_rust::Channel;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -33,8 +33,8 @@ pub struct ProviderModel {
 
 #[derive(derive_new::new)]
 pub struct PluginInit {
-	plugin: Plugin, 
-	service: ProviderClient<Channel>
+	plugin: Plugin,
+	service: ProviderClient<Channel>,
 }
 
 #[derive(Debug)]
@@ -171,7 +171,10 @@ impl AsyncFactoryComponent for ProviderModel {
 		);
 
 		for list in &self.data.lists {
-			self.list_factory.guard().push_back(ListInit::new(list.clone(), self.service.clone()));
+			self
+				.list_factory
+				.guard()
+				.push_back(ListInit::new(list.clone(), self.service.clone()));
 		}
 
 		widgets
@@ -203,7 +206,10 @@ impl AsyncFactoryComponent for ProviderModel {
 				))
 			},
 			ProviderInput::AddList(list) => {
-				self.list_factory.guard().push_back(ListInit::new(list, self.service.clone()));
+				self
+					.list_factory
+					.guard()
+					.push_back(ListInit::new(list, self.service.clone()));
 				self.data = self.plugin.data().await.unwrap();
 				info!("List added to {}", self.data.name)
 			},
@@ -223,7 +229,10 @@ impl AsyncFactoryComponent for ProviderModel {
 					}
 				}
 				for list in &self.data.lists {
-					self.list_factory.guard().push_back(ListInit::new(list.clone(), self.service.clone()));
+					self
+						.list_factory
+						.guard()
+						.push_back(ListInit::new(list.clone(), self.service.clone()));
 				}
 			},
 			ProviderInput::Disable => self.enabled = false,
