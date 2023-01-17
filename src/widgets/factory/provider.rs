@@ -70,33 +70,33 @@ impl AsyncFactoryComponent for ProviderModel {
 	view! {
 		#[root]
 		#[name(list_box)]
-		adw::PreferencesGroup {
-			#[name(expander)]
-			add = &adw::ExpanderRow {
-				#[watch]
-				set_title: self.data.name.as_str(),
-				#[watch]
-				set_subtitle: self.data.description.as_str(),
-				#[watch]
-				set_icon_name: Some(self.data.icon.as_str()),
-				#[watch]
-				set_enable_expansion: !self.data.lists.is_empty() && self.plugin.is_running() && self.enabled,
-				set_expanded: !self.data.lists.is_empty(),
-				add_action = if self.plugin.is_running() {
-					gtk::MenuButton {
-						set_icon_name: "value-increase-symbolic",
-						set_css_classes: &["flat", "image-button"],
-						set_valign: gtk::Align::Center,
-						set_direction: gtk::ArrowType::Right,
-						set_popover: Some(self.new_list_controller.widget())
-					}
-				} else {
-					gtk::Box {
+			adw::PreferencesGroup {
+				#[name(expander)]
+				add = &adw::ExpanderRow {
+					#[watch]
+					set_title: self.data.name.as_str(),
+					#[watch]
+					set_subtitle: self.data.description.as_str(),
+					#[watch]
+					set_icon_name: Some(self.data.icon.as_str()),
+					#[watch]
+					set_enable_expansion: !self.data.lists.is_empty() && self.plugin.is_running() && self.enabled,
+					set_expanded: !self.data.lists.is_empty(),
+					add_action = if self.plugin.is_running() {
+						gtk::MenuButton {
+							set_icon_name: "value-increase-symbolic",
+							set_css_classes: &["flat", "image-button"],
+							set_valign: gtk::Align::Center,
+							set_direction: gtk::ArrowType::Right,
+							set_popover: Some(self.new_list_controller.widget())
+						}
+					} else {
+						gtk::Box {
 
-					}
+						}
+					},
 				},
-			},
-		}
+			}
 	}
 
 	fn init_loading_widgets(

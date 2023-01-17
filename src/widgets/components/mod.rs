@@ -3,3 +3,4 @@ pub mod new_task;
 pub mod preferences;
 pub mod sidebar;
 pub mod welcome;
+pub mod smart_lists;
