@@ -13,7 +13,7 @@ use relm4::actions::{RelmAction, RelmActionGroup};
 use relm4::adw;
 use relm4::gtk;
 use relm4::gtk::prelude::ApplicationExt;
-use sysinfo::{System, SystemExt, ProcessExt};
+use sysinfo::{ProcessExt, System, SystemExt};
 
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
@@ -120,17 +120,25 @@ pub fn verify_data_integrity() -> Result<()> {
 }
 
 fn start_services() -> Result<()> {
-	   if !Plugin::Local.is_running() {
-	       Plugin::Local.start().map_err(|err| info!("{:?}", err));
-	   }
-	   if !Plugin::Google.is_running() {
-	       Plugin::Google.start().map_err(|err| info!("{:?}", err));
-	   }
-	   if !Plugin::Microsoft.is_running() {
-	       Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
-	   }
-	   if !Plugin::Nextcloud.is_running() {
-	       Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
-	   }
+	if !Plugin::Local.is_running() {
+		if let Err(e) = Plugin::Local.start() {
+			info!("{:?}", e)
+		};
+	}
+	if !Plugin::Google.is_running() {
+		if let Err(e) = Plugin::Google.start() {
+			info!("{:?}", e)
+		};
+	}
+	if !Plugin::Microsoft.is_running() {
+		if let Err(e) = Plugin::Microsoft.start() {
+			info!("{:?}", e)
+		};
+	}
+	if !Plugin::Nextcloud.is_running() {
+		if let Err(e) = Plugin::Nextcloud.start() {
+			info!("{:?}", e)
+		};
+	}
 	Ok(())
 }

@@ -360,10 +360,10 @@ impl Component for App {
 			AppMsg::SelectSmartList(list) => {
 				self.page_title = Some(String::from(list.name()));
 				self
-				.content
-				.sender()
-				.send(ContentInput::SelectSmartList(list.clone()))
-				.unwrap_or_default();
+					.content
+					.sender()
+					.send(ContentInput::SelectSmartList(list.clone()))
+					.unwrap_or_default();
 			},
 		}
 		self.update_view(widgets, sender)

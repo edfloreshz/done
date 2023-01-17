@@ -146,10 +146,8 @@ impl AsyncFactoryComponent for ProviderModel {
 	) -> Self::Widgets {
 		let widgets = view_output!();
 
-		self.list_factory = AsyncFactoryVecDeque::new(
-			root.clone(),
-			sender.input_sender(),
-		);
+		self.list_factory =
+			AsyncFactoryVecDeque::new(root.clone(), sender.input_sender());
 
 		for list in &self.data.lists {
 			self
@@ -203,7 +201,7 @@ impl AsyncFactoryComponent for ProviderModel {
 			ProviderInput::Enable => {
 				self.enabled = true;
 				self.data = self.plugin.data().await.unwrap();
-				
+
 				self.list_factory.guard().clear();
 				for list in &self.data.lists {
 					self

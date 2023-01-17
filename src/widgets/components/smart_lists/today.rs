@@ -24,12 +24,12 @@ impl SimpleComponent for TodayModel {
 	type Init = ();
 
 	view! {
-        #[root]
-        gtk::Box {
-            gtk::Label {
-                set_text: "Today"
-            }
-        }
+				#[root]
+				gtk::Box {
+						gtk::Label {
+								set_text: "Today"
+						}
+				}
 	}
 
 	fn init(

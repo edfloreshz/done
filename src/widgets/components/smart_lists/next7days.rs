@@ -26,9 +26,9 @@ impl SimpleComponent for Next7DaysModel {
 	view! {
 			#[root]
 			gtk::Box {
-                gtk::Label {
-                    set_text: "Next 7 Days"
-                }
+								gtk::Label {
+										set_text: "Next 7 Days"
+								}
 			}
 	}
 

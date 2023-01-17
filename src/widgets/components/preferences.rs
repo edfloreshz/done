@@ -7,9 +7,9 @@ use relm4::adw::prelude::{
 	PreferencesRowExt,
 };
 use relm4::adw::traits::ComboRowExt;
-use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt, ListModelExt};
-use relm4::ComponentParts;
+use relm4::gtk::prelude::{BoxExt, ListModelExt, OrientableExt, WidgetExt};
 use relm4::gtk::traits::ListBoxRowExt;
+use relm4::ComponentParts;
 use relm4::{adw, gtk};
 use relm4::{Component, ComponentSender};
 use serde::{Deserialize, Serialize};
@@ -17,20 +17,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Preferences {
 	pub plugins: ProviderPreferences,
-	pub color_scheme: ColorScheme
+	pub color_scheme: ColorScheme,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ColorScheme {
 	Dark,
 	Light,
-	Default
+	Default,
 }
 
 impl Default for ColorScheme {
-    fn default() -> Self {
-        Self::Default
-    }
+	fn default() -> Self {
+		Self::Default
+	}
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -58,7 +58,7 @@ pub enum PreferencesEvent {
 	DisablePlugin(Plugin),
 	SetDarkColorScheme,
 	SetLightColorScheme,
-	SetDefaultColorScheme
+	SetDefaultColorScheme,
 }
 
 #[derive(Debug)]
@@ -201,11 +201,13 @@ impl Component for Preferences {
 	) -> ComponentParts<Self> {
 		let model = if let Ok(project) = Project::open("dev", "edfloreshz", "done")
 		{
-			project.get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap_or(Preferences::default())
+			project
+				.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+				.unwrap_or(Preferences::default())
 		} else {
 			Preferences::default()
 		};
-	
+
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
 	}
@@ -254,17 +256,20 @@ impl Component for Preferences {
 				Err(err) => info!("Failed to stop {:?} plugin: {:?}", plugin, err),
 			},
 			PreferencesEvent::SetDarkColorScheme => {
-				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+				adw::StyleManager::default()
+					.set_color_scheme(adw::ColorScheme::ForceDark);
 				self.color_scheme = ColorScheme::Dark;
 				update_preferences(self).unwrap()
 			},
 			PreferencesEvent::SetLightColorScheme => {
-				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
+				adw::StyleManager::default()
+					.set_color_scheme(adw::ColorScheme::ForceLight);
 				self.color_scheme = ColorScheme::Light;
 				update_preferences(self).unwrap()
 			},
 			PreferencesEvent::SetDefaultColorScheme => {
-				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
+				adw::StyleManager::default()
+					.set_color_scheme(adw::ColorScheme::Default);
 				self.color_scheme = ColorScheme::Default;
 				update_preferences(self).unwrap()
 			},
