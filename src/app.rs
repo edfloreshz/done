@@ -9,6 +9,7 @@ use crate::widgets::components::preferences::{Preferences, PreferencesOutput};
 use crate::widgets::components::sidebar::{
 	SidebarInput, SidebarModel, SidebarOutput,
 };
+use crate::widgets::components::smart_lists::SmartList;
 use crate::widgets::components::welcome::Welcome;
 use crate::widgets::factory::list::ListData;
 use crate::widgets::modals::about::AboutDialog;
@@ -59,6 +60,7 @@ pub enum AppMsg {
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
+	SelectSmartList(SmartList),
 	DisablePlugin,
 	CloseWarning,
 	Folded,
@@ -220,6 +222,7 @@ impl Component for App {
 				SidebarOutput::ListSelected(list) => AppMsg::TaskListSelected(list),
 				SidebarOutput::Forward => AppMsg::Forward,
 				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
+				SidebarOutput::SelectSmartList(list) => AppMsg::SelectSmartList(list),
 			},
 		);
 
@@ -354,6 +357,14 @@ impl Component for App {
 				.sender()
 				.send(SidebarInput::DisableService(plugin))
 				.unwrap_or_default(),
+			AppMsg::SelectSmartList(list) => {
+				self.page_title = Some(String::from(list.name()));
+				self
+				.content
+				.sender()
+				.send(ContentInput::SelectSmartList(list.clone()))
+				.unwrap_or_default();
+			},
 		}
 		self.update_view(widgets, sender)
 	}

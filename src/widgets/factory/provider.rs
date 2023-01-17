@@ -60,7 +60,7 @@ pub enum ProviderOutput {
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for ProviderModel {
 	type ParentInput = SidebarInput;
-	type ParentWidget = gtk::Box;
+	type ParentWidget = adw::PreferencesGroup;
 	type CommandOutput = ();
 	type Input = ProviderInput;
 	type Output = ProviderOutput;
@@ -69,49 +69,30 @@ impl AsyncFactoryComponent for ProviderModel {
 
 	view! {
 		#[root]
-		#[name(list_box)]
-			adw::PreferencesGroup {
-				#[name(expander)]
-				add = &adw::ExpanderRow {
-					#[watch]
-					set_title: self.data.name.as_str(),
-					#[watch]
-					set_subtitle: self.data.description.as_str(),
-					#[watch]
-					set_icon_name: Some(self.data.icon.as_str()),
-					#[watch]
-					set_enable_expansion: !self.data.lists.is_empty() && self.plugin.is_running() && self.enabled,
-					set_expanded: !self.data.lists.is_empty(),
-					add_action = if self.plugin.is_running() {
-						gtk::MenuButton {
-							set_icon_name: "value-increase-symbolic",
-							set_css_classes: &["flat", "image-button"],
-							set_valign: gtk::Align::Center,
-							set_direction: gtk::ArrowType::Right,
-							set_popover: Some(self.new_list_controller.widget())
-						}
-					} else {
-						gtk::Box {
-
-						}
-					},
-				},
-			}
-	}
-
-	fn init_loading_widgets(
-		root: &mut Self::Root,
-	) -> Option<relm4::loading_widgets::LoadingWidgets> {
-		relm4::view! {
-			#[local_ref]
-			root {
-				#[name(expander)]
-				add = &adw::ExpanderRow {
+		adw::ExpanderRow {
+			#[watch]
+			set_title: self.data.name.as_str(),
+			#[watch]
+			set_subtitle: self.data.description.as_str(),
+			#[watch]
+			set_icon_name: Some(self.data.icon.as_str()),
+			#[watch]
+			set_enable_expansion: !self.data.lists.is_empty() && self.plugin.is_running() && self.enabled,
+			set_expanded: !self.data.lists.is_empty(),
+			add_action = if self.plugin.is_running() {
+				gtk::MenuButton {
+					set_icon_name: "value-increase-symbolic",
+					set_css_classes: &["flat", "image-button"],
+					set_valign: gtk::Align::Center,
+					set_direction: gtk::ArrowType::Right,
+					set_popover: Some(self.new_list_controller.widget())
+				}
+			} else {
+				gtk::Box {
 
 				}
-			}
+			},
 		}
-		Some(LoadingWidgets::new(root, expander))
 	}
 
 	async fn init_model(
@@ -166,7 +147,7 @@ impl AsyncFactoryComponent for ProviderModel {
 		let widgets = view_output!();
 
 		self.list_factory = AsyncFactoryVecDeque::new(
-			widgets.expander.clone(),
+			root.clone(),
 			sender.input_sender(),
 		);
 
@@ -222,12 +203,8 @@ impl AsyncFactoryComponent for ProviderModel {
 			ProviderInput::Enable => {
 				self.enabled = true;
 				self.data = self.plugin.data().await.unwrap();
-				loop {
-					let list = self.list_factory.guard().pop_front();
-					if list.is_none() {
-						break;
-					}
-				}
+				
+				self.list_factory.guard().clear();
 				for list in &self.data.lists {
 					self
 						.list_factory
