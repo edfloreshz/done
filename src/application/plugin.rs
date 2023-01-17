@@ -1,57 +1,73 @@
-use std::process::Command;
-
 use anyhow::Result;
+use libset::format::FileFormat;
+use libset::project::Project;
 use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::{Empty, List};
-use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter, EnumString};
+use serde::{Deserialize, Serialize};
+use std::process::Command;
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
-#[derive(Debug, Clone)]
-pub struct PluginData {
+pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/beta/dev.edfloreshz.Done.Plugins.json";
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Plugin {
+	#[serde(rename = "pluginId")]
 	pub id: String,
+	#[serde(rename = "pluginName")]
 	pub name: String,
+	#[serde(rename = "pluginDescription")]
 	pub description: String,
+	#[serde(rename = "pluginIcon")]
 	pub icon: String,
+	#[serde(rename = "pluginPort")]
+	pub port: u32,
+	#[serde(rename = "pluginVersion")]
+	pub version: String,
+	#[serde(rename = "pluginDownloadUrl")]
+	pub download_url: String,
+	#[serde(rename = "pluginProcessName")]
+	pub process_name: String,
+	#[serde(skip)]
 	pub lists: Vec<List>,
 }
 
-#[derive(Debug, EnumIter, EnumString, Display, Copy, Clone)]
-pub enum Plugin {
-	Local = 7007,
-	Google = 6006,
-	Microsoft = 3003,
-	Nextcloud = 4004,
-}
-
 impl Plugin {
-	pub fn list() -> Vec<Plugin> {
-		Plugin::iter().collect()
+	pub async fn fetch_plugins() -> Result<Vec<Plugin>> {
+		let response = reqwest::get(PLUGINS_URL).await?.text().await?;
+		println!("{}", response);
+		let plugins: Vec<Plugin> = serde_json::from_str(&response)?;
+		Ok(plugins)
+	}
+
+	pub fn get_plugins() -> Result<Vec<Plugin>> {
+		let plugins = Project::open("dev", "edfloreshz", "done")?
+			.get_file_as::<Vec<Plugin>>(
+				"dev.edfloreshz.Done.Plugins",
+				FileFormat::JSON,
+			)?;
+		Ok(plugins)
+	}
+
+	pub fn get_by_id(id: &str) -> Result<Plugin> {
+		let plugins = Self::get_plugins()?;
+		let plugin = plugins
+			.into_iter()
+			.find(|plugin| plugin.id == id)
+			.ok_or(anyhow::anyhow!("Plugin not found."))?;
+		Ok(plugin)
 	}
 
 	pub fn start(&self) -> Result<u32, std::io::Error> {
-		let process_name = match self {
-			Plugin::Local => "local-plugin",
-			Plugin::Google => "google-plugin",
-			Plugin::Microsoft => "microsoft-plugin",
-			Plugin::Nextcloud => "nextcloud-plugin",
-		};
-		match Command::new(process_name).spawn() {
+		match Command::new(&self.process_name).spawn() {
 			Ok(child) => Ok(child.id()),
 			Err(err) => Err(err),
 		}
 	}
 
 	pub fn stop(&self) -> Result<()> {
-		let process_name = match self {
-			Plugin::Local => "local-plugin",
-			Plugin::Google => "google-plugin",
-			Plugin::Microsoft => "microsoft-plugin",
-			Plugin::Nextcloud => "nextcloud-plugin",
-		};
 		let processes = System::new_all();
-		match processes.processes_by_exact_name(process_name).next() {
+		match processes.processes_by_exact_name(&self.process_name).next() {
 			Some(process) => {
 				if process.kill() {
 					info!("Process was killed.")
@@ -66,93 +82,26 @@ impl Plugin {
 
 	pub fn is_running(&self) -> bool {
 		let processes = System::new_all();
-		match self {
-			Plugin::Local => processes
-				.processes_by_exact_name("local-plugin")
-				.next()
-				.is_some(),
-			Plugin::Google => processes
-				.processes_by_exact_name("google-plugin")
-				.next()
-				.is_some(),
-			Plugin::Microsoft => processes
-				.processes_by_exact_name("microsoft-plugin")
-				.next()
-				.is_some(),
-			Plugin::Nextcloud => processes
-				.processes_by_exact_name("nextcloud-plugin")
-				.next()
-				.is_some(),
-		}
+		let is_running = processes
+			.processes_by_exact_name(&self.process_name)
+			.next()
+			.is_some();
+		is_running
 	}
 
 	pub fn is_installed(&self) -> bool {
-		match self {
-			Plugin::Local => Command::new("local-plugin").spawn().ok().is_some(),
-			Plugin::Google => Command::new("google-plugin").spawn().ok().is_some(),
-			Plugin::Microsoft => {
-				Command::new("microsoft-plugin").spawn().ok().is_some()
-			},
-			Plugin::Nextcloud => {
-				Command::new("nextcloud-plugin").spawn().ok().is_some()
-			},
-		}
+		Command::new(&self.process_name).spawn().ok().is_some()
 	}
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
-		let port = *self as i32;
-		let url = format!("http://[::1]:{port}");
+		let url = format!("http://[::1]:{}", self.port);
 		let plugin = ProviderClient::connect(url).await?;
 		Ok(plugin)
 	}
 
-	pub async fn data(&self) -> Result<PluginData> {
+	pub async fn lists(&self) -> Result<Vec<String>> {
 		let mut connector = self.connect().await?;
-		let mut stream = connector.read_all_lists(Empty {}).await?.into_inner();
-		let mut lists = vec![];
-		while let Some(msg) = stream.message().await.unwrap() {
-			lists.push(msg.list.unwrap());
-		}
-		let data = PluginData {
-			id: connector.get_id(Empty {}).await?.into_inner(),
-			name: connector.get_name(Empty {}).await?.into_inner(),
-			description: connector.get_description(Empty {}).await?.into_inner(),
-			icon: connector.get_icon_name(Empty {}).await?.into_inner(),
-			lists,
-		};
-		Ok(data)
-	}
-
-	pub fn placeholder(&self) -> PluginData {
-		match self {
-			Plugin::Local => PluginData {
-				id: Default::default(),
-				name: "Local".to_string(),
-				description: "Local tasks".to_string(),
-				icon: "user-home-symbolic".to_string(),
-				lists: vec![],
-			},
-			Plugin::Google => PluginData {
-				id: Default::default(),
-				name: "Google".to_string(),
-				description: "Google tasks".to_string(),
-				icon: "user-home-symbolic".to_string(),
-				lists: vec![],
-			},
-			Plugin::Microsoft => PluginData {
-				id: Default::default(),
-				name: "Microsoft To Do".to_string(),
-				description: "Microsoft To Do tasks".to_string(),
-				icon: "user-home-symbolic".to_string(),
-				lists: vec![],
-			},
-			Plugin::Nextcloud => PluginData {
-				id: Default::default(),
-				name: "Nextcloud".to_string(),
-				description: "Nextcloud tasks".to_string(),
-				icon: "user-home-symbolic".to_string(),
-				lists: vec![],
-			},
-		}
+		let response = connector.read_all_list_ids(Empty {}).await?.into_inner();
+		Ok(response.lists)
 	}
 }

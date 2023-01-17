@@ -27,7 +27,7 @@ use relm4::{
 pub struct App {
 	sidebar: AsyncController<SidebarModel>,
 	content: AsyncController<ContentModel>,
-	preferences: Controller<Preferences>,
+	preferences: AsyncController<Preferences>,
 	welcome: Controller<Welcome>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
@@ -38,7 +38,7 @@ impl App {
 	pub fn new(
 		sidebar: AsyncController<SidebarModel>,
 		content: AsyncController<ContentModel>,
-		preferences: Controller<Preferences>,
+		preferences: AsyncController<Preferences>,
 		welcome: Controller<Welcome>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {

@@ -17,7 +17,7 @@ mod widgets;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-	let app = RelmApp::with_app(setup_app()?);
+	let app = RelmApp::with_app(setup_app().await?);
 	app.run::<App>(());
 	Ok(())
 }
