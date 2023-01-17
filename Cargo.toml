@@ -13,7 +13,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-relm4 = { git = "https://github.com/Relm4/Relm4", branch="main", features = ["macros", "libadwaita"] }
+relm4 = { version = "0.5.0-rc.1", features = ["macros", "libadwaita"] }
 i18n-embed = { version = "0.13.4", features = ["fluent-system", "desktop-requester"] }
 libset = { git = "https://github.com/edfloreshz/libset", branch = "beta" }
 tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }

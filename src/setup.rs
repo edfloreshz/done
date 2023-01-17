@@ -1,5 +1,5 @@
 use crate::{
-	application::fluent::setup_fluent,
+	application::{fluent::setup_fluent, plugin::Plugin},
 	config::{APP_ID, GETTEXT_PACKAGE, LOCALEDIR, VERSION},
 	widgets::components::preferences::Preferences,
 };
@@ -13,6 +13,7 @@ use relm4::actions::{RelmAction, RelmActionGroup};
 use relm4::adw;
 use relm4::gtk;
 use relm4::gtk::prelude::ApplicationExt;
+use sysinfo::{System, SystemExt, ProcessExt};
 
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
@@ -40,6 +41,21 @@ pub fn setup_app() -> Result<adw::Application> {
 	start_services()?;
 
 	let app = main_app();
+
+	app.connect_shutdown(|_| {
+		let processes = System::new_all();
+		let mut local = processes.processes_by_exact_name("local-plugin");
+		match local.next() {
+			Some(process) => {
+				if process.kill() {
+					info!("The {} process was killed.", process.name())
+				} else {
+					error!("Failed to kill process.")
+				}
+			},
+			None => info!("Process is not running."),
+		}
+	});
 
 	setup_actions(&app);
 
@@ -104,17 +120,17 @@ pub fn verify_data_integrity() -> Result<()> {
 }
 
 fn start_services() -> Result<()> {
-	//    if !Plugin::Local.is_running() {
-	//        Plugin::Local.start().map_err(|err| info!("{:?}", err));
-	//    }
-	//    if !Plugin::Google.is_running() {
-	//        Plugin::Google.start().map_err(|err| info!("{:?}", err));
-	//    }
-	//    if !Plugin::Microsoft.is_running() {
-	//        Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
-	//    }
-	//    if !Plugin::Nextcloud.is_running() {
-	//        Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
-	//    }
+	   if !Plugin::Local.is_running() {
+	       Plugin::Local.start().map_err(|err| info!("{:?}", err));
+	   }
+	   if !Plugin::Google.is_running() {
+	       Plugin::Google.start().map_err(|err| info!("{:?}", err));
+	   }
+	   if !Plugin::Microsoft.is_running() {
+	       Plugin::Microsoft.start().map_err(|err| info!("{:?}", err));
+	   }
+	   if !Plugin::Nextcloud.is_running() {
+	       Plugin::Nextcloud.start().map_err(|err| info!("{:?}", err));
+	   }
 	Ok(())
 }
