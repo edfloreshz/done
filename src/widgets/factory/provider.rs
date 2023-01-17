@@ -76,8 +76,8 @@ impl AsyncFactoryComponent for ProviderModel {
 			#[watch]
 			set_icon_name: Some(self.plugin.icon.as_str()),
 			#[watch]
-			set_enable_expansion: !self.plugin.lists.is_empty() && self.plugin.is_running() && self.enabled,
-			set_expanded: !self.plugin.lists.is_empty(),
+			set_enable_expansion: !self.lists.is_empty() && self.plugin.is_running() && self.enabled,
+			set_expanded: !self.lists.is_empty(),
 			add_action = if self.plugin.is_running() {
 				gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
@@ -174,7 +174,8 @@ impl AsyncFactoryComponent for ProviderModel {
 				self
 					.list_factory
 					.guard()
-					.push_back(ListInit::new(list.id, self.service.clone()));
+					.push_back(ListInit::new(list.id.clone(), self.service.clone()));
+				self.lists.push(list.id);
 				info!("List added to {}", self.plugin.name)
 			},
 			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
