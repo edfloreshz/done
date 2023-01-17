@@ -1,5 +1,5 @@
 
-use relm4::{gtk::{self, traits::OrientableExt}, SimpleComponent, ComponentParts, ComponentSender, factory::AsyncFactoryVecDeque};
+use relm4::{gtk::{self, traits::{OrientableExt, WidgetExt, BoxExt}}, SimpleComponent, ComponentParts, ComponentSender, factory::AsyncFactoryVecDeque};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -73,8 +73,14 @@ impl SimpleComponent for SmartListModel {
     view! {
         #[root]
         gtk::Box {
+            set_margin_top: 5,
+            set_margin_start: 10,
+            set_margin_end: 10,
+            set_orientation: gtk::Orientation::Vertical,
+            set_css_classes: &["navigation-sidebar"],
             #[local_ref]
             smart_list_container -> gtk::Box {
+                set_spacing: 12,
                 set_orientation: gtk::Orientation::Vertical,
             }
         }
