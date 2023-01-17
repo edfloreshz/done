@@ -212,16 +212,14 @@ impl AsyncFactoryComponent for ListData {
 			},
 			ListInput::Select => {
 				let mut service = self.service.clone();
-				let tasks = match service
-					.read_task_ids_from_list(self.list.id.clone())
-					.await
-				{
-					Ok(response) => response.into_inner().tasks,
-					Err(e) => {
-						error!("Failed to find tasks. {:?}", e);
-						vec![]
-					},
-				};
+				let tasks =
+					match service.read_task_ids_from_list(self.list.id.clone()).await {
+						Ok(response) => response.into_inner().tasks,
+						Err(e) => {
+							error!("Failed to find tasks. {:?}", e);
+							vec![]
+						},
+					};
 				self.tasks = tasks;
 				sender.output(ListOutput::Select(self.clone()));
 			},

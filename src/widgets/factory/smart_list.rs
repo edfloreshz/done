@@ -12,12 +12,12 @@ pub struct SmartListFactory {
 	pub name: String,
 	pub description: String,
 	pub icon: String,
-	pub smart_list: SmartList
+	pub smart_list: SmartList,
 }
 
 #[derive(Debug)]
 pub enum SmartListFactoryInput {
-	SelectSmartList
+	SelectSmartList,
 }
 
 #[derive(Debug)]
@@ -85,7 +85,7 @@ impl AsyncFactoryComponent for SmartListFactory {
 			name: String::from(init.name()),
 			description: String::from(init.description()),
 			icon: String::from(init.icon()),
-			smart_list: init
+			smart_list: init,
 		}
 	}
 
@@ -106,7 +106,9 @@ impl AsyncFactoryComponent for SmartListFactory {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-    		SmartListFactoryInput::SelectSmartList => sender.output(SmartListFactoryOutput::SelectSmartList(self.smart_list.clone())),
+			SmartListFactoryInput::SelectSmartList => sender.output(
+				SmartListFactoryOutput::SelectSmartList(self.smart_list.clone()),
+			),
 		}
 	}
 

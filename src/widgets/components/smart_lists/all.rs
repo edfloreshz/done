@@ -26,9 +26,9 @@ impl SimpleComponent for AllModel {
 	view! {
 			#[root]
 			gtk::Box {
-                gtk::Label {
-                    set_text: "All"
-                }
+								gtk::Label {
+										set_text: "All"
+								}
 			}
 	}
 

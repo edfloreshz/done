@@ -26,9 +26,9 @@ impl SimpleComponent for StarredModel {
 	view! {
 			#[root]
 			gtk::Box {
-                gtk::Label {
-                    set_text: "Starred"
-                }
+								gtk::Label {
+										set_text: "Starred"
+								}
 			}
 	}
 
