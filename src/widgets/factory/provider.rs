@@ -1,6 +1,6 @@
 use crate::application::plugin::{Plugin, PluginData};
 use crate::widgets::factory::list::ListInit;
-use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
+use adw::prelude::{ExpanderRowExt, PreferencesRowExt};
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::List;
@@ -11,7 +11,6 @@ use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
-use relm4::loading_widgets::LoadingWidgets;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 

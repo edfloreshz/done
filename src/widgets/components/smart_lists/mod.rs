@@ -11,7 +11,7 @@ use relm4::{
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
-		traits::{BoxExt, OrientableExt, WidgetExt},
+		traits::{BoxExt, OrientableExt},
 	},
 	ComponentParts, ComponentSender, SimpleComponent,
 };
