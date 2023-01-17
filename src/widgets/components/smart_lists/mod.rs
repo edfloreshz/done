@@ -34,7 +34,7 @@ pub enum SmartListInput {
 #[derive(Debug)]
 pub enum SmartListOutput {
 	SelectSmartList(SmartList),
-    Forward
+	Forward,
 }
 
 #[derive(Debug, EnumIter, Clone, PartialEq)]
@@ -126,7 +126,9 @@ impl SimpleComponent for SmartListModel {
 			SmartListInput::SelectSmartList(list) => sender
 				.output(SmartListOutput::SelectSmartList(list))
 				.unwrap(),
-			SmartListInput::Forward => sender.output(SmartListOutput::Forward).unwrap(),
+			SmartListInput::Forward => {
+				sender.output(SmartListOutput::Forward).unwrap()
+			},
 		}
 	}
 }

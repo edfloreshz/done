@@ -124,7 +124,7 @@ impl SimpleAsyncComponent for SidebarModel {
 					SmartListOutput::SelectSmartList(list) => {
 						SidebarInput::SelectSmartList(list)
 					},
-					SmartListOutput::Forward => SidebarInput::Forward
+					SmartListOutput::Forward => SidebarInput::Forward,
 				},
 			),
 		};
