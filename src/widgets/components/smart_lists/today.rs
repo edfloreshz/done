@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use proto_rust::{provider_client::ProviderClient, Channel, Task};
+use proto_rust::Task;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::application::plugin::Plugin;
@@ -33,9 +33,9 @@ impl SimpleComponent for TodayModel {
 	}
 
 	fn init(
-		init: Self::Init,
+		_init: Self::Init,
 		root: &Self::Root,
-		sender: relm4::ComponentSender<Self>,
+		_sender: relm4::ComponentSender<Self>,
 	) -> relm4::ComponentParts<Self> {
 		let model = Self {
 			tasks: HashMap::new(),
@@ -46,8 +46,8 @@ impl SimpleComponent for TodayModel {
 
 	fn update(
 		&mut self,
-		message: Self::Input,
-		sender: relm4::ComponentSender<Self>,
+		_message: Self::Input,
+		_sender: relm4::ComponentSender<Self>,
 	) {
 	}
 }

@@ -120,25 +120,12 @@ pub fn verify_data_integrity() -> Result<()> {
 }
 
 fn start_services() -> Result<()> {
-	if !Plugin::Local.is_running() {
-		if let Err(e) = Plugin::Local.start() {
-			info!("{:?}", e)
-		};
-	}
-	if !Plugin::Google.is_running() {
-		if let Err(e) = Plugin::Google.start() {
-			info!("{:?}", e)
-		};
-	}
-	if !Plugin::Microsoft.is_running() {
-		if let Err(e) = Plugin::Microsoft.start() {
-			info!("{:?}", e)
-		};
-	}
-	if !Plugin::Nextcloud.is_running() {
-		if let Err(e) = Plugin::Nextcloud.start() {
-			info!("{:?}", e)
-		};
+	for plugin in Plugin::list() {
+		if !plugin.is_running() {
+			if let Err(e) = plugin.start() {
+				info!("{:?}", e)
+			};
+		}
 	}
 	Ok(())
 }

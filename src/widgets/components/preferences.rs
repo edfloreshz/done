@@ -7,8 +7,7 @@ use relm4::adw::prelude::{
 	PreferencesRowExt,
 };
 use relm4::adw::traits::ComboRowExt;
-use relm4::gtk::prelude::{BoxExt, ListModelExt, OrientableExt, WidgetExt};
-use relm4::gtk::traits::ListBoxRowExt;
+use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
 use relm4::ComponentParts;
 use relm4::{adw, gtk};
 use relm4::{Component, ComponentSender};
