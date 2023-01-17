@@ -47,7 +47,7 @@ Done is a simple to do app that lets you combine your existing set of task provi
 
 ## Plug-ins
 Done strives the become the ultimate to-do list app, to do this, it needs to be versatile, flexible and extensible, 
-that's why we developed a plug-in system for it, it relies on [gRPC](https://grpc.io/) to communicate the app with its services.
+that's why we developed a plug-in system for it.
 
 To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 
