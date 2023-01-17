@@ -45,7 +45,11 @@ Done is a simple to do app that lets you combine your existing set of task provi
 | Arch Linux | `paru -S done-git`                    |
 | Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
 
+## Plug-ins
+Done strives the become the ultimate to-do list app, to do this, it needs to be versatile, flexible and extensible, 
+that's why we developed a plug-in system for it, it relies on [gRPC](https://grpc.io/) to communicate the app with its services.
 
+To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 
 ## To do
 
