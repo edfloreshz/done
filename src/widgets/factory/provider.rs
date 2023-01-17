@@ -1,4 +1,4 @@
-use crate::application::plugin::{Plugin, PluginData};
+use crate::application::plugin::Plugin;
 use crate::widgets::factory::list::ListInit;
 use adw::prelude::{ExpanderRowExt, PreferencesRowExt};
 use libset::format::FileFormat;
@@ -25,7 +25,7 @@ pub struct ProviderModel {
 	pub plugin: Plugin,
 	pub service: ProviderClient<Channel>,
 	pub enabled: bool,
-	pub data: PluginData,
+	pub lists: Vec<String>,
 	pub list_factory: AsyncFactoryVecDeque<ListData>,
 	pub new_list_controller: Controller<NewListModel>,
 }
@@ -70,14 +70,14 @@ impl AsyncFactoryComponent for ProviderModel {
 		#[root]
 		adw::ExpanderRow {
 			#[watch]
-			set_title: self.data.name.as_str(),
+			set_title: self.plugin.name.as_str(),
 			#[watch]
-			set_subtitle: self.data.description.as_str(),
+			set_subtitle: self.plugin.description.as_str(),
 			#[watch]
-			set_icon_name: Some(self.data.icon.as_str()),
+			set_icon_name: Some(self.plugin.icon.as_str()),
 			#[watch]
-			set_enable_expansion: !self.data.lists.is_empty() && self.plugin.is_running() && self.enabled,
-			set_expanded: !self.data.lists.is_empty(),
+			set_enable_expansion: !self.plugin.lists.is_empty() && self.plugin.is_running() && self.enabled,
+			set_expanded: !self.plugin.lists.is_empty(),
 			add_action = if self.plugin.is_running() {
 				gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
@@ -104,23 +104,16 @@ impl AsyncFactoryComponent for ProviderModel {
 			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
 			.unwrap()
 			.plugins;
-		let data = if init.plugin.is_running() {
-			init.plugin.data().await.unwrap()
-		} else {
-			init.plugin.placeholder()
-		};
-		let enabled = match init.plugin {
-			Plugin::Local => plugin_preferences.local_enabled,
-			Plugin::Google => plugin_preferences.google_enabled,
-			Plugin::Microsoft => plugin_preferences.microsoft_enabled,
-			Plugin::Nextcloud => plugin_preferences.nextcloud_enabled,
-		};
 		let index = index.current_index();
 		Self {
-			plugin: init.plugin,
+			plugin: init.plugin.clone(),
 			service: init.service,
-			enabled,
-			data,
+			enabled: plugin_preferences
+				.iter()
+				.find(|p| p.plugin.name == init.plugin.name)
+				.unwrap()
+				.enabled,
+			lists: init.plugin.lists().await.unwrap(),
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
@@ -148,7 +141,7 @@ impl AsyncFactoryComponent for ProviderModel {
 		self.list_factory =
 			AsyncFactoryVecDeque::new(root.clone(), sender.input_sender());
 
-		for list in &self.data.lists {
+		for list in &self.lists {
 			self
 				.list_factory
 				.guard()
@@ -167,29 +160,22 @@ impl AsyncFactoryComponent for ProviderModel {
 			ProviderInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());
 				let index = self
-					.data
 					.lists
 					.iter()
-					.position(|list| list.id == list_id)
+					.position(|list_id| list_id == list_id)
 					.unwrap();
-				self.data.lists.remove(index);
-				self.data = self.plugin.data().await.unwrap();
+				self.lists.remove(index);
 				info!("Deleted task list with id: {}", list_id);
 			},
-			ProviderInput::RequestAddList(index, name) => {
-				sender.output(ProviderOutput::AddListToProvider(
-					index,
-					self.plugin.data().await.unwrap().id,
-					name,
-				))
-			},
+			ProviderInput::RequestAddList(index, name) => sender.output(
+				ProviderOutput::AddListToProvider(index, self.plugin.id.clone(), name),
+			),
 			ProviderInput::AddList(list) => {
 				self
 					.list_factory
 					.guard()
-					.push_back(ListInit::new(list, self.service.clone()));
-				self.data = self.plugin.data().await.unwrap();
-				info!("List added to {}", self.data.name)
+					.push_back(ListInit::new(list.id, self.service.clone()));
+				info!("List added to {}", self.plugin.name)
 			},
 			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
 			ProviderInput::ListSelected(list) => {
@@ -199,10 +185,9 @@ impl AsyncFactoryComponent for ProviderModel {
 			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
 			ProviderInput::Enable => {
 				self.enabled = true;
-				self.data = self.plugin.data().await.unwrap();
 
 				self.list_factory.guard().clear();
-				for list in &self.data.lists {
+				for list in &self.lists {
 					self
 						.list_factory
 						.guard()

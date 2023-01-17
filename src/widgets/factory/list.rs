@@ -39,7 +39,7 @@ pub struct ListData {
 
 #[derive(derive_new::new)]
 pub struct ListInit {
-	list: List,
+	list_id: String,
 	service: ProviderClient<Channel>,
 }
 
@@ -144,8 +144,15 @@ impl AsyncFactoryComponent for ListData {
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let mut service = params.service.clone();
+		let list = match service.read_list(params.list_id.clone()).await {
+			Ok(response) => response.into_inner().list.unwrap(), //TODO: Handle this unwrap.
+			Err(e) => {
+				error!("Failed to find list. {:?}", e);
+				List::default()
+			},
+		};
 		let tasks = match service
-			.read_task_ids_from_list(params.list.id.clone())
+			.read_task_ids_from_list(params.list_id.clone())
 			.await
 		{
 			Ok(response) => response.into_inner().tasks,
@@ -155,7 +162,7 @@ impl AsyncFactoryComponent for ListData {
 			},
 		};
 		Self {
-			list: params.list,
+			list,
 			tasks,
 			service: params.service,
 		}

@@ -26,11 +26,11 @@ pub fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
 }
 
-pub fn setup_app() -> Result<adw::Application> {
+pub async fn setup_app() -> Result<adw::Application> {
 	gtk::init()?;
 	setup_gettext();
 	setup_fluent()?;
-	verify_data_integrity()?;
+	verify_data_integrity().await?;
 	pretty_env_logger::init();
 
 	glib::set_application_name(&gettext("Done"));
@@ -38,7 +38,7 @@ pub fn setup_app() -> Result<adw::Application> {
 	setup_css();
 	gtk::Window::set_default_icon_name(APP_ID);
 
-	start_services()?;
+	start_services().await?;
 
 	let app = main_app();
 
@@ -101,13 +101,14 @@ fn setup_css() {
 	}
 }
 
-pub fn verify_data_integrity() -> Result<()> {
+pub async fn verify_data_integrity() -> Result<()> {
 	let project = Project::new("dev", "edfloreshz", "done")
 		.about("Done is a simple to do app.")
 		.author("Eduardo Flores")
 		.version(VERSION)
 		.add_files(&[
 			new_file!("preferences").set_format(FileFormat::JSON),
+			new_file!("dev.edfloreshz.Done.Plugins").set_format(FileFormat::JSON),
 			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
 		])?;
 	if !project.integrity_ok::<Preferences>("preferences", FileFormat::JSON) {
@@ -116,11 +117,16 @@ pub fn verify_data_integrity() -> Result<()> {
 			.set_content(Preferences::default())?
 			.write()?;
 	}
+	let plugins: Vec<Plugin> = Plugin::fetch_plugins().await?;
+	project
+		.get_file("dev.edfloreshz.Done.Plugins", FileFormat::JSON)?
+		.set_content(plugins)?
+		.write()?;
 	Ok(())
 }
 
-fn start_services() -> Result<()> {
-	for plugin in Plugin::list() {
+async fn start_services() -> Result<()> {
+	for plugin in Plugin::fetch_plugins().await? {
 		if !plugin.is_running() {
 			if let Err(e) = plugin.start() {
 				info!("{:?}", e)
