@@ -1,0 +1,38 @@
+[
+    {
+        "pluginId": "local",
+        "pluginName": "Local",
+        "pluginDescription": "Local tasks are stored here.",
+        "pluginIcon": "user-home-symbolic",
+        "pluginPort": 7007,
+        "pluginVersion": "1.0.0",
+        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/tag/v1.0.0"
+    },
+    {
+        "pluginId": "google",
+        "pluginName": "Google Tasks",
+        "pluginDescription": "Google tasks are stored here.",
+        "pluginIcon": "",
+        "pluginPort": 6006,
+        "pluginVersion": "1.0.0",
+        "pluginDownloadUrl": "https://github.com/done-devs/google-plugin/releases/tag/v1.0.0"
+    },
+    {
+        "pluginId": "microsoft",
+        "pluginName": "Microsoft To Do",
+        "pluginDescription": "Microsoft To Do tasks are stored here.",
+        "pluginIcon": "",
+        "pluginPort": 3003,
+        "pluginVersion": "1.0.0",
+        "pluginDownloadUrl": "https://github.com/done-devs/microsoft-plugin/releases/tag/v1.0.0"
+    },
+    {
+        "pluginId": "nextcloud",
+        "pluginName": "Nextcloud",
+        "pluginDescription": "Nextcloud tasks are stored here.",
+        "pluginIcon": "",
+        "pluginPort": 4004,
+        "pluginVersion": "1.0.0",
+        "pluginDownloadUrl": "https://github.com/done-devs/microsoft-plugin/releases/tag/v1.0.0"
+    }
+]
