@@ -142,7 +142,10 @@ impl AsyncFactoryComponent for TaskData {
 			first_load: true,
 		};
 		match model.service.read_task(init.id.clone()).await {
-			Ok(response) => model.task = response.into_inner().task.unwrap(),
+			Ok(response) => match response.into_inner().task {
+				Some(task) => model.task = task,
+				None => error!("Failed to get task.")
+			},
 			Err(e) => error!("Failed to find tasks. {:?}", e),
 		}
 		model

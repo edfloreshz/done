@@ -102,7 +102,7 @@ impl AsyncFactoryComponent for ProviderModel {
 	) -> Self {
 		let plugin_preferences = Project::open("dev", "edfloreshz", "done")
 			.unwrap()
-			.get_file_as::<Preferences>("preferences", FileFormat::TOML)
+			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
 			.unwrap()
 			.plugins;
 		let data = if init.plugin.is_running() {
