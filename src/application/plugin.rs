@@ -35,7 +35,6 @@ pub struct Plugin {
 impl Plugin {
 	pub async fn fetch_plugins() -> Result<Vec<Plugin>> {
 		let response = reqwest::get(PLUGINS_URL).await?.text().await?;
-		println!("{}", response);
 		let plugins: Vec<Plugin> = serde_json::from_str(&response)?;
 		Ok(plugins)
 	}

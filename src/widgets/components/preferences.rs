@@ -15,10 +15,24 @@ use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Preferences {
 	pub plugins: Vec<PluginPreferences>,
 	pub color_scheme: ColorScheme,
+}
+
+impl Default for Preferences {
+	fn default() -> Self {
+		let plugins: Vec<PluginPreferences> = Plugin::get_plugins().unwrap().iter().map(|plugin| PluginPreferences {
+			plugin: plugin.clone(),
+			enabled: false,
+			installed: false,
+		}).collect();
+		Self {
+			plugins,
+			color_scheme: ColorScheme::Default,
+		}
+	}
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

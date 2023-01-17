@@ -137,9 +137,9 @@ impl SimpleAsyncComponent for SidebarModel {
 					.provider_factory
 					.guard()
 					.push_back(PluginInit::new(plugin.clone(), service));
-				info!("Added {:?} provider to the sidebar", plugin)
+				info!("Added {:?} service to the sidebar", plugin.name)
 			} else {
-				error!("Plug-in {plugin:?} failed to connect.")
+				error!("{} service is not reachable.", plugin.name)
 			}
 		}
 
