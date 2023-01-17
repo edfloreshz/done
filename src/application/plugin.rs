@@ -86,7 +86,6 @@ impl Plugin {
 		}
 	}
 
-	#[allow(dead_code)]
 	pub fn is_installed(&self) -> bool {
 		match self {
 			Plugin::Local => Command::new("local-plugin").spawn().ok().is_some(),
