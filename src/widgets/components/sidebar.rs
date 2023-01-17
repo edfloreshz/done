@@ -1,3 +1,4 @@
+use super::smart_lists::{SmartList, SmartListModel, SmartListOutput};
 use crate::application::plugin::Plugin;
 use crate::fl;
 use crate::widgets::factory::list::ListData;
@@ -16,9 +17,6 @@ use relm4::{
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	RelmWidgetExt,
 };
-use std::str::FromStr;
-
-use super::smart_lists::{SmartList, SmartListModel, SmartListOutput};
 
 #[derive(Debug)]
 pub struct SidebarModel {
@@ -133,12 +131,12 @@ impl SimpleAsyncComponent for SidebarModel {
 
 		let widgets = view_output!();
 
-		for plugin in Plugin::list() {
+		for plugin in Plugin::get_plugins().unwrap() {
 			if let Ok(service) = plugin.connect().await {
 				model
 					.provider_factory
 					.guard()
-					.push_back(PluginInit::new(plugin, service));
+					.push_back(PluginInit::new(plugin.clone(), service));
 				info!("Added {:?} provider to the sidebar", plugin)
 			} else {
 				error!("Plug-in {plugin:?} failed to connect.")
@@ -155,8 +153,12 @@ impl SimpleAsyncComponent for SidebarModel {
 	) {
 		match message {
 			SidebarInput::AddListToProvider(index, provider_id, name) => {
-				match Plugin::from_str(&provider_id) {
-					Ok(provider) => match provider.connect().await {
+				match Plugin::get_plugins()
+					.unwrap()
+					.iter()
+					.find(|i| i.id == provider_id)
+				{
+					Some(provider) => match provider.connect().await {
 						Ok(mut service) => {
 							let list = List::new(&name, &provider_id);
 							match service.create_list(list.clone()).await {
@@ -184,31 +186,29 @@ impl SimpleAsyncComponent for SidebarModel {
 								.unwrap_or_default();
 						},
 					},
-					Err(err) => {
+					None => {
 						sender
-							.output(SidebarOutput::Notify(err.to_string()))
+							.output(SidebarOutput::Notify("Provider not found".to_string()))
 							.unwrap_or_default();
 					},
 				}
 			},
 			SidebarInput::EnableService(plugin) => {
 				if plugin.is_running() {
-					let index = match plugin {
-						Plugin::Local => 0,
-						Plugin::Google => 1,
-						Plugin::Microsoft => 2,
-						Plugin::Nextcloud => 3,
-					};
+					let index = Plugin::get_plugins()
+						.unwrap()
+						.iter()
+						.position(|p| p == &plugin)
+						.unwrap();
 					self.provider_factory.send(index, ProviderInput::Enable)
 				}
 			},
 			SidebarInput::DisableService(plugin) => {
-				let index = match plugin {
-					Plugin::Local => 0,
-					Plugin::Google => 1,
-					Plugin::Microsoft => 2,
-					Plugin::Nextcloud => 3,
-				};
+				let index = Plugin::get_plugins()
+					.unwrap()
+					.iter()
+					.position(|p| p == &plugin)
+					.unwrap();
 				self.provider_factory.send(index, ProviderInput::Disable);
 				sender
 					.output(SidebarOutput::DisablePlugin)

@@ -18,7 +18,6 @@ use relm4::{
 	view, Controller,
 };
 use relm4::{Component, ComponentController};
-use std::str::FromStr;
 use tonic::transport::Channel;
 
 use super::smart_lists::{
@@ -256,8 +255,8 @@ impl AsyncComponent for ContentModel {
 					.sender()
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
-				self.plugin = Some(Plugin::from_str(&list.list.provider).unwrap());
-				self.service = Some(self.plugin.unwrap().connect().await.unwrap());
+				self.plugin = Some(Plugin::get_by_id(&list.list.provider).unwrap());
+				self.service = Some(self.plugin.as_ref().unwrap().connect().await.unwrap());
 
 				self.task_factory.guard().clear();
 
