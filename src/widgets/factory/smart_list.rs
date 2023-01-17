@@ -1,22 +1,23 @@
 use crate::widgets::components::smart_lists::{SmartList, SmartListInput};
 use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
+use relm4::adw;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
+use relm4::gtk::traits::WidgetExt;
 use relm4::loading_widgets::LoadingWidgets;
-use relm4::adw;
-
 
 #[derive(Debug)]
 pub struct SmartListFactory {
-    pub name: String, 
-    pub description: String,
-    pub icon: String,
+	pub name: String,
+	pub description: String,
+	pub icon: String,
+	pub smart_list: SmartList
 }
 
 #[derive(Debug)]
 pub enum SmartListFactoryInput {
-	Forward,
+	SelectSmartList
 }
 
 #[derive(Debug)]
@@ -38,20 +39,26 @@ impl AsyncFactoryComponent for SmartListFactory {
 	view! {
 		#[root]
 		#[name(list_box)]
-        adw::PreferencesGroup {
-            #[name(expander)]
-            add = &adw::ExpanderRow {
-                #[watch]
-                set_title: self.name.as_str(),
-                #[watch]
-                set_subtitle: self.description.as_str(),
-                #[watch]
-                set_icon_name: Some(self.icon.as_str()),
-                #[watch]
-                set_enable_expansion: false,
-                set_expanded: false,
-            },
-        }
+		adw::PreferencesGroup {
+			#[name(expander)]
+			add = &adw::ExpanderRow {
+				#[watch]
+				set_title: self.name.as_str(),
+				#[watch]
+				set_subtitle: self.description.as_str(),
+				#[watch]
+				set_icon_name: Some(self.icon.as_str()),
+				#[watch]
+				set_enable_expansion: false,
+				set_expanded: false,
+			},
+			add_controller = &gtk::GestureClick {
+				connect_pressed[sender] => move |_, _, _, _| {
+					sender.input(SmartListFactoryInput::SelectSmartList);
+					sender.output(SmartListFactoryOutput::Forward)
+				}
+			}
+		}
 	}
 
 	fn init_loading_widgets(
@@ -74,11 +81,12 @@ impl AsyncFactoryComponent for SmartListFactory {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		Self { 
-            name: String::from(init.name()),
-            description: String::from(init.description()),
-            icon: String::from(init.icon())
-        }
+		Self {
+			name: String::from(init.name()),
+			description: String::from(init.description()),
+			icon: String::from(init.icon()),
+			smart_list: init
+		}
 	}
 
 	fn init_widgets(
@@ -86,7 +94,7 @@ impl AsyncFactoryComponent for SmartListFactory {
 		_index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-		_sender: AsyncFactorySender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 		widgets
@@ -95,17 +103,19 @@ impl AsyncFactoryComponent for SmartListFactory {
 	async fn update(
 		&mut self,
 		message: Self::Input,
-		_sender: AsyncFactorySender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-            SmartListFactoryInput::Forward => todo!(),
+    		SmartListFactoryInput::SelectSmartList => sender.output(SmartListFactoryOutput::SelectSmartList(self.smart_list.clone())),
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			SmartListFactoryOutput::Forward => SmartListInput::Forward,
-            SmartListFactoryOutput::SelectSmartList(list) => SmartListInput::SelectSmartList(list)
+			SmartListFactoryOutput::SelectSmartList(list) => {
+				SmartListInput::SelectSmartList(list)
+			},
 		};
 		Some(output)
 	}

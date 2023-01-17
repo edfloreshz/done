@@ -5,11 +5,12 @@ use crate::widgets::factory::provider::{
 	PluginInit, ProviderInput, ProviderModel,
 };
 use proto_rust::provider::List;
-use relm4::{adw, Controller, Component, ComponentController};
+use relm4::adw::traits::PreferencesGroupExt;
 use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
 };
 use relm4::factory::AsyncFactoryVecDeque;
+use relm4::{adw, Component, ComponentController, Controller};
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
@@ -17,12 +18,12 @@ use relm4::{
 };
 use std::str::FromStr;
 
-use super::smart_lists::{SmartListModel, SmartListOutput, SmartList};
+use super::smart_lists::{SmartList, SmartListModel, SmartListOutput};
 
 #[derive(Debug)]
 pub struct SidebarModel {
 	provider_factory: AsyncFactoryVecDeque<ProviderModel>,
-	smart_list_controller: Controller<SmartListModel>
+	smart_list_controller: Controller<SmartListModel>,
 }
 
 #[derive(Debug)]
@@ -33,7 +34,7 @@ pub enum SidebarInput {
 	DisableService(Plugin),
 	Forward,
 	Notify(String),
-	SelectSmartList(SmartList)
+	SelectSmartList(SmartList),
 }
 
 #[allow(dead_code)]
@@ -43,6 +44,7 @@ pub enum SidebarOutput {
 	Forward,
 	Notify(String),
 	DisablePlugin,
+	SelectSmartList(SmartList),
 }
 
 #[relm4::component(pub async)]
@@ -62,40 +64,41 @@ impl SimpleAsyncComponent for SidebarModel {
 					#[wrap(Some)]
 					set_child = &gtk::Box {
 						set_orientation: gtk::Orientation::Vertical,
+						set_css_classes: &["navigation-sidebar"],
+						set_margin_top: 5,
+						set_margin_start: 10,
+						set_margin_end: 10,
+						set_spacing: 12,
+						set_vexpand: true,
 						append = model.smart_list_controller.widget(),
 						#[local_ref]
-						providers_container -> gtk::Box {
-							set_margin_top: 5,
-							set_margin_start: 10,
-							set_margin_end: 10,
+						providers_container -> adw::PreferencesGroup {
+							set_hexpand: false,
+							set_title: "Services"
+						},
+						gtk::CenterBox {
+							#[watch]
+							set_visible: false, // TODO: Show when no provider is enabled.
 							set_orientation: gtk::Orientation::Vertical,
-							set_spacing: 12,
+							set_halign: gtk::Align::Center,
+							set_valign: gtk::Align::Center,
 							set_vexpand: true,
-							set_css_classes: &["navigation-sidebar"],
-							gtk::CenterBox {
-								#[watch]
-								set_visible: false, // TODO: Show when no provider is enabled.
+							#[wrap(Some)]
+							set_center_widget = &gtk::Box {
 								set_orientation: gtk::Orientation::Vertical,
-								set_halign: gtk::Align::Center,
-								set_valign: gtk::Align::Center,
-								set_vexpand: true,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Box {
-									set_orientation: gtk::Orientation::Vertical,
-									set_spacing: 24,
-									gtk::Picture {
-										set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/leaf.png"),
-										set_margin_all: 25
-									},
-									gtk::Label {
-										set_label: fl!("empty-sidebar"),
-										set_css_classes: &["title-4", "accent"],
-										set_wrap: true
-									},
-									gtk::Label {
-										set_label: fl!("open-preferences"),
-										set_wrap: true
-									}
+								set_spacing: 24,
+								gtk::Picture {
+									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/leaf.png"),
+									set_margin_all: 25
+								},
+								gtk::Label {
+									set_label: fl!("empty-sidebar"),
+									set_css_classes: &["title-4", "accent"],
+									set_wrap: true
+								},
+								gtk::Label {
+									set_label: fl!("open-preferences"),
+									set_wrap: true
 								}
 							}
 						}
@@ -112,15 +115,18 @@ impl SimpleAsyncComponent for SidebarModel {
 	) -> AsyncComponentParts<Self> {
 		let mut model = SidebarModel {
 			provider_factory: AsyncFactoryVecDeque::new(
-				gtk::Box::default(),
+				adw::PreferencesGroup::default(),
 				sender.input_sender(),
 			),
 			smart_list_controller: SmartListModel::builder().launch(()).forward(
 				sender.input_sender(),
 				|message| match message {
-					SmartListOutput::SelectSmartList(list) => SidebarInput::SelectSmartList(list),
+					SmartListOutput::SelectSmartList(list) => {
+						SidebarInput::SelectSmartList(list)
+					},
+					SmartListOutput::Forward => SidebarInput::Forward
 				},
-			)
+			),
 		};
 
 		let providers_container = model.provider_factory.widget();
@@ -221,7 +227,9 @@ impl SimpleAsyncComponent for SidebarModel {
 					.output(SidebarOutput::Notify(msg))
 					.unwrap_or_default();
 			},
-			SidebarInput::SelectSmartList(list) => todo!()
+			SidebarInput::SelectSmartList(list) => sender
+				.output(SidebarOutput::SelectSmartList(list))
+				.unwrap_or_default(),
 		}
 	}
 }
