@@ -143,15 +143,17 @@ impl AsyncFactoryComponent for ListData {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let mut tasks = vec![];
 		let mut service = params.service.clone();
-		match service
+		let tasks = match service
 			.read_task_ids_from_list(params.list.id.clone())
 			.await
 		{
-			Ok(response) => tasks = response.into_inner().tasks,
-			Err(e) => error!("Failed to find tasks. {:?}", e),
-		}
+			Ok(response) => response.into_inner().tasks,
+			Err(e) => {
+				error!("Failed to find tasks. {:?}", e);
+				vec![]
+			},
+		};
 		Self {
 			list: params.list,
 			tasks,
@@ -208,7 +210,21 @@ impl AsyncFactoryComponent for ListData {
 					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
 				}
 			},
-			ListInput::Select => sender.output(ListOutput::Select(self.clone())),
+			ListInput::Select => {
+				let mut service = self.service.clone();
+				let tasks = match service
+					.read_task_ids_from_list(self.list.id.clone())
+					.await
+				{
+					Ok(response) => response.into_inner().tasks,
+					Err(e) => {
+						error!("Failed to find tasks. {:?}", e);
+						vec![]
+					},
+				};
+				self.tasks = tasks;
+				sender.output(ListOutput::Select(self.clone()));
+			},
 		}
 	}
 

@@ -6,8 +6,10 @@ use relm4::adw::prelude::{
 	ActionRowExt, AdwWindowExt, PreferencesGroupExt, PreferencesPageExt,
 	PreferencesRowExt,
 };
-use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
+use relm4::adw::traits::ComboRowExt;
+use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt, ListModelExt};
 use relm4::ComponentParts;
+use relm4::gtk::traits::ListBoxRowExt;
 use relm4::{adw, gtk};
 use relm4::{Component, ComponentSender};
 use serde::{Deserialize, Serialize};
@@ -15,6 +17,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Preferences {
 	pub plugins: ProviderPreferences,
+	pub color_scheme: ColorScheme
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ColorScheme {
+	Dark,
+	Light,
+	Default
+}
+
+impl Default for ColorScheme {
+    fn default() -> Self {
+        Self::Default
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,6 +56,9 @@ impl Default for ProviderPreferences {
 pub enum PreferencesEvent {
 	EnablePlugin(Plugin),
 	DisablePlugin(Plugin),
+	SetDarkColorScheme,
+	SetLightColorScheme,
+	SetDefaultColorScheme
 }
 
 #[derive(Debug)]
@@ -67,6 +86,26 @@ impl Component for Preferences {
 					#[wrap(Some)]
 					set_child = &adw::PreferencesPage {
 						add = &adw::PreferencesGroup {
+							set_title: "Appearance",
+							add = &adw::ComboRow {
+								set_title: "Color scheme",
+								set_subtitle: "Set the color scheme of the app",
+								set_model: Some(&gtk::StringList::new(&["Light", "Dark", "Default"])),
+								set_selected: match model.color_scheme {
+									ColorScheme::Light => 0,
+									ColorScheme::Dark => 1,
+									ColorScheme::Default => 2,
+								},
+								connect_selected_notify[sender] => move |combo_row| {
+									match combo_row.selected() {
+										0 => sender.input_sender().send(PreferencesEvent::SetLightColorScheme).unwrap(),
+										1 => sender.input_sender().send(PreferencesEvent::SetDarkColorScheme).unwrap(),
+										_ => sender.input_sender().send(PreferencesEvent::SetDefaultColorScheme).unwrap(),
+									}
+								},
+							}
+						},
+						add = &adw::PreferencesGroup {
 							set_title: "Providers",
 							add = &adw::ActionRow {
 								set_title: "Local",
@@ -75,15 +114,15 @@ impl Component for Preferences {
 									set_halign: gtk::Align::Center,
 									set_valign: gtk::Align::Center,
 									append = &gtk::Switch {
-																				#[watch]
-																				set_active: model.plugins.local_enabled,
+										#[watch]
+										set_active: model.plugins.local_enabled,
 										connect_state_set[sender] => move |_, state| {
-																						if state {
+											if state {
 												sender.input(PreferencesEvent::EnablePlugin(Plugin::Local))
 											} else {
 												sender.input(PreferencesEvent::DisablePlugin(Plugin::Local))
 											}
-																						Default::default()
+											Default::default()
 										}
 									}
 								}
@@ -95,15 +134,15 @@ impl Component for Preferences {
 									set_halign: gtk::Align::Center,
 									set_valign: gtk::Align::Center,
 									append = &gtk::Switch {
-																				#[watch]
-																				set_active: model.plugins.google_enabled,
+										#[watch]
+										set_active: model.plugins.google_enabled,
 										connect_state_set[sender] => move |_, state| {
-																						if state {
+											if state {
 												sender.input(PreferencesEvent::EnablePlugin(Plugin::Google))
 											} else {
 												sender.input(PreferencesEvent::DisablePlugin(Plugin::Google))
 											}
-																						Default::default()
+											Default::default()
 										}
 									}
 								}
@@ -115,15 +154,15 @@ impl Component for Preferences {
 									set_halign: gtk::Align::Center,
 									set_valign: gtk::Align::Center,
 									append = &gtk::Switch {
-																				#[watch]
-																				set_active: model.plugins.microsoft_enabled,
-																				connect_state_set[sender] => move |_, state| {
-																						if state {
+										#[watch]
+										set_active: model.plugins.microsoft_enabled,
+										connect_state_set[sender] => move |_, state| {
+												if state {
 												sender.input(PreferencesEvent::EnablePlugin(Plugin::Microsoft))
 											} else {
 												sender.input(PreferencesEvent::DisablePlugin(Plugin::Microsoft))
 											}
-																						Default::default()
+											Default::default()
 										}
 									}
 								}
@@ -135,15 +174,15 @@ impl Component for Preferences {
 									set_halign: gtk::Align::Center,
 									set_valign: gtk::Align::Center,
 									append = &gtk::Switch {
-																				#[watch]
-																				set_active: model.plugins.nextcloud_enabled,
+										#[watch]
+										set_active: model.plugins.nextcloud_enabled,
 										connect_state_set[sender] => move |_, state| {
-																						if state {
+											if state {
 												sender.input(PreferencesEvent::EnablePlugin(Plugin::Nextcloud))
 											} else {
 												sender.input(PreferencesEvent::DisablePlugin(Plugin::Nextcloud))
 											}
-																						Default::default()
+											Default::default()
 										}
 									}
 								}
@@ -162,16 +201,11 @@ impl Component for Preferences {
 	) -> ComponentParts<Self> {
 		let model = if let Ok(project) = Project::open("dev", "edfloreshz", "done")
 		{
-			if let Ok(preferences) =
-				project.get_file_as::<Preferences>("preferences", FileFormat::TOML)
-			{
-				preferences
-			} else {
-				Preferences::default()
-			}
+			project.get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap_or(Preferences::default())
 		} else {
 			Preferences::default()
 		};
+	
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
 	}
@@ -219,13 +253,28 @@ impl Component for Preferences {
 				},
 				Err(err) => info!("Failed to stop {:?} plugin: {:?}", plugin, err),
 			},
+			PreferencesEvent::SetDarkColorScheme => {
+				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+				self.color_scheme = ColorScheme::Dark;
+				update_preferences(self).unwrap()
+			},
+			PreferencesEvent::SetLightColorScheme => {
+				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
+				self.color_scheme = ColorScheme::Light;
+				update_preferences(self).unwrap()
+			},
+			PreferencesEvent::SetDefaultColorScheme => {
+				adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
+				self.color_scheme = ColorScheme::Default;
+				update_preferences(self).unwrap()
+			},
 		}
 	}
 }
 
 fn update_preferences(preferences: &Preferences) -> Result<()> {
 	Project::open("dev", "edfloreshz", "done")?
-		.get_file("preferences", FileFormat::TOML)?
+		.get_file("preferences", FileFormat::JSON)?
 		.set_content(preferences)?
 		.write()
 }
