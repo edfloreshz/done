@@ -45,7 +45,7 @@ pub struct TaskInit {
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskData {
 	type ParentInput = ContentInput;
-	type ParentWidget = gtk::Box;
+	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;

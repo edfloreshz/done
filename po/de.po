@@ -93,3 +93,11 @@ msgstr "Alle Aufgaben auflisten"
 #: data/dev.edfloreshz.Done.metainfo.xml.in.in:26
 msgid "Main Window"
 msgstr "Hauptfenster"
+
+#. Translators: Replace "translator-credits" with your names, one name per line
+msgid "translator-credits"
+msgstr "Eduardo Flores <edfloreshz@gmail.com>\n
+Jürgen Benvenuti<gastornis@posteo.org>\n
+Isabella Breder\n
+Sabri Ünal<libreajans@gmail.com>\n
+albanobattistella"

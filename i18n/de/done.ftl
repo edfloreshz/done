@@ -21,3 +21,4 @@ all = Alle
 starred = Favorisiert
 archived = Archiviert
 
+translator-credits = Eduardo Flores <edfloreshz@gmail.com> \nJürgen Benvenuti<gastornis@posteo.org> \nIsabella Breder \nSabri Ünal<libreajans@gmail.com> \nalbanobattistella

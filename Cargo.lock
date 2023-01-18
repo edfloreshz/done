@@ -447,6 +447,7 @@ dependencies = [
  "glib-build-tools",
  "i18n-embed",
  "i18n-embed-fl",
+ "libadwaita",
  "libset",
  "log",
  "once_cell",

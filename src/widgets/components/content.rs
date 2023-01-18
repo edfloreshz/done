@@ -15,9 +15,9 @@ use relm4::factory::DynamicIndex;
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	view, Controller,
+	Controller,
 };
-use relm4::{Component, ComponentController};
+use relm4::{Component, ComponentController, RelmWidgetExt};
 use tonic::transport::Channel;
 
 use super::smart_lists::{
@@ -66,6 +66,7 @@ impl AsyncComponent for ContentModel {
 			set_vexpand: true,
 			set_transition_duration: 250,
 			set_transition_type: gtk::StackTransitionType::Crossfade,
+			set_margin_all: 10,
 			gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				#[name(task_container)]
@@ -77,7 +78,7 @@ impl AsyncComponent for ContentModel {
 						set_visible: model.parent_list.is_some(),
 						set_vexpand: true,
 						set_hexpand: true,
-						set_child: Some(&list_box),
+						set_child: Some(list_box),
 					},
 					gtk::ScrolledWindow {
 						#[watch]
@@ -118,11 +119,6 @@ impl AsyncComponent for ContentModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		view! {
-			list_box = &gtk::Box {
-				set_orientation: gtk::Orientation::Vertical,
-			}
-		}
 		let plugin = None;
 		let service = None;
 
@@ -141,7 +137,11 @@ impl AsyncComponent for ContentModel {
 
 		let model = ContentModel {
 			task_factory: AsyncFactoryVecDeque::new(
-				list_box.clone(),
+				gtk::ListBox::builder()
+					.show_separators(true)
+					.css_classes(vec!["boxed-list".to_string()])
+					.valign(gtk::Align::Start)
+					.build(),
 				sender.input_sender(),
 			),
 			task_entry: NewTask::builder().launch(None).forward(
@@ -159,6 +159,8 @@ impl AsyncComponent for ContentModel {
 			parent_list: None,
 			selected_smart_list: None,
 		};
+		let list_box = model.task_factory.widget();
+
 		let widgets = view_output!();
 		AsyncComponentParts { model, widgets }
 	}
@@ -256,7 +258,8 @@ impl AsyncComponent for ContentModel {
 					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
 					.unwrap_or_default();
 				self.plugin = Some(Plugin::get_by_id(&list.list.provider).unwrap());
-				self.service = Some(self.plugin.as_ref().unwrap().connect().await.unwrap());
+				self.service =
+					Some(self.plugin.as_ref().unwrap().connect().await.unwrap());
 
 				self.task_factory.guard().clear();
 

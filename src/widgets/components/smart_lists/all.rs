@@ -24,12 +24,12 @@ impl SimpleComponent for AllModel {
 	type Init = ();
 
 	view! {
-			#[root]
-			gtk::Box {
-								gtk::Label {
-										set_text: "All"
-								}
+		#[root]
+		gtk::Box {
+			gtk::Label {
+				set_text: "All"
 			}
+		}
 	}
 
 	fn init(
