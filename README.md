@@ -3,6 +3,7 @@
   <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.svg" width="150" />
   <h1>Done</h1>
   <h3>To-do lists reimagined</h3>
+  <h4>The ultimate task management solution for seamless organization and efficiency.</h4>
   
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/edfloreshz/done/ci.yml?style=for-the-badge" alt="build"/>
@@ -30,14 +31,11 @@
   
 </div>
 <br/>
-
-Done, the ultimate task management solution for seamless organization and efficiency. 
-
-Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization. 
-
 <div align="center">
   <img src="https://raw.githubusercontent.com/edfloreshz/done/81ea1f6d32cd491d1893f9ba730f511bc1cb0aea/data/resources/screenshots/tasks.png"/>
 </div>
+
+ Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
 
 
 
