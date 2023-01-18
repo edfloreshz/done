@@ -32,7 +32,7 @@
 </div>
 <br/>
 <div align="center">
-  <img src="https://raw.githubusercontent.com/edfloreshz/done/81ea1f6d32cd491d1893f9ba730f511bc1cb0aea/data/resources/screenshots/tasks.png"/>
+  <img src="https://raw.githubusercontent.com/done-devs/done/beta/data/resources/screenshots/tasks.png"/>
 </div>
 
  Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
