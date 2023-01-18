@@ -21,6 +21,7 @@ pub enum TaskInput {
 	SetCompleted(bool),
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
+	ToggleCompact(bool)
 }
 
 #[derive(Debug)]
@@ -34,12 +35,14 @@ pub struct TaskData {
 	pub task: Task,
 	pub service: ProviderClient<Channel>,
 	pub first_load: bool,
+	pub compact: bool
 }
 
 #[derive(derive_new::new)]
 pub struct TaskInit {
 	id: String,
 	service: ProviderClient<Channel>,
+	compact: bool
 }
 
 #[relm4::factory(pub async)]
@@ -59,7 +62,12 @@ impl AsyncFactoryComponent for TaskData {
 			gtk::Box {
 				set_orientation: gtk::Orientation::Horizontal,
 				set_spacing: 5,
-				set_margin_all: 10,
+				#[watch]
+				set_margin_all: if self.compact {
+					2
+				} else {
+					10
+				},
 				#[name(check_button)]
 				gtk::CheckButton {
 					set_active: self.task.status == 1,
@@ -140,6 +148,7 @@ impl AsyncFactoryComponent for TaskData {
 			task: Task::default(),
 			service: init.service,
 			first_load: true,
+			compact: init.compact
 		};
 		match model.service.read_task(init.id.clone()).await {
 			Ok(response) => match response.into_inner().task {
@@ -198,6 +207,7 @@ impl AsyncFactoryComponent for TaskData {
 						.unwrap_or_default();
 				}
 			},
+			TaskInput::ToggleCompact(compact) => self.compact = compact
 		}
 		self.first_load = false;
 	}
