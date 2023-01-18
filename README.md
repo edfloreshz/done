@@ -18,7 +18,7 @@
   <a href="https://github.com/sponsors/edfloreshz">
     <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white"/>
   </a>
-  <a href="https://matrix.to/#/#done-gh:matrix.org">
+  <a href="https://matrix.to/#/#done-devs:matrix.org">
     <img src="https://img.shields.io/badge/matrix-000000?style=for-the-badge&logo=Matrix&logoColor=white"/>
   </a>
   <a href="https://github.com/edfloreshz/done">
