@@ -1,22 +1,52 @@
 done = Done
 
-create-list = Crea lista
-cancel = Cancella
-
-list-name = Nome lista
-new-task = Nuovo compito...
-add-tasks = Aggiungi compiti...
-tasks-here = I compiti appariranno qui
-empty-sidebar = Looking quite empty in here...
-open-preferences = Open preferences to add a provider
-select-list = Select a list from the sidebar
+# Warning
 alpha-warning = Stai eseguendo una versione di sviluppo in fase iniziale. Tieni presente che è un lavoro in corso e tutt'altro che completo.
 
-providers = Fornitori
+# New task dialog
+new-task = Nuovo compito...
+add-to-today = Add to Today
+set-time = Set time
+set-due-date = Set due date
+more-details = More details
 
-inbox = Inbox
-today = Oggi
-next-7-days = Prossimi 7 giorni
+# New list dialog
+list-name = Nome lista
+
+# Welcome
+select-list = Select a list from the sidebar
+tasks-here = I compiti appariranno qui
+
+# Main menu
+preferences = Preferences
+keyboard-shortcuts = Keyboard shortcuts
+about-done = About Done
+quit = Quit
+
+# Sidebar
 all = Tutto
+all-desc = All tasks
+today = Oggi
+today-desc = Tasks due today
 starred = Preferiti
-archived = Archiviati
+starred-desc = Starred tasks
+next-7-days = Prossimi 7 giorni
+next-7-days-desc = Tasks due the next 7 days
+
+# Empty sidebar
+empty-sidebar = Looking quite empty in here...
+open-preferences = Open preferences to add a provider
+
+# Preferences
+preferences = Preferences
+appearance = Appearance
+color-scheme = Color scheme
+color-scheme-description = Set the color scheme of the app
+color-scheme-light = Light
+color-scheme-dark = Dark
+color-scheme-default = System
+services = Services
+install = Install
+
+# Translator credits
+translator-credits = Eduardo Flores <edfloreshz@gmail.com> \nJürgen Benvenuti<gastornis@posteo.org> \nIsabella Breder \nSabri Ünal<libreajans@gmail.com> \nalbanobattistella

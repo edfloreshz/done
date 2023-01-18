@@ -1,8 +1,9 @@
 use gettextrs::gettext;
 use gtk::prelude::GtkWindowExt;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use libadwaita as adw;
 
-use crate::config::{APP_ID, VERSION};
+use crate::{config::{APP_ID, VERSION}, fl};
 
 pub struct AboutDialog {}
 
@@ -36,20 +37,26 @@ impl SimpleComponent for AboutDialog {
 		widgets: &mut Self::Widgets,
 		_sender: ComponentSender<Self>,
 	) {
-		let dialog = gtk::AboutDialog::builder()
-			.logo_icon_name(APP_ID)
-			.program_name("Done")
-			.website_label("Website")
+		let dialog = adw::AboutWindow::builder()
+			.application_icon(APP_ID)
+			.application_name("Done")
+			.developer_name("Eduardo Flores")
+			.website("Website")
 			.copyright("© 2022 Eduardo Flores")
 			.license_type(gtk::License::Mpl20)
 			.website("https://done.edfloreshz.dev/")
+			.issue_url("https://github.com/done-devs/done/issues")
 			.version(VERSION)
-			.translator_credits(&gettext("translator-credits"))
+			.translator_credits(&fl!("translator-credits"))
 			.modal(true)
+			.translator_credits(
+				"Jürgen Benvenuti\nIsabella Breder\nSabri Ünal\nalbanobattistella"
+			)
 			.transient_for(&widgets.main_window)
-			.authors(vec!["Eduardo Flores".into()])
+			.developers(vec!["Eduardo Flores".into()])
 			.artists(vec!["Eduardo Flores".into()])
-			.comments("To-do lists reimagined")
+			.documenters(vec!["Eduardo Flores".into()])
+			.comments("The ultimate task management solution for seamless organization and efficiency.")
 			.build();
 		dialog.present();
 	}
