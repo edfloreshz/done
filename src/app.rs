@@ -91,10 +91,10 @@ impl Component for App {
 	menu! {
 		primary_menu: {
 			section! {
-				"_Preferences" => PreferencesAction,
-				"_Keyboard" => ShortcutsAction,
-				"_About Done" => AboutAction,
-				"_Quit" => QuitAction,
+				preferences => PreferencesAction,
+				keyboard_shortcuts => ShortcutsAction,
+				about_done => AboutAction,
+				quit => QuitAction,
 			}
 		}
 	}
@@ -213,6 +213,12 @@ impl Component for App {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
+		let preferences: &str = fl!("preferences");
+		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
+		let about_done: &str = fl!("about-done");
+		let quit: &str = fl!("quit");
+		
+
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
 
 		let sidebar_controller = SidebarModel::builder().launch(()).forward(
