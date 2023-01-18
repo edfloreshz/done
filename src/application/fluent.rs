@@ -43,7 +43,7 @@ pub fn setup_fluent() -> Result<()> {
 
 	if let Err(error) = localizer.select(&requested_languages) {
 		eprintln!(
-			"Error while loading language for pop-desktop-widget {}",
+			"Error while loading language: {}",
 			error
 		);
 	}

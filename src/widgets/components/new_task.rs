@@ -52,28 +52,28 @@ impl Component for NewTask {
 				set_spacing: 5,
 				set_halign: gtk::Align::Center,
 				gtk::Button {
-					set_tooltip_text: Some("Add to My Day"),
+					set_tooltip_text: Some(fl!("add-to-today")),
 					set_icon_name: "daytime-sunrise-symbolic",
 					connect_clicked[sender] => move |_| {
 						sender.input(NewTaskEvent::AddToMyDay)
 					}
 				},
 				gtk::Button {
-					set_tooltip_text: Some("Set time"),
+					set_tooltip_text: Some(fl!("set-time")),
 					set_icon_name: "appointment-soon-symbolic",
 					connect_clicked[sender] => move |_| {
 						sender.input(NewTaskEvent::SetReminder(chrono::Utc::now().naive_utc()))
 					}
 				},
 				gtk::Button {
-					set_tooltip_text: Some("Set due date"),
+					set_tooltip_text: Some(fl!("set-due-date")),
 					set_icon_name: "office-calendar-symbolic",
 					connect_clicked[sender] => move |_| {
 						sender.input(NewTaskEvent::SetDueDate(chrono::Utc::now().naive_utc()))
 					}
 				},
 				gtk::Button {
-					set_tooltip_text: Some("More details"),
+					set_tooltip_text: Some(fl!("more-details")),
 					set_icon_name: "text-editor-symbolic",
 					connect_clicked[sender] => move |_| {
 						sender.input(NewTaskEvent::AddNote(String::new()))

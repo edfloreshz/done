@@ -72,7 +72,7 @@ impl SimpleAsyncComponent for SidebarModel {
 						#[local_ref]
 						providers_container -> adw::PreferencesGroup {
 							set_hexpand: false,
-							set_title: "Services"
+							set_title: fl!("services"),
 						},
 						gtk::CenterBox {
 							#[watch]
