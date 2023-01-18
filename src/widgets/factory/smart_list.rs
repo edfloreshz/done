@@ -1,5 +1,5 @@
 use crate::widgets::components::smart_lists::{SmartList, SmartListInput};
-use adw::prelude::{ExpanderRowExt, PreferencesGroupExt, PreferencesRowExt};
+use adw::prelude::{ActionRowExt, PreferencesGroupExt, PreferencesRowExt};
 use relm4::adw;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -41,16 +41,13 @@ impl AsyncFactoryComponent for SmartListFactory {
 		#[name(list_box)]
 		adw::PreferencesGroup {
 			#[name(expander)]
-			add = &adw::ExpanderRow {
+			add = &adw::ActionRow {
 				#[watch]
 				set_title: self.name.as_str(),
 				#[watch]
 				set_subtitle: self.description.as_str(),
 				#[watch]
 				set_icon_name: Some(self.icon.as_str()),
-				#[watch]
-				set_enable_expansion: false,
-				set_expanded: false,
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {

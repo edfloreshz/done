@@ -1,4 +1,3 @@
-use gettextrs::gettext;
 use gtk::prelude::GtkWindowExt;
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 use libadwaita as adw;
@@ -38,6 +37,7 @@ impl SimpleComponent for AboutDialog {
 		_sender: ComponentSender<Self>,
 	) {
 		let dialog = adw::AboutWindow::builder()
+			.icon_name(APP_ID)
 			.application_icon(APP_ID)
 			.application_name("Done")
 			.developer_name("Eduardo Flores")
