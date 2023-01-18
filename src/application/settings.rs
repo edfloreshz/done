@@ -1,0 +1,35 @@
+use anyhow::Result;
+use libset::{format::FileFormat, new_file, project::Project};
+
+use crate::{
+	application::info::VERSION,
+	widgets::components::preferences::PreferencesComponent,
+};
+
+use super::plugin::Plugin;
+
+pub(crate) async fn init() -> Result<()> {
+	let project = Project::new("dev", "edfloreshz", "done")
+		.about("Done is a simple to do app.")
+		.author("Eduardo Flores")
+		.version(VERSION)
+		.add_files(&[
+			new_file!("preferences").set_format(FileFormat::JSON),
+			new_file!("dev.edfloreshz.Done.Plugins").set_format(FileFormat::JSON),
+			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
+		])?;
+	let plugins: Vec<Plugin> = Plugin::fetch_plugins().await?;
+	project
+		.get_file("dev.edfloreshz.Done.Plugins", FileFormat::JSON)?
+		.set_content(plugins)?
+		.write()?;
+	if !project
+		.integrity_ok::<PreferencesComponent>("preferences", FileFormat::JSON)
+	{
+		project
+			.get_file("preferences", FileFormat::JSON)?
+			.set_content(PreferencesComponent::default())?
+			.write()?;
+	}
+	Ok(())
+}

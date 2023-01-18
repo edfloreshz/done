@@ -1,10 +1,12 @@
 use crate::application::plugin::Plugin;
-use crate::widgets::components::new_task::{
-	NewTask, NewTaskEvent, NewTaskOutput,
+use crate::widgets::components::preferences::PreferencesComponent;
+use crate::widgets::components::task_entry::{
+	TaskEntryComponent, TaskEntryComponentInput, TaskEntryComponentOutput,
 };
-use crate::widgets::components::preferences::Preferences;
-use crate::widgets::factory::list::ListData;
-use crate::widgets::factory::task::{TaskData, TaskInit, TaskInput};
+use crate::widgets::factory::list::ListFactoryModel;
+use crate::widgets::factory::task::{
+	TaskFactory, TaskFactoryInit, TaskFactoryInput,
+};
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::provider_client::ProviderClient;
@@ -24,46 +26,46 @@ use relm4::{Component, ComponentController, RelmWidgetExt};
 use tonic::transport::Channel;
 
 use super::smart_lists::{
-	AllModel, Next7DaysModel, SmartList, StarredModel, TodayModel,
+	AllComponentModel, Next7DaysComponentModel, SmartList, StarredComponentModel,
+	TodayComponentModel,
 };
 
-pub struct ContentModel {
-	task_factory: AsyncFactoryVecDeque<TaskData>,
-	task_entry: Controller<NewTask>,
-	all: Controller<AllModel>,
-	today: Controller<TodayModel>,
-	starred: Controller<StarredModel>,
-	next7days: Controller<Next7DaysModel>,
+pub struct ContentComponentModel {
+	task_factory: AsyncFactoryVecDeque<TaskFactory>,
+	task_entry: Controller<TaskEntryComponent>,
+	all: Controller<AllComponentModel>,
+	today: Controller<TodayComponentModel>,
+	starred: Controller<StarredComponentModel>,
+	next7days: Controller<Next7DaysComponentModel>,
 	service: Option<ProviderClient<Channel>>,
 	plugin: Option<Plugin>,
 	parent_list: Option<List>,
 	selected_smart_list: Option<SmartList>,
-	compact: bool
+	compact: bool,
 }
 
 #[derive(Debug)]
-pub enum ContentInput {
+pub enum ContentComponentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
-	TaskListSelected(ListData),
+	TaskListSelected(ListFactoryModel),
 	SelectSmartList(SmartList),
 	ToggleCompact(bool),
 	DisablePlugin,
 }
 
 #[derive(Debug)]
-pub enum ContentOutput {
+pub enum ContentComponentOutput {
 	Notify(String),
 }
 
 #[relm4::component(pub async)]
-impl AsyncComponent for ContentModel {
-	type Input = ContentInput;
-	type Output = ContentOutput;
-	type Init = ();
-	type Widgets = ContentWidgets;
+impl AsyncComponent for ContentComponentModel {
 	type CommandOutput = ();
+	type Input = ContentComponentInput;
+	type Output = ContentComponentOutput;
+	type Init = ();
 
 	view! {
 		#[root]
@@ -126,21 +128,25 @@ impl AsyncComponent for ContentModel {
 	) -> AsyncComponentParts<Self> {
 		let plugin = None;
 		let service = None;
-		let compact = Project::open("dev", "edfloreshz", "done").unwrap().get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap().compact;
-		let all = AllModel::builder()
+		let compact = Project::open("dev", "edfloreshz", "done")
+			.unwrap()
+			.get_file_as::<PreferencesComponent>("preferences", FileFormat::JSON)
+			.unwrap()
+			.compact;
+		let all = AllComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {});
-		let today = TodayModel::builder()
+		let today = TodayComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {});
-		let starred = StarredModel::builder()
+		let starred = StarredComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {});
-		let next7days = Next7DaysModel::builder()
+		let next7days = Next7DaysComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {});
 
-		let model = ContentModel {
+		let model = ContentComponentModel {
 			task_factory: AsyncFactoryVecDeque::new(
 				gtk::ListBox::builder()
 					.show_separators(true)
@@ -149,10 +155,12 @@ impl AsyncComponent for ContentModel {
 					.build(),
 				sender.input_sender(),
 			),
-			task_entry: NewTask::builder().launch(None).forward(
+			task_entry: TaskEntryComponent::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
-					NewTaskOutput::AddTask(task) => ContentInput::AddTask(task),
+					TaskEntryComponentOutput::AddTask(task) => {
+						ContentComponentInput::AddTask(task)
+					},
 				},
 			),
 			all,
@@ -163,7 +171,7 @@ impl AsyncComponent for ContentModel {
 			plugin,
 			parent_list: None,
 			selected_smart_list: None,
-			compact
+			compact,
 		};
 		let list_box = model.task_factory.widget();
 
@@ -178,7 +186,7 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ContentInput::AddTask(task) => {
+			ContentComponentInput::AddTask(task) => {
 				match self
 					.service
 					.as_mut()
@@ -190,24 +198,24 @@ impl AsyncComponent for ContentModel {
 						let response = response.into_inner();
 						if response.successful && response.task.is_some() {
 							let task = response.task.unwrap();
-							self.task_factory.guard().push_back(TaskInit::new(
+							self.task_factory.guard().push_back(TaskFactoryInit::new(
 								task.id,
 								self.service.clone().unwrap(),
-								self.compact
+								self.compact,
 							));
 						}
 						sender
-							.output(ContentOutput::Notify(response.message))
+							.output(ContentComponentOutput::Notify(response.message))
 							.unwrap_or_default();
 					},
 					Err(err) => {
 						sender
-							.output(ContentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string()))
 							.unwrap_or_default();
 					},
 				}
 			},
-			ContentInput::RemoveTask(index) => {
+			ContentComponentInput::RemoveTask(index) => {
 				let mut guard = self.task_factory.guard();
 				let task = guard.get(index.current_index()).unwrap();
 				match self
@@ -223,17 +231,17 @@ impl AsyncComponent for ContentModel {
 							guard.remove(index.current_index());
 						}
 						sender
-							.output(ContentOutput::Notify(response.message))
+							.output(ContentComponentOutput::Notify(response.message))
 							.unwrap_or_default();
 					},
 					Err(err) => {
 						sender
-							.output(ContentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string()))
 							.unwrap_or_default();
 					},
 				}
 			},
-			ContentInput::UpdateTask(index, task) => {
+			ContentComponentInput::UpdateTask(index, task) => {
 				match self.service.as_mut().unwrap().update_task(task).await {
 					Ok(response) => {
 						let response = response.into_inner();
@@ -245,24 +253,26 @@ impl AsyncComponent for ContentModel {
 							}
 						} else {
 							sender
-								.output(ContentOutput::Notify(response.message))
+								.output(ContentComponentOutput::Notify(response.message))
 								.unwrap_or_default();
 						}
 					},
 					Err(err) => {
 						sender
-							.output(ContentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string()))
 							.unwrap_or_default();
 					},
 				}
 			},
-			ContentInput::TaskListSelected(list) => {
+			ContentComponentInput::TaskListSelected(list) => {
 				self.parent_list = Some(list.list.clone());
 				self.selected_smart_list = None;
 				self
 					.task_entry
 					.sender()
-					.send(NewTaskEvent::SetParentList(self.parent_list.clone()))
+					.send(TaskEntryComponentInput::SetParentList(
+						self.parent_list.clone(),
+					))
 					.unwrap_or_default();
 				self.plugin = Some(Plugin::get_by_id(&list.list.provider).unwrap());
 				self.service =
@@ -271,25 +281,28 @@ impl AsyncComponent for ContentModel {
 				self.task_factory.guard().clear();
 
 				for task in list.tasks {
-					self
-						.task_factory
-						.guard()
-						.push_back(TaskInit::new(task, self.service.clone().unwrap(), self.compact));
+					self.task_factory.guard().push_back(TaskFactoryInit::new(
+						task,
+						self.service.clone().unwrap(),
+						self.compact,
+					));
 				}
 			},
-			ContentInput::DisablePlugin => {
+			ContentComponentInput::DisablePlugin => {
 				self.parent_list = None;
 			},
-			ContentInput::SelectSmartList(list) => {
+			ContentComponentInput::SelectSmartList(list) => {
 				self.selected_smart_list = Some(list);
 				self.parent_list = None;
 			},
-			ContentInput::ToggleCompact(compact) => {
+			ContentComponentInput::ToggleCompact(compact) => {
 				let size = self.task_factory.len();
 				for index in 0..size {
-					self.task_factory.send(index, TaskInput::ToggleCompact(compact));
+					self
+						.task_factory
+						.send(index, TaskFactoryInput::ToggleCompact(compact));
 				}
-			}
+			},
 		}
 	}
 }

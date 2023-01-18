@@ -17,7 +17,6 @@ Cargo.lock
 
 .idea
 .env
-.vscode
 .flatpak-builder
 _build
 

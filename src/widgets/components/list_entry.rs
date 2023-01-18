@@ -8,19 +8,18 @@ use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 use crate::fl;
 
 #[derive(Debug)]
-pub struct NewListModel;
+pub struct ListEntryModel;
 
 #[derive(Debug)]
-pub enum NewListOutput {
+pub enum ListEntryOutput {
 	AddTaskListToSidebar(String),
 }
 
 #[relm4::component(pub)]
-impl SimpleComponent for NewListModel {
+impl SimpleComponent for ListEntryModel {
 	type Input = ();
-	type Output = NewListOutput;
+	type Output = ListEntryOutput;
 	type Init = ();
-	type Widgets = NewListWidgets;
 
 	view! {
 		#[root]
@@ -36,7 +35,7 @@ impl SimpleComponent for NewListModel {
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.buffer();
 							if !buffer.text().is_empty() {
-								sender.output(NewListOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
+								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
 							}
 						}
 					},
@@ -47,7 +46,7 @@ impl SimpleComponent for NewListModel {
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
 							if !buffer.text().is_empty() {
-								sender.output(NewListOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
+								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
 							}
 							new_list_entry.set_text("");
 						})
@@ -72,7 +71,7 @@ impl SimpleComponent for NewListModel {
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
 		ComponentParts {
-			model: NewListModel,
+			model: ListEntryModel,
 			widgets,
 		}
 	}

@@ -5,31 +5,29 @@ use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::application::plugin::Plugin;
 
-pub struct TodayModel {
+pub struct TodayComponentModel {
 	pub tasks: HashMap<Plugin, Vec<Task>>,
 }
 
 #[derive(Debug)]
-pub enum TodayInput {}
+pub enum TodayComponentInput {}
 
 #[derive(Debug)]
-pub enum TodayOutput {}
+pub enum TodayComponentOutput {}
 
 #[relm4::component(pub)]
-impl SimpleComponent for TodayModel {
-	type Input = TodayInput;
-
-	type Output = TodayOutput;
-
+impl SimpleComponent for TodayComponentModel {
+	type Input = TodayComponentInput;
+	type Output = TodayComponentOutput;
 	type Init = ();
 
 	view! {
-				#[root]
-				gtk::Box {
-						gtk::Label {
-								set_text: "Today"
-						}
-				}
+		#[root]
+		gtk::Box {
+			gtk::Label {
+				set_text: "Today"
+			}
+		}
 	}
 
 	fn init(
