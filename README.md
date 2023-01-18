@@ -31,7 +31,9 @@
 </div>
 <br/>
 
-Done is a simple to do app that lets you combine your existing set of task providers into one database, easily.
+Introducing Done, the ultimate task management solution for seamless organization and efficiency. 
+
+Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization. 
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/edfloreshz/done/81ea1f6d32cd491d1893f9ba730f511bc1cb0aea/data/resources/screenshots/tasks.png"/>
@@ -45,9 +47,11 @@ Done is a simple to do app that lets you combine your existing set of task provi
 | Arch Linux | `paru -S done-git`                    |
 | Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
 
-## Plug-ins
-Done strives the become the ultimate to-do list app, to do this, it needs to be versatile, flexible and extensible, 
-that's why we developed a plug-in system for it.
+## Plugins
+In order to realize its full potential, the Done app has been designed with a strong focus on versatility, flexibility and extensibility.
+
+This is why we have implemented a plugin system, allowing for the addition of new task services, making it the go-to choice for 
+anyone looking for a comprehensive and complete to-do list solution.
 
 To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 
