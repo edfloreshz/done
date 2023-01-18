@@ -102,7 +102,7 @@ impl Component for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_width: 800,
+			set_default_width: 700,
 			set_default_height: 700,
 			connect_close_request[sender] => move |_| {
 				sender.input(AppMsg::Quit);
