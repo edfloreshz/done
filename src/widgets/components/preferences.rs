@@ -23,11 +23,15 @@ pub struct Preferences {
 
 impl Default for Preferences {
 	fn default() -> Self {
-		let plugins: Vec<PluginPreferences> = Plugin::get_plugins().unwrap().iter().map(|plugin| PluginPreferences {
-			plugin: plugin.clone(),
-			enabled: false,
-			installed: false,
-		}).collect();
+		let plugins: Vec<PluginPreferences> = Plugin::get_plugins()
+			.unwrap()
+			.iter()
+			.map(|plugin| PluginPreferences {
+				plugin: plugin.clone(),
+				enabled: false,
+				installed: false,
+			})
+			.collect();
 		Self {
 			plugins,
 			color_scheme: ColorScheme::Default,
@@ -140,7 +144,7 @@ impl AsyncComponent for Preferences {
 		let widgets = view_output!();
 
 		let plugins = Plugin::fetch_plugins().await.unwrap_or_default();
-		
+
 		for plugin in plugins {
 			relm4::view! {
 				#[name(service)]
