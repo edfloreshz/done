@@ -61,6 +61,7 @@ pub enum AppMsg {
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
 	SelectSmartList(SmartList),
+	ToggleCompact(bool),
 	DisablePlugin,
 	CloseWarning,
 	Folded,
@@ -248,6 +249,7 @@ impl Component for App {
 				PreferencesOutput::DisablePluginOnSidebar(plugin) => {
 					AppMsg::DisablePluginOnSidebar(plugin)
 				},
+				PreferencesOutput::ToggleCompact(compact) => AppMsg::ToggleCompact(compact)
 			},
 		);
 
@@ -371,6 +373,7 @@ impl Component for App {
 					.send(ContentInput::SelectSmartList(list.clone()))
 					.unwrap_or_default();
 			},
+			AppMsg::ToggleCompact(compact) => self.content.sender().send(ContentInput::ToggleCompact(compact)).unwrap()
 		}
 		self.update_view(widgets, sender)
 	}

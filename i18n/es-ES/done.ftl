@@ -39,6 +39,8 @@ open-preferences = Abre las preferencias para habilitar o instalar nuevos servic
 
 # Preferences
 appearance = Apariencia
+compact = Tareas compactas
+compact-description = Activalo para compactar las tareas
 color-scheme = Esquema de colores
 color-scheme-description = Establece el esquema de colores
 color-scheme-light = Claro

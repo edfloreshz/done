@@ -2,8 +2,11 @@ use crate::application::plugin::Plugin;
 use crate::widgets::components::new_task::{
 	NewTask, NewTaskEvent, NewTaskOutput,
 };
+use crate::widgets::components::preferences::Preferences;
 use crate::widgets::factory::list::ListData;
-use crate::widgets::factory::task::{TaskData, TaskInit};
+use crate::widgets::factory::task::{TaskData, TaskInit, TaskInput};
+use libset::format::FileFormat;
+use libset::project::Project;
 use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::{List, Task};
 
@@ -35,6 +38,7 @@ pub struct ContentModel {
 	plugin: Option<Plugin>,
 	parent_list: Option<List>,
 	selected_smart_list: Option<SmartList>,
+	compact: bool
 }
 
 #[derive(Debug)]
@@ -44,6 +48,7 @@ pub enum ContentInput {
 	UpdateTask(Option<DynamicIndex>, Task),
 	TaskListSelected(ListData),
 	SelectSmartList(SmartList),
+	ToggleCompact(bool),
 	DisablePlugin,
 }
 
@@ -121,7 +126,7 @@ impl AsyncComponent for ContentModel {
 	) -> AsyncComponentParts<Self> {
 		let plugin = None;
 		let service = None;
-
+		let compact = Project::open("dev", "edfloreshz", "done").unwrap().get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap().compact;
 		let all = AllModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {});
@@ -158,6 +163,7 @@ impl AsyncComponent for ContentModel {
 			plugin,
 			parent_list: None,
 			selected_smart_list: None,
+			compact
 		};
 		let list_box = model.task_factory.widget();
 
@@ -187,6 +193,7 @@ impl AsyncComponent for ContentModel {
 							self.task_factory.guard().push_back(TaskInit::new(
 								task.id,
 								self.service.clone().unwrap(),
+								self.compact
 							));
 						}
 						sender
@@ -267,7 +274,7 @@ impl AsyncComponent for ContentModel {
 					self
 						.task_factory
 						.guard()
-						.push_back(TaskInit::new(task, self.service.clone().unwrap()));
+						.push_back(TaskInit::new(task, self.service.clone().unwrap(), self.compact));
 				}
 			},
 			ContentInput::DisablePlugin => {
@@ -277,6 +284,12 @@ impl AsyncComponent for ContentModel {
 				self.selected_smart_list = Some(list);
 				self.parent_list = None;
 			},
+			ContentInput::ToggleCompact(compact) => {
+				let size = self.task_factory.len();
+				for index in 0..size {
+					self.task_factory.send(index, TaskInput::ToggleCompact(compact));
+				}
+			}
 		}
 	}
 }
