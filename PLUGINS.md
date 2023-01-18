@@ -19,7 +19,7 @@ The required resources are currently available in the following languages:
 
 Additional languages will be made available in the near future.
 
-## How to start
+# How to start
 Each plugin is responsible for communicating with the designated service and acquiring the necessary information. To accomplish this, it is necessary 
 to implement the `Provider` interface, enabling communication with the client.
 
@@ -53,7 +53,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Examples
+# Publish a new plugin
+When you're done, you can include your plugin to the list of services of Done. 
+
+To do it, you'll need to add the following object to [`dev.edfloreshz.Done.Plugins.json`](dev.edfloreshz.Done.Plugins.json).
+
+```json
+{
+    "pluginId": string,
+    "pluginName": string,
+    "pluginDescription": string,
+    "pluginIcon": string,
+    "pluginPort": int,
+    "pluginVersion": string,
+    "pluginProcessName": string,
+    "pluginDownloadUrl": string
+}
+```
+
+Fill the fields with information about your plugin, send a [PR](https://github.com/done-devs/done/pulls) and wait for approval.
+
+# Examples
 You can guide yourself by looking at existing implementations:
 
 - [Local Service](https://github.com/done-devs/local-plugin)
