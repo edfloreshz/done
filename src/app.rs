@@ -1,18 +1,20 @@
+use crate::application::info::PROFILE;
 use crate::application::plugin::Plugin;
-use crate::config::PROFILE;
+use crate::application::setup::main_app;
 use crate::fl;
-use crate::setup::main_app;
+use crate::widgets::components::about_dialog::AboutDialog;
 use crate::widgets::components::content::{
-	ContentInput, ContentModel, ContentOutput,
+	ContentComponentInput, ContentComponentModel, ContentComponentOutput,
 };
-use crate::widgets::components::preferences::{Preferences, PreferencesOutput};
+use crate::widgets::components::preferences::{
+	PreferencesComponent, PreferencesComponentOutput,
+};
 use crate::widgets::components::sidebar::{
-	SidebarInput, SidebarModel, SidebarOutput,
+	SidebarComponentInput, SidebarComponentModel, SidebarComponentOutput,
 };
 use crate::widgets::components::smart_lists::SmartList;
-use crate::widgets::components::welcome::Welcome;
-use crate::widgets::factory::list::ListData;
-use crate::widgets::modals::about::AboutDialog;
+use crate::widgets::components::welcome::WelcomeComponent;
+use crate::widgets::factory::list::ListFactoryModel;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::AsyncController;
@@ -23,12 +25,13 @@ use relm4::{
 	gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
 	ComponentSender, Controller,
 };
+use sysinfo::{ProcessExt, System, SystemExt};
 
 pub struct App {
-	sidebar: AsyncController<SidebarModel>,
-	content: AsyncController<ContentModel>,
-	preferences: AsyncController<Preferences>,
-	welcome: Controller<Welcome>,
+	sidebar: AsyncController<SidebarComponentModel>,
+	content: AsyncController<ContentComponentModel>,
+	preferences: AsyncController<PreferencesComponent>,
+	welcome: Controller<WelcomeComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
 	warning_revealed: bool,
@@ -36,10 +39,10 @@ pub struct App {
 
 impl App {
 	pub fn new(
-		sidebar: AsyncController<SidebarModel>,
-		content: AsyncController<ContentModel>,
-		preferences: AsyncController<Preferences>,
-		welcome: Controller<Welcome>,
+		sidebar: AsyncController<SidebarComponentModel>,
+		content: AsyncController<ContentComponentModel>,
+		preferences: AsyncController<PreferencesComponent>,
+		welcome: Controller<WelcomeComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
 		Self {
@@ -55,8 +58,8 @@ impl App {
 }
 
 #[derive(Debug)]
-pub enum AppMsg {
-	TaskListSelected(ListData),
+pub enum Event {
+	TaskListSelected(ListFactoryModel),
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -84,10 +87,201 @@ relm4::new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 #[relm4::component(pub)]
 impl Component for App {
 	type CommandOutput = ();
-	type Input = AppMsg;
+	type Input = Event;
 	type Output = ();
 	type Init = ();
 	type Widgets = AppWidgets;
+
+	fn init(
+		_init: Self::Init,
+		root: &Self::Root,
+		sender: ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		let preferences: &str = fl!("preferences");
+		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
+		let about_done: &str = fl!("about-done");
+		let quit: &str = fl!("quit");
+
+		let app = main_app();
+
+		app.connect_shutdown(|_| {
+			let processes = System::new_all();
+			let mut local = processes.processes_by_exact_name("local-plugin");
+			if let Some(process) = local.next() {
+				if process.kill() {
+					info!("The {} process was killed.", process.name());
+				} else {
+					error!("Failed to kill process.");
+				}
+			} else {
+				info!("Process is not running.");
+			}
+		});
+
+		let actions = RelmActionGroup::<WindowActionGroup>::new();
+
+		let sidebar_controller = SidebarComponentModel::builder()
+			.launch(())
+			.forward(sender.input_sender(), |message| match message {
+				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
+				SidebarComponentOutput::ListSelected(list) => {
+					Event::TaskListSelected(list)
+				},
+				SidebarComponentOutput::Forward => Event::Forward,
+				SidebarComponentOutput::Notify(msg) => Event::Notify(msg),
+				SidebarComponentOutput::SelectSmartList(list) => {
+					Event::SelectSmartList(list)
+				},
+			});
+
+		let content_controller = ContentComponentModel::builder()
+			.launch(())
+			.forward(sender.input_sender(), |message| match message {
+				ContentComponentOutput::Notify(msg) => Event::Notify(msg),
+			});
+
+		let preferences_controller = PreferencesComponent::builder()
+			.launch(())
+			.forward(sender.input_sender(), |message| match message {
+				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
+					Event::EnablePluginOnSidebar(plugin)
+				},
+				PreferencesComponentOutput::DisablePluginOnSidebar(plugin) => {
+					Event::DisablePluginOnSidebar(plugin)
+				},
+				PreferencesComponentOutput::ToggleCompact(compact) => {
+					Event::ToggleCompact(compact)
+				},
+			});
+
+		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
+
+		let mut model = App::new(
+			sidebar_controller,
+			content_controller,
+			preferences_controller,
+			welcome_controller,
+			None,
+		);
+
+		let widgets = view_output!();
+
+		let preferences_action = {
+			let preferences = model.preferences.widget().clone();
+			RelmAction::<PreferencesAction>::new_stateless(move |_| {
+				preferences.present();
+			})
+		};
+
+		let shortcuts_action = {
+			let shortcuts = widgets.shortcuts.clone();
+			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
+				shortcuts.present();
+			})
+		};
+
+		let about_dialog = ComponentBuilder::default()
+			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
+			.detach();
+
+		model.about_dialog = Some(about_dialog);
+
+		let about_action = {
+			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
+			RelmAction::<AboutAction>::new_stateless(move |_| {
+				sender.send(()).unwrap_or_default();
+			})
+		};
+
+		let quit_action = {
+			RelmAction::<QuitAction>::new_stateless(move |_| {
+				sender.input_sender().send(Event::Quit).unwrap_or_default();
+			})
+		};
+
+		actions.add_action(&preferences_action);
+		actions.add_action(&shortcuts_action);
+		actions.add_action(&about_action);
+		actions.add_action(&quit_action);
+
+		widgets.main_window.insert_action_group(
+			WindowActionGroup::NAME,
+			Some(&actions.into_action_group()),
+		);
+
+		ComponentParts { model, widgets }
+	}
+
+	fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: ComponentSender<Self>,
+		_root: &Self::Root,
+	) {
+		match message {
+			Event::Quit => main_app().quit(),
+			Event::CloseWarning => self.warning_revealed = false,
+			Event::TaskListSelected(list) => {
+				self.page_title = Some(list.list.name.clone());
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::TaskListSelected(list))
+					.unwrap_or_default();
+			},
+			Event::DisablePlugin => {
+				self.page_title = None;
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::DisablePlugin)
+					.unwrap_or_default();
+			},
+			Event::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
+			Event::Folded => {
+				if self.page_title.is_some() {
+					widgets.leaflet.set_visible_child(&widgets.content);
+				} else {
+					widgets.leaflet.set_visible_child(&widgets.sidebar);
+				}
+				widgets.go_back_button.set_visible(true);
+				widgets.sidebar_header.set_show_start_title_buttons(true);
+				widgets.sidebar_header.set_show_end_title_buttons(true);
+			},
+			Event::Unfolded => {
+				widgets.go_back_button.set_visible(false);
+				widgets.sidebar_header.set_show_start_title_buttons(false);
+				widgets.sidebar_header.set_show_end_title_buttons(false);
+			},
+			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
+			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
+			Event::EnablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::EnableService(plugin))
+				.unwrap_or_default(),
+			Event::DisablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::DisableService(plugin))
+				.unwrap_or_default(),
+			Event::SelectSmartList(list) => {
+				self.page_title = Some(list.name());
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::SelectSmartList(list))
+					.unwrap_or_default();
+			},
+			Event::ToggleCompact(compact) => self
+				.content
+				.sender()
+				.send(ContentComponentInput::ToggleCompact(compact))
+				.unwrap(),
+		}
+		self.update_view(widgets, sender);
+	}
 
 	menu! {
 		primary_menu: {
@@ -106,7 +300,7 @@ impl Component for App {
 			set_default_width: 700,
 			set_default_height: 700,
 			connect_close_request[sender] => move |_| {
-				sender.input(AppMsg::Quit);
+				sender.input(Event::Quit);
 				gtk::Inhibit(true)
 			},
 
@@ -126,7 +320,7 @@ impl Component for App {
 
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input(AppMsg::CloseWarning)
+					sender.input(Event::CloseWarning);
 				}
 			},
 
@@ -170,7 +364,7 @@ impl Component for App {
 										set_icon_name: "go-previous-symbolic",
 										set_visible: false,
 										connect_clicked[sender] => move |_| {
-											sender.input(AppMsg::Back);
+											sender.input(Event::Back);
 										}
 									}
 								},
@@ -187,9 +381,9 @@ impl Component for App {
 							},
 							connect_folded_notify[sender] => move |leaflet| {
 								if leaflet.is_folded() {
-									sender.input(AppMsg::Folded);
+									sender.input(Event::Folded);
 								} else {
-									sender.input(AppMsg::Unfolded);
+									sender.input(Event::Unfolded);
 								}
 							}
 						},
@@ -208,178 +402,9 @@ impl Component for App {
 			}
 		}
 	}
-
-	fn init(
-		_init: Self::Init,
-		root: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> ComponentParts<Self> {
-		let preferences: &str = fl!("preferences");
-		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
-		let about_done: &str = fl!("about-done");
-		let quit: &str = fl!("quit");
-		
-
-		let actions = RelmActionGroup::<WindowActionGroup>::new();
-
-		let sidebar_controller = SidebarModel::builder().launch(()).forward(
-			sender.input_sender(),
-			|message| match message {
-				SidebarOutput::DisablePlugin => AppMsg::DisablePlugin,
-				SidebarOutput::ListSelected(list) => AppMsg::TaskListSelected(list),
-				SidebarOutput::Forward => AppMsg::Forward,
-				SidebarOutput::Notify(msg) => AppMsg::Notify(msg),
-				SidebarOutput::SelectSmartList(list) => AppMsg::SelectSmartList(list),
-			},
-		);
-
-		let content_controller = ContentModel::builder().launch(()).forward(
-			sender.input_sender(),
-			|message| match message {
-				ContentOutput::Notify(msg) => AppMsg::Notify(msg),
-			},
-		);
-
-		let preferences_controller = Preferences::builder().launch(()).forward(
-			sender.input_sender(),
-			|message| match message {
-				PreferencesOutput::EnablePluginOnSidebar(plugin) => {
-					AppMsg::EnablePluginOnSidebar(plugin)
-				},
-				PreferencesOutput::DisablePluginOnSidebar(plugin) => {
-					AppMsg::DisablePluginOnSidebar(plugin)
-				},
-				PreferencesOutput::ToggleCompact(compact) => AppMsg::ToggleCompact(compact)
-			},
-		);
-
-		let welcome_controller = Welcome::builder().launch(()).detach();
-
-		let mut model = App::new(
-			sidebar_controller,
-			content_controller,
-			preferences_controller,
-			welcome_controller,
-			None,
-		);
-
-		let widgets = view_output!();
-
-		let preferences_action = {
-			let preferences = model.preferences.widget().clone();
-			RelmAction::<PreferencesAction>::new_stateless(move |_| {
-				preferences.present();
-			})
-		};
-
-		let shortcuts_action = {
-			let shortcuts = widgets.shortcuts.clone();
-			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
-				shortcuts.present();
-			})
-		};
-
-		let about_dialog = ComponentBuilder::default()
-			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
-			.detach();
-
-		model.about_dialog = Some(about_dialog);
-
-		let about_action = {
-			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
-			RelmAction::<AboutAction>::new_stateless(move |_| {
-				sender.send(()).unwrap_or_default();
-			})
-		};
-
-		let quit_action = {
-			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender.input_sender().send(AppMsg::Quit).unwrap_or_default();
-			})
-		};
-
-		actions.add_action(&preferences_action);
-		actions.add_action(&shortcuts_action);
-		actions.add_action(&about_action);
-		actions.add_action(&quit_action);
-
-		widgets.main_window.insert_action_group(
-			WindowActionGroup::NAME,
-			Some(&actions.into_action_group()),
-		);
-
-		ComponentParts { model, widgets }
-	}
-
-	fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: ComponentSender<Self>,
-		_root: &Self::Root,
-	) {
-		match message {
-			AppMsg::Quit => main_app().quit(),
-			AppMsg::CloseWarning => self.warning_revealed = false,
-			AppMsg::TaskListSelected(list) => {
-				self.page_title = Some(list.list.name.clone());
-				self
-					.content
-					.sender()
-					.send(ContentInput::TaskListSelected(list))
-					.unwrap_or_default();
-			},
-			AppMsg::DisablePlugin => {
-				self.page_title = None;
-				self
-					.content
-					.sender()
-					.send(ContentInput::DisablePlugin)
-					.unwrap_or_default();
-			},
-			AppMsg::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
-			AppMsg::Folded => {
-				if self.page_title.is_some() {
-					widgets.leaflet.set_visible_child(&widgets.content);
-				} else {
-					widgets.leaflet.set_visible_child(&widgets.sidebar);
-				}
-				widgets.go_back_button.set_visible(true);
-				widgets.sidebar_header.set_show_start_title_buttons(true);
-				widgets.sidebar_header.set_show_end_title_buttons(true);
-			},
-			AppMsg::Unfolded => {
-				widgets.go_back_button.set_visible(false);
-				widgets.sidebar_header.set_show_start_title_buttons(false);
-				widgets.sidebar_header.set_show_end_title_buttons(false);
-			},
-			AppMsg::Forward => widgets.leaflet.set_visible_child(&widgets.content),
-			AppMsg::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
-			AppMsg::EnablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarInput::EnableService(plugin))
-				.unwrap_or_default(),
-			AppMsg::DisablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarInput::DisableService(plugin))
-				.unwrap_or_default(),
-			AppMsg::SelectSmartList(list) => {
-				self.page_title = Some(String::from(list.name()));
-				self
-					.content
-					.sender()
-					.send(ContentInput::SelectSmartList(list.clone()))
-					.unwrap_or_default();
-			},
-			AppMsg::ToggleCompact(compact) => self.content.sender().send(ContentInput::ToggleCompact(compact)).unwrap()
-		}
-		self.update_view(widgets, sender)
-	}
 }
 
-pub fn toast(title: impl ToString) -> Toast {
+pub fn toast<T: ToString>(title: T) -> Toast {
 	Toast::builder()
 		.title(title.to_string().as_str())
 		.timeout(1)

@@ -1,9 +1,9 @@
 use super::smart_lists::{SmartList, SmartListModel, SmartListOutput};
 use crate::application::plugin::Plugin;
 use crate::fl;
-use crate::widgets::factory::list::ListData;
-use crate::widgets::factory::provider::{
-	PluginInit, ProviderInput, ProviderModel,
+use crate::widgets::factory::list::ListFactoryModel;
+use crate::widgets::factory::plugin::{
+	PluginFactoryInit, PluginFactoryInput, PluginFactoryModel,
 };
 use proto_rust::provider::List;
 use relm4::adw::traits::PreferencesGroupExt;
@@ -19,15 +19,15 @@ use relm4::{
 };
 
 #[derive(Debug)]
-pub struct SidebarModel {
-	provider_factory: AsyncFactoryVecDeque<ProviderModel>,
+pub struct SidebarComponentModel {
+	provider_factory: AsyncFactoryVecDeque<PluginFactoryModel>,
 	smart_list_controller: Controller<SmartListModel>,
 }
 
 #[derive(Debug)]
-pub enum SidebarInput {
+pub enum SidebarComponentInput {
 	AddListToProvider(usize, String, String),
-	ListSelected(ListData),
+	ListSelected(ListFactoryModel),
 	EnableService(Plugin),
 	DisableService(Plugin),
 	Forward,
@@ -37,8 +37,8 @@ pub enum SidebarInput {
 
 #[allow(dead_code)]
 #[derive(Debug)]
-pub enum SidebarOutput {
-	ListSelected(ListData),
+pub enum SidebarComponentOutput {
+	ListSelected(ListFactoryModel),
 	Forward,
 	Notify(String),
 	DisablePlugin,
@@ -46,10 +46,9 @@ pub enum SidebarOutput {
 }
 
 #[relm4::component(pub async)]
-impl SimpleAsyncComponent for SidebarModel {
-	type Input = SidebarInput;
-	type Output = SidebarOutput;
-	type Widgets = SidebarWidgets;
+impl SimpleAsyncComponent for SidebarComponentModel {
+	type Input = SidebarComponentInput;
+	type Output = SidebarComponentOutput;
 	type Init = ();
 
 	view! {
@@ -111,7 +110,7 @@ impl SimpleAsyncComponent for SidebarModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		let mut model = SidebarModel {
+		let mut model = SidebarComponentModel {
 			provider_factory: AsyncFactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
@@ -120,9 +119,9 @@ impl SimpleAsyncComponent for SidebarModel {
 				sender.input_sender(),
 				|message| match message {
 					SmartListOutput::SelectSmartList(list) => {
-						SidebarInput::SelectSmartList(list)
+						SidebarComponentInput::SelectSmartList(list)
 					},
-					SmartListOutput::Forward => SidebarInput::Forward,
+					SmartListOutput::Forward => SidebarComponentInput::Forward,
 				},
 			),
 		};
@@ -136,10 +135,10 @@ impl SimpleAsyncComponent for SidebarModel {
 				model
 					.provider_factory
 					.guard()
-					.push_back(PluginInit::new(plugin.clone(), service));
-				info!("Added {:?} service to the sidebar", plugin.name)
+					.push_back(PluginFactoryInit::new(plugin.clone(), service));
+				info!("Added {:?} service to the sidebar", plugin.name);
 			} else {
-				error!("{} service is not reachable.", plugin.name)
+				error!("{} service is not reachable.", plugin.name);
 			}
 		}
 
@@ -152,7 +151,7 @@ impl SimpleAsyncComponent for SidebarModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
-			SidebarInput::AddListToProvider(index, provider_id, name) => {
+			SidebarComponentInput::AddListToProvider(index, provider_id, name) => {
 				match Plugin::get_plugins()
 					.unwrap()
 					.iter()
@@ -167,68 +166,76 @@ impl SimpleAsyncComponent for SidebarModel {
 									if response.successful {
 										self
 											.provider_factory
-											.send(index, ProviderInput::AddList(list));
+											.send(index, PluginFactoryInput::AddList(list));
 									}
 									sender
-										.output(SidebarOutput::Notify(response.message))
+										.output(SidebarComponentOutput::Notify(response.message))
 										.unwrap_or_default();
 								},
 								Err(err) => {
 									sender
-										.output(SidebarOutput::Notify(err.to_string()))
+										.output(SidebarComponentOutput::Notify(err.to_string()))
 										.unwrap_or_default();
 								},
 							}
 						},
 						Err(err) => {
 							sender
-								.output(SidebarOutput::Notify(err.to_string()))
+								.output(SidebarComponentOutput::Notify(err.to_string()))
 								.unwrap_or_default();
 						},
 					},
 					None => {
 						sender
-							.output(SidebarOutput::Notify("Provider not found".to_string()))
+							.output(SidebarComponentOutput::Notify(
+								"Provider not found".to_string(),
+							))
 							.unwrap_or_default();
 					},
 				}
 			},
-			SidebarInput::EnableService(plugin) => {
+			SidebarComponentInput::EnableService(plugin) => {
 				if plugin.is_running() {
 					let index = Plugin::get_plugins()
 						.unwrap()
 						.iter()
 						.position(|p| p == &plugin)
 						.unwrap();
-					self.provider_factory.send(index, ProviderInput::Enable)
+					self
+						.provider_factory
+						.send(index, PluginFactoryInput::Enable);
 				}
 			},
-			SidebarInput::DisableService(plugin) => {
+			SidebarComponentInput::DisableService(plugin) => {
 				let index = Plugin::get_plugins()
 					.unwrap()
 					.iter()
 					.position(|p| p == &plugin)
 					.unwrap();
-				self.provider_factory.send(index, ProviderInput::Disable);
+				self
+					.provider_factory
+					.send(index, PluginFactoryInput::Disable);
 				sender
-					.output(SidebarOutput::DisablePlugin)
-					.unwrap_or_default()
-			},
-			SidebarInput::ListSelected(list) => {
-				sender
-					.output(SidebarOutput::ListSelected(list))
+					.output(SidebarComponentOutput::DisablePlugin)
 					.unwrap_or_default();
 			},
-			SidebarInput::Forward => {
-				sender.output(SidebarOutput::Forward).unwrap_or_default();
-			},
-			SidebarInput::Notify(msg) => {
+			SidebarComponentInput::ListSelected(list) => {
 				sender
-					.output(SidebarOutput::Notify(msg))
+					.output(SidebarComponentOutput::ListSelected(list))
 					.unwrap_or_default();
 			},
-			SidebarInput::SelectSmartList(list) => sender
-				.output(SidebarOutput::SelectSmartList(list))
+			SidebarComponentInput::Forward => {
+				sender
+					.output(SidebarComponentOutput::Forward)
+					.unwrap_or_default();
+			},
+			SidebarComponentInput::Notify(msg) => {
+				sender
+					.output(SidebarComponentOutput::Notify(msg))
+					.unwrap_or_default();
+			},
+			SidebarComponentInput::SelectSmartList(list) => sender
+				.output(SidebarComponentOutput::SelectSmartList(list))
 				.unwrap_or_default(),
 		}
 	}

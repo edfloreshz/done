@@ -11,13 +11,13 @@ use relm4::{
 };
 
 #[derive(Debug)]
-pub struct NewTask {
+pub struct TaskEntryComponent {
 	task: Task,
 	parent_list: Option<List>,
 }
 
 #[derive(Debug)]
-pub enum NewTaskEvent {
+pub enum TaskEntryComponentInput {
 	AddToMyDay,
 	SetTitle(String),
 	SetReminder(NaiveDateTime),
@@ -28,17 +28,16 @@ pub enum NewTaskEvent {
 }
 
 #[derive(Debug)]
-pub enum NewTaskOutput {
+pub enum TaskEntryComponentOutput {
 	AddTask(Task),
 }
 
 #[relm4::component(pub)]
-impl Component for NewTask {
+impl Component for TaskEntryComponent {
 	type CommandOutput = ();
-	type Input = NewTaskEvent;
-	type Output = NewTaskOutput;
+	type Input = TaskEntryComponentInput;
+	type Output = TaskEntryComponentOutput;
 	type Init = Option<List>;
-	type Widgets = NewTaskWidgets;
 
 	view! {
 		#[root]
@@ -55,28 +54,28 @@ impl Component for NewTask {
 					set_tooltip_text: Some(fl!("add-to-today")),
 					set_icon_name: "daytime-sunrise-symbolic",
 					connect_clicked[sender] => move |_| {
-						sender.input(NewTaskEvent::AddToMyDay)
+						sender.input(TaskEntryComponentInput::AddToMyDay);
 					}
 				},
 				gtk::Button {
 					set_tooltip_text: Some(fl!("set-time")),
 					set_icon_name: "appointment-soon-symbolic",
 					connect_clicked[sender] => move |_| {
-						sender.input(NewTaskEvent::SetReminder(chrono::Utc::now().naive_utc()))
+						sender.input(TaskEntryComponentInput::SetReminder(chrono::Utc::now().naive_utc()));
 					}
 				},
 				gtk::Button {
 					set_tooltip_text: Some(fl!("set-due-date")),
 					set_icon_name: "office-calendar-symbolic",
 					connect_clicked[sender] => move |_| {
-						sender.input(NewTaskEvent::SetDueDate(chrono::Utc::now().naive_utc()))
+						sender.input(TaskEntryComponentInput::SetDueDate(chrono::Utc::now().naive_utc()));
 					}
 				},
 				gtk::Button {
 					set_tooltip_text: Some(fl!("more-details")),
 					set_icon_name: "text-editor-symbolic",
 					connect_clicked[sender] => move |_| {
-						sender.input(NewTaskEvent::AddNote(String::new()))
+						sender.input(TaskEntryComponentInput::AddNote(String::new()));
 					}
 				},
 			},
@@ -94,18 +93,18 @@ impl Component for NewTask {
 					set_height_request: 42,
 					connect_changed[sender] => move |entry| {
 						let buffer = entry.buffer();
-						sender.input(NewTaskEvent::SetTitle(buffer.text()));
+						sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
 					},
 					connect_activate[sender] => move |entry| {
 						let buffer = entry.buffer();
-						sender.input(NewTaskEvent::SetTitle(buffer.text()));
-						sender.input(NewTaskEvent::AddTask);
+						sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
+						sender.input(TaskEntryComponentInput::AddTask);
 					}
 				},
 				gtk::Button {
 					set_icon_name: "mail-send-symbolic",
 					connect_clicked[sender] => move |_| {
-						sender.input(NewTaskEvent::AddTask)
+						sender.input(TaskEntryComponentInput::AddTask);
 					}
 				}
 			}
@@ -117,7 +116,7 @@ impl Component for NewTask {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let model = NewTask {
+		let model = TaskEntryComponent {
 			task: Task::new(String::new(), String::new()),
 			parent_list: init,
 		};
@@ -134,30 +133,30 @@ impl Component for NewTask {
 		_root: &Self::Root,
 	) {
 		match message {
-			NewTaskEvent::AddToMyDay => (), // TODO: Add to my day.
-			NewTaskEvent::SetTitle(title) => self.task.title = title,
-			NewTaskEvent::SetReminder(reminder) => {
+			TaskEntryComponentInput::AddToMyDay => (), // TODO: Add to my day.
+			TaskEntryComponentInput::SetTitle(title) => self.task.title = title,
+			TaskEntryComponentInput::SetReminder(reminder) => {
 				self.task.reminder_date = Some(reminder.timestamp());
 				self.task.is_reminder_on = true;
 			},
-			NewTaskEvent::SetDueDate(due) => {
-				self.task.due_date = Some(due.timestamp())
+			TaskEntryComponentInput::SetDueDate(due) => {
+				self.task.due_date = Some(due.timestamp());
 			},
-			NewTaskEvent::AddNote(note) => self.task.body = Some(note),
-			NewTaskEvent::AddTask => {
+			TaskEntryComponentInput::AddNote(note) => self.task.body = Some(note),
+			TaskEntryComponentInput::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
 					self.task.parent = self.parent_list.as_ref().unwrap().id.clone();
 					sender
-						.output(NewTaskOutput::AddTask(self.task.clone()))
+						.output(TaskEntryComponentOutput::AddTask(self.task.clone()))
 						.unwrap_or_default();
 					self.task = Task::new(
 						String::new(),
 						self.parent_list.as_ref().unwrap().id.clone(),
 					);
-					widgets.entry.set_text("")
+					widgets.entry.set_text("");
 				}
 			},
-			NewTaskEvent::SetParentList(list) => self.parent_list = list,
+			TaskEntryComponentInput::SetParentList(list) => self.parent_list = list,
 		}
 	}
 }

@@ -53,7 +53,7 @@ impl Plugin {
 		let plugin = plugins
 			.into_iter()
 			.find(|plugin| plugin.id == id)
-			.ok_or(anyhow::anyhow!("Plugin not found."))?;
+			.ok_or_else(|| anyhow::anyhow!("Plugin not found."))?;
 		Ok(plugin)
 	}
 
@@ -64,19 +64,19 @@ impl Plugin {
 		}
 	}
 
-	pub fn stop(&self) -> Result<()> {
+	pub fn stop(&self) {
 		let processes = System::new_all();
-		match processes.processes_by_exact_name(&self.process_name).next() {
-			Some(process) => {
-				if process.kill() {
-					info!("Process was killed.")
-				} else {
-					error!("Failed to kill process.")
-				}
-			},
-			None => info!("Process is not running."),
-		}
-		Ok(())
+		if let Some(process) =
+			processes.processes_by_exact_name(&self.process_name).next()
+		{
+			if process.kill() {
+				info!("Process was killed.");
+			} else {
+				error!("Failed to kill process.");
+			}
+		} else {
+			info!("Process is not running.");
+		};
 	}
 
 	pub fn is_running(&self) -> bool {

@@ -1,12 +1,15 @@
 use gtk::prelude::GtkWindowExt;
-use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 use libadwaita as adw;
+use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
-use crate::{config::{APP_ID, VERSION}, fl};
+use crate::{
+	application::info::{APP_ID, VERSION},
+	fl,
+};
 
 pub struct AboutDialog {}
 
-pub struct AboutDialogWidgets {
+pub struct Widgets {
 	main_window: gtk::Window,
 }
 
@@ -15,7 +18,7 @@ impl SimpleComponent for AboutDialog {
 	type Output = ();
 	type Init = gtk::Window;
 	type Root = ();
-	type Widgets = AboutDialogWidgets;
+	type Widgets = Widgets;
 
 	fn init_root() -> Self::Root {}
 
@@ -26,7 +29,7 @@ impl SimpleComponent for AboutDialog {
 	) -> ComponentParts<Self> {
 		let model = Self {};
 
-		let widgets = AboutDialogWidgets { main_window };
+		let widgets = Widgets { main_window };
 
 		ComponentParts { model, widgets }
 	}

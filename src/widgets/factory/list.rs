@@ -8,14 +8,21 @@ use relm4::{view, AsyncFactorySender};
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
-use crate::widgets::factory::provider::ProviderInput;
+use crate::widgets::factory::plugin::PluginFactoryInput;
 use proto_rust::provider::List;
 use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};
 
+#[derive(Debug, Clone)]
+pub struct ListFactoryModel {
+	pub list: List,
+	pub tasks: Vec<String>,
+	pub service: ProviderClient<Channel>,
+}
+
 #[derive(Debug)]
-pub enum ListInput {
+pub enum ListFactoryInput {
 	Select,
 	Delete(DynamicIndex),
 	Rename(String),
@@ -23,34 +30,27 @@ pub enum ListInput {
 }
 
 #[derive(Debug)]
-pub enum ListOutput {
-	Select(ListData),
+pub enum ListFactoryOutput {
+	Select(ListFactoryModel),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),
 }
 
-#[derive(Debug, Clone)]
-pub struct ListData {
-	pub list: List,
-	pub tasks: Vec<String>,
-	pub service: ProviderClient<Channel>,
-}
-
 #[derive(derive_new::new)]
-pub struct ListInit {
+pub struct ListFactoryInit {
 	list_id: String,
 	service: ProviderClient<Channel>,
 }
 
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for ListData {
-	type ParentInput = ProviderInput;
+impl AsyncFactoryComponent for ListFactoryModel {
+	type ParentInput = PluginFactoryInput;
 	type ParentWidget = adw::ExpanderRow;
 	type CommandOutput = ();
-	type Input = ListInput;
-	type Output = ListOutput;
-	type Init = ListInit;
+	type Input = ListFactoryInput;
+	type Output = ListFactoryOutput;
+	type Init = ListFactoryInit;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -67,7 +67,7 @@ impl AsyncFactoryComponent for ListData {
 					set_margin_bottom: 10,
 					connect_activate[sender] => move |entry| {
 						let buffer = entry.buffer();
-						sender.input(ListInput::Rename(buffer.text()));
+						sender.input(ListFactoryInput::Rename(buffer.text()));
 					},
 					// This crashes the program.
 					// connect_changed[sender] => move |entry| {
@@ -83,7 +83,7 @@ impl AsyncFactoryComponent for ListData {
 					#[wrap(Some)]
 					set_popover = &gtk::EmojiChooser{
 						connect_emoji_picked[sender] => move |_, emoji| {
-							sender.input(ListInput::ChangeIcon(emoji.to_string()))
+							sender.input(ListFactoryInput::ChangeIcon(emoji.to_string()));
 						}
 					}
 				},
@@ -98,14 +98,14 @@ impl AsyncFactoryComponent for ListData {
 					set_css_classes: &["circular", "image-button", "destructive-action"],
 					set_valign: gtk::Align::Center,
 					connect_clicked[sender, index] => move |_| {
-						sender.input(ListInput::Delete(index.clone()))
+						sender.input(ListFactoryInput::Delete(index.clone()));
 					}
 				},
 			},
 			add_controller = &gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input(ListInput::Select);
-					sender.output(ListOutput::Forward)
+					sender.input(ListFactoryInput::Select);
+					sender.output(ListFactoryOutput::Forward);
 				}
 			}
 		}
@@ -174,7 +174,7 @@ impl AsyncFactoryComponent for ListData {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ListInput::Rename(name) => {
+			ListFactoryInput::Rename(name) => {
 				let mut list = self.list.clone();
 				list.name = name.clone();
 				match self.service.update_list(list).await {
@@ -183,27 +183,27 @@ impl AsyncFactoryComponent for ListData {
 						if response.successful {
 							self.list.name = name;
 						}
-						sender.output(ListOutput::Notify(response.message))
+						sender.output(ListFactoryOutput::Notify(response.message));
 					},
-					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
 				}
 			},
-			ListInput::Delete(index) => {
+			ListFactoryInput::Delete(index) => {
 				match self.service.delete_list(self.clone().list.id).await {
 					Ok(response) => {
 						let response = response.into_inner();
 						if response.successful {
-							sender.output(ListOutput::DeleteTaskList(
+							sender.output(ListFactoryOutput::DeleteTaskList(
 								index,
 								self.list.id.clone(),
 							));
 						}
-						sender.output(ListOutput::Notify(response.message))
+						sender.output(ListFactoryOutput::Notify(response.message));
 					},
-					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
 				}
 			},
-			ListInput::ChangeIcon(icon) => {
+			ListFactoryInput::ChangeIcon(icon) => {
 				let mut list = self.list.clone();
 				list.icon = Some(icon.clone());
 				match self.service.update_list(list).await {
@@ -212,12 +212,12 @@ impl AsyncFactoryComponent for ListData {
 						if response.successful {
 							self.list.icon = Some(icon);
 						}
-						sender.output(ListOutput::Notify(response.message))
+						sender.output(ListFactoryOutput::Notify(response.message));
 					},
-					Err(err) => sender.output(ListOutput::Notify(err.to_string())),
+					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
 				}
 			},
-			ListInput::Select => {
+			ListFactoryInput::Select => {
 				let mut service = self.service.clone();
 				let tasks =
 					match service.read_task_ids_from_list(self.list.id.clone()).await {
@@ -228,19 +228,21 @@ impl AsyncFactoryComponent for ListData {
 						},
 					};
 				self.tasks = tasks;
-				sender.output(ListOutput::Select(self.clone()));
+				sender.output(ListFactoryOutput::Select(self.clone()));
 			},
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
-			ListOutput::Select(data) => Some(ProviderInput::ListSelected(data)),
-			ListOutput::DeleteTaskList(index, list_id) => {
-				Some(ProviderInput::DeleteTaskList(index, list_id))
+			ListFactoryOutput::Select(data) => {
+				Some(PluginFactoryInput::ListSelected(data))
 			},
-			ListOutput::Forward => Some(ProviderInput::Forward),
-			ListOutput::Notify(msg) => Some(ProviderInput::Notify(msg)),
+			ListFactoryOutput::DeleteTaskList(index, list_id) => {
+				Some(PluginFactoryInput::DeleteTaskList(index, list_id))
+			},
+			ListFactoryOutput::Forward => Some(PluginFactoryInput::Forward),
+			ListFactoryOutput::Notify(msg) => Some(PluginFactoryInput::Notify(msg)),
 		}
 	}
 }

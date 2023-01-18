@@ -79,8 +79,8 @@ impl AsyncFactoryComponent for SmartListFactory {
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		Self {
-			name: String::from(init.name()),
-			description: String::from(init.description()),
+			name: init.name(),
+			description: init.description(),
 			icon: String::from(init.icon()),
 			smart_list: init,
 		}
