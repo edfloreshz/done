@@ -1,5 +1,5 @@
 # Plugin system
-The Done application is equipped with an integrated plugin system, utilizing `gRPC` for effective communication between the app and its various services.
+Done is equipped with an integrated plugin system, utilizing `gRPC` for effective communication between the app and its various services.
 
 Plugins operate as distinct processes, initiated by the app upon start-up and terminated upon closure. The app utilizes `gRPC` to make requests to the 
 service, as specified in the predefined `.proto` file, allowing the plugin to seamlessly communicate with the underlying service and retrieve necessary 
