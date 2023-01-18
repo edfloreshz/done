@@ -47,15 +47,20 @@ impl SimpleComponent for AboutDialog {
 			.website("https://done.edfloreshz.dev/")
 			.issue_url("https://github.com/done-devs/done/issues")
 			.version(VERSION)
-			.translator_credits(&fl!("translator-credits"))
+			.translator_credits(&fl!("translator-credits").replace("\\n", "\n"))
 			.modal(true)
-			.translator_credits(
-				"Jürgen Benvenuti\nIsabella Breder\nSabri Ünal\nalbanobattistella"
-			)
 			.transient_for(&widgets.main_window)
-			.developers(vec!["Eduardo Flores".into()])
-			.artists(vec!["Eduardo Flores".into()])
-			.documenters(vec!["Eduardo Flores".into()])
+			.developers(vec![
+				"Eduardo Flores <edfloreshz@gmail.com>".into(),
+				"Abraham Toriz Cruz <categulario@gmail.com>".into(),
+				"GageBerz".into(),
+				"adamijak".into()
+			])
+			.artists(vec![
+				"Eduardo Flores <edfloreshz@gmail.com>".into(),
+				"David Lapshin <ddaudix@gmail.com>".into()
+				])
+			.documenters(vec!["Eduardo Flores <edfloreshz@gmail.com>".into()])
 			.comments("The ultimate task management solution for seamless organization and efficiency.")
 			.build();
 		dialog.present();

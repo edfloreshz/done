@@ -18,7 +18,7 @@ use relm4::{
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::widgets::factory::smart_list::SmartListFactory;
+use crate::{widgets::factory::smart_list::SmartListFactory, fl};
 
 #[derive(Debug)]
 pub struct SmartListModel {
@@ -50,21 +50,29 @@ impl SmartList {
 		SmartList::iter().collect()
 	}
 
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> String {
+		let all: &String = fl!("all");
+		let today: &String = fl!("today");
+		let starred: &String = fl!("starred");
+		let next_7_days: &String = fl!("next-7-days");
 		match self {
-			SmartList::All => "All",
-			SmartList::Today => "Today",
-			SmartList::Starred => "Starred",
-			SmartList::Next7Days => "Next 7 Days",
+			SmartList::All => all.clone(),
+			SmartList::Today => today.clone(),
+			SmartList::Starred => starred.clone(),
+			SmartList::Next7Days => next_7_days.clone(),
 		}
 	}
 
-	pub fn description(&self) -> &str {
+	pub fn description(&self) -> String {
+		let all_desc: &String = fl!("all-desc");
+		let today_desc: &String = fl!("today-desc");
+		let starred_desc: &String = fl!("starred-desc");
+		let next_7_days_desc: &String = fl!("next-7-days-desc");
 		match self {
-			SmartList::All => "All tasks",
-			SmartList::Today => "Tasks due today",
-			SmartList::Starred => "Starred tasks",
-			SmartList::Next7Days => "Tasks due the next 7 days",
+			SmartList::All => all_desc.clone(),
+			SmartList::Today => today_desc.clone(),
+			SmartList::Starred => starred_desc.clone(),
+			SmartList::Next7Days => next_7_days_desc.clone(),
 		}
 	}
 

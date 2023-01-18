@@ -1,5 +1,7 @@
 use crate::app::toast;
 use crate::application::plugin::Plugin;
+use crate::fl;
+use adw::prelude::GtkWindowExt;
 use anyhow::Result;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -84,6 +86,7 @@ impl AsyncComponent for Preferences {
 
 	view! {
 		adw::PreferencesWindow {
+			set_title: Some(fl!("preferences")),
 			#[wrap(Some)]
 			#[name = "overlay"]
 			set_content = &adw::ToastOverlay {
@@ -97,11 +100,15 @@ impl AsyncComponent for Preferences {
 						#[wrap(Some)]
 						set_child = &adw::PreferencesPage {
 							add = &adw::PreferencesGroup {
-								set_title: "Appearance",
+								set_title: fl!("appearance"),
 								add = &adw::ComboRow {
-									set_title: "Color scheme",
-									set_subtitle: "Set the color scheme of the app",
-									set_model: Some(&gtk::StringList::new(&["Light", "Dark", "Default"])),
+									set_title: fl!("color-scheme"),
+									set_subtitle: fl!("color-scheme-description"),
+									set_model: Some(&gtk::StringList::new(&[
+										fl!("color-scheme-light"), 
+										fl!("color-scheme-dark"), 
+										fl!("color-scheme-default")
+									])),
 									set_selected: match model.color_scheme {
 										ColorScheme::Light => 0,
 										ColorScheme::Dark => 1,
@@ -118,7 +125,7 @@ impl AsyncComponent for Preferences {
 							},
 							#[name(services)]
 							add = &adw::PreferencesGroup {
-								set_title: "Services",
+								set_title: fl!("services"),
 							},
 						}
 					}
@@ -155,7 +162,7 @@ impl AsyncComponent for Preferences {
 						set_halign: gtk::Align::Center,
 						set_valign: gtk::Align::Center,
 						append = &gtk::Button {
-							set_label: "Install",
+							set_label: fl!("install"),
 							set_visible: !plugin.is_installed(),
 							connect_clicked[sender, plugin] => move |_| {
 								sender.input(PreferencesEvent::InstallPlugin(plugin.clone()))
