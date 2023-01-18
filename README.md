@@ -4,14 +4,14 @@
   <h1>Done</h1>
   <h3>To-do lists reimagined</h3>
   
-  <a href="https://github.com/edfloreshz/done/actions/workflows/rust.yml">
-    <img src="https://img.shields.io/github/workflow/status/edfloreshz/sensei/Rust?logo=GitHub" alt="build"/>
+  <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/edfloreshz/done/ci.yml?style=for-the-badge" alt="build"/>
   </a>
   <a href="https://crates.io/crates/done">
-    <img src="https://img.shields.io/crates/v/done?label=Done" alt="crate"/>
+    <img src="https://img.shields.io/crates/v/done?label=Done&style=for-the-badge" alt="crate"/>
   </a>
    <a href="https://crates.io/crates/done">
-    <img src="https://img.shields.io/crates/d/done" alt="downloads"/>
+    <img src="https://img.shields.io/crates/d/done?style=for-the-badge" alt="downloads"/>
   </a>
   <br/>
   <a href="https://github.com/sponsors/edfloreshz">
@@ -31,7 +31,7 @@
 </div>
 <br/>
 
-Introducing Done, the ultimate task management solution for seamless organization and efficiency. 
+Done, the ultimate task management solution for seamless organization and efficiency. 
 
 Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization. 
 
