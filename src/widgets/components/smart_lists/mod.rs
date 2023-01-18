@@ -18,7 +18,7 @@ use relm4::{
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::{widgets::factory::smart_list::SmartListFactory, fl};
+use crate::{fl, widgets::factory::smart_list::SmartListFactory};
 
 #[derive(Debug)]
 pub struct SmartListModel {

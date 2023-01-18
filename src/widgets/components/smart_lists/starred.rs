@@ -5,22 +5,20 @@ use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::application::plugin::Plugin;
 
-pub struct StarredModel {
+pub struct StarredComponentModel {
 	_tasks: HashMap<Plugin, Vec<Task>>,
 }
 
 #[derive(Debug)]
-pub enum StarredInput {}
+pub enum StarredComponentInput {}
 
 #[derive(Debug)]
-pub enum StarredOutput {}
+pub enum StarredComponentOutput {}
 
 #[relm4::component(pub)]
-impl SimpleComponent for StarredModel {
-	type Input = StarredInput;
-
-	type Output = StarredOutput;
-
+impl SimpleComponent for StarredComponentModel {
+	type Input = StarredComponentInput;
+	type Output = StarredComponentOutput;
 	type Init = ();
 
 	view! {

@@ -13,46 +13,46 @@ use relm4::{
 	RelmWidgetExt,
 };
 
-use crate::widgets::components::content::ContentInput;
+use crate::widgets::components::content::ContentComponentInput;
 use proto_rust::provider::Task;
 
 #[derive(Debug)]
-pub enum TaskInput {
+pub enum TaskFactoryInput {
 	SetCompleted(bool),
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
-	ToggleCompact(bool)
+	ToggleCompact(bool),
 }
 
 #[derive(Debug)]
-pub enum TaskOutput {
+pub enum TaskFactoryOutput {
 	Remove(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
 }
 
 #[derive(Debug, Clone)]
-pub struct TaskData {
+pub struct TaskFactory {
 	pub task: Task,
 	pub service: ProviderClient<Channel>,
 	pub first_load: bool,
-	pub compact: bool
+	pub compact: bool,
 }
 
 #[derive(derive_new::new)]
-pub struct TaskInit {
+pub struct TaskFactoryInit {
 	id: String,
 	service: ProviderClient<Channel>,
-	compact: bool
+	compact: bool,
 }
 
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for TaskData {
-	type ParentInput = ContentInput;
+impl AsyncFactoryComponent for TaskFactory {
+	type ParentInput = ContentComponentInput;
 	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
-	type Input = TaskInput;
-	type Output = TaskOutput;
-	type Init = TaskInit;
+	type Input = TaskFactoryInput;
+	type Output = TaskFactoryOutput;
+	type Init = TaskFactoryInit;
 	type Widgets = TaskWidgets;
 
 	view! {
@@ -72,7 +72,7 @@ impl AsyncFactoryComponent for TaskData {
 				gtk::CheckButton {
 					set_active: self.task.status == 1,
 					connect_toggled[sender] => move |checkbox| {
-						sender.input(TaskInput::SetCompleted(checkbox.is_active()));
+						sender.input(TaskFactoryInput::SetCompleted(checkbox.is_active()));
 					}
 				},
 				gtk::Box {
@@ -86,11 +86,11 @@ impl AsyncFactoryComponent for TaskData {
 						set_text: &self.task.title,
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.buffer();
-							sender.input(TaskInput::ModifyTitle(buffer.text()));
+							sender.input(TaskFactoryInput::ModifyTitle(buffer.text()));
 						},
 						connect_changed[sender] => move |entry| {
 							let buffer = entry.buffer();
-							sender.input(TaskInput::ModifyTitle(buffer.text()));
+							sender.input(TaskFactoryInput::ModifyTitle(buffer.text()));
 						},
 					},
 					#[name(favorite)]
@@ -101,7 +101,7 @@ impl AsyncFactoryComponent for TaskData {
 						set_class_active: ("favorite", self.task.favorite),
 						set_icon_name: "star-filled-rounded-symbolic",
 						connect_toggled[sender, index] => move |_| {
-							sender.input(TaskInput::Favorite(index.clone()));
+							sender.input(TaskFactoryInput::Favorite(index.clone()));
 						}
 					},
 					#[name(delete)]
@@ -110,7 +110,7 @@ impl AsyncFactoryComponent for TaskData {
 						add_css_class: "circular",
 						set_icon_name: "user-trash-full-symbolic",
 						connect_clicked[sender, index] => move |_| {
-							sender.output(TaskOutput::Remove(index.clone()))
+							sender.output(TaskFactoryOutput::Remove(index.clone()))
 						}
 					}
 				}
@@ -148,7 +148,7 @@ impl AsyncFactoryComponent for TaskData {
 			task: Task::default(),
 			service: init.service,
 			first_load: true,
-			compact: init.compact
+			compact: init.compact,
 		};
 		match model.service.read_task(init.id.clone()).await {
 			Ok(response) => match response.into_inner().task {
@@ -177,7 +177,7 @@ impl AsyncFactoryComponent for TaskData {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			TaskInput::SetCompleted(toggled) => {
+			TaskFactoryInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
 					TaskStatus::Completed as i32
 				} else {
@@ -186,37 +186,42 @@ impl AsyncFactoryComponent for TaskData {
 				if !self.first_load {
 					sender
 						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.task.clone()))
+						.send(TaskFactoryOutput::UpdateTask(None, self.task.clone()))
 						.unwrap_or_default();
 				}
 			},
-			TaskInput::Favorite(index) => {
+			TaskFactoryInput::Favorite(index) => {
 				self.task.favorite = !self.task.favorite;
 
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(Some(index), self.task.clone()))
+					.send(TaskFactoryOutput::UpdateTask(
+						Some(index),
+						self.task.clone(),
+					))
 					.unwrap_or_default();
 			},
-			TaskInput::ModifyTitle(title) => {
+			TaskFactoryInput::ModifyTitle(title) => {
 				if title != self.task.title {
 					self.task.title = title;
 					sender
 						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.task.clone()))
+						.send(TaskFactoryOutput::UpdateTask(None, self.task.clone()))
 						.unwrap_or_default();
 				}
 			},
-			TaskInput::ToggleCompact(compact) => self.compact = compact
+			TaskFactoryInput::ToggleCompact(compact) => self.compact = compact,
 		}
 		self.first_load = false;
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		Some(match output {
-			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::UpdateTask(index, task) => {
-				ContentInput::UpdateTask(index, task)
+			TaskFactoryOutput::Remove(index) => {
+				ContentComponentInput::RemoveTask(index)
+			},
+			TaskFactoryOutput::UpdateTask(index, task) => {
+				ContentComponentInput::UpdateTask(index, task)
 			},
 		})
 	}

@@ -1,8 +1,7 @@
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
 	glib_build_tools::compile_resources(
 		"data/resources/",
 		"data/resources/resources.gresource.xml",
 		"resources.gresource",
 	);
-	Ok(())
 }

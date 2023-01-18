@@ -5,17 +5,11 @@ global_conf.set_quoted('PROFILE', profile)
 global_conf.set_quoted('VERSION', version + version_suffix)
 global_conf.set_quoted('GETTEXT_PACKAGE', gettext_package)
 global_conf.set_quoted('LOCALEDIR', localedir)
+
 config = configure_file(
-  input: 'config.rs.in',
-  output: 'config.rs',
+  input: 'info.rs.in',
+  output: 'info.rs',
   configuration: global_conf
-)
-# Copy the config.rs output to the source directory.
-run_command(
-  'cp',
-  meson.project_build_root() / 'src' / 'application' / 'config.rs',
-  meson.project_source_root() / 'src' / 'config.rs',
-  check: true
 )
 
 cargo_options = [ '--manifest-path', meson.project_source_root() / 'Cargo.toml' ]

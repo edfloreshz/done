@@ -1,5 +1,5 @@
 use crate::application::plugin::Plugin;
-use crate::widgets::factory::list::ListInit;
+use crate::widgets::factory::list::ListFactoryInit;
 use adw::prelude::{ExpanderRowExt, PreferencesRowExt};
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -14,56 +14,56 @@ use relm4::gtk::prelude::WidgetExt;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 
-use crate::widgets::components::preferences::Preferences;
-use crate::widgets::components::sidebar::SidebarInput;
-use crate::widgets::factory::list::ListData;
-use crate::widgets::popover::new_list::{NewListModel, NewListOutput};
+use crate::widgets::components::list_entry::{ListEntryModel, ListEntryOutput};
+use crate::widgets::components::preferences::PreferencesComponent;
+use crate::widgets::components::sidebar::SidebarComponentInput;
+use crate::widgets::factory::list::ListFactoryModel;
 
 #[allow(dead_code)]
 #[derive(Debug)]
-pub struct ProviderModel {
+pub struct PluginFactoryModel {
 	pub plugin: Plugin,
 	pub service: ProviderClient<Channel>,
 	pub enabled: bool,
 	pub lists: Vec<String>,
-	pub list_factory: AsyncFactoryVecDeque<ListData>,
-	pub new_list_controller: Controller<NewListModel>,
-}
-
-#[derive(derive_new::new)]
-pub struct PluginInit {
-	plugin: Plugin,
-	service: ProviderClient<Channel>,
+	pub list_factory: AsyncFactoryVecDeque<ListFactoryModel>,
+	pub new_list_controller: Controller<ListEntryModel>,
 }
 
 #[derive(Debug)]
-pub enum ProviderInput {
+pub enum PluginFactoryInput {
 	RequestAddList(usize, String),
 	AddList(List),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
-	ListSelected(ListData),
+	ListSelected(ListFactoryModel),
 	Notify(String),
 	Enable,
 	Disable,
 }
 
 #[derive(Debug)]
-pub enum ProviderOutput {
+pub enum PluginFactoryOutput {
 	AddListToProvider(usize, String, String),
-	ListSelected(ListData),
+	ListSelected(ListFactoryModel),
 	Notify(String),
 	Forward,
 }
 
+#[derive(derive_new::new)]
+pub struct PluginFactoryInit {
+	plugin: Plugin,
+	service: ProviderClient<Channel>,
+}
+
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for ProviderModel {
-	type ParentInput = SidebarInput;
+impl AsyncFactoryComponent for PluginFactoryModel {
+	type ParentInput = SidebarComponentInput;
 	type ParentWidget = adw::PreferencesGroup;
 	type CommandOutput = ();
-	type Input = ProviderInput;
-	type Output = ProviderOutput;
-	type Init = PluginInit;
+	type Input = PluginFactoryInput;
+	type Output = PluginFactoryOutput;
+	type Init = PluginFactoryInit;
 	type Widgets = ProviderWidgets;
 
 	view! {
@@ -101,7 +101,7 @@ impl AsyncFactoryComponent for ProviderModel {
 	) -> Self {
 		let plugin_preferences = Project::open("dev", "edfloreshz", "done")
 			.unwrap()
-			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+			.get_file_as::<PreferencesComponent>("preferences", FileFormat::JSON)
 			.unwrap()
 			.plugins;
 		let index = index.current_index();
@@ -118,11 +118,11 @@ impl AsyncFactoryComponent for ProviderModel {
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
 			),
-			new_list_controller: NewListModel::builder().launch(()).forward(
+			new_list_controller: ListEntryModel::builder().launch(()).forward(
 				sender.input_sender(),
 				move |message| match message {
-					NewListOutput::AddTaskListToSidebar(name) => {
-						ProviderInput::RequestAddList(index, name)
+					ListEntryOutput::AddTaskListToSidebar(name) => {
+						PluginFactoryInput::RequestAddList(index, name)
 					},
 				},
 			),
@@ -145,7 +145,7 @@ impl AsyncFactoryComponent for ProviderModel {
 			self
 				.list_factory
 				.guard()
-				.push_back(ListInit::new(list.clone(), self.service.clone()));
+				.push_back(ListFactoryInit::new(list.clone(), self.service.clone()));
 		}
 
 		widgets
@@ -157,56 +157,66 @@ impl AsyncFactoryComponent for ProviderModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ProviderInput::DeleteTaskList(index, list_id) => {
+			PluginFactoryInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());
 				let index = self
 					.lists
 					.iter()
-					.position(|list_id| list_id == list_id)
+					.position(|list_id| list_id.eq(list_id))
 					.unwrap();
 				self.lists.remove(index);
 				info!("Deleted task list with id: {}", list_id);
 			},
-			ProviderInput::RequestAddList(index, name) => sender.output(
-				ProviderOutput::AddListToProvider(index, self.plugin.id.clone(), name),
-			),
-			ProviderInput::AddList(list) => {
-				self
-					.list_factory
-					.guard()
-					.push_back(ListInit::new(list.id.clone(), self.service.clone()));
+			PluginFactoryInput::RequestAddList(index, name) => {
+				sender.output(PluginFactoryOutput::AddListToProvider(
+					index,
+					self.plugin.id.clone(),
+					name,
+				))
+			},
+			PluginFactoryInput::AddList(list) => {
+				self.list_factory.guard().push_back(ListFactoryInit::new(
+					list.id.clone(),
+					self.service.clone(),
+				));
 				self.lists.push(list.id);
-				info!("List added to {}", self.plugin.name)
+				info!("List added to {}", self.plugin.name);
 			},
-			ProviderInput::Forward => sender.output(ProviderOutput::Forward),
-			ProviderInput::ListSelected(list) => {
-				sender.output(ProviderOutput::ListSelected(list.clone()));
-				info!("List selected: {}", list.list.name)
+			PluginFactoryInput::Forward => {
+				sender.output(PluginFactoryOutput::Forward)
 			},
-			ProviderInput::Notify(msg) => sender.output(ProviderOutput::Notify(msg)),
-			ProviderInput::Enable => {
+			PluginFactoryInput::ListSelected(list) => {
+				sender.output(PluginFactoryOutput::ListSelected(list.clone()));
+				info!("List selected: {}", list.list.name);
+			},
+			PluginFactoryInput::Notify(msg) => {
+				sender.output(PluginFactoryOutput::Notify(msg))
+			},
+			PluginFactoryInput::Enable => {
 				self.enabled = true;
 
 				self.list_factory.guard().clear();
 				for list in &self.lists {
-					self
-						.list_factory
-						.guard()
-						.push_back(ListInit::new(list.clone(), self.service.clone()));
+					self.list_factory.guard().push_back(ListFactoryInit::new(
+						list.clone(),
+						self.service.clone(),
+					));
 				}
 			},
-			ProviderInput::Disable => self.enabled = false,
+			PluginFactoryInput::Disable => self.enabled = false,
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
-			ProviderOutput::ListSelected(list) => SidebarInput::ListSelected(list),
-			ProviderOutput::Forward => SidebarInput::Forward,
-			ProviderOutput::AddListToProvider(index, provider_id, name) => {
-				SidebarInput::AddListToProvider(index, provider_id, name)
+			PluginFactoryOutput::ListSelected(list) => {
+				SidebarComponentInput::ListSelected(list)
 			},
-			ProviderOutput::Notify(msg) => SidebarInput::Notify(msg),
+			PluginFactoryOutput::Forward => SidebarComponentInput::Forward,
+			PluginFactoryOutput::AddListToProvider(index, provider_id, name) => {
+				SidebarComponentInput::AddListToProvider(index, provider_id, name)
+			},
+			PluginFactoryOutput::Notify(msg) => SidebarComponentInput::Notify(msg),
 		};
 		Some(output)
 	}

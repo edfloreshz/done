@@ -6,14 +6,13 @@ use relm4::{ComponentParts, ComponentSender, SimpleComponent};
 use crate::fl;
 
 #[derive(Debug)]
-pub struct Welcome {}
+pub struct WelcomeComponent {}
 
 #[relm4::component(pub)]
-impl SimpleComponent for Welcome {
+impl SimpleComponent for WelcomeComponent {
 	type Input = ();
 	type Output = ();
 	type Init = ();
-	type Widgets = WelcomeWidgets;
 
 	view! {
 		#[root]
@@ -53,7 +52,7 @@ impl SimpleComponent for Welcome {
 		_sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let widgets = view_output!();
-		let model = Welcome {};
+		let model = WelcomeComponent {};
 		ComponentParts { model, widgets }
 	}
 }
