@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct Preferences {
 	pub plugins: Vec<PluginPreferences>,
 	pub color_scheme: ColorScheme,
-	pub compact: bool
+	pub compact: bool,
 }
 
 impl Default for Preferences {
@@ -38,7 +38,7 @@ impl Default for Preferences {
 		Self {
 			plugins,
 			color_scheme: ColorScheme::Default,
-			compact: false
+			compact: false,
 		}
 	}
 }
@@ -71,7 +71,7 @@ pub enum PreferencesEvent {
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
-	ToggleCompact
+	ToggleCompact(bool)
 }
 
 #[derive(Debug)]
@@ -133,10 +133,9 @@ impl AsyncComponent for Preferences {
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,
 										append = &gtk::Switch {
-											#[watch]
 											set_active: model.compact,
-											connect_state_set[sender] => move |_, _| {
-												sender.input(PreferencesEvent::ToggleCompact);
+											connect_state_set[sender] => move |_, state| {
+												sender.input(PreferencesEvent::ToggleCompact(state));
 												Default::default()
 											}
 										}
@@ -291,8 +290,8 @@ impl AsyncComponent for Preferences {
 				self.color_scheme = ColorScheme::Default;
 				update_preferences(self).unwrap()
 			},
-			PreferencesEvent::ToggleCompact => {
-				self.compact = !self.compact;
+			PreferencesEvent::ToggleCompact(compact) => {
+				self.compact = compact;
 				update_preferences(self).unwrap();
 				sender.output(PreferencesOutput::ToggleCompact(self.compact)).unwrap()
 			}
