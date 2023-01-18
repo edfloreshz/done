@@ -6,7 +6,7 @@ use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
 use crate::application::plugin::Plugin;
 
 pub struct StarredModel {
-	tasks: HashMap<Plugin, Vec<Task>>,
+	_tasks: HashMap<Plugin, Vec<Task>>,
 }
 
 #[derive(Debug)]
@@ -38,7 +38,7 @@ impl SimpleComponent for StarredModel {
 		_sender: relm4::ComponentSender<Self>,
 	) -> relm4::ComponentParts<Self> {
 		let model = Self {
-			tasks: HashMap::new(),
+			_tasks: HashMap::new(),
 		};
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
