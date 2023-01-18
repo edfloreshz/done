@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct Preferences {
 	pub plugins: Vec<PluginPreferences>,
 	pub color_scheme: ColorScheme,
+	pub compact: bool
 }
 
 impl Default for Preferences {
@@ -37,6 +38,7 @@ impl Default for Preferences {
 		Self {
 			plugins,
 			color_scheme: ColorScheme::Default,
+			compact: false
 		}
 	}
 }
@@ -69,12 +71,14 @@ pub enum PreferencesEvent {
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
+	ToggleCompact
 }
 
 #[derive(Debug)]
 pub enum PreferencesOutput {
 	EnablePluginOnSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
+	ToggleCompact(bool)
 }
 
 #[relm4::component(pub async)]
@@ -101,7 +105,7 @@ impl AsyncComponent for Preferences {
 						set_child = &adw::PreferencesPage {
 							add = &adw::PreferencesGroup {
 								set_title: fl!("appearance"),
-								add = &adw::ComboRow {
+								adw::ComboRow {
 									set_title: fl!("color-scheme"),
 									set_subtitle: fl!("color-scheme-description"),
 									set_model: Some(&gtk::StringList::new(&[
@@ -121,6 +125,22 @@ impl AsyncComponent for Preferences {
 											_ => sender.input_sender().send(PreferencesEvent::SetDefaultColorScheme).unwrap(),
 										}
 									},
+								},
+								adw::ActionRow {
+									set_title: fl!("compact"),
+									set_subtitle: fl!("compact-description"),
+									add_suffix = &gtk::Box {
+										set_halign: gtk::Align::Center,
+										set_valign: gtk::Align::Center,
+										append = &gtk::Switch {
+											#[watch]
+											set_active: model.compact,
+											connect_state_set[sender] => move |_, _| {
+												sender.input(PreferencesEvent::ToggleCompact);
+												Default::default()
+											}
+										}
+									}
 								}
 							},
 							#[name(services)]
@@ -271,6 +291,11 @@ impl AsyncComponent for Preferences {
 				self.color_scheme = ColorScheme::Default;
 				update_preferences(self).unwrap()
 			},
+			PreferencesEvent::ToggleCompact => {
+				self.compact = !self.compact;
+				update_preferences(self).unwrap();
+				sender.output(PreferencesOutput::ToggleCompact(self.compact)).unwrap()
+			}
 		}
 		self.update_view(widgets, sender)
 	}

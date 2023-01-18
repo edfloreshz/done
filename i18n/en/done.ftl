@@ -40,6 +40,8 @@ open-preferences = Open preferences to enable or install a task service.
 # Preferences
 preferences = Preferences
 appearance = Appearance
+compact = Compact tasks
+compact-description = Toggle this to make tasks smaller
 color-scheme = Color scheme
 color-scheme-description = Set the color scheme of the app
 color-scheme-light = Light
