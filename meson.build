@@ -13,6 +13,7 @@ base_id = 'dev.edfloreshz.Done'
 dependency('glib-2.0', version: '>= 2.66')
 dependency('gio-2.0', version: '>= 2.66')
 dependency('gtk4', version: '>= 4.0.0')
+dependency('protobuf', version: '>=0.29.2')
 
 glib_compile_resources = find_program('glib-compile-resources', required: true)
 glib_compile_schemas = find_program('glib-compile-schemas', required: true)
