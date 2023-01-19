@@ -97,8 +97,14 @@ To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 - [ ] Export tasks
 
 ## Dependencies to build
+
+Cargo:
 - gtk4
 - libadwaita
+
+Meson:
+- cmake
+- gettext
 - pkg-config
 
 Ubuntu 22.04:
