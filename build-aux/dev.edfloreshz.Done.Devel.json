@@ -14,7 +14,7 @@
         "--socket=fallback-x11",
         "--socket=wayland",
         "--device=dri",
-        "--filesystem=home"
+        "--filesystem=xdg-run/gvfsd"
     ],
     "build-options" : {
         "append-path" : "/usr/lib/sdk/rust-stable/bin",
