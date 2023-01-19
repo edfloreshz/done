@@ -883,8 +883,9 @@ dependencies = [
 
 [[package]]
 name = "glib-build-tools"
-version = "0.17.0"
-source = "git+https://github.com/gtk-rs/gtk-rs-core#776120e820ecedce00d5af7509e87b5a8a92c575"
+version = "0.16.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "251935cb159350458a627642b0852a7fb8e027e3c5916dc2cebcd70f025de3fc"
 
 [[package]]
 name = "glib-macros"

@@ -10,8 +10,8 @@
     <file alias="star-filled-rounded-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/star-filled-rounded-symbolic.svg</file>
     <file alias="user-trash-full-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-trash-full-symbolic.svg</file>
     <file alias="user-trash-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-trash-symbolic.svg</file>
-    <file alias="leaf.png" preprocess="xml-stripblanks">../icons/actions/leaf.png</file>
-    <file alias="paper-plane.png" preprocess="xml-stripblanks">../icons/actions/paper-plane.png</file>
+    <file alias="leaf.png">../icons/actions/leaf.png</file>
+    <file alias="paper-plane.png">../icons/actions/paper-plane.png</file>
     <file alias="document-save-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/document-save-symbolic.svg</file>
     <file alias="sun-alt-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/sun-alt-symbolic.svg</file>
     <file alias="org.gnome.Calendar.Devel-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/org.gnome.Calendar.Devel-symbolic.svg</file>
