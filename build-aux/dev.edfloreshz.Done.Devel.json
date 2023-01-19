@@ -1,7 +1,7 @@
 {
     "app-id" : "dev.edfloreshz.Done.Devel",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "42",
+    "runtime-version" : "43",
     "sdk" : "org.gnome.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.rust-stable"
@@ -44,8 +44,8 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "branch" : "main",
-                    "url" : "https://github.com/edfloreshz/do.git"
+                    "branch" : "beta",
+                    "url" : "https://github.com/done-devs/done.git"
                 }
             ]
         }
