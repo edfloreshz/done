@@ -271,7 +271,12 @@ impl AsyncComponent for PreferencesComponent {
 					}
 				}
 			},
-			PreferencesComponentEvent::InstallPlugin(_plugin) => todo!(),
+			PreferencesComponentEvent::InstallPlugin(plugin) => {
+				match plugin.install().await {
+					Ok(_) => todo!(),
+					Err(err) => error!("{err:?}"),
+				}
+			},
 			PreferencesComponentEvent::SetDarkColorScheme => {
 				adw::StyleManager::default()
 					.set_color_scheme(adw::ColorScheme::ForceDark);
