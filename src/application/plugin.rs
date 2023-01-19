@@ -1,9 +1,13 @@
 use anyhow::Result;
+use directories::ProjectDirs;
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::{Empty, List};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::io::Write;
+use std::path::PathBuf;
 use std::process::Command;
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
@@ -88,6 +92,12 @@ impl Plugin {
 		is_running
 	}
 
+	pub async fn install(&self) -> Result<()> {
+		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+		download_file(&self.download_url, project.data_dir().join("bin")).await?;
+		Ok(())
+	}
+
 	pub fn is_installed(&self) -> bool {
 		Command::new(&self.process_name).spawn().ok().is_some()
 	}
@@ -103,4 +113,13 @@ impl Plugin {
 		let response = connector.read_all_list_ids(Empty {}).await?.into_inner();
 		Ok(response.lists)
 	}
+}
+
+// Download a file from a URL and save it to a file
+async fn download_file(url: &str, path: PathBuf) -> Result<(), reqwest::Error> {
+	let client = Client::new();
+	let response = client.get(url).send().await?.bytes().await?.to_vec();
+	let mut file = std::fs::File::create(path).unwrap();
+	file.write_all(&response).unwrap();
+	Ok(())
 }
