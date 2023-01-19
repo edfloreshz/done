@@ -103,11 +103,15 @@ To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 
 Ubuntu 22.04:
 ```bash
-sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev
+sudo apt install libadwaita-1-dev libgtk-4-dev protobuf-compiler
 ```
 Arch Linux:
 ```bash
-sudo pacman -S libadwaita gtk4 sqlite
+sudo pacman -S libadwaita gtk4 protobuf
+```
+Fedora:
+```
+sudo dnf install libadwaita-devel gtk4-devel protobuf-compiler
 ```
 
 ## Debug
