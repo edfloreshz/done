@@ -15,7 +15,7 @@ In order to start, it is necessary to review the generated code specific to your
 The required resources are currently available in the following languages: 
 
 - [Rust](https://github.com/done-devs/proto-rust)
-- [Go](https://github.com/done-devs/proto-rust)
+- [Go](https://github.com/done-devs/proto-go)
 
 Additional languages will be made available in the near future.
 
