@@ -1,11 +1,11 @@
 @media (prefers-color-scheme: dark) {
     #screenshot {
-        content: url("../data/resources/screenshots/dark.png");
+        content: url("dark.png");
     }
 }
 
 @media (prefers-color-scheme: light) {
     #screenshot {
-        content: url("../data/resources/screenshots/tasks.png");
+        content: url("tasks.png");
     }
 }
