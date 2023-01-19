@@ -1,11 +1,11 @@
 @media (prefers-color-scheme: dark) {
     #screenshot {
-        content: url("https://github.com/done-devs/done/blob/70cc340795421b1c27686776c5f6160f0b56a83a/data/resources/screenshots/dark.png?raw=true");
+        content: url("../data/resources/screenshots/dark.png");
     }
 }
 
 @media (prefers-color-scheme: light) {
     #screenshot {
-        content: url("https://github.com/done-devs/done/blob/70cc340795421b1c27686776c5f6160f0b56a83a/data/resources/screenshots/tasks.png?raw=true");
+        content: url("../data/resources/screenshots/tasks.png");
     }
 }
