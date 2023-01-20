@@ -1,10 +1,13 @@
 use super::smart_lists::{SmartList, SmartListModel, SmartListOutput};
 use crate::application::plugin::Plugin;
 use crate::fl;
+use crate::widgets::components::preferences::Preferences;
 use crate::widgets::factory::list::ListFactoryModel;
 use crate::widgets::factory::plugin::{
 	PluginFactoryInit, PluginFactoryInput, PluginFactoryModel,
 };
+use libset::format::FileFormat;
+use libset::project::Project;
 use proto_rust::provider::List;
 use relm4::adw::traits::PreferencesGroupExt;
 use relm4::component::{
@@ -30,6 +33,7 @@ pub enum SidebarComponentInput {
 	ListSelected(ListFactoryModel),
 	EnableService(Plugin),
 	DisableService(Plugin),
+	AddPluginToSidebar(Plugin),
 	Forward,
 	Notify(String),
 	SelectSmartList(SmartList),
@@ -130,15 +134,30 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 		let widgets = view_output!();
 
-		for plugin in Plugin::get_plugins().unwrap() {
-			if let Ok(service) = plugin.connect().await {
+		let project = Project::open("dev", "edfloreshz", "done").unwrap();
+		let preferences = project
+			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+			.unwrap();
+
+		for plugin_preference in preferences.plugins {
+			if let Ok(service) = plugin_preference.plugin.connect().await {
 				model
 					.provider_factory
 					.guard()
-					.push_back(PluginFactoryInit::new(plugin.clone(), service));
-				info!("Added {:?} service to the sidebar", plugin.name);
+					.push_back(PluginFactoryInit::new(
+						plugin_preference.plugin.clone(),
+						plugin_preference.enabled,
+						service,
+					));
+				info!(
+					"Added {:?} service to the sidebar",
+					plugin_preference.plugin.name
+				);
 			} else {
-				error!("{} service is not reachable.", plugin.name);
+				error!(
+					"{} service is not reachable.",
+					plugin_preference.plugin.name
+				);
 			}
 		}
 
@@ -194,30 +213,55 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					},
 				}
 			},
+			SidebarComponentInput::AddPluginToSidebar(plugin) => {
+				match plugin.start() {
+					Ok(_) => {
+						if let Ok(service) = plugin.connect().await {
+							self
+								.provider_factory
+								.guard()
+								.push_back(PluginFactoryInit::new(
+									plugin.clone(),
+									false,
+									service,
+								));
+							info!("Added {:?} service to the sidebar", plugin.name);
+						} else {
+							error!("{} service is not reachable.", plugin.name);
+						}
+					},
+					Err(err) => sender
+						.output_sender()
+						.send(SidebarComponentOutput::Notify(err.to_string()))
+						.unwrap(),
+				}
+			},
 			SidebarComponentInput::EnableService(plugin) => {
-				if plugin.is_running() {
-					let index = Plugin::get_plugins()
-						.unwrap()
-						.iter()
-						.position(|p| p == &plugin)
-						.unwrap();
+				let index = self
+					.provider_factory
+					.guard()
+					.iter()
+					.position(|p| p.unwrap().plugin == plugin);
+				if let Some(index) = index {
 					self
 						.provider_factory
 						.send(index, PluginFactoryInput::Enable);
 				}
 			},
 			SidebarComponentInput::DisableService(plugin) => {
-				let index = Plugin::get_plugins()
-					.unwrap()
-					.iter()
-					.position(|p| p == &plugin)
-					.unwrap();
-				self
+				let index = self
 					.provider_factory
-					.send(index, PluginFactoryInput::Disable);
-				sender
-					.output(SidebarComponentOutput::DisablePlugin)
-					.unwrap_or_default();
+					.guard()
+					.iter()
+					.position(|p| p.unwrap().plugin == plugin);
+				if let Some(index) = index {
+					self
+						.provider_factory
+						.send(index, PluginFactoryInput::Disable);
+					sender
+						.output(SidebarComponentOutput::DisablePlugin)
+						.unwrap_or_default();
+				}
 			},
 			SidebarComponentInput::ListSelected(list) => {
 				sender

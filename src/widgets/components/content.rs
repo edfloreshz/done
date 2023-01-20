@@ -1,5 +1,5 @@
 use crate::application::plugin::Plugin;
-use crate::widgets::components::preferences::PreferencesComponent;
+use crate::widgets::components::preferences::Preferences;
 use crate::widgets::components::task_entry::{
 	TaskEntryComponent, TaskEntryComponentInput, TaskEntryComponentOutput,
 };
@@ -130,7 +130,7 @@ impl AsyncComponent for ContentComponentModel {
 		let service = None;
 		let compact = Project::open("dev", "edfloreshz", "done")
 			.unwrap()
-			.get_file_as::<PreferencesComponent>("preferences", FileFormat::JSON)
+			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
 			.unwrap()
 			.compact;
 		let all = AllComponentModel::builder()
