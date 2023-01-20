@@ -93,6 +93,8 @@ To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 ### Backups
 - [ ] Export tasks
 
+# Build
+
 ## Dependencies to build
 
 Cargo:
@@ -118,10 +120,13 @@ sudo dnf install libadwaita-devel gtk4-devel protobuf-compiler
 ```
 
 ## Debug
-To enable logging set `RUST_LOG` to `done=info`
+To enable logging set `RUST_LOG` to `info`.
 ```bash
-RUST_LOG=done=info
+RUST_LOG=info
 ```
+
+## Deploy
+To deploy the app, head to [RELEASE.md](RELEASE.md)
 
 Copyright and licensing
 -----------------------
