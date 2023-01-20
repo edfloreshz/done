@@ -12,6 +12,14 @@ config = configure_file(
   configuration: global_conf
 )
 
+# Copy the info.rs output to the source directory.
+run_command(
+  'cp',
+  meson.project_build_root() / 'src' / 'application' / 'info.rs',
+  meson.project_source_root() / 'src' / 'application' / 'info.rs',
+  check: true
+)
+
 cargo_options = [ '--manifest-path', meson.project_source_root() / 'Cargo.toml' ]
 cargo_options += [ '--target-dir', meson.project_build_root() / 'src' ]
 
