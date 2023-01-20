@@ -129,17 +129,20 @@ impl Plugin {
 }
 
 // Download a file from a URL and save it to a file
-async fn download_file(
-	url: &str,
-	path: PathBuf,
-) -> Result<PathBuf, reqwest::Error> {
+async fn download_file(url: &str, path: PathBuf) -> Result<PathBuf> {
 	let client = Client::new();
-	let response = client.get(url).send().await?.bytes().await?.to_vec();
-	std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-	let mut file = std::fs::File::create(path.clone()).unwrap();
-	file
-		.set_permissions(std::fs::Permissions::from_mode(0o755))
-		.unwrap();
-	file.write_all(&response).unwrap();
-	Ok(path)
+	let response = client.get(url).send().await?;
+	let status = response.status();
+	if status == 200 {
+		let bytes = response.bytes().await?.to_vec();
+		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+		let mut file = std::fs::File::create(path.clone()).unwrap();
+		file
+			.set_permissions(std::fs::Permissions::from_mode(0o755))
+			.unwrap();
+		file.write_all(&bytes).unwrap();
+		Ok(path)
+	} else {
+		Err(anyhow::anyhow!("This service is unavailable."))
+	}
 }

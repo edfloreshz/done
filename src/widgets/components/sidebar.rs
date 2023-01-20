@@ -44,7 +44,7 @@ pub enum SidebarComponentInput {
 pub enum SidebarComponentOutput {
 	ListSelected(ListFactoryModel),
 	Forward,
-	Notify(String),
+	Notify(String, u32),
 	DisablePlugin,
 	SelectSmartList(SmartList),
 }
@@ -188,19 +188,19 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 											.send(index, PluginFactoryInput::AddList(list));
 									}
 									sender
-										.output(SidebarComponentOutput::Notify(response.message))
+										.output(SidebarComponentOutput::Notify(response.message, 1))
 										.unwrap_or_default();
 								},
 								Err(err) => {
 									sender
-										.output(SidebarComponentOutput::Notify(err.to_string()))
+										.output(SidebarComponentOutput::Notify(err.to_string(), 2))
 										.unwrap_or_default();
 								},
 							}
 						},
 						Err(err) => {
 							sender
-								.output(SidebarComponentOutput::Notify(err.to_string()))
+								.output(SidebarComponentOutput::Notify(err.to_string(), 2))
 								.unwrap_or_default();
 						},
 					},
@@ -208,6 +208,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						sender
 							.output(SidebarComponentOutput::Notify(
 								"Provider not found".to_string(),
+								2,
 							))
 							.unwrap_or_default();
 					},
@@ -232,7 +233,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					},
 					Err(err) => sender
 						.output_sender()
-						.send(SidebarComponentOutput::Notify(err.to_string()))
+						.send(SidebarComponentOutput::Notify(err.to_string(), 2))
 						.unwrap(),
 				}
 			},
@@ -275,7 +276,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::Notify(msg) => {
 				sender
-					.output(SidebarComponentOutput::Notify(msg))
+					.output(SidebarComponentOutput::Notify(msg, 2))
 					.unwrap_or_default();
 			},
 			SidebarComponentInput::SelectSmartList(list) => sender

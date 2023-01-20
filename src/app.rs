@@ -60,7 +60,7 @@ impl App {
 #[derive(Debug)]
 pub enum Event {
 	TaskListSelected(ListFactoryModel),
-	Notify(String),
+	Notify(String, u32),
 	EnablePluginOnSidebar(Plugin),
 	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -129,7 +129,9 @@ impl Component for App {
 					Event::TaskListSelected(list)
 				},
 				SidebarComponentOutput::Forward => Event::Forward,
-				SidebarComponentOutput::Notify(msg) => Event::Notify(msg),
+				SidebarComponentOutput::Notify(msg, timeout) => {
+					Event::Notify(msg, timeout)
+				},
 				SidebarComponentOutput::SelectSmartList(list) => {
 					Event::SelectSmartList(list)
 				},
@@ -138,7 +140,9 @@ impl Component for App {
 		let content_controller = ContentComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
-				ContentComponentOutput::Notify(msg) => Event::Notify(msg),
+				ContentComponentOutput::Notify(msg, timeout) => {
+					Event::Notify(msg, timeout)
+				},
 			});
 
 		let preferences_controller = PreferencesComponentModel::builder()
@@ -242,7 +246,9 @@ impl Component for App {
 					.send(ContentComponentInput::DisablePlugin)
 					.unwrap_or_default();
 			},
-			Event::Notify(msg) => widgets.overlay.add_toast(&toast(msg)),
+			Event::Notify(msg, timeout) => {
+				widgets.overlay.add_toast(&toast(msg, timeout))
+			},
 			Event::Folded => {
 				if self.page_title.is_some() {
 					widgets.leaflet.set_visible_child(&widgets.content);
@@ -413,9 +419,9 @@ impl Component for App {
 	}
 }
 
-pub fn toast<T: ToString>(title: T) -> Toast {
+pub fn toast<T: ToString>(title: T, timeout: u32) -> Toast {
 	Toast::builder()
 		.title(title.to_string().as_str())
-		.timeout(1)
+		.timeout(timeout)
 		.build()
 }
