@@ -85,7 +85,7 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "branch" : "beta",
+                    "branch" : "main",
                     "url" : "https://github.com/done-devs/done.git"
                 }
             ]
