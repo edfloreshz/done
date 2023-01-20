@@ -5,10 +5,10 @@ alpha-warning = Erken aşama geliştirme sürümünü çalıştırıyorsunuz. Ç
 
 # New task dialog
 new-task = Yeni görev...
-add-to-today = Add to Today
-set-time = Set time
-set-due-date = Set due date
-more-details = More details
+add-to-today = Bugünʼe Ekle
+set-time = Süreyi ayarla
+set-due-date = Bitiş tarihini ayarla
+more-details = Daha fazla ayrıntı
 
 # New list dialog
 list-name = Liste adı
@@ -18,10 +18,10 @@ select-list = Yan panelden liste seç
 tasks-here = Görevler burada görünecek
 
 # Main menu
-preferences = Preferences
-keyboard-shortcuts = Keyboard shortcuts
-about-done = About Done
-quit = Quit
+preferences = Tercihler
+keyboard-shortcuts = Klavye Kısayolları
+about-done = Done Hakkında
+quit = Çık
 
 # Sidebar
 all = Tümü
@@ -34,21 +34,21 @@ next-7-days = Gelecek 7 Gün
 next-7-days-desc = Gelecek 7 Gün yapılacaklar
 
 # Empty sidebar
-empty-sidebar = Looking quite empty in here...
-open-preferences = Open preferences to add a provider
+empty-sidebar = Burası oldukça boş görünüyor…
+open-preferences = Sağlayıcı eklemek için tercihleri aç
 
 # Preferences
-preferences = Preferences
-appearance = Appearance
-compact = Compact tasks
-compact-description = Toggle this to make tasks smaller
-color-scheme = Color scheme
-color-scheme-description = Set the color scheme of the app
-color-scheme-light = Light
-color-scheme-dark = Dark
-color-scheme-default = System
-services = Services
-install = Install
+preferences = Tercihler
+appearance = Görünüm
+compact = Sıkışık görevler
+compact-description = Görevleri küçültmek için bunu açıp/kapatın
+color-scheme = Renk şeması
+color-scheme-description = Uygulamanın renk şemasını ayarla
+color-scheme-light = Açık
+color-scheme-dark = Koyu
+color-scheme-default = Sistem
+services = Servisler
+install = Kur
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
