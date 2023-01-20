@@ -30,12 +30,11 @@
   <h4>This is still in very early development. Be aware it is a work in progress and far from complete yet.</h4>
   
 </div>
-<br/>
-<div align="center">
-  <img src="https://raw.githubusercontent.com/done-devs/done/beta/data/resources/screenshots/tasks.png"/>
-</div>
 
- Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
+  ![Screenshot](./data/resources/screenshots/tasks.png#gh-light-mode-only)
+  ![Screenshot](./data/resources/screenshots/dark.png#gh-dark-mode-only)
+
+Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
 
 
 
