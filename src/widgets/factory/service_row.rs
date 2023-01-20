@@ -42,40 +42,39 @@ impl AsyncFactoryComponent for ServiceRowModel {
 	type Input = ServiceRowInput;
 	type Output = ServiceRowOutput;
 	type Init = PluginPreferences;
-	type Widgets = ProviderWidgets;
 
 	view! {
-				#[root]
+		#[root]
 		#[name(service)]
-				adw::ActionRow {
-						set_title: &self.plugin.name,
-						set_subtitle: &self.plugin.description,
-						add_suffix = &gtk::Box {
-								set_halign: gtk::Align::Center,
-								set_valign: gtk::Align::Center,
-								append = &gtk::Button {
-										set_label: fl!("install"),
-										#[watch]
-										set_visible: !self.installed,
-										connect_clicked[sender, index] => move |_| {
-												sender.input(ServiceRowInput::InstallPlugin(index.clone()));
+		adw::ActionRow {
+				set_title: &self.plugin.name,
+				set_subtitle: &self.plugin.description,
+				add_suffix = &gtk::Box {
+						set_halign: gtk::Align::Center,
+						set_valign: gtk::Align::Center,
+						append = &gtk::Button {
+								set_label: fl!("install"),
+								#[watch]
+								set_visible: !self.installed,
+								connect_clicked[sender, index] => move |_| {
+										sender.input(ServiceRowInput::InstallPlugin(index.clone()));
+								}
+						},
+						append = &gtk::Switch {
+								#[watch]
+								set_visible: self.installed,
+								set_active: self.enabled,
+								connect_state_set[sender, index] => move |_, state| {
+										if state {
+												sender.input(ServiceRowInput::EnablePlugin(index.clone()));
+										} else {
+												sender.input(ServiceRowInput::DisablePlugin(index.clone()));
 										}
-								},
-								append = &gtk::Switch {
-										#[watch]
-										set_visible: self.installed,
-										set_active: self.enabled,
-										connect_state_set[sender, index] => move |_, state| {
-												if state {
-														sender.input(ServiceRowInput::EnablePlugin(index.clone()));
-												} else {
-														sender.input(ServiceRowInput::DisablePlugin(index.clone()));
-												}
-												gtk::Inhibit::default()
-										}
+										gtk::Inhibit::default()
 								}
 						}
 				}
+		}
 	}
 
 	async fn init_model(
