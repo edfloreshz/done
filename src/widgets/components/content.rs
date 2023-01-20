@@ -57,7 +57,7 @@ pub enum ContentComponentInput {
 
 #[derive(Debug)]
 pub enum ContentComponentOutput {
-	Notify(String),
+	Notify(String, u32),
 }
 
 #[relm4::component(pub async)]
@@ -205,12 +205,12 @@ impl AsyncComponent for ContentComponentModel {
 							));
 						}
 						sender
-							.output(ContentComponentOutput::Notify(response.message))
+							.output(ContentComponentOutput::Notify(response.message, 1))
 							.unwrap_or_default();
 					},
 					Err(err) => {
 						sender
-							.output(ContentComponentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string(), 2))
 							.unwrap_or_default();
 					},
 				}
@@ -231,12 +231,12 @@ impl AsyncComponent for ContentComponentModel {
 							guard.remove(index.current_index());
 						}
 						sender
-							.output(ContentComponentOutput::Notify(response.message))
+							.output(ContentComponentOutput::Notify(response.message, 1))
 							.unwrap_or_default();
 					},
 					Err(err) => {
 						sender
-							.output(ContentComponentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string(), 2))
 							.unwrap_or_default();
 					},
 				}
@@ -253,13 +253,13 @@ impl AsyncComponent for ContentComponentModel {
 							}
 						} else {
 							sender
-								.output(ContentComponentOutput::Notify(response.message))
+								.output(ContentComponentOutput::Notify(response.message, 1))
 								.unwrap_or_default();
 						}
 					},
 					Err(err) => {
 						sender
-							.output(ContentComponentOutput::Notify(err.to_string()))
+							.output(ContentComponentOutput::Notify(err.to_string(), 2))
 							.unwrap_or_default();
 					},
 				}

@@ -229,7 +229,7 @@ impl AsyncComponent for PreferencesComponentModel {
 				match plugin.start() {
 					Ok(_) => {
 						info!("Plugin {:?} started...", plugin);
-						widgets.overlay.add_toast(&toast("Service enabled."));
+						widgets.overlay.add_toast(&toast("Service enabled.", 1));
 
 						self.preferences.plugins = self
 							.preferences
@@ -262,7 +262,7 @@ impl AsyncComponent for PreferencesComponentModel {
 						info!("Failed to start {:?} plugin: {:?}", plugin, err);
 						widgets
 							.overlay
-							.add_toast(&toast("Failed to start this plug-in."));
+							.add_toast(&toast("Failed to start this plug-in.", 2));
 					},
 				}
 			},
@@ -282,7 +282,7 @@ impl AsyncComponent for PreferencesComponentModel {
 					})
 					.collect();
 				if previous_model != self.preferences {
-					widgets.overlay.add_toast(&toast("Service disabled."));
+					widgets.overlay.add_toast(&toast("Service disabled.", 1));
 					match update_preferences(&self.preferences) {
 						Ok(()) => {
 							sender
@@ -322,7 +322,10 @@ impl AsyncComponent for PreferencesComponentModel {
 							.service_row_factory
 							.send(index.current_index(), ServiceRowInput::HideInstallButton);
 					},
-					Err(err) => error!("{err:?}"),
+					Err(err) => {
+						error!("{err:?}");
+						widgets.overlay.add_toast(&toast(err, 2))
+					},
 				}
 			},
 			PreferencesComponentInput::SetDarkColorScheme => {
