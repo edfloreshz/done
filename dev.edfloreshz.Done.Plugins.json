@@ -17,7 +17,7 @@
         "pluginPort": 6006,
         "pluginVersion": "1.0.0",
         "pluginProcessName": "google-plugin",
-        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.0/local-plugin"
+        "pluginDownloadUrl": "https://github.com/done-devs/google-plugin/releases/download/v0.1.0/google-plugin"
     },
     {
         "pluginId": "microsoft",
@@ -27,7 +27,7 @@
         "pluginPort": 3003,
         "pluginVersion": "1.0.0",
         "pluginProcessName": "microsoft-plugin",
-        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.0/local-plugin"
+        "pluginDownloadUrl": "https://github.com/done-devs/microsoft-plugin/releases/download/v0.1.0/microsoft-plugin"
     },
     {
         "pluginId": "nextcloud",
@@ -37,6 +37,6 @@
         "pluginPort": 4004,
         "pluginVersion": "1.0.0",
         "pluginProcessName": "nextcloud-plugin",
-        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.0/local-plugin"
+        "pluginDownloadUrl": "https://github.com/done-devs/nextcloud-plugin/releases/download/v0.1.0/nextcloud-plugin"
     }
 ]
