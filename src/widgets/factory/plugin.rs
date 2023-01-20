@@ -62,7 +62,6 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 	type Input = PluginFactoryInput;
 	type Output = PluginFactoryOutput;
 	type Init = PluginFactoryInit;
-	type Widgets = ProviderWidgets;
 
 	view! {
 		#[root]

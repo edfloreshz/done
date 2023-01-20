@@ -34,7 +34,6 @@ impl AsyncFactoryComponent for SmartListFactory {
 	type Input = SmartListFactoryInput;
 	type Output = SmartListFactoryOutput;
 	type Init = SmartList;
-	type Widgets = ProviderWidgets;
 
 	view! {
 		#[root]
