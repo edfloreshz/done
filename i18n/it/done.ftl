@@ -5,50 +5,50 @@ alpha-warning = Stai eseguendo una versione di sviluppo in fase iniziale. Tieni 
 
 # New task dialog
 new-task = Nuovo compito...
-add-to-today = Add to Today
-set-time = Set time
-set-due-date = Set due date
-more-details = More details
+add-to-today = Aggiungi alla mia giornata
+set-time = Imposta l'ora
+set-due-date = imposta la data
+more-details = Maggiori dettagli
 
 # New list dialog
 list-name = Nome lista
 
 # Welcome
-select-list = Select a list from the sidebar
+select-list = Seleziona un elenco dalla barra laterale
 tasks-here = I compiti appariranno qui
 
 # Main menu
-preferences = Preferences
-keyboard-shortcuts = Keyboard shortcuts
-about-done = About Done
-quit = Quit
+preferences = Preferenze
+keyboard-shortcuts = Scorciatoie da tastiera
+about-done = Informazioni su Done
+quit = Esci
 
 # Sidebar
 all = Tutto
-all-desc = All tasks
+all-desc = Tutti i compiti
 today = Oggi
-today-desc = Tasks due today
+today-desc = Compiti in scadenza oggi
 starred = Preferiti
-starred-desc = Starred tasks
+starred-desc = Favoriti
 next-7-days = Prossimi 7 giorni
-next-7-days-desc = Tasks due the next 7 days
+next-7-days-desc = Compiti in scadenza nei prossimi 7 giorni
 
 # Empty sidebar
-empty-sidebar = Looking quite empty in here...
-open-preferences = Open preferences to add a provider
+empty-sidebar = Sembra abbastanza vuoto qui dentro...
+open-preferences = Apri le preferenze per aggiungere un provider
 
 # Preferences
-preferences = Preferences
-appearance = Appearance
-compact = Compact tasks
-compact-description = Toggle this to make tasks smaller
-color-scheme = Color scheme
-color-scheme-description = Set the color scheme of the app
-color-scheme-light = Light
-color-scheme-dark = Dark
-color-scheme-default = System
-services = Services
-install = Install
+preferences = Preferenze
+appearance = Aspetto
+compact = Compiti compatti
+compact-description = Attiva questa opzione per ridurre i compiti
+color-scheme = Combinazione di colori
+color-scheme-description = Imposta la combinazione di colori dell'app
+color-scheme-light = Chiaro
+color-scheme-dark = Scuro
+color-scheme-default = Sistema
+services = Servizi
+install = Installa
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
