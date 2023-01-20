@@ -1,54 +1,54 @@
 done = Done
 
 # Warning
-alpha-warning = Sie führen eine frühe Entwicklungsversion aus. Beachten Sie, dass dies noch in Arbeit und noch lange nicht abgeschlossen ist.
+alpha-warning = Sie führen eine frühe Entwicklungsversion aus. Beachten Sie, dass diese noch in Arbeit und noch lange nicht abgeschlossen ist.
 
 # New task dialog
 new-task = Neue Aufgabe …
-add-to-today = Add to Today
-set-time = Set time
-set-due-date = Set due date
-more-details = More details
+add-to-today = Zu »Heute« hinzufügen
+set-time = Zeit festlegen
+set-due-date = Fälligkeitsdatum festlegen
+more-details = Weitere Details
 
 # New list dialog
 list-name = Listenname
 
 # Welcome
-select-list = Select a list from the sidebar
+select-list = Eine Liste aus der Seitenleiste auswählen
 tasks-here = Aufgaben werden hier erscheinen
 
 # Main menu
-preferences = Preferences
-keyboard-shortcuts = Keyboard shortcuts
-about-done = About Done
-quit = Quit
+preferences = Einstellungen
+keyboard-shortcuts = Tastenkürzel
+about-done = Info zu Done
+quit = Beenden
 
 # Sidebar
 all = Alle
-all-desc = All tasks
+all-desc = Alle Aufgaben
 today = Heute
-today-desc = Tasks due today
+today-desc = Heute fällige Aufgaben
 starred = Favorisiert
-starred-desc = Starred tasks
+starred-desc = Favorisierte Aufgaben
 next-7-days = Nächste 7 Tage
-next-7-days-desc = Tasks due the next 7 days
+next-7-days-desc = Aufgaben, die in den nächsten 7 Tagen fällig sind
 
 # Empty sidebar
-empty-sidebar = Looking quite empty in here...
-open-preferences = Open preferences to add a provider
+empty-sidebar = Sieht ziemlich leer aus hier …
+open-preferences = Einstellungen öffnen, um einen Anbieter hinzuzufügen
 
 # Preferences
-preferences = Preferences
-appearance = Appearance
-compact = Compact tasks
-compact-description = Toggle this to make tasks smaller
-color-scheme = Color scheme
-color-scheme-description = Set the color scheme of the app
-color-scheme-light = Light
-color-scheme-dark = Dark
+preferences = Einstellungen
+appearance = Erscheinungsbild
+compact = Kompakte Aufgaben
+compact-description = Umschalten, um Aufgaben zu verkleinern
+color-scheme = Farbschema
+color-scheme-description = Das Farbschema der Anwendung festlegen
+color-scheme-light = Hell
+color-scheme-dark = Dunkel
 color-scheme-default = System
-services = Services
-install = Install
+services = Dienste
+install = Installieren
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
