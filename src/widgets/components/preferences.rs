@@ -1,8 +1,12 @@
+use std::path::PathBuf;
+
 use crate::app::toast;
 use crate::application::plugin::Plugin;
 use crate::fl;
-use adw::prelude::GtkWindowExt;
+use crate::widgets::factory::service_row::{ServiceRowInput, ServiceRowModel};
+use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
 use anyhow::Result;
+use directories::ProjectDirs;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::prelude::{
@@ -11,21 +15,30 @@ use relm4::adw::prelude::{
 };
 use relm4::adw::traits::ComboRowExt;
 use relm4::component::{AsyncComponent, AsyncComponentParts};
-use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::gtk::traits::ButtonExt;
+use relm4::factory::AsyncFactoryVecDeque;
+use relm4::prelude::DynamicIndex;
 use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug)]
+
+pub struct PreferencesComponentModel {
+	pub preferences: Preferences,
+	pub service_row_factory: AsyncFactoryVecDeque<ServiceRowModel>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct PreferencesComponent {
+pub struct Preferences {
 	pub plugins: Vec<PluginPreferences>,
 	pub color_scheme: ColorScheme,
 	pub compact: bool,
 }
 
-impl Default for PreferencesComponent {
+impl Default for Preferences {
 	fn default() -> Self {
+		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+
 		let plugins: Vec<PluginPreferences> = Plugin::get_plugins()
 			.unwrap()
 			.iter()
@@ -33,6 +46,7 @@ impl Default for PreferencesComponent {
 				plugin: plugin.clone(),
 				enabled: false,
 				installed: false,
+				executable: project.data_dir().join("bin").join(&plugin.process_name),
 			})
 			.collect();
 		Self {
@@ -61,30 +75,33 @@ pub struct PluginPreferences {
 	pub plugin: Plugin,
 	pub enabled: bool,
 	pub installed: bool,
+	pub executable: PathBuf,
 }
 
 #[derive(Debug)]
-pub enum PreferencesComponentEvent {
-	EnablePlugin(Plugin),
-	DisablePlugin(Plugin),
-	InstallPlugin(Plugin),
+pub enum PreferencesComponentInput {
+	EnablePlugin(DynamicIndex, Plugin),
+	DisablePlugin(DynamicIndex, Plugin),
+	InstallPlugin(DynamicIndex, Plugin),
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
 	ToggleCompact(bool),
+	Notify(String),
 }
 
 #[derive(Debug)]
 pub enum PreferencesComponentOutput {
 	EnablePluginOnSidebar(Plugin),
+	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
 	ToggleCompact(bool),
 }
 
 #[relm4::component(pub async)]
-impl AsyncComponent for PreferencesComponent {
+impl AsyncComponent for PreferencesComponentModel {
 	type CommandOutput = ();
-	type Input = PreferencesComponentEvent;
+	type Input = PreferencesComponentInput;
 	type Output = PreferencesComponentOutput;
 	type Init = ();
 
@@ -113,16 +130,16 @@ impl AsyncComponent for PreferencesComponent {
 										fl!("color-scheme-dark"),
 										fl!("color-scheme-default")
 									])),
-									set_selected: match model.color_scheme {
+									set_selected: match model.preferences.color_scheme {
 										ColorScheme::Light => 0,
 										ColorScheme::Dark => 1,
 										ColorScheme::Default => 2,
 									},
 									connect_selected_notify[sender] => move |combo_row| {
 										match combo_row.selected() {
-											0 => sender.input_sender().send(PreferencesComponentEvent::SetLightColorScheme).unwrap(),
-											1 => sender.input_sender().send(PreferencesComponentEvent::SetDarkColorScheme).unwrap(),
-											_ => sender.input_sender().send(PreferencesComponentEvent::SetDefaultColorScheme).unwrap(),
+											0 => sender.input_sender().send(PreferencesComponentInput::SetLightColorScheme).unwrap(),
+											1 => sender.input_sender().send(PreferencesComponentInput::SetDarkColorScheme).unwrap(),
+											_ => sender.input_sender().send(PreferencesComponentInput::SetDefaultColorScheme).unwrap(),
 										}
 									},
 								},
@@ -133,17 +150,17 @@ impl AsyncComponent for PreferencesComponent {
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,
 										append = &gtk::Switch {
-											set_active: model.compact,
+											set_active: model.preferences.compact,
 											connect_state_set[sender] => move |_, state| {
-												sender.input(PreferencesComponentEvent::ToggleCompact(state));
+												sender.input(PreferencesComponentInput::ToggleCompact(state));
 												gtk::Inhibit::default()
 											}
 										}
 									}
 								}
 							},
-							#[name(services)]
-							add = &adw::PreferencesGroup {
+							#[local_ref]
+							add = services_container -> adw::PreferencesGroup {
 								set_title: fl!("services"),
 							},
 						}
@@ -158,52 +175,44 @@ impl AsyncComponent for PreferencesComponent {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		let model = if let Ok(project) = Project::open("dev", "edfloreshz", "done")
-		{
-			project
-				.get_file_as::<PreferencesComponent>("preferences", FileFormat::JSON)
-				.unwrap_or_default()
-		} else {
-			PreferencesComponent::default()
+		let preferences =
+			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
+				project
+					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+					.unwrap_or_default()
+			} else {
+				Preferences::default()
+			};
+
+		let mut model = Self {
+			preferences,
+			service_row_factory: AsyncFactoryVecDeque::new(
+				adw::PreferencesGroup::default(),
+				sender.input_sender(),
+			),
 		};
+
+		let services_container = model.service_row_factory.widget();
 
 		let widgets = view_output!();
 
 		let plugins = Plugin::fetch_plugins().await.unwrap_or_default();
 
+		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+
+		model.preferences.plugins.clear();
 		for plugin in plugins {
-			relm4::view! {
-				#[name(service)]
-				adw::ActionRow {
-					set_title: &plugin.name,
-					set_subtitle: &plugin.description,
-					add_suffix = &gtk::Box {
-						set_halign: gtk::Align::Center,
-						set_valign: gtk::Align::Center,
-						append = &gtk::Button {
-							set_label: fl!("install"),
-							set_visible: !plugin.is_installed(),
-							connect_clicked[sender, plugin] => move |_| {
-								sender.input(PreferencesComponentEvent::InstallPlugin(plugin.clone()));
-							}
-						},
-						append = &gtk::Switch {
-							set_visible: plugin.is_installed(),
-							#[watch]
-							set_active: plugin.is_running(),
-							connect_state_set[sender, plugin] => move |_, state| {
-								if state {
-									sender.input(PreferencesComponentEvent::EnablePlugin(plugin.clone()));
-								} else {
-									sender.input(PreferencesComponentEvent::DisablePlugin(plugin.clone()));
-								}
-								gtk::Inhibit::default()
-							}
-						}
-					}
-				}
-			}
-			widgets.services.add(&service);
+			let preferences = PluginPreferences {
+				plugin: plugin.clone(),
+				enabled: plugin.clone().is_running(),
+				installed: plugin.clone().is_installed(),
+				executable: project.data_dir().join("bin").join(&plugin.process_name),
+			};
+			model
+				.service_row_factory
+				.guard()
+				.push_back(preferences.clone());
+			model.preferences.plugins.push(preferences);
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -217,89 +226,134 @@ impl AsyncComponent for PreferencesComponent {
 		_root: &Self::Root,
 	) {
 		match message {
-			PreferencesComponentEvent::EnablePlugin(plugin) => match plugin.start() {
-				Ok(_) => {
-					info!("Plugin {:?} started...", plugin);
-					widgets.overlay.add_toast(&toast("Service enabled."));
-
-					self.plugins = self
-						.plugins
-						.iter_mut()
-						.filter(|p| p.plugin == plugin)
-						.map(|p| {
-							p.enabled = true;
-							p.clone()
-						})
-						.collect();
-
-					match update_preferences(self) {
-						Ok(()) => sender
-							.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin))
-							.unwrap(),
-						Err(e) => error!("{:?}", e),
-					}
-				},
-				Err(err) => {
-					info!("Failed to start {:?} plugin: {:?}", plugin, err);
-					widgets
-						.overlay
-						.add_toast(&toast("Failed to start this plug-in."));
-				},
+			PreferencesComponentInput::Notify(msg) => {
+				widgets.overlay.add_toast(&toast(msg))
 			},
-			PreferencesComponentEvent::DisablePlugin(plugin) => {
+			PreferencesComponentInput::EnablePlugin(index, plugin) => {
+				match plugin.start() {
+					Ok(_) => {
+						info!("Plugin {:?} started...", plugin);
+						widgets.overlay.add_toast(&toast("Service enabled."));
+
+						self.preferences.plugins = self
+							.preferences
+							.plugins
+							.iter_mut()
+							.map(|p| {
+								if p.plugin == plugin {
+									p.enabled = true;
+								}
+								p.clone()
+							})
+							.collect();
+
+						match update_preferences(&self.preferences) {
+							Ok(()) => {
+								sender
+									.output(PreferencesComponentOutput::EnablePluginOnSidebar(
+										plugin,
+									))
+									.unwrap();
+								self.service_row_factory.send(
+									index.current_index(),
+									ServiceRowInput::EnableSwitch(true),
+								);
+							},
+							Err(e) => error!("{:?}", e),
+						}
+					},
+					Err(err) => {
+						info!("Failed to start {:?} plugin: {:?}", plugin, err);
+						widgets
+							.overlay
+							.add_toast(&toast("Failed to start this plug-in."));
+					},
+				}
+			},
+			PreferencesComponentInput::DisablePlugin(index, plugin) => {
 				plugin.stop();
 				info!("Plugin {:?} stopped.", plugin);
-				let previous_model = self.clone();
-				self.plugins = self
+				let previous_model = self.preferences.clone();
+				self.preferences.plugins = self
+					.preferences
 					.plugins
 					.iter_mut()
-					.filter(|p| p.plugin == plugin)
 					.map(|p| {
-						p.enabled = false;
+						if p.plugin == plugin {
+							p.enabled = false;
+						}
 						p.clone()
 					})
 					.collect();
-				if previous_model != *self {
+				if previous_model != self.preferences {
 					widgets.overlay.add_toast(&toast("Service disabled."));
-					match update_preferences(self) {
-						Ok(()) => sender
-							.output(PreferencesComponentOutput::DisablePluginOnSidebar(
-								plugin,
-							))
-							.unwrap(),
+					match update_preferences(&self.preferences) {
+						Ok(()) => {
+							sender
+								.output(PreferencesComponentOutput::DisablePluginOnSidebar(
+									plugin,
+								))
+								.unwrap();
+							self.service_row_factory.send(
+								index.current_index(),
+								ServiceRowInput::EnableSwitch(false),
+							);
+						},
 						Err(e) => error!("{:?}", e),
 					}
 				}
 			},
-			PreferencesComponentEvent::InstallPlugin(plugin) => {
+			PreferencesComponentInput::InstallPlugin(index, plugin) => {
 				match plugin.install().await {
-					Ok(_) => todo!(),
+					Ok(_) => {
+						if let Some(plugin) = self
+							.preferences
+							.plugins
+							.iter_mut()
+							.find(|p| p.plugin == plugin)
+						{
+							plugin.installed = true;
+							plugin.enabled = true;
+						} else {
+							error!("This plugin is not registered.")
+						}
+						update_preferences(&self.preferences).unwrap();
+						sender
+							.output_sender()
+							.send(PreferencesComponentOutput::AddPluginToSidebar(plugin))
+							.unwrap();
+						self
+							.service_row_factory
+							.send(index.current_index(), ServiceRowInput::HideInstallButton);
+					},
 					Err(err) => error!("{err:?}"),
 				}
 			},
-			PreferencesComponentEvent::SetDarkColorScheme => {
+			PreferencesComponentInput::SetDarkColorScheme => {
 				adw::StyleManager::default()
 					.set_color_scheme(adw::ColorScheme::ForceDark);
-				self.color_scheme = ColorScheme::Dark;
-				update_preferences(self).unwrap();
+				self.preferences.color_scheme = ColorScheme::Dark;
+				update_preferences(&self.preferences).unwrap();
 			},
-			PreferencesComponentEvent::SetLightColorScheme => {
+			PreferencesComponentInput::SetLightColorScheme => {
 				adw::StyleManager::default()
 					.set_color_scheme(adw::ColorScheme::ForceLight);
-				self.color_scheme = ColorScheme::Light;
-				update_preferences(self).unwrap();
+				self.preferences.color_scheme = ColorScheme::Light;
+				update_preferences(&self.preferences).unwrap();
 			},
-			PreferencesComponentEvent::SetDefaultColorScheme => {
+			PreferencesComponentInput::SetDefaultColorScheme => {
 				adw::StyleManager::default()
 					.set_color_scheme(adw::ColorScheme::Default);
-				self.color_scheme = ColorScheme::Default;
-				update_preferences(self).unwrap();
+				self.preferences.color_scheme = ColorScheme::Default;
+				update_preferences(&self.preferences).unwrap();
 			},
-			PreferencesComponentEvent::ToggleCompact(compact) => {
-				self.compact = compact;
-				update_preferences(self).unwrap();
+			PreferencesComponentInput::ToggleCompact(compact) => {
+				self.preferences.compact = compact;
+				update_preferences(&self.preferences).unwrap();
 				sender
-					.output(PreferencesComponentOutput::ToggleCompact(self.compact))
+					.output(PreferencesComponentOutput::ToggleCompact(
+						self.preferences.compact,
+					))
 					.unwrap();
 			},
 		}
@@ -307,7 +361,7 @@ impl AsyncComponent for PreferencesComponent {
 	}
 }
 
-fn update_preferences(preferences: &PreferencesComponent) -> Result<()> {
+fn update_preferences(preferences: &Preferences) -> Result<()> {
 	Project::open("dev", "edfloreshz", "done")?
 		.get_file("preferences", FileFormat::JSON)?
 		.set_content(preferences)?

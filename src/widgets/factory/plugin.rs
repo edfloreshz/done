@@ -1,8 +1,6 @@
 use crate::application::plugin::Plugin;
 use crate::widgets::factory::list::ListFactoryInit;
 use adw::prelude::{ExpanderRowExt, PreferencesRowExt};
-use libset::format::FileFormat;
-use libset::project::Project;
 use proto_rust::provider::List;
 use proto_rust::provider_client::ProviderClient;
 use proto_rust::Channel;
@@ -15,7 +13,6 @@ use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 
 use crate::widgets::components::list_entry::{ListEntryModel, ListEntryOutput};
-use crate::widgets::components::preferences::PreferencesComponent;
 use crate::widgets::components::sidebar::SidebarComponentInput;
 use crate::widgets::factory::list::ListFactoryModel;
 
@@ -53,6 +50,7 @@ pub enum PluginFactoryOutput {
 #[derive(derive_new::new)]
 pub struct PluginFactoryInit {
 	plugin: Plugin,
+	enabled: bool,
 	service: ProviderClient<Channel>,
 }
 
@@ -99,20 +97,11 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		index: &DynamicIndex,
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let plugin_preferences = Project::open("dev", "edfloreshz", "done")
-			.unwrap()
-			.get_file_as::<PreferencesComponent>("preferences", FileFormat::JSON)
-			.unwrap()
-			.plugins;
 		let index = index.current_index();
 		Self {
 			plugin: init.plugin.clone(),
 			service: init.service,
-			enabled: plugin_preferences
-				.iter()
-				.find(|p| p.plugin.name == init.plugin.name)
-				.unwrap()
-				.enabled,
+			enabled: init.enabled,
 			lists: init.plugin.lists().await.unwrap(),
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
