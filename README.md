@@ -4,7 +4,6 @@
   <h1>Done</h1>
   <h3>To-do lists reimagined</h3>
   <h4>The ultimate task management solution for seamless organization and efficiency.</h4>
-  
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/edfloreshz/done/ci.yml?style=for-the-badge" alt="build"/>
   </a>
@@ -27,8 +26,6 @@
   <a href="https://t.me/done_devs">
     <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
   </a>
-  <h4>This is still in very early development. Be aware it is a work in progress and far from complete yet.</h4>
-  
 </div>
 
   ![Screenshot](./data/resources/screenshots/tasks.png#gh-light-mode-only)
@@ -36,9 +33,10 @@
 
 Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
 
+#### **This is still in very early development. Be aware it is a work in progress and far from complete yet.**
 
 
-## Install
+## Installation
 | Platform   | Command                                 |
 |------------|-----------------------------------------|
 | Arch Linux | `paru -S done-git`                    |
