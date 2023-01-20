@@ -87,7 +87,6 @@ pub enum PreferencesComponentInput {
 	SetLightColorScheme,
 	SetDefaultColorScheme,
 	ToggleCompact(bool),
-	Notify(String),
 }
 
 #[derive(Debug)]
@@ -226,9 +225,6 @@ impl AsyncComponent for PreferencesComponentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			PreferencesComponentInput::Notify(msg) => {
-				widgets.overlay.add_toast(&toast(msg))
-			},
 			PreferencesComponentInput::EnablePlugin(index, plugin) => {
 				match plugin.start() {
 					Ok(_) => {
