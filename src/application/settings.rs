@@ -2,8 +2,7 @@ use anyhow::Result;
 use libset::{format::FileFormat, new_file, project::Project};
 
 use crate::{
-	application::info::VERSION,
-	widgets::components::preferences::PreferencesComponent,
+	application::info::VERSION, widgets::components::preferences::Preferences,
 };
 
 use super::plugin::Plugin;
@@ -23,12 +22,10 @@ pub(crate) async fn init() -> Result<()> {
 		.get_file("dev.edfloreshz.Done.Plugins", FileFormat::JSON)?
 		.set_content(plugins)?
 		.write()?;
-	if !project
-		.integrity_ok::<PreferencesComponent>("preferences", FileFormat::JSON)
-	{
+	if !project.integrity_ok::<Preferences>("preferences", FileFormat::JSON) {
 		project
 			.get_file("preferences", FileFormat::JSON)?
-			.set_content(PreferencesComponent::default())?
+			.set_content(Preferences::default())?
 			.write()?;
 	}
 	Ok(())

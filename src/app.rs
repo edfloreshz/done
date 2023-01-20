@@ -7,7 +7,7 @@ use crate::widgets::components::content::{
 	ContentComponentInput, ContentComponentModel, ContentComponentOutput,
 };
 use crate::widgets::components::preferences::{
-	PreferencesComponent, PreferencesComponentOutput,
+	PreferencesComponentModel, PreferencesComponentOutput,
 };
 use crate::widgets::components::sidebar::{
 	SidebarComponentInput, SidebarComponentModel, SidebarComponentOutput,
@@ -30,7 +30,7 @@ use sysinfo::{ProcessExt, System, SystemExt};
 pub struct App {
 	sidebar: AsyncController<SidebarComponentModel>,
 	content: AsyncController<ContentComponentModel>,
-	preferences: AsyncController<PreferencesComponent>,
+	preferences: AsyncController<PreferencesComponentModel>,
 	welcome: Controller<WelcomeComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
@@ -41,7 +41,7 @@ impl App {
 	pub fn new(
 		sidebar: AsyncController<SidebarComponentModel>,
 		content: AsyncController<ContentComponentModel>,
-		preferences: AsyncController<PreferencesComponent>,
+		preferences: AsyncController<PreferencesComponentModel>,
 		welcome: Controller<WelcomeComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
@@ -62,6 +62,7 @@ pub enum Event {
 	TaskListSelected(ListFactoryModel),
 	Notify(String),
 	EnablePluginOnSidebar(Plugin),
+	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
 	SelectSmartList(SmartList),
 	ToggleCompact(bool),
@@ -140,9 +141,12 @@ impl Component for App {
 				ContentComponentOutput::Notify(msg) => Event::Notify(msg),
 			});
 
-		let preferences_controller = PreferencesComponent::builder()
+		let preferences_controller = PreferencesComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
+				PreferencesComponentOutput::AddPluginToSidebar(plugin) => {
+					Event::AddPluginToSidebar(plugin)
+				},
 				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
 					Event::EnablePluginOnSidebar(plugin)
 				},
@@ -256,6 +260,11 @@ impl Component for App {
 			},
 			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
 			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
+			Event::AddPluginToSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::AddPluginToSidebar(plugin))
+				.unwrap(),
 			Event::EnablePluginOnSidebar(plugin) => self
 				.sidebar
 				.sender()

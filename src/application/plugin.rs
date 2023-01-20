@@ -7,14 +7,15 @@ use proto_rust::provider::{Empty, List};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
+use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Command;
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
-pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/beta/dev.edfloreshz.Done.Plugins.json";
+pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/feat-install-plugin/dev.edfloreshz.Done.Plugins.json";
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub struct Plugin {
 	#[serde(rename = "pluginId")]
 	pub id: String,
@@ -62,7 +63,10 @@ impl Plugin {
 	}
 
 	pub fn start(&self) -> Result<u32, std::io::Error> {
-		match Command::new(&self.process_name).spawn() {
+		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+		let mut command = Command::new(format!("./{}", &self.process_name));
+		command.current_dir(project.data_dir().join("bin"));
+		match command.spawn() {
 			Ok(child) => Ok(child.id()),
 			Err(err) => Err(err),
 		}
@@ -92,14 +96,23 @@ impl Plugin {
 		is_running
 	}
 
-	pub async fn install(&self) -> Result<()> {
+	pub async fn install(&self) -> Result<PathBuf> {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
-		download_file(&self.download_url, project.data_dir().join("bin")).await?;
-		Ok(())
+		let path = download_file(
+			&self.download_url,
+			project.data_dir().join("bin").join(&self.process_name),
+		)
+		.await?;
+		Ok(path)
 	}
 
 	pub fn is_installed(&self) -> bool {
-		Command::new(&self.process_name).spawn().ok().is_some()
+		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+		project
+			.data_dir()
+			.join("bin")
+			.join(&self.process_name)
+			.exists()
 	}
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
@@ -116,10 +129,17 @@ impl Plugin {
 }
 
 // Download a file from a URL and save it to a file
-async fn download_file(url: &str, path: PathBuf) -> Result<(), reqwest::Error> {
+async fn download_file(
+	url: &str,
+	path: PathBuf,
+) -> Result<PathBuf, reqwest::Error> {
 	let client = Client::new();
 	let response = client.get(url).send().await?.bytes().await?.to_vec();
-	let mut file = std::fs::File::create(path).unwrap();
+	std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+	let mut file = std::fs::File::create(path.clone()).unwrap();
+	file
+		.set_permissions(std::fs::Permissions::from_mode(0o755))
+		.unwrap();
 	file.write_all(&response).unwrap();
-	Ok(())
+	Ok(path)
 }
