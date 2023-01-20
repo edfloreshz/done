@@ -1,13 +1,7 @@
 # Release
 
 ## Flatpak
-To test the build for Flatpak, read [this](../FLATPAK.md).
-
-To make a release, run [`flatpak.sh`](flatpak.sh), take the files and upload them to the new release. 
-
-Once they are uploaded, edit [`dev.edfloreshz.Done.json`](https://github.com/flathub/dev.edfloreshz.Done) and change the link and the hash.
-
-Push the changes.
+To test the build for Flatpak and release to Flathub, read [this](../FLATPAK.md).
 
 ## Arch Linux
 Update the PKGCONFIG to include the newest release `pkgrel` and `pkgver`.
