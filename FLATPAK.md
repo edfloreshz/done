@@ -1,5 +1,14 @@
 # Flatpak
 
+## Dependencies
+- org.gnome.Platform 43
+- org.freedesktop.Sdk.Extension.rust-stable
+
+Install the following dependencies:
+```
+flatpak install --runtime org.gnome.Platform org.freedesktop.Sdk.Extension.rust-stable
+```
+
 ## Build
 
 #### Development
