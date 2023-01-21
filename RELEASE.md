@@ -1,10 +1,10 @@
 # Release
 
 ## Flatpak
-To test the build for Flatpak and release to Flathub, read [this](../FLATPAK.md).
+To test the build for `Flatpak` and release to `Flathub`, head to [FLATPAK.md](../FLATPAK.md).
 
 ## Arch Linux
-Update the PKGCONFIG to include the newest release `pkgrel` and `pkgver`.
+Update the [PKGBUILD](PKGBUILD) to include the new release number in `pkgrel` and `pkgver`.
 
 ## Windows
 To compile for Windows, we need to configure Docker:
