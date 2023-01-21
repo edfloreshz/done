@@ -49,6 +49,7 @@ color-scheme-dark = Koyu
 color-scheme-default = Sistem
 services = Servisler
 install = Kur
+remove = Remove
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella

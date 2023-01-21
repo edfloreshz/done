@@ -26,6 +26,7 @@ pub enum ServiceRowInput {
 	RemovePlugin(DynamicIndex),
 	EnableInstallButton(bool),
 	EnableSwitch(bool),
+	ToggleSwitch(DynamicIndex, bool),
 }
 
 #[derive(Debug)]
@@ -54,6 +55,19 @@ impl AsyncFactoryComponent for ServiceRowModel {
 				add_suffix = &gtk::Box {
 						set_halign: gtk::Align::Center,
 						set_valign: gtk::Align::Center,
+						gtk::Button {
+							#[watch]
+							set_visible: self.installed,
+							set_icon_name: "user-trash-full-symbolic",
+							set_tooltip_text: Some(fl!("remove")),
+							connect_clicked[sender, index] => move |_| {
+								sender.input(ServiceRowInput::RemovePlugin(index.clone()));
+							}
+						}
+				},
+				add_suffix = &gtk::Box {
+						set_halign: gtk::Align::Center,
+						set_valign: gtk::Align::Center,
 						append = &gtk::Button {
 								set_label: fl!("install"),
 								#[watch]
@@ -62,25 +76,13 @@ impl AsyncFactoryComponent for ServiceRowModel {
 										sender.input(ServiceRowInput::InstallPlugin(index.clone()));
 								}
 						},
-						append = &gtk::Button {
-							#[watch]
-							set_visible: self.installed,
-							set_icon_name: "user-trash-full-symbolic",
-							connect_activate[sender, index] => move |_| {
-									sender.input(ServiceRowInput::RemovePlugin(index.clone()));
-							}
-						},
+						#[name(switch)]
 						append = &gtk::Switch {
 								#[watch]
 								set_visible: self.installed,
-								set_active: self.enabled,
 								connect_state_set[sender, index] => move |_, state| {
-										if state {
-												sender.input(ServiceRowInput::EnablePlugin(index.clone()));
-										} else {
-												sender.input(ServiceRowInput::DisablePlugin(index.clone()));
-										}
-										gtk::Inhibit::default()
+									sender.input(ServiceRowInput::ToggleSwitch(index.clone(), state));
+									gtk::Inhibit(false)
 								}
 						}
 				}
@@ -108,17 +110,29 @@ impl AsyncFactoryComponent for ServiceRowModel {
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
+		if self.enabled {
+			widgets.switch.set_state(true);
+		}
 		widgets
 	}
 
-	async fn update(
+	async fn update_with_view(
 		&mut self,
+		widgets: &mut Self::Widgets,
 		message: Self::Input,
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ServiceRowInput::InstallPlugin(index) => sender
-				.output(ServiceRowOutput::InstallPlugin(index, self.plugin.clone())),
+			ServiceRowInput::ToggleSwitch(index, state) => {
+				if state {
+					sender.input(ServiceRowInput::EnablePlugin(index));
+				} else {
+					sender.input(ServiceRowInput::DisablePlugin(index));
+				}
+			},
+			ServiceRowInput::InstallPlugin(index) => {
+				sender.output(ServiceRowOutput::InstallPlugin(index, self.plugin.clone()));
+			},
 			ServiceRowInput::EnablePlugin(index) => {
 				if !self.first_load {
 					sender
@@ -131,12 +145,16 @@ impl AsyncFactoryComponent for ServiceRowModel {
 						.output(ServiceRowOutput::DisablePlugin(index, self.plugin.clone()))
 				}
 			},
-			ServiceRowInput::RemovePlugin(index) => sender
-				.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone())),
+			ServiceRowInput::RemovePlugin(index) => {
+				sender.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone()))
+			},
 			ServiceRowInput::EnableInstallButton(enable) => self.installed = !enable,
-			ServiceRowInput::EnableSwitch(enabled) => self.enabled = enabled,
+			ServiceRowInput::EnableSwitch(enabled) => {
+				widgets.switch.set_state(enabled);
+			},
 		}
 		self.first_load = false;
+		self.update_view(widgets, sender);
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
