@@ -230,7 +230,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						self
 							.provider_factory
 							.guard()
-							.push_back(PluginFactoryInit::new(plugin.clone(), false));
+							.push_back(PluginFactoryInit::new(plugin.clone(), true));
 						self.is_sidebar_empty = false;
 						tracing::info!("Added {:?} service to the sidebar", plugin.name);
 					},
@@ -245,7 +245,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.provider_factory
 					.guard()
 					.iter()
-					.position(|p| p.unwrap().plugin == plugin);
+					.position(|p| p.map_or(false, |p| p.plugin == plugin));
 				if let Some(index) = index {
 					println!("ENABLED SERVICE CORRECTLY");
 					self
@@ -287,6 +287,9 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						Some(provider) => info!("Removed {} service", provider.plugin.name),
 						None => error!("Failed to remove service from sidebar."),
 					}
+				}
+				if self.provider_factory.guard().is_empty() {
+					self.is_sidebar_empty = true;
 				}
 			},
 			SidebarComponentInput::ListSelected(list) => {

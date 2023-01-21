@@ -48,6 +48,7 @@ color-scheme-dark = Oscuro
 color-scheme-default = Sistema
 services = Servicios
 install = Instalar
+remove = Remover
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
