@@ -23,7 +23,8 @@ pub enum ServiceRowInput {
 	InstallPlugin(DynamicIndex),
 	EnablePlugin(DynamicIndex),
 	DisablePlugin(DynamicIndex),
-	HideInstallButton,
+	RemovePlugin(DynamicIndex),
+	EnableInstallButton(bool),
 	EnableSwitch(bool),
 }
 
@@ -32,6 +33,7 @@ pub enum ServiceRowOutput {
 	InstallPlugin(DynamicIndex, Plugin),
 	EnablePlugin(DynamicIndex, Plugin),
 	DisablePlugin(DynamicIndex, Plugin),
+	RemovePlugin(DynamicIndex, Plugin),
 }
 
 #[relm4::factory(pub async)]
@@ -59,6 +61,14 @@ impl AsyncFactoryComponent for ServiceRowModel {
 								connect_clicked[sender, index] => move |_| {
 										sender.input(ServiceRowInput::InstallPlugin(index.clone()));
 								}
+						},
+						append = &gtk::Button {
+							#[watch]
+							set_visible: self.installed,
+							set_icon_name: "user-trash-full-symbolic",
+							connect_activate[sender, index] => move |_| {
+									sender.input(ServiceRowInput::RemovePlugin(index.clone()));
+							}
 						},
 						append = &gtk::Switch {
 								#[watch]
@@ -121,7 +131,9 @@ impl AsyncFactoryComponent for ServiceRowModel {
 						.output(ServiceRowOutput::DisablePlugin(index, self.plugin.clone()))
 				}
 			},
-			ServiceRowInput::HideInstallButton => self.installed = true,
+			ServiceRowInput::RemovePlugin(index) => sender
+				.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone())),
+			ServiceRowInput::EnableInstallButton(enable) => self.installed = !enable,
 			ServiceRowInput::EnableSwitch(enabled) => self.enabled = enabled,
 		}
 		self.first_load = false;
@@ -137,6 +149,9 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			},
 			ServiceRowOutput::DisablePlugin(index, plugin) => {
 				PreferencesComponentInput::DisablePlugin(index, plugin)
+			},
+			ServiceRowOutput::RemovePlugin(index, plugin) => {
+				PreferencesComponentInput::RemovePlugin(index, plugin)
 			},
 		};
 		Some(output)
