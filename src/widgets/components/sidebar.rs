@@ -284,8 +284,10 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.position(|p| p.unwrap().plugin == plugin);
 				if let Some(index) = index {
 					match self.provider_factory.guard().remove(index) {
-						Some(provider) => info!("Removed {} service", provider.plugin.name),
-						None => error!("Failed to remove service from sidebar."),
+						Some(provider) => {
+							tracing::info!("Removed {} service", provider.plugin.name)
+						},
+						None => tracing::error!("Failed to remove service from sidebar."),
 					}
 				}
 				if self.provider_factory.guard().is_empty() {

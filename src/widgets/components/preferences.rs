@@ -325,16 +325,17 @@ impl AsyncComponent for PreferencesComponentModel {
 						update_preferences(&self.preferences).unwrap();
 						sender
 							.output_sender()
-							.send(PreferencesComponentOutput::AddPluginToSidebar(plugin.clone()))
+							.send(PreferencesComponentOutput::AddPluginToSidebar(
+								plugin.clone(),
+							))
 							.unwrap();
 						self.service_row_factory.send(
 							index.current_index(),
 							ServiceRowInput::EnableInstallButton(false),
 						);
-						self.service_row_factory.send(
-							index.current_index(),
-							ServiceRowInput::EnableSwitch(true),
-						);
+						self
+							.service_row_factory
+							.send(index.current_index(), ServiceRowInput::EnableSwitch(true));
 					},
 					Err(err) => {
 						tracing::error!("{err:?}");
@@ -373,11 +374,13 @@ impl AsyncComponent for PreferencesComponentModel {
 										.unwrap()
 								},
 								Err(err) => {
-									error!("Failed to update plugin preferences: {err}")
+									tracing::error!("Failed to update plugin preferences: {err}")
 								},
 							}
 						},
-						Err(err) => error!("Failed to remove plugin executable: {err}"),
+						Err(err) => {
+							tracing::error!("Failed to remove plugin executable: {err}")
+						},
 					}
 				}
 			},
