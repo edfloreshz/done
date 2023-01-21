@@ -83,6 +83,7 @@ pub enum PreferencesComponentInput {
 	EnablePlugin(DynamicIndex, Plugin),
 	DisablePlugin(DynamicIndex, Plugin),
 	InstallPlugin(DynamicIndex, Plugin),
+	RemovePlugin(DynamicIndex, Plugin),
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
@@ -94,6 +95,7 @@ pub enum PreferencesComponentOutput {
 	EnablePluginOnSidebar(Plugin),
 	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
+	RemovePluginFromSidebar(Plugin),
 	ToggleCompact(bool),
 }
 
@@ -325,14 +327,54 @@ impl AsyncComponent for PreferencesComponentModel {
 							.output_sender()
 							.send(PreferencesComponentOutput::AddPluginToSidebar(plugin))
 							.unwrap();
-						self
-							.service_row_factory
-							.send(index.current_index(), ServiceRowInput::HideInstallButton);
+						self.service_row_factory.send(
+							index.current_index(),
+							ServiceRowInput::EnableInstallButton(false),
+						);
 					},
 					Err(err) => {
 						tracing::error!("{err:?}");
 						widgets.overlay.add_toast(&toast(err, 2))
 					},
+				}
+			},
+			PreferencesComponentInput::RemovePlugin(index, plugin) => {
+				plugin.stop();
+				if let Some(preferences) = self
+					.preferences
+					.plugins
+					.iter_mut()
+					.find(|preferences| preferences.plugin == plugin)
+				{
+					match std::fs::remove_dir_all(&preferences.executable) {
+						Ok(_) => {
+							preferences.enabled = false;
+							preferences.installed = false;
+							match update_preferences(&self.preferences) {
+								Ok(_) => {
+									self.service_row_factory.send(
+										index.current_index(),
+										ServiceRowInput::EnableSwitch(false),
+									);
+									self.service_row_factory.send(
+										index.current_index(),
+										ServiceRowInput::EnableInstallButton(true),
+									);
+									sender
+										.output(
+											PreferencesComponentOutput::RemovePluginFromSidebar(
+												plugin,
+											),
+										)
+										.unwrap()
+								},
+								Err(err) => {
+									error!("Failed to update plugin preferences: {err}")
+								},
+							}
+						},
+						Err(err) => error!("Failed to remove plugin executable: {err}"),
+					}
 				}
 			},
 			PreferencesComponentInput::SetDarkColorScheme => {
