@@ -97,11 +97,21 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let index = index.current_index();
+		let plugin = init.plugin.clone();
+		let (service, lists) = relm4::spawn(async move {
+			(
+				init.plugin.connect().await.ok(),
+				init.plugin.lists().await.unwrap(),
+			)
+		})
+		.await
+		.unwrap();
+
 		Self {
-			plugin: init.plugin.clone(),
-			service: init.plugin.connect().await.ok(),
+			plugin,
+			service,
 			enabled: init.enabled,
-			lists: init.plugin.lists().await.unwrap(),
+			lists,
 			last_list_selected: None,
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),

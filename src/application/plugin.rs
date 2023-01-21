@@ -118,7 +118,11 @@ impl Plugin {
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
 		let url = format!("http://[::1]:{}", self.port);
 		loop {
-			match ProviderClient::connect(url.clone()).await {
+			let url = url.clone();
+			match relm4::spawn(async move { ProviderClient::connect(url).await })
+				.await
+				.unwrap()
+			{
 				Ok(client) => return Ok(client),
 				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
 			}

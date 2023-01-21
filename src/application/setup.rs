@@ -15,13 +15,12 @@ pub fn main_app() -> adw::Application {
 	APP.with(|app| (*app).clone())
 }
 
-pub async fn init() -> Result<adw::Application> {
+pub fn init() -> Result<adw::Application> {
 	let app = main_app();
 
 	gtk::init()?;
 	gettext::init();
 	localization::init();
-	settings::init().await?;
 	appearance::init()?;
 	// Enable logging
 	tracing_subscriber::fmt()
@@ -29,8 +28,13 @@ pub async fn init() -> Result<adw::Application> {
 		.with_max_level(tracing::Level::INFO)
 		.init();
 	resources::init()?;
-	services::init().await?;
 	actions::init(&app);
 
 	Ok(app)
+}
+
+pub async fn async_init() -> Result<()> {
+	services::init().await?;
+	settings::init().await?;
+	Ok(())
 }

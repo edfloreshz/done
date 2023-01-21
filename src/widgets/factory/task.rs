@@ -151,7 +151,12 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 			compact: init.compact,
 			first_load: true,
 		};
-		match model.client.read_task(init.id.clone()).await {
+		let mut client = model.client.clone();
+		let id = init.id.clone();
+		match relm4::spawn(async move { client.read_task(id).await })
+			.await
+			.unwrap()
+		{
 			Ok(response) => match response.into_inner().task {
 				Some(task) => model.task = task,
 				None => tracing::error!("Failed to get task."),
