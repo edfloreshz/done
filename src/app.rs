@@ -1,6 +1,6 @@
 use crate::application::info::PROFILE;
 use crate::application::plugin::Plugin;
-use crate::application::setup::main_app;
+use crate::application::setup::{self, main_app};
 use crate::fl;
 use crate::widgets::components::about_dialog::AboutDialog;
 use crate::widgets::components::content::{
@@ -17,14 +17,15 @@ use crate::widgets::components::welcome::WelcomeComponent;
 use crate::widgets::factory::list::ListFactoryModel;
 use gtk::prelude::*;
 use relm4::adw::Toast;
-use relm4::component::AsyncController;
+use relm4::component::{AsyncComponentParts, AsyncController};
+use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
 	component::{AsyncComponent, AsyncComponentController},
-	gtk, Component, ComponentBuilder, ComponentController, ComponentParts,
-	ComponentSender, Controller,
+	gtk, Component, ComponentBuilder, ComponentController, Controller,
 };
+use relm4::{view, AsyncComponentSender};
 use sysinfo::{ProcessExt, System, SystemExt};
 
 pub struct App {
@@ -86,19 +87,47 @@ relm4::new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "sho
 relm4::new_stateless_action!(AboutAction, WindowActionGroup, "about");
 relm4::new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
-#[relm4::component(pub)]
-impl Component for App {
+#[relm4::component(pub async)]
+impl AsyncComponent for App {
 	type CommandOutput = ();
 	type Input = Event;
 	type Output = ();
 	type Init = ();
 	type Widgets = AppWidgets;
 
-	fn init(
+	fn init_loading_widgets(
+		root: &mut Self::Root,
+	) -> Option<relm4::loading_widgets::LoadingWidgets> {
+		view! {
+				#[local_ref]
+				root {
+						set_title: Some("Simple app"),
+						set_default_size: (300, 100),
+
+						// This will replaced by the Box of the fully
+						// initialized view because Window can only have one child.
+						// If the root of the component was a Box which can have
+						// several children, you'd need to remove this again in init().
+						#[name(spinner)]
+						gtk::Spinner {
+								start: (),
+								set_halign: gtk::Align::Center,
+						}
+				}
+		}
+		Some(LoadingWidgets::new(root, spinner))
+	}
+
+	async fn init(
 		_init: Self::Init,
-		root: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> ComponentParts<Self> {
+		root: Self::Root,
+		sender: AsyncComponentSender<Self>,
+	) -> AsyncComponentParts<Self> {
+		match setup::init_services().await {
+			Ok(_) => (),
+			Err(_) => panic!("Failed to initialize services."),
+		};
+
 		let preferences: &str = fl!("preferences");
 		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
 		let about_done: &str = fl!("about-done");
@@ -221,14 +250,14 @@ impl Component for App {
 			Some(&actions.into_action_group()),
 		);
 
-		ComponentParts { model, widgets }
+		AsyncComponentParts { model, widgets }
 	}
 
-	fn update_with_view(
+	async fn update_with_view(
 		&mut self,
 		widgets: &mut Self::Widgets,
 		message: Self::Input,
-		sender: ComponentSender<Self>,
+		sender: AsyncComponentSender<Self>,
 		_root: &Self::Root,
 	) {
 		match message {
@@ -349,91 +378,86 @@ impl Component for App {
 				None
 			},
 
-			// add_controller = &gtk::GestureClick {
-			// 	connect_pressed[sender] => move |_, _, _, _| {
-			// 		sender.input(Event::CloseWarning);
-			// 	}
-			// },
-
-
-			#[name = "overlay"]
-			adw::ToastOverlay {
-				#[wrap(Some)]
-				set_child: stack = &gtk::Stack {
-					set_hexpand: true,
-					set_vexpand: true,
-					set_transition_duration: 250,
-					set_transition_type: gtk::StackTransitionType::Crossfade,
-					add_child = &gtk::Box {
-						set_orientation: gtk::Orientation::Vertical,
-						append: leaflet = &adw::Leaflet {
-							set_can_navigate_back: true,
-							append: sidebar = &gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								set_width_request: 280,
-								#[name = "sidebar_header"]
-								adw::HeaderBar {
-									set_show_end_title_buttons: false,
-									set_title_widget: Some(&gtk::Label::new(Some("Done"))),
-									pack_end = &gtk::MenuButton {
-										set_icon_name: "open-menu-symbolic",
-										set_menu_model: Some(&primary_menu),
+			gtk::Box {
+				#[name = "overlay"]
+				adw::ToastOverlay {
+					#[wrap(Some)]
+					set_child: stack = &gtk::Stack {
+						set_hexpand: true,
+						set_vexpand: true,
+						set_transition_duration: 250,
+						set_transition_type: gtk::StackTransitionType::Crossfade,
+						add_child = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							append: leaflet = &adw::Leaflet {
+								set_can_navigate_back: true,
+								append: sidebar = &gtk::Box {
+									set_orientation: gtk::Orientation::Vertical,
+									set_width_request: 280,
+									#[name = "sidebar_header"]
+									adw::HeaderBar {
+										set_show_end_title_buttons: false,
+										set_title_widget: Some(&gtk::Label::new(Some("Done"))),
+										pack_end = &gtk::MenuButton {
+											set_icon_name: "open-menu-symbolic",
+											set_menu_model: Some(&primary_menu),
+										},
 									},
+									append: model.sidebar.widget(),
 								},
-								append: model.sidebar.widget(),
-							},
-							append: &gtk::Separator::default(),
-							append: content = &gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								#[name = "content_header"]
-								append = &adw::HeaderBar {
-									set_hexpand: true,
-									set_show_start_title_buttons: true,
-									#[watch]
-									set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
-									pack_start: go_back_button = &gtk::Button {
-										set_icon_name: "go-previous-symbolic",
-										set_visible: false,
-										connect_clicked[sender] => move |_| {
-											sender.input(Event::Back);
+								append: &gtk::Separator::default(),
+								append: content = &gtk::Box {
+									set_orientation: gtk::Orientation::Vertical,
+									#[name = "content_header"]
+									append = &adw::HeaderBar {
+										set_hexpand: true,
+										set_show_start_title_buttons: true,
+										#[watch]
+										set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
+										pack_start: go_back_button = &gtk::Button {
+											set_icon_name: "go-previous-symbolic",
+											set_visible: false,
+											connect_clicked[sender] => move |_| {
+												sender.input(Event::Back);
+											}
 										}
-									}
-								},
-								gtk::InfoBar {
-									set_message_type: gtk::MessageType::Warning,
-									set_visible: PROFILE == "Devel",
-									#[watch]
-									set_revealed: model.warning_revealed,
-									set_show_close_button: true,
-									connect_response[sender] => move |_, _| {
-										sender.input_sender().send(Event::CloseWarning).unwrap()
 									},
-									gtk4::Label {
-										set_wrap: true,
-										set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
-										add_css_class: "warning",
-										set_text: fl!("alpha-warning")
+									gtk::InfoBar {
+										set_message_type: gtk::MessageType::Warning,
+										set_visible: PROFILE == "Devel",
+										#[watch]
+										set_revealed: model.warning_revealed,
+										set_show_close_button: true,
+										connect_response[sender] => move |_, _| {
+											sender.input_sender().send(Event::CloseWarning).unwrap()
+										},
+										gtk4::Label {
+											set_wrap: true,
+											set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
+											add_css_class: "warning",
+											set_text: fl!("alpha-warning")
+										}
+									},
+									append = &gtk::Box {
+										#[watch]
+										set_visible: model.page_title.is_none(),
+										append: model.welcome.widget()
+									},
+									append = &gtk::Box {
+										#[watch]
+										set_visible: model.page_title.is_some(),
+										append: model.content.widget()
+									},
+								},
+								connect_folded_notify[sender] => move |leaflet| {
+									if leaflet.is_folded() {
+										sender.input(Event::Folded);
+									} else {
+										sender.input(Event::Unfolded);
 									}
-								},
-								append = &gtk::Box {
-									#[watch]
-									set_visible: model.page_title.is_none(),
-									append: model.welcome.widget()
-								},
-								append = &gtk::Box {
-									#[watch]
-									set_visible: model.page_title.is_some(),
-									append: model.content.widget()
-								},
-							},
-							connect_folded_notify[sender] => move |leaflet| {
-								if leaflet.is_folded() {
-									sender.input(Event::Folded);
-								} else {
-									sender.input(Event::Unfolded);
 								}
-							}
-						},
+							},
+						}
 					}
 				}
 			}

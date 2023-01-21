@@ -33,8 +33,8 @@ pub fn init() -> Result<adw::Application> {
 	Ok(app)
 }
 
-pub async fn async_init() -> Result<()> {
-	services::init().await?;
+pub async fn init_services() -> Result<()> {
 	settings::init().await?;
+	services::init().await?;
 	Ok(())
 }
