@@ -13,6 +13,7 @@ use relm4::{
 	RelmWidgetExt,
 };
 
+use crate::application::plugin::Plugin;
 use crate::widgets::components::content::ContentComponentInput;
 use proto_rust::provider::Task;
 
@@ -31,22 +32,22 @@ pub enum TaskFactoryOutput {
 }
 
 #[derive(Debug, Clone)]
-pub struct TaskFactory {
+pub struct TaskFactoryModel {
 	pub task: Task,
-	pub service: ProviderClient<Channel>,
-	pub first_load: bool,
+	pub client: ProviderClient<Channel>,
 	pub compact: bool,
+	pub first_load: bool,
 }
 
 #[derive(derive_new::new)]
 pub struct TaskFactoryInit {
+	plugin: Plugin,
 	id: String,
-	service: ProviderClient<Channel>,
 	compact: bool,
 }
 
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for TaskFactory {
+impl AsyncFactoryComponent for TaskFactoryModel {
 	type ParentInput = ContentComponentInput;
 	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
@@ -146,11 +147,11 @@ impl AsyncFactoryComponent for TaskFactory {
 	) -> Self {
 		let mut model = Self {
 			task: Task::default(),
-			service: init.service,
-			first_load: true,
+			client: init.plugin.connect().await.unwrap(),
 			compact: init.compact,
+			first_load: true,
 		};
-		match model.service.read_task(init.id.clone()).await {
+		match model.client.read_task(init.id.clone()).await {
 			Ok(response) => match response.into_inner().task {
 				Some(task) => model.task = task,
 				None => tracing::error!("Failed to get task."),

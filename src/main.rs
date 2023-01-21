@@ -1,7 +1,3 @@
-extern crate pretty_env_logger;
-#[macro_use]
-extern crate log;
-
 use anyhow::Result;
 use application::setup;
 use relm4::{adw, gtk, RelmApp};

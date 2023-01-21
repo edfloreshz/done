@@ -5,7 +5,7 @@ use crate::widgets::components::task_entry::{
 };
 use crate::widgets::factory::list::ListFactoryModel;
 use crate::widgets::factory::task::{
-	TaskFactory, TaskFactoryInit, TaskFactoryInput,
+	TaskFactoryInit, TaskFactoryInput, TaskFactoryModel,
 };
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -31,7 +31,7 @@ use super::smart_lists::{
 };
 
 pub struct ContentComponentModel {
-	task_factory: AsyncFactoryVecDeque<TaskFactory>,
+	task_factory: AsyncFactoryVecDeque<TaskFactoryModel>,
 	task_entry: Controller<TaskEntryComponent>,
 	all: Controller<AllComponentModel>,
 	today: Controller<TodayComponentModel>,
@@ -199,8 +199,8 @@ impl AsyncComponent for ContentComponentModel {
 						if response.successful && response.task.is_some() {
 							let task = response.task.unwrap();
 							self.task_factory.guard().push_back(TaskFactoryInit::new(
+								self.plugin.clone().unwrap(),
 								task.id,
-								self.service.clone().unwrap(),
 								self.compact,
 							));
 						}
@@ -283,8 +283,8 @@ impl AsyncComponent for ContentComponentModel {
 
 				for task in model.tasks {
 					self.task_factory.guard().push_back(TaskFactoryInit::new(
+						self.plugin.clone().unwrap(),
 						task,
-						self.service.clone().unwrap(),
 						self.compact,
 					));
 				}
