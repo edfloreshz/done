@@ -20,7 +20,7 @@ use crate::widgets::factory::list::ListFactoryModel;
 #[derive(Debug)]
 pub struct PluginFactoryModel {
 	pub plugin: Plugin,
-	pub service: ProviderClient<Channel>,
+	pub service: Option<ProviderClient<Channel>>,
 	pub enabled: bool,
 	pub lists: Vec<String>,
 	pub list_factory: AsyncFactoryVecDeque<ListFactoryModel>,
@@ -51,7 +51,6 @@ pub enum PluginFactoryOutput {
 pub struct PluginFactoryInit {
 	plugin: Plugin,
 	enabled: bool,
-	service: ProviderClient<Channel>,
 }
 
 #[relm4::factory(pub async)]
@@ -99,7 +98,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		let index = index.current_index();
 		Self {
 			plugin: init.plugin.clone(),
-			service: init.service,
+			service: init.plugin.connect().await.ok(),
 			enabled: init.enabled,
 			lists: init.plugin.lists().await.unwrap(),
 			list_factory: AsyncFactoryVecDeque::new(
@@ -173,9 +172,9 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			PluginFactoryInput::Forward => {
 				sender.output(PluginFactoryOutput::Forward)
 			},
-			PluginFactoryInput::ListSelected(list) => {
-				sender.output(PluginFactoryOutput::ListSelected(list.clone()));
-				info!("List selected: {}", list.list.name);
+			PluginFactoryInput::ListSelected(model) => {
+				sender.output(PluginFactoryOutput::ListSelected(model.clone()));
+				info!("List selected: {}", model.list.unwrap().name);
 			},
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))

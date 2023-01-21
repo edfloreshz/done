@@ -18,13 +18,13 @@ use relm4::{adw, Component, ComponentController, Controller};
 use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
-	RelmWidgetExt,
 };
 
 #[derive(Debug)]
 pub struct SidebarComponentModel {
 	provider_factory: AsyncFactoryVecDeque<PluginFactoryModel>,
 	smart_list_controller: Controller<SmartListModel>,
+	is_sidebar_empty: bool,
 }
 
 #[derive(Debug)]
@@ -79,19 +79,16 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						},
 						gtk::CenterBox {
 							#[watch]
-							set_visible: false, // TODO: Show when no provider is enabled.
+							set_visible: model.is_sidebar_empty,
 							set_orientation: gtk::Orientation::Vertical,
 							set_halign: gtk::Align::Center,
-							set_valign: gtk::Align::Center,
 							set_vexpand: true,
+							set_valign: gtk::Align::Start,
+							set_margin_top: 15,
 							#[wrap(Some)]
 							set_center_widget = &gtk::Box {
 								set_orientation: gtk::Orientation::Vertical,
 								set_spacing: 24,
-								gtk::Picture {
-									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/leaf.png"),
-									set_margin_all: 25
-								},
 								gtk::Label {
 									set_label: fl!("empty-sidebar"),
 									set_css_classes: &["title-4", "accent"],
@@ -114,6 +111,11 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
+		let project = Project::open("dev", "edfloreshz", "done").unwrap();
+		let preferences = project
+			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+			.unwrap();
+
 		let mut model = SidebarComponentModel {
 			provider_factory: AsyncFactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
@@ -128,37 +130,26 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					SmartListOutput::Forward => SidebarComponentInput::Forward,
 				},
 			),
+			is_sidebar_empty: !preferences
+				.plugins
+				.iter()
+				.any(|preferences| preferences.installed),
 		};
 
 		let providers_container = model.provider_factory.widget();
 
 		let widgets = view_output!();
 
-		let project = Project::open("dev", "edfloreshz", "done").unwrap();
-		let preferences = project
-			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-			.unwrap();
-
-		for plugin_preference in preferences.plugins {
-			if let Ok(service) = plugin_preference.plugin.connect().await {
-				model
-					.provider_factory
-					.guard()
-					.push_back(PluginFactoryInit::new(
-						plugin_preference.plugin.clone(),
-						plugin_preference.enabled,
-						service,
-					));
-				info!(
-					"Added {:?} service to the sidebar",
-					plugin_preference.plugin.name
-				);
-			} else {
-				error!(
-					"{} service is not reachable.",
-					plugin_preference.plugin.name
-				);
-			}
+		for plugin_preference in
+			preferences.plugins.iter().filter(|plugin| plugin.installed)
+		{
+			model
+				.provider_factory
+				.guard()
+				.push_back(PluginFactoryInit::new(
+					plugin_preference.plugin.clone(),
+					plugin_preference.enabled,
+				));
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -217,19 +208,12 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			SidebarComponentInput::AddPluginToSidebar(plugin) => {
 				match plugin.start() {
 					Ok(_) => {
-						if let Ok(service) = plugin.connect().await {
-							self
-								.provider_factory
-								.guard()
-								.push_back(PluginFactoryInit::new(
-									plugin.clone(),
-									false,
-									service,
-								));
-							info!("Added {:?} service to the sidebar", plugin.name);
-						} else {
-							error!("{} service is not reachable.", plugin.name);
-						}
+						self
+							.provider_factory
+							.guard()
+							.push_back(PluginFactoryInit::new(plugin.clone(), false));
+						self.is_sidebar_empty = false;
+						info!("Added {:?} service to the sidebar", plugin.name);
 					},
 					Err(err) => sender
 						.output_sender()
@@ -244,6 +228,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.iter()
 					.position(|p| p.unwrap().plugin == plugin);
 				if let Some(index) = index {
+					println!("ENABLED SERVICE CORRECTLY");
 					self
 						.provider_factory
 						.send(index, PluginFactoryInput::Enable);
@@ -262,6 +247,14 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					sender
 						.output(SidebarComponentOutput::DisablePlugin)
 						.unwrap_or_default();
+					let project = Project::open("dev", "edfloreshz", "done").unwrap();
+					let preferences = project
+						.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+						.unwrap();
+					self.is_sidebar_empty = !preferences
+						.plugins
+						.iter()
+						.any(|preferences| preferences.installed);
 				}
 			},
 			SidebarComponentInput::ListSelected(list) => {

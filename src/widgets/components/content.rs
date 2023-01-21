@@ -264,8 +264,8 @@ impl AsyncComponent for ContentComponentModel {
 					},
 				}
 			},
-			ContentComponentInput::TaskListSelected(list) => {
-				self.parent_list = Some(list.list.clone());
+			ContentComponentInput::TaskListSelected(model) => {
+				self.parent_list = Some(model.list.clone().unwrap());
 				self.selected_smart_list = None;
 				self
 					.task_entry
@@ -274,13 +274,14 @@ impl AsyncComponent for ContentComponentModel {
 						self.parent_list.clone(),
 					))
 					.unwrap_or_default();
-				self.plugin = Some(Plugin::get_by_id(&list.list.provider).unwrap());
+				self.plugin =
+					Some(Plugin::get_by_id(&model.list.unwrap().provider).unwrap());
 				self.service =
 					Some(self.plugin.as_ref().unwrap().connect().await.unwrap());
 
 				self.task_factory.guard().clear();
 
-				for task in list.tasks {
+				for task in model.tasks {
 					self.task_factory.guard().push_back(TaskFactoryInit::new(
 						task,
 						self.service.clone().unwrap(),

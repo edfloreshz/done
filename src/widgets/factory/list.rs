@@ -16,9 +16,9 @@ use crate::{adw, gtk};
 
 #[derive(Debug, Clone)]
 pub struct ListFactoryModel {
-	pub list: List,
+	pub list: Option<List>,
 	pub tasks: Vec<String>,
-	pub service: ProviderClient<Channel>,
+	pub service: Option<ProviderClient<Channel>>,
 }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ pub enum ListFactoryOutput {
 #[derive(derive_new::new)]
 pub struct ListFactoryInit {
 	list_id: String,
-	service: ProviderClient<Channel>,
+	service: Option<ProviderClient<Channel>>,
 }
 
 #[relm4::factory(pub async)]
@@ -56,13 +56,18 @@ impl AsyncFactoryComponent for ListFactoryModel {
 	view! {
 		#[root]
 		gtk::ListBoxRow {
+			set_visible: self.list.is_some(),
 			adw::ActionRow {
 				add_prefix = &gtk::Entry {
 					set_hexpand: false,
 					add_css_class: "flat",
 					add_css_class: "no-border",
 					#[watch]
-					set_text: self.list.name.as_str(),
+					set_text: if self.list.is_some() {
+						self.list.as_ref().unwrap().name.as_str()
+					} else {
+						""
+					},
 					set_margin_top: 10,
 					set_margin_bottom: 10,
 					connect_activate[sender] => move |entry| {
@@ -77,7 +82,11 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				},
 				add_prefix = &gtk::MenuButton {
 					#[watch]
-					set_label: self.list.icon.as_ref().unwrap().as_str(),
+					set_label: if self.list.is_some() {
+						self.list.as_ref().unwrap().icon.as_ref().unwrap().as_str()
+					} else {
+						""
+					},
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					#[wrap(Some)]
@@ -144,23 +153,33 @@ impl AsyncFactoryComponent for ListFactoryModel {
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let mut service = params.service.clone();
-		let list = match service.read_list(params.list_id.clone()).await {
-			Ok(response) => response.into_inner().list.unwrap(), //TODO: Handle this unwrap.
-			Err(e) => {
-				error!("Failed to find list. {:?}", e);
-				List::default()
-			},
-		};
-		let tasks = match service
-			.read_task_ids_from_list(params.list_id.clone())
-			.await
-		{
-			Ok(response) => response.into_inner().tasks,
-			Err(e) => {
-				error!("Failed to find tasks. {:?}", e);
-				vec![]
-			},
-		};
+		let mut list = None;
+		let mut tasks = vec![];
+		if let Some(client) = &mut service {
+			list = match client.read_list(params.list_id.clone()).await {
+				Ok(response) => {
+					let response = response.into_inner();
+					if response.list.is_some() {
+						tasks = match client
+							.read_task_ids_from_list(params.list_id.clone())
+							.await
+						{
+							Ok(response) => response.into_inner().tasks,
+							Err(e) => {
+								error!("Failed to find tasks. {:?}", e);
+								vec![]
+							},
+						};
+					}
+					response.list
+				},
+				Err(e) => {
+					error!("Failed to find list. {:?}", e);
+					None
+				},
+			};
+		}
+
 		Self {
 			list,
 			tasks,
@@ -175,60 +194,74 @@ impl AsyncFactoryComponent for ListFactoryModel {
 	) {
 		match message {
 			ListFactoryInput::Rename(name) => {
-				let mut list = self.list.clone();
+				let mut list = self.list.clone().unwrap();
 				list.name = name.clone();
-				match self.service.update_list(list).await {
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful {
-							self.list.name = name;
-						}
-						sender.output(ListFactoryOutput::Notify(response.message));
-					},
-					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
+				if let Some(client) = &mut self.service {
+					match client.update_list(list).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								self.list.as_mut().unwrap().name = name;
+							}
+							sender.output(ListFactoryOutput::Notify(response.message));
+						},
+						Err(err) => {
+							sender.output(ListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
 			ListFactoryInput::Delete(index) => {
-				match self.service.delete_list(self.clone().list.id).await {
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful {
-							sender.output(ListFactoryOutput::DeleteTaskList(
-								index,
-								self.list.id.clone(),
-							));
-						}
-						sender.output(ListFactoryOutput::Notify(response.message));
-					},
-					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
+				let list_id = self.list.as_ref().unwrap().id.clone();
+				if let Some(client) = &mut self.service {
+					match client.delete_list(list_id.clone()).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								sender
+									.output(ListFactoryOutput::DeleteTaskList(index, list_id));
+							}
+							sender.output(ListFactoryOutput::Notify(response.message));
+						},
+						Err(err) => {
+							sender.output(ListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
 			ListFactoryInput::ChangeIcon(icon) => {
-				let mut list = self.list.clone();
-				list.icon = Some(icon.clone());
-				match self.service.update_list(list).await {
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful {
-							self.list.icon = Some(icon);
-						}
-						sender.output(ListFactoryOutput::Notify(response.message));
-					},
-					Err(err) => sender.output(ListFactoryOutput::Notify(err.to_string())),
+				if let Some(client) = &mut self.service {
+					let mut list = self.list.clone().unwrap();
+					list.icon = Some(icon.clone());
+					match client.update_list(list).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								self.list.as_mut().unwrap().icon = Some(icon);
+							}
+							sender.output(ListFactoryOutput::Notify(response.message));
+						},
+						Err(err) => {
+							sender.output(ListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
 			ListFactoryInput::Select => {
-				let mut service = self.service.clone();
-				let tasks =
-					match service.read_task_ids_from_list(self.list.id.clone()).await {
+				if let Some(client) = &mut self.service {
+					let tasks = match client
+						.read_task_ids_from_list(self.list.as_ref().unwrap().id.clone())
+						.await
+					{
 						Ok(response) => response.into_inner().tasks,
 						Err(e) => {
 							error!("Failed to find tasks. {:?}", e);
 							vec![]
 						},
 					};
-				self.tasks = tasks;
-				sender.output(ListFactoryOutput::Select(self.clone()));
+					self.tasks = tasks;
+					sender.output(ListFactoryOutput::Select(self.clone()));
+				}
 			},
 		}
 	}
