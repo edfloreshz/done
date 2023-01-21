@@ -131,7 +131,8 @@ impl AsyncFactoryComponent for ServiceRowModel {
 				}
 			},
 			ServiceRowInput::InstallPlugin(index) => {
-				sender.output(ServiceRowOutput::InstallPlugin(index, self.plugin.clone()));
+				sender
+					.output(ServiceRowOutput::InstallPlugin(index, self.plugin.clone()));
 			},
 			ServiceRowInput::EnablePlugin(index) => {
 				if !self.first_load {
@@ -145,9 +146,8 @@ impl AsyncFactoryComponent for ServiceRowModel {
 						.output(ServiceRowOutput::DisablePlugin(index, self.plugin.clone()))
 				}
 			},
-			ServiceRowInput::RemovePlugin(index) => {
-				sender.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone()))
-			},
+			ServiceRowInput::RemovePlugin(index) => sender
+				.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone())),
 			ServiceRowInput::EnableInstallButton(enable) => self.installed = !enable,
 			ServiceRowInput::EnableSwitch(enabled) => {
 				widgets.switch.set_state(enabled);
