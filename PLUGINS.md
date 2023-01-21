@@ -60,14 +60,14 @@ To do it, you'll need to add the following object to [`dev.edfloreshz.Done.Plugi
 
 ```json
 {
-    "pluginId": string,
-    "pluginName": string,
-    "pluginDescription": string,
-    "pluginIcon": string,
-    "pluginPort": int,
-    "pluginVersion": string,
-    "pluginProcessName": string,
-    "pluginDownloadUrl": string
+    "pluginId": "Assign a unique id to your plugin, we recommend you create a universally unique identifier (UUID)",
+    "pluginName": "Type your service name",
+    "pluginDescription": "Type a short description of your service",
+    "pluginIcon": "Find an icon from freedesktop and assign it to this property",
+    "pluginPort": 12345,
+    "pluginVersion": "Type the latest version of your plugin, this number will be used to figure out if there are updates available, be sure to change it with each release",
+    "pluginProcessName": "Type the name of your binary",
+    "pluginDownloadUrl": "Type the download url of your binary"
 }
 ```
 
