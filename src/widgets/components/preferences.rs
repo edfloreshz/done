@@ -325,11 +325,15 @@ impl AsyncComponent for PreferencesComponentModel {
 						update_preferences(&self.preferences).unwrap();
 						sender
 							.output_sender()
-							.send(PreferencesComponentOutput::AddPluginToSidebar(plugin))
+							.send(PreferencesComponentOutput::AddPluginToSidebar(plugin.clone()))
 							.unwrap();
 						self.service_row_factory.send(
 							index.current_index(),
 							ServiceRowInput::EnableInstallButton(false),
+						);
+						self.service_row_factory.send(
+							index.current_index(),
+							ServiceRowInput::EnableSwitch(true),
 						);
 					},
 					Err(err) => {
@@ -346,7 +350,7 @@ impl AsyncComponent for PreferencesComponentModel {
 					.iter_mut()
 					.find(|preferences| preferences.plugin == plugin)
 				{
-					match std::fs::remove_dir_all(&preferences.executable) {
+					match std::fs::remove_file(&preferences.executable) {
 						Ok(_) => {
 							preferences.enabled = false;
 							preferences.installed = false;
