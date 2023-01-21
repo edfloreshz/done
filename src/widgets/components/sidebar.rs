@@ -213,7 +213,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							.guard()
 							.push_back(PluginFactoryInit::new(plugin.clone(), false));
 						self.is_sidebar_empty = false;
-						info!("Added {:?} service to the sidebar", plugin.name);
+						tracing::info!("Added {:?} service to the sidebar", plugin.name);
 					},
 					Err(err) => sender
 						.output_sender()

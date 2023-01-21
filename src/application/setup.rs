@@ -23,7 +23,11 @@ pub async fn init() -> Result<adw::Application> {
 	localization::init();
 	settings::init().await?;
 	appearance::init()?;
-	pretty_env_logger::init();
+	// Enable logging
+	tracing_subscriber::fmt()
+		.with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
+		.with_max_level(tracing::Level::INFO)
+		.init();
 	resources::init()?;
 	services::init().await?;
 	actions::init(&app);

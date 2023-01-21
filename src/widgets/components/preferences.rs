@@ -228,7 +228,7 @@ impl AsyncComponent for PreferencesComponentModel {
 			PreferencesComponentInput::EnablePlugin(index, plugin) => {
 				match plugin.start() {
 					Ok(_) => {
-						info!("Plugin {:?} started...", plugin);
+						tracing::info!("Plugin {:?} started...", plugin);
 						widgets.overlay.add_toast(&toast("Service enabled.", 1));
 
 						self.preferences.plugins = self
@@ -255,11 +255,11 @@ impl AsyncComponent for PreferencesComponentModel {
 									ServiceRowInput::EnableSwitch(true),
 								);
 							},
-							Err(e) => error!("{:?}", e),
+							Err(e) => tracing::error!("{:?}", e),
 						}
 					},
 					Err(err) => {
-						info!("Failed to start {:?} plugin: {:?}", plugin, err);
+						tracing::info!("Failed to start {:?} plugin: {:?}", plugin, err);
 						widgets
 							.overlay
 							.add_toast(&toast("Failed to start this plug-in.", 2));
@@ -268,7 +268,7 @@ impl AsyncComponent for PreferencesComponentModel {
 			},
 			PreferencesComponentInput::DisablePlugin(index, plugin) => {
 				plugin.stop();
-				info!("Plugin {:?} stopped.", plugin);
+				tracing::info!("Plugin {:?} stopped.", plugin);
 				let previous_model = self.preferences.clone();
 				self.preferences.plugins = self
 					.preferences
@@ -295,7 +295,7 @@ impl AsyncComponent for PreferencesComponentModel {
 								ServiceRowInput::EnableSwitch(false),
 							);
 						},
-						Err(e) => error!("{:?}", e),
+						Err(e) => tracing::error!("{:?}", e),
 					}
 				}
 			},
@@ -311,7 +311,7 @@ impl AsyncComponent for PreferencesComponentModel {
 							plugin.installed = true;
 							plugin.enabled = true;
 						} else {
-							error!("This plugin is not registered.")
+							tracing::error!("This plugin is not registered.")
 						}
 						update_preferences(&self.preferences).unwrap();
 						sender
@@ -323,7 +323,7 @@ impl AsyncComponent for PreferencesComponentModel {
 							.send(index.current_index(), ServiceRowInput::HideInstallButton);
 					},
 					Err(err) => {
-						error!("{err:?}");
+						tracing::error!("{err:?}");
 						widgets.overlay.add_toast(&toast(err, 2))
 					},
 				}

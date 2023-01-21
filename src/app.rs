@@ -110,12 +110,12 @@ impl Component for App {
 			let mut local = processes.processes_by_exact_name("local-plugin");
 			if let Some(process) = local.next() {
 				if process.kill() {
-					info!("The {} process was killed.", process.name());
+					tracing::info!("The {} process was killed.", process.name());
 				} else {
-					error!("Failed to kill process.");
+					tracing::error!("Failed to kill process.");
 				}
 			} else {
-				info!("Process is not running.");
+				tracing::info!("Process is not running.");
 			}
 		});
 
