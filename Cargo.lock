@@ -445,6 +445,7 @@ dependencies = [
  "i18n-embed-fl",
  "libadwaita",
  "libset",
+ "meson",
  "once_cell",
  "proto_rust",
  "relm4",
@@ -1460,6 +1461,12 @@ checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "meson"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de6e688268407ad0a7c589bf2d7313db6c2079dae5c96df0f2d5903bc6343a91"
 
 [[package]]
 name = "mime"

@@ -1,3 +1,4 @@
+subdir('icons')
 # Resources
 resources = gnome.compile_resources(
   'resources',

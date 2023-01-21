@@ -75,3 +75,4 @@ git = "https://github.com/done-devel/proto-rust"
 
 [build-dependencies]
 glib-build-tools = "0.16.3"
+meson = "1.0.0"

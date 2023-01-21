@@ -6,32 +6,32 @@
     <file compressed="true">style.css</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/actions">
-    <file alias="star-outline-rounded-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/star-outline-rounded-symbolic.svg</file>
-    <file alias="star-filled-rounded-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/star-filled-rounded-symbolic.svg</file>
-    <file alias="user-trash-full-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-trash-full-symbolic.svg</file>
-    <file alias="user-trash-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-trash-symbolic.svg</file>
-    <file alias="leaf.png">../icons/actions/leaf.png</file>
-    <file alias="paper-plane.png">../icons/actions/paper-plane.png</file>
-    <file alias="document-save-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/document-save-symbolic.svg</file>
-    <file alias="sun-alt-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/sun-alt-symbolic.svg</file>
-    <file alias="org.gnome.Calendar.Devel-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/org.gnome.Calendar.Devel-symbolic.svg</file>
-    <file alias="edit-paste-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/edit-paste-symbolic.svg</file>
-    <file alias="folder-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/folder-symbolic.svg</file>
-    <file alias="list-compact-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/list-compact-symbolic.svg</file>
-    <file alias="open-menu-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/open-menu-symbolic.svg</file>
-    <file alias="value-increase-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/value-increase-symbolic.svg</file>
-    <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/go-previous-symbolic.svg</file>
-    <file alias="user-home-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/user-home-symbolic.svg</file>
-    <file alias="small-x-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/small-x-symbolic.svg</file>
-    <file alias="checkmark-small-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/checkmark-small-symbolic.svg</file>
-    <file alias="daytime-sunrise-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/daytime-sunrise-symbolic.svg</file>
-    <file alias="appointment-soon-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/appointment-soon-symbolic.svg</file>
-    <file alias="office-calendar-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/office-calendar-symbolic.svg</file>
-    <file alias="accessories-text-editor-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/accessories-text-editor-symbolic.svg</file>
+    <file alias="star-outline-rounded-symbolic.svg" preprocess="xml-stripblanks">icons/actions/star-outline-rounded-symbolic.svg</file>
+    <file alias="star-filled-rounded-symbolic.svg" preprocess="xml-stripblanks">icons/actions/star-filled-rounded-symbolic.svg</file>
+    <file alias="user-trash-full-symbolic.svg" preprocess="xml-stripblanks">icons/actions/user-trash-full-symbolic.svg</file>
+    <file alias="user-trash-symbolic.svg" preprocess="xml-stripblanks">icons/actions/user-trash-symbolic.svg</file>
+    <file alias="leaf.png">icons/actions/leaf.png</file>
+    <file alias="paper-plane.png">icons/actions/paper-plane.png</file>
+    <file alias="document-save-symbolic.svg" preprocess="xml-stripblanks">icons/actions/document-save-symbolic.svg</file>
+    <file alias="sun-alt-symbolic.svg" preprocess="xml-stripblanks">icons/actions/sun-alt-symbolic.svg</file>
+    <file alias="org.gnome.Calendar.Devel-symbolic.svg" preprocess="xml-stripblanks">icons/actions/org.gnome.Calendar.Devel-symbolic.svg</file>
+    <file alias="edit-paste-symbolic.svg" preprocess="xml-stripblanks">icons/actions/edit-paste-symbolic.svg</file>
+    <file alias="folder-symbolic.svg" preprocess="xml-stripblanks">icons/actions/folder-symbolic.svg</file>
+    <file alias="list-compact-symbolic.svg" preprocess="xml-stripblanks">icons/actions/list-compact-symbolic.svg</file>
+    <file alias="open-menu-symbolic.svg" preprocess="xml-stripblanks">icons/actions/open-menu-symbolic.svg</file>
+    <file alias="value-increase-symbolic.svg" preprocess="xml-stripblanks">icons/actions/value-increase-symbolic.svg</file>
+    <file alias="go-previous-symbolic.svg" preprocess="xml-stripblanks">icons/actions/go-previous-symbolic.svg</file>
+    <file alias="user-home-symbolic.svg" preprocess="xml-stripblanks">icons/actions/user-home-symbolic.svg</file>
+    <file alias="small-x-symbolic.svg" preprocess="xml-stripblanks">icons/actions/small-x-symbolic.svg</file>
+    <file alias="checkmark-small-symbolic.svg" preprocess="xml-stripblanks">icons/actions/checkmark-small-symbolic.svg</file>
+    <file alias="daytime-sunrise-symbolic.svg" preprocess="xml-stripblanks">icons/actions/daytime-sunrise-symbolic.svg</file>
+    <file alias="appointment-soon-symbolic.svg" preprocess="xml-stripblanks">icons/actions/appointment-soon-symbolic.svg</file>
+    <file alias="office-calendar-symbolic.svg" preprocess="xml-stripblanks">icons/actions/office-calendar-symbolic.svg</file>
+    <file alias="accessories-text-editor-symbolic.svg" preprocess="xml-stripblanks">icons/actions/accessories-text-editor-symbolic.svg</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
-    <file alias="app-icon.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.svg</file>
-    <file alias="app-icon-devel.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.Devel.svg</file>
-    <file alias="app-icon-symbolic.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done-symbolic.svg</file>
+    <file alias="app-icon.svg" preprocess="xml-stripblanks">icons/dev.edfloreshz.Done.svg</file>
+    <file alias="app-icon-devel.svg" preprocess="xml-stripblanks">icons/dev.edfloreshz.Done.Devel.svg</file>
+    <file alias="app-icon-symbolic.svg" preprocess="xml-stripblanks">icons/dev.edfloreshz.Done-symbolic.svg</file>
   </gresource>
 </gresources>
