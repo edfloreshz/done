@@ -33,6 +33,7 @@ pub enum SidebarComponentInput {
 	ListSelected(ListFactoryModel),
 	EnableService(Plugin),
 	DisableService(Plugin),
+	RemoveService(Plugin),
 	AddPluginToSidebar(Plugin),
 	Forward,
 	Notify(String),
@@ -273,6 +274,19 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						.plugins
 						.iter()
 						.any(|preferences| preferences.installed);
+				}
+			},
+			SidebarComponentInput::RemoveService(plugin) => {
+				let index = self
+					.provider_factory
+					.guard()
+					.iter()
+					.position(|p| p.unwrap().plugin == plugin);
+				if let Some(index) = index {
+					match self.provider_factory.guard().remove(index) {
+						Some(provider) => info!("Removed {} service", provider.plugin.name),
+						None => error!("Failed to remove service from sidebar."),
+					}
 				}
 			},
 			SidebarComponentInput::ListSelected(list) => {

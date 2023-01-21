@@ -64,6 +64,7 @@ pub enum Event {
 	EnablePluginOnSidebar(Plugin),
 	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
+	RemovePluginFromSidebar(Plugin),
 	SelectSmartList(SmartList),
 	ToggleCompact(bool),
 	DisablePlugin,
@@ -159,6 +160,9 @@ impl Component for App {
 				},
 				PreferencesComponentOutput::ToggleCompact(compact) => {
 					Event::ToggleCompact(compact)
+				},
+				PreferencesComponentOutput::RemovePluginFromSidebar(plugin) => {
+					Event::RemovePluginFromSidebar(plugin)
 				},
 			});
 
@@ -281,6 +285,18 @@ impl Component for App {
 				.sender()
 				.send(SidebarComponentInput::DisableService(plugin))
 				.unwrap_or_default(),
+			Event::RemovePluginFromSidebar(plugin) => {
+				self
+					.sidebar
+					.sender()
+					.send(SidebarComponentInput::RemoveService(plugin))
+					.unwrap_or_default();
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::DisablePlugin)
+					.unwrap_or_default()
+			},
 			Event::SelectSmartList(list) => {
 				self.page_title = Some(list.name());
 				self
