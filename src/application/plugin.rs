@@ -39,7 +39,15 @@ pub struct Plugin {
 
 impl Plugin {
 	pub async fn fetch_plugins() -> Result<Vec<Plugin>> {
-		let response = reqwest::get(PLUGINS_URL).await?.text().await?;
+		let response = relm4::spawn(async move {
+			reqwest::get(PLUGINS_URL)
+				.await
+				.unwrap()
+				.text()
+				.await
+				.unwrap()
+		})
+		.await?;
 		let plugins: Vec<Plugin> = serde_json::from_str(&response)?;
 		Ok(plugins)
 	}
@@ -116,12 +124,14 @@ impl Plugin {
 	}
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
-		let url = format!("http://[::1]:{}", self.port);
+		let port = self.port;
 		loop {
-			let url = url.clone();
-			match relm4::spawn(async move { ProviderClient::connect(url).await })
-				.await
-				.unwrap()
+			match relm4::spawn(async move {
+				ProviderClient::connect(format!("http://[::1]:{}", port))
+					.await
+					.unwrap()
+			})
+			.await
 			{
 				Ok(client) => return Ok(client),
 				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
@@ -129,9 +139,16 @@ impl Plugin {
 		}
 	}
 
-	pub async fn lists(&self) -> Result<Vec<String>> {
-		let mut connector = self.connect().await?;
-		let response = connector.read_all_list_ids(Empty {}).await?.into_inner();
+	pub async fn lists(self) -> Result<Vec<String>> {
+		let response = relm4::spawn(async move {
+			let mut connector = self.connect().await.unwrap();
+			connector
+				.read_all_list_ids(Empty {})
+				.await
+				.unwrap()
+				.into_inner()
+		})
+		.await?;
 		Ok(response.lists)
 	}
 }
@@ -139,10 +156,13 @@ impl Plugin {
 // Download a file from a URL and save it to a file
 async fn download_file(url: &str, path: PathBuf) -> Result<PathBuf> {
 	let client = Client::new();
-	let response = client.get(url).send().await?;
+	let url = url.to_string();
+	let response =
+		relm4::spawn(async move { client.get(url).send().await.unwrap() }).await?;
 	let status = response.status();
 	if status == 200 {
-		let bytes = response.bytes().await?.to_vec();
+		let bytes =
+			relm4::spawn(async move { response.bytes().await.unwrap() }).await?;
 		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
 		let mut file = std::fs::File::create(path.clone()).unwrap();
 		file
