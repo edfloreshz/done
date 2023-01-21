@@ -78,12 +78,12 @@ impl Plugin {
 			processes.processes_by_exact_name(&self.process_name).next()
 		{
 			if process.kill() {
-				info!("Process was killed.");
+				tracing::info!("Process was killed.");
 			} else {
-				error!("Failed to kill process.");
+				tracing::error!("Failed to kill process.");
 			}
 		} else {
-			info!("Process is not running.");
+			tracing::info!("Process is not running.");
 		};
 	}
 
@@ -120,7 +120,7 @@ impl Plugin {
 		loop {
 			match ProviderClient::connect(url.clone()).await {
 				Ok(client) => return Ok(client),
-				Err(err) => error!("Failed to connect to plugin: {err}"),
+				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
 			}
 		}
 	}

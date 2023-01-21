@@ -166,7 +166,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 						{
 							Ok(response) => response.into_inner().tasks,
 							Err(e) => {
-								error!("Failed to find tasks. {:?}", e);
+								tracing::error!("Failed to find tasks. {:?}", e);
 								vec![]
 							},
 						};
@@ -174,7 +174,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 					response.list
 				},
 				Err(e) => {
-					error!("Failed to find list. {:?}", e);
+					tracing::error!("Failed to find list. {:?}", e);
 					None
 				},
 			};
@@ -255,7 +255,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 					{
 						Ok(response) => response.into_inner().tasks,
 						Err(e) => {
-							error!("Failed to find tasks. {:?}", e);
+							tracing::error!("Failed to find tasks. {:?}", e);
 							vec![]
 						},
 					};
