@@ -39,13 +39,17 @@ features = ["serde"]
 version = "0.5.0-rc.1"
 features = ["macros", "libadwaita"]
 
-[dependencies.serde]
-version = "1.0.126"
-features = ["derive"]
+[dependencies.gtk4]
+version = "0.5.5"
+features = ["v4_6"]
 
 [dependencies.libadwaita]
 version = "0.2.1"
 features = ["v1_2"]
+
+[dependencies.serde]
+version = "1.0.126"
+features = ["derive"]
 
 [dependencies.gettext-rs]
 version = "0.7"

@@ -231,7 +231,7 @@ impl Component for App {
 			Event::Quit => main_app().quit(),
 			Event::CloseWarning => self.warning_revealed = false,
 			Event::TaskListSelected(list) => {
-				self.page_title = Some(list.list.name.clone());
+				self.page_title = Some(list.list.clone().unwrap().name);
 				self
 					.content
 					.sender()
@@ -333,11 +333,11 @@ impl Component for App {
 				None
 			},
 
-			add_controller = &gtk::GestureClick {
-				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input(Event::CloseWarning);
-				}
-			},
+			// add_controller = &gtk::GestureClick {
+			// 	connect_pressed[sender] => move |_, _, _, _| {
+			// 		sender.input(Event::CloseWarning);
+			// 	}
+			// },
 
 
 			#[name = "overlay"]
@@ -383,6 +383,22 @@ impl Component for App {
 										}
 									}
 								},
+								gtk::InfoBar {
+									set_message_type: gtk::MessageType::Warning,
+									set_visible: PROFILE == "Devel",
+									#[watch]
+									set_revealed: model.warning_revealed,
+									set_show_close_button: true,
+									connect_response[sender] => move |_, _| {
+										sender.input_sender().send(Event::CloseWarning).unwrap()
+									},
+									gtk4::Label {
+										set_wrap: true,
+										set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
+										add_css_class: "warning",
+										set_text: fl!("alpha-warning")
+									}
+								},
 								append = &gtk::Box {
 									#[watch]
 									set_visible: model.page_title.is_none(),
@@ -400,16 +416,6 @@ impl Component for App {
 								} else {
 									sender.input(Event::Unfolded);
 								}
-							}
-						},
-						append = &gtk::InfoBar {
-							set_message_type: gtk::MessageType::Warning,
-							#[watch]
-							set_revealed: model.warning_revealed,
-							gtk::Label {
-								set_wrap: true,
-								add_css_class: "warning",
-								set_text: fl!("alpha-warning")
 							}
 						},
 					}

@@ -117,8 +117,12 @@ impl Plugin {
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
 		let url = format!("http://[::1]:{}", self.port);
-		let plugin = ProviderClient::connect(url).await?;
-		Ok(plugin)
+		loop {
+			match ProviderClient::connect(url.clone()).await {
+				Ok(client) => return Ok(client),
+				Err(err) => error!("Failed to connect to plugin: {err}"),
+			}
+		}
 	}
 
 	pub async fn lists(&self) -> Result<Vec<String>> {
