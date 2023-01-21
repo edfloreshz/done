@@ -151,13 +151,24 @@ impl AsyncFactoryComponent for ListFactoryModel {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let list = match &mut params.plugin.connect().await {
-			Ok(client) => match client.read_list(params.list_id.clone()).await {
-				Ok(response) => response.into_inner().list,
-				Err(e) => {
-					tracing::error!("Failed to find list. {:?}", e);
-					None
-				},
+		let plugin = params.plugin.clone();
+		let list = match relm4::spawn(async move { plugin.connect().await })
+			.await
+			.unwrap()
+		{
+			Ok(client) => {
+				let mut read_client = client.clone();
+				let list_id = params.list_id.clone();
+				match relm4::spawn(async move { read_client.read_list(list_id).await })
+					.await
+					.unwrap()
+				{
+					Ok(response) => response.into_inner().list,
+					Err(e) => {
+						tracing::error!("Failed to find list. {:?}", e);
+						None
+					},
+				}
 			},
 			Err(err) => {
 				tracing::error!("Failed to connect to server. {:?}", err);

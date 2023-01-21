@@ -167,33 +167,51 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.iter()
 					.find(|i| i.id == provider_id)
 				{
-					Some(provider) => match provider.connect().await {
-						Ok(mut service) => {
-							let list = List::new(&name, &provider_id);
-							match service.create_list(list.clone()).await {
-								Ok(response) => {
-									let response = response.into_inner();
-									if response.successful {
-										self
-											.provider_factory
-											.send(index, PluginFactoryInput::AddList(list));
-									}
-									sender
-										.output(SidebarComponentOutput::Notify(response.message, 1))
-										.unwrap_or_default();
-								},
-								Err(err) => {
-									sender
-										.output(SidebarComponentOutput::Notify(err.to_string(), 2))
-										.unwrap_or_default();
-								},
-							}
-						},
-						Err(err) => {
-							sender
-								.output(SidebarComponentOutput::Notify(err.to_string(), 2))
-								.unwrap_or_default();
-						},
+					Some(provider) => {
+						let provider = provider.clone();
+						match relm4::spawn(async move { provider.connect().await })
+							.await
+							.unwrap()
+						{
+							Ok(mut service) => {
+								let list = List::new(&name, &provider_id);
+								let create_list = list.clone();
+								match relm4::spawn(async move {
+									service.create_list(create_list).await
+								})
+								.await
+								.unwrap()
+								{
+									Ok(response) => {
+										let response = response.into_inner();
+										if response.successful {
+											self
+												.provider_factory
+												.send(index, PluginFactoryInput::AddList(list));
+										}
+										sender
+											.output(SidebarComponentOutput::Notify(
+												response.message,
+												1,
+											))
+											.unwrap_or_default();
+									},
+									Err(err) => {
+										sender
+											.output(SidebarComponentOutput::Notify(
+												err.to_string(),
+												2,
+											))
+											.unwrap_or_default();
+									},
+								}
+							},
+							Err(err) => {
+								sender
+									.output(SidebarComponentOutput::Notify(err.to_string(), 2))
+									.unwrap_or_default();
+							},
+						}
 					},
 					None => {
 						sender

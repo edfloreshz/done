@@ -7,4 +7,4 @@ pub const PROFILE: &str = "Devel";
 #[allow(dead_code)]
 pub const RESOURCES_FILE: &str =
 	concat!("/app/share/done", "/resources.gresource");
-pub const VERSION: &str = "0.1.2-9d9c6fa";
+pub const VERSION: &str = "0.1.2-d5ac365";

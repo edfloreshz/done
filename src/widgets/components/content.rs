@@ -187,12 +187,12 @@ impl AsyncComponent for ContentComponentModel {
 	) {
 		match message {
 			ContentComponentInput::AddTask(task) => {
-				match self
-					.service
-					.as_mut()
-					.unwrap()
-					.create_task(task.clone())
-					.await
+				let mut service = self.service.as_ref().unwrap().clone();
+				match relm4::spawn(
+					async move { service.create_task(task.clone()).await },
+				)
+				.await
+				.unwrap()
 				{
 					Ok(response) => {
 						let response = response.into_inner();
@@ -217,13 +217,13 @@ impl AsyncComponent for ContentComponentModel {
 			},
 			ContentComponentInput::RemoveTask(index) => {
 				let mut guard = self.task_factory.guard();
-				let task = guard.get(index.current_index()).unwrap();
-				match self
-					.service
-					.as_mut()
-					.unwrap()
-					.delete_task(task.clone().task.id)
-					.await
+				let task = guard.get(index.current_index()).unwrap().clone();
+				let mut service = self.service.as_ref().unwrap().clone();
+				match relm4::spawn(async move {
+					service.delete_task(task.clone().task.id).await
+				})
+				.await
+				.unwrap()
 				{
 					Ok(response) => {
 						let response = response.into_inner();
@@ -276,8 +276,12 @@ impl AsyncComponent for ContentComponentModel {
 					.unwrap_or_default();
 				self.plugin =
 					Some(Plugin::get_by_id(&model.list.unwrap().provider).unwrap());
-				self.service =
-					Some(self.plugin.as_ref().unwrap().connect().await.unwrap());
+				let plugin = self.plugin.as_ref().unwrap().clone();
+				self.service = Some(
+					relm4::spawn(async move { plugin.connect().await.unwrap() })
+						.await
+						.unwrap(),
+				);
 
 				self.task_factory.guard().clear();
 

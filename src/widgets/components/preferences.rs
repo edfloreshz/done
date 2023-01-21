@@ -195,7 +195,10 @@ impl AsyncComponent for PreferencesComponentModel {
 
 		let widgets = view_output!();
 
-		let plugins = Plugin::fetch_plugins().await.unwrap_or_default();
+		let plugins = relm4::spawn(Plugin::fetch_plugins())
+			.await
+			.unwrap()
+			.unwrap();
 
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 
@@ -300,7 +303,11 @@ impl AsyncComponent for PreferencesComponentModel {
 				}
 			},
 			PreferencesComponentInput::InstallPlugin(index, plugin) => {
-				match plugin.install().await {
+				let install_plugin = plugin.clone();
+				match relm4::spawn(async move { install_plugin.install().await })
+					.await
+					.unwrap()
+				{
 					Ok(_) => {
 						if let Some(plugin) = self
 							.preferences
