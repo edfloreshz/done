@@ -152,7 +152,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 					.position(|list_id| list_id.eq(list_id))
 					.unwrap();
 				self.lists.remove(index);
-				info!("Deleted task list with id: {}", list_id);
+				tracing::info!("Deleted task list with id: {}", list_id);
 			},
 			PluginFactoryInput::RequestAddList(index, name) => {
 				sender.output(PluginFactoryOutput::AddListToProvider(
@@ -167,14 +167,14 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 					self.service.clone(),
 				));
 				self.lists.push(list.id);
-				info!("List added to {}", self.plugin.name);
+				tracing::info!("List added to {}", self.plugin.name);
 			},
 			PluginFactoryInput::Forward => {
 				sender.output(PluginFactoryOutput::Forward)
 			},
 			PluginFactoryInput::ListSelected(model) => {
 				sender.output(PluginFactoryOutput::ListSelected(model.clone()));
-				info!("List selected: {}", model.list.unwrap().name);
+				tracing::info!("List selected: {}", model.list.unwrap().name);
 			},
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))
