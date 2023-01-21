@@ -1,10 +1,9 @@
-use proto_rust::provider_client::ProviderClient;
-use proto_rust::Channel;
 use relm4::adw::prelude::ActionRowExt;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
 use relm4::{view, AsyncFactorySender};
 
+use crate::application::plugin::Plugin;
 use crate::gtk::prelude::{
 	ButtonExt, EditableExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
@@ -14,11 +13,11 @@ use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ListFactoryModel {
 	pub list: Option<List>,
 	pub tasks: Vec<String>,
-	pub service: Option<ProviderClient<Channel>>,
+	pub plugin: Plugin,
 }
 
 #[derive(Debug)]
@@ -39,8 +38,8 @@ pub enum ListFactoryOutput {
 
 #[derive(derive_new::new)]
 pub struct ListFactoryInit {
+	plugin: Plugin,
 	list_id: String,
-	service: Option<ProviderClient<Channel>>,
 }
 
 #[relm4::factory(pub async)]
@@ -152,38 +151,24 @@ impl AsyncFactoryComponent for ListFactoryModel {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let mut service = params.service.clone();
-		let mut list = None;
-		let mut tasks = vec![];
-		if let Some(client) = &mut service {
-			list = match client.read_list(params.list_id.clone()).await {
-				Ok(response) => {
-					let response = response.into_inner();
-					if response.list.is_some() {
-						tasks = match client
-							.read_task_ids_from_list(params.list_id.clone())
-							.await
-						{
-							Ok(response) => response.into_inner().tasks,
-							Err(e) => {
-								tracing::error!("Failed to find tasks. {:?}", e);
-								vec![]
-							},
-						};
-					}
-					response.list
-				},
+		let list = match &mut params.plugin.connect().await {
+			Ok(client) => match client.read_list(params.list_id.clone()).await {
+				Ok(response) => response.into_inner().list,
 				Err(e) => {
 					tracing::error!("Failed to find list. {:?}", e);
 					None
 				},
-			};
-		}
+			},
+			Err(err) => {
+				tracing::error!("Failed to connect to server. {:?}", err);
+				None
+			},
+		};
 
 		Self {
 			list,
-			tasks,
-			service: params.service,
+			tasks: vec![],
+			plugin: params.plugin,
 		}
 	}
 
@@ -196,7 +181,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 			ListFactoryInput::Rename(name) => {
 				let mut list = self.list.clone().unwrap();
 				list.name = name.clone();
-				if let Some(client) = &mut self.service {
+				if let Ok(client) = &mut self.plugin.connect().await {
 					match client.update_list(list).await {
 						Ok(response) => {
 							let response = response.into_inner();
@@ -213,7 +198,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 			},
 			ListFactoryInput::Delete(index) => {
 				let list_id = self.list.as_ref().unwrap().id.clone();
-				if let Some(client) = &mut self.service {
+				if let Ok(client) = &mut self.plugin.connect().await {
 					match client.delete_list(list_id.clone()).await {
 						Ok(response) => {
 							let response = response.into_inner();
@@ -230,7 +215,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				}
 			},
 			ListFactoryInput::ChangeIcon(icon) => {
-				if let Some(client) = &mut self.service {
+				if let Ok(client) = &mut self.plugin.connect().await {
 					let mut list = self.list.clone().unwrap();
 					list.icon = Some(icon.clone());
 					match client.update_list(list).await {
@@ -248,20 +233,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				}
 			},
 			ListFactoryInput::Select => {
-				if let Some(client) = &mut self.service {
-					let tasks = match client
-						.read_task_ids_from_list(self.list.as_ref().unwrap().id.clone())
-						.await
-					{
-						Ok(response) => response.into_inner().tasks,
-						Err(e) => {
-							tracing::error!("Failed to find tasks. {:?}", e);
-							vec![]
-						},
-					};
-					self.tasks = tasks;
-					sender.output(ListFactoryOutput::Select(self.clone()));
-				}
+				sender.output(ListFactoryOutput::Select(self.clone()));
 			},
 		}
 	}
