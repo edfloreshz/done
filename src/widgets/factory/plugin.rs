@@ -22,6 +22,7 @@ pub struct PluginFactoryModel {
 	pub plugin: Plugin,
 	pub service: Option<ProviderClient<Channel>>,
 	pub enabled: bool,
+	pub last_list_selected: Option<ListFactoryModel>,
 	pub lists: Vec<String>,
 	pub list_factory: AsyncFactoryVecDeque<ListFactoryModel>,
 	pub new_list_controller: Controller<ListEntryModel>,
@@ -101,6 +102,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			service: init.plugin.connect().await.ok(),
 			enabled: init.enabled,
 			lists: init.plugin.lists().await.unwrap(),
+			last_list_selected: None,
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
 				sender.input_sender(),
@@ -132,7 +134,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			self
 				.list_factory
 				.guard()
-				.push_back(ListFactoryInit::new(list.clone(), self.service.clone()));
+				.push_back(ListFactoryInit::new(self.plugin.clone(), list.clone()));
 		}
 
 		widgets
@@ -163,8 +165,8 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			},
 			PluginFactoryInput::AddList(list) => {
 				self.list_factory.guard().push_back(ListFactoryInit::new(
+					self.plugin.clone(),
 					list.id.clone(),
-					self.service.clone(),
 				));
 				self.lists.push(list.id);
 				tracing::info!("List added to {}", self.plugin.name);
@@ -172,9 +174,38 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			PluginFactoryInput::Forward => {
 				sender.output(PluginFactoryOutput::Forward)
 			},
-			PluginFactoryInput::ListSelected(model) => {
-				sender.output(PluginFactoryOutput::ListSelected(model.clone()));
-				tracing::info!("List selected: {}", model.list.unwrap().name);
+			PluginFactoryInput::ListSelected(list) => {
+				let mut model = list;
+				let list = model.list.as_ref().unwrap();
+				let reload_neccessary = self.last_list_selected.is_none()
+					|| (self.last_list_selected.is_some()
+						&& self
+							.last_list_selected
+							.as_ref()
+							.unwrap()
+							.list
+							.as_ref()
+							.unwrap()
+							.id != list.id.clone());
+
+				if reload_neccessary {
+					self.last_list_selected = Some(model.clone());
+					if let Some(client) = &mut self.service {
+						let tasks =
+							match client.read_task_ids_from_list(list.id.clone()).await {
+								Ok(response) => response.into_inner().tasks,
+								Err(e) => {
+									tracing::error!("Failed to find tasks. {:?}", e);
+									vec![]
+								},
+							};
+						model.tasks = tasks;
+					}
+					sender.output(PluginFactoryOutput::ListSelected(model.clone()));
+				} else {
+					tracing::info!("Skipping task list refresh");
+				}
+				tracing::info!("List selected: {}", list.name);
 			},
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))
@@ -184,10 +215,10 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 
 				self.list_factory.guard().clear();
 				for list in &self.lists {
-					self.list_factory.guard().push_back(ListFactoryInit::new(
-						list.clone(),
-						self.service.clone(),
-					));
+					self
+						.list_factory
+						.guard()
+						.push_back(ListFactoryInit::new(self.plugin.clone(), list.clone()));
 				}
 			},
 			PluginFactoryInput::Disable => self.enabled = false,
