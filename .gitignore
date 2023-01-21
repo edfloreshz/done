@@ -22,3 +22,5 @@ _build
 
 bin
 releases
+
+.flatpak/
