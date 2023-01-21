@@ -1,4 +1,5 @@
 pub mod actions;
+pub mod appearance;
 pub mod gettext;
 pub mod info;
 pub mod localization;
