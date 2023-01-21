@@ -5,6 +5,8 @@ use anyhow::{Ok, Result};
 use once_cell::unsync::Lazy;
 use relm4::{adw, gtk, gtk::gio};
 
+use super::appearance;
+
 thread_local! {
 	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
 }
@@ -20,6 +22,7 @@ pub async fn init() -> Result<adw::Application> {
 	gettext::init();
 	localization::init();
 	settings::init().await?;
+	appearance::init()?;
 	pretty_env_logger::init();
 	resources::init()?;
 	services::init().await?;
