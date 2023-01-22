@@ -1,6 +1,6 @@
-use crate::application::info::PROFILE;
+use crate::application::info::{APP_ID, PROFILE};
 use crate::application::plugin::Plugin;
-use crate::application::setup::{self, main_app};
+use crate::application::setup::{self};
 use crate::fl;
 use crate::widgets::components::about_dialog::AboutDialog;
 use crate::widgets::components::content::{
@@ -16,6 +16,7 @@ use crate::widgets::components::smart_lists::SmartList;
 use crate::widgets::components::welcome::WelcomeComponent;
 use crate::widgets::factory::list::ListFactoryModel;
 use gtk::prelude::*;
+use once_cell::unsync::Lazy;
 use relm4::adw::Toast;
 use relm4::component::{AsyncComponentParts, AsyncController};
 use relm4::loading_widgets::LoadingWidgets;
@@ -28,34 +29,22 @@ use relm4::{
 use relm4::{view, AsyncComponentSender, RelmWidgetExt};
 use sysinfo::{ProcessExt, System, SystemExt};
 
-pub struct App {
-	sidebar: AsyncController<SidebarComponentModel>,
-	content: AsyncController<ContentComponentModel>,
-	preferences: AsyncController<PreferencesComponentModel>,
-	welcome: Controller<WelcomeComponent>,
-	about_dialog: Option<Controller<AboutDialog>>,
-	page_title: Option<String>,
-	warning_revealed: bool,
+thread_local! {
+	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gtk::gio::ApplicationFlags::empty())});
 }
 
-impl App {
-	pub fn new(
-		sidebar: AsyncController<SidebarComponentModel>,
-		content: AsyncController<ContentComponentModel>,
-		preferences: AsyncController<PreferencesComponentModel>,
-		welcome: Controller<WelcomeComponent>,
-		about_dialog: Option<Controller<AboutDialog>>,
-	) -> Self {
-		Self {
-			sidebar,
-			content,
-			preferences,
-			welcome,
-			about_dialog,
-			page_title: None,
-			warning_revealed: true,
-		}
-	}
+pub fn main_app() -> adw::Application {
+	APP.with(|app| (*app).clone())
+}
+
+pub struct App {
+	pub sidebar: AsyncController<SidebarComponentModel>,
+	pub content: AsyncController<ContentComponentModel>,
+	pub preferences: AsyncController<PreferencesComponentModel>,
+	pub welcome: Controller<WelcomeComponent>,
+	pub about_dialog: Option<Controller<AboutDialog>>,
+	pub page_title: Option<String>,
+	pub warning_revealed: bool,
 }
 
 #[derive(Debug)]
@@ -94,266 +83,6 @@ impl AsyncComponent for App {
 	type Output = ();
 	type Init = ();
 
-	fn init_loading_widgets(
-		root: &mut Self::Root,
-	) -> Option<relm4::loading_widgets::LoadingWidgets> {
-		view! {
-				#[local_ref]
-				root {
-					set_title: Some("Done"),
-					set_default_size: (700, 700),
-
-					// This will replaced by the Box of the fully
-					// initialized view because Window can only have one child.
-					// If the root of the component was a Box which can have
-					// several children, you'd need to remove this again in init().
-					#[name(loading)]
-					gtk::CenterBox {
-						set_margin_all: 100,
-						set_orientation: gtk::Orientation::Vertical,
-						#[wrap(Some)]
-						set_center_widget = &gtk::Picture {
-							set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
-							set_margin_all: 150
-						},
-						#[wrap(Some)]
-						set_end_widget = &gtk::Spinner {
-							start: (),
-							set_size_request: (40, 40),
-							set_halign: gtk::Align::Center,
-							set_valign: gtk::Align::Center,
-						},
-					}
-				}
-		}
-		Some(LoadingWidgets::new(root, loading))
-	}
-
-	async fn init(
-		_init: Self::Init,
-		root: Self::Root,
-		sender: AsyncComponentSender<Self>,
-	) -> AsyncComponentParts<Self> {
-		match setup::init_services().await {
-			Ok(_) => (),
-			Err(_) => panic!("Failed to initialize services."),
-		};
-
-		let preferences: &str = fl!("preferences");
-		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
-		let about_done: &str = fl!("about-done");
-		let quit: &str = fl!("quit");
-
-		let app = main_app();
-
-		app.connect_shutdown(|_| {
-			let processes = System::new_all();
-			let mut local = processes.processes_by_exact_name("local-plugin");
-			if let Some(process) = local.next() {
-				if process.kill() {
-					tracing::info!("The {} process was killed.", process.name());
-				} else {
-					tracing::error!("Failed to kill process.");
-				}
-			} else {
-				tracing::info!("Process is not running.");
-			}
-		});
-
-		let actions = RelmActionGroup::<WindowActionGroup>::new();
-
-		let sidebar_controller = SidebarComponentModel::builder()
-			.launch(())
-			.forward(sender.input_sender(), |message| match message {
-				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
-				SidebarComponentOutput::ListSelected(list) => {
-					Event::TaskListSelected(list)
-				},
-				SidebarComponentOutput::Forward => Event::Forward,
-				SidebarComponentOutput::Notify(msg, timeout) => {
-					Event::Notify(msg, timeout)
-				},
-				SidebarComponentOutput::SelectSmartList(list) => {
-					Event::SelectSmartList(list)
-				},
-			});
-
-		let content_controller = ContentComponentModel::builder()
-			.launch(())
-			.forward(sender.input_sender(), |message| match message {
-				ContentComponentOutput::Notify(msg, timeout) => {
-					Event::Notify(msg, timeout)
-				},
-			});
-
-		let preferences_controller = PreferencesComponentModel::builder()
-			.launch(())
-			.forward(sender.input_sender(), |message| match message {
-				PreferencesComponentOutput::AddPluginToSidebar(plugin) => {
-					Event::AddPluginToSidebar(plugin)
-				},
-				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
-					Event::EnablePluginOnSidebar(plugin)
-				},
-				PreferencesComponentOutput::DisablePluginOnSidebar(plugin) => {
-					Event::DisablePluginOnSidebar(plugin)
-				},
-				PreferencesComponentOutput::ToggleCompact(compact) => {
-					Event::ToggleCompact(compact)
-				},
-				PreferencesComponentOutput::RemovePluginFromSidebar(plugin) => {
-					Event::RemovePluginFromSidebar(plugin)
-				},
-			});
-
-		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
-
-		let mut model = App::new(
-			sidebar_controller,
-			content_controller,
-			preferences_controller,
-			welcome_controller,
-			None,
-		);
-
-		let widgets = view_output!();
-
-		let preferences_action = {
-			let preferences = model.preferences.widget().clone();
-			RelmAction::<PreferencesAction>::new_stateless(move |_| {
-				preferences.present();
-			})
-		};
-
-		let shortcuts_action = {
-			let shortcuts = widgets.shortcuts.clone();
-			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
-				shortcuts.present();
-			})
-		};
-
-		let about_dialog = ComponentBuilder::default()
-			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
-			.detach();
-
-		model.about_dialog = Some(about_dialog);
-
-		let about_action = {
-			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
-			RelmAction::<AboutAction>::new_stateless(move |_| {
-				sender.send(()).unwrap_or_default();
-			})
-		};
-
-		let quit_action = {
-			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender.input_sender().send(Event::Quit).unwrap_or_default();
-			})
-		};
-
-		actions.add_action(&preferences_action);
-		actions.add_action(&shortcuts_action);
-		actions.add_action(&about_action);
-		actions.add_action(&quit_action);
-
-		widgets.main_window.insert_action_group(
-			WindowActionGroup::NAME,
-			Some(&actions.into_action_group()),
-		);
-
-		AsyncComponentParts { model, widgets }
-	}
-
-	async fn update_with_view(
-		&mut self,
-		widgets: &mut Self::Widgets,
-		message: Self::Input,
-		sender: AsyncComponentSender<Self>,
-		_root: &Self::Root,
-	) {
-		match message {
-			Event::Quit => main_app().quit(),
-			Event::CloseWarning => self.warning_revealed = false,
-			Event::TaskListSelected(list) => {
-				self.page_title = Some(list.list.clone().unwrap().name);
-				self
-					.content
-					.sender()
-					.send(ContentComponentInput::TaskListSelected(list))
-					.unwrap_or_default();
-			},
-			Event::DisablePlugin => {
-				self.page_title = None;
-				self
-					.content
-					.sender()
-					.send(ContentComponentInput::DisablePlugin)
-					.unwrap_or_default();
-			},
-			Event::Notify(msg, timeout) => {
-				widgets.overlay.add_toast(&toast(msg, timeout))
-			},
-			Event::Folded => {
-				if self.page_title.is_some() {
-					widgets.leaflet.set_visible_child(&widgets.content);
-				} else {
-					widgets.leaflet.set_visible_child(&widgets.sidebar);
-				}
-				widgets.go_back_button.set_visible(true);
-				widgets.sidebar_header.set_show_start_title_buttons(true);
-				widgets.sidebar_header.set_show_end_title_buttons(true);
-			},
-			Event::Unfolded => {
-				widgets.go_back_button.set_visible(false);
-				widgets.sidebar_header.set_show_start_title_buttons(false);
-				widgets.sidebar_header.set_show_end_title_buttons(false);
-			},
-			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
-			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
-			Event::AddPluginToSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::AddPluginToSidebar(plugin))
-				.unwrap(),
-			Event::EnablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::EnableService(plugin))
-				.unwrap_or_default(),
-			Event::DisablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::DisableService(plugin))
-				.unwrap_or_default(),
-			Event::RemovePluginFromSidebar(plugin) => {
-				self
-					.sidebar
-					.sender()
-					.send(SidebarComponentInput::RemoveService(plugin))
-					.unwrap_or_default();
-				self
-					.content
-					.sender()
-					.send(ContentComponentInput::DisablePlugin)
-					.unwrap_or_default()
-			},
-			Event::SelectSmartList(list) => {
-				self.page_title = Some(list.name());
-				self
-					.content
-					.sender()
-					.send(ContentComponentInput::SelectSmartList(list))
-					.unwrap_or_default();
-			},
-			Event::ToggleCompact(compact) => self
-				.content
-				.sender()
-				.send(ContentComponentInput::ToggleCompact(compact))
-				.unwrap(),
-		}
-		self.update_view(widgets, sender);
-	}
-
 	menu! {
 		primary_menu: {
 			section! {
@@ -380,7 +109,7 @@ impl AsyncComponent for App {
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
 				set_transient_for: Some(&main_window),
-				set_application: Some(&crate::setup::main_app()),
+				set_application: Some(&crate::app::main_app()),
 			},
 
 			add_css_class?: if PROFILE == "Devel" {
@@ -473,6 +202,207 @@ impl AsyncComponent for App {
 				}
 			}
 		}
+	}
+
+	fn init_loading_widgets(
+		root: &mut Self::Root,
+	) -> Option<relm4::loading_widgets::LoadingWidgets> {
+		let icon = if PROFILE == "Devel" {
+			"/dev/edfloreshz/Done/icons/scalable/apps/app-icon-devel.svg"
+		} else {
+			"/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"
+		};
+		view! {
+				#[local_ref]
+				root {
+					set_title: Some("Done"),
+					set_default_size: (700, 700),
+
+					#[name(loading)]
+					gtk::CenterBox {
+						set_margin_all: 100,
+						set_orientation: gtk::Orientation::Vertical,
+						#[wrap(Some)]
+						set_center_widget = &gtk::Picture {
+							set_resource: Some(icon),
+							set_margin_all: 150
+						},
+						#[wrap(Some)]
+						set_end_widget = &gtk::Spinner {
+							start: (),
+							set_size_request: (40, 40),
+							set_halign: gtk::Align::Center,
+							set_valign: gtk::Align::Center,
+						},
+					}
+				}
+		}
+		Some(LoadingWidgets::new(root, loading))
+	}
+
+	async fn init(
+		_init: Self::Init,
+		root: Self::Root,
+		sender: AsyncComponentSender<Self>,
+	) -> AsyncComponentParts<Self> {
+		let mut model = App::new(sender.clone()).init_services().await;
+
+		let preferences: &str = fl!("preferences");
+		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
+		let about_done: &str = fl!("about-done");
+		let quit: &str = fl!("quit");
+
+		let widgets = view_output!();
+
+		let preferences_action = {
+			let preferences = model.preferences.widget().clone();
+			RelmAction::<PreferencesAction>::new_stateless(move |_| {
+				preferences.present();
+			})
+		};
+
+		let shortcuts_action = {
+			let shortcuts = widgets.shortcuts.clone();
+			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
+				shortcuts.present();
+			})
+		};
+
+		let about_dialog = ComponentBuilder::default()
+			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
+			.detach();
+
+		model.about_dialog = Some(about_dialog);
+
+		let about_action = {
+			let sender = model.about_dialog.as_ref().unwrap().sender().clone();
+			RelmAction::<AboutAction>::new_stateless(move |_| {
+				sender.send(()).unwrap_or_default();
+			})
+		};
+
+		let quit_action = {
+			RelmAction::<QuitAction>::new_stateless(move |_| {
+				sender.input_sender().send(Event::Quit).unwrap_or_default();
+			})
+		};
+
+		let actions = RelmActionGroup::<WindowActionGroup>::new();
+		actions.add_action(&preferences_action);
+		actions.add_action(&shortcuts_action);
+		actions.add_action(&about_action);
+		actions.add_action(&quit_action);
+
+		widgets.main_window.insert_action_group(
+			WindowActionGroup::NAME,
+			Some(&actions.into_action_group()),
+		);
+
+		AsyncComponentParts { model, widgets }
+	}
+
+	async fn update_with_view(
+		&mut self,
+		widgets: &mut Self::Widgets,
+		message: Self::Input,
+		sender: AsyncComponentSender<Self>,
+		_root: &Self::Root,
+	) {
+		match message {
+			Event::Quit => {
+				//TODO: Terminate all running plugins.
+				let processes = System::new_all();
+				let mut local = processes.processes_by_exact_name("local-plugin");
+				if let Some(process) = local.next() {
+					if process.kill() {
+						tracing::info!("The {} process was killed.", process.name());
+					} else {
+						tracing::error!("Failed to kill process.");
+					}
+				} else {
+					tracing::info!("Process is not running.");
+				}
+				main_app().quit()
+			},
+			Event::CloseWarning => self.warning_revealed = false,
+			Event::TaskListSelected(list) => {
+				self.page_title = Some(list.list.clone().unwrap().name);
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::TaskListSelected(list))
+					.unwrap_or_default();
+			},
+			Event::DisablePlugin => {
+				self.page_title = None;
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::DisablePlugin)
+					.unwrap_or_default();
+			},
+			Event::Notify(msg, timeout) => {
+				widgets.overlay.add_toast(&toast(msg, timeout))
+			},
+			Event::Folded => {
+				if self.page_title.is_some() {
+					widgets.leaflet.set_visible_child(&widgets.content);
+				} else {
+					widgets.leaflet.set_visible_child(&widgets.sidebar);
+				}
+				widgets.go_back_button.set_visible(true);
+				widgets.sidebar_header.set_show_start_title_buttons(true);
+				widgets.sidebar_header.set_show_end_title_buttons(true);
+			},
+			Event::Unfolded => {
+				widgets.go_back_button.set_visible(false);
+				widgets.sidebar_header.set_show_start_title_buttons(false);
+				widgets.sidebar_header.set_show_end_title_buttons(false);
+			},
+			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
+			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
+			Event::AddPluginToSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::AddPluginToSidebar(plugin))
+				.unwrap(),
+			Event::EnablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::EnableService(plugin))
+				.unwrap_or_default(),
+			Event::DisablePluginOnSidebar(plugin) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::DisableService(plugin))
+				.unwrap_or_default(),
+			Event::RemovePluginFromSidebar(plugin) => {
+				self
+					.sidebar
+					.sender()
+					.send(SidebarComponentInput::RemoveService(plugin))
+					.unwrap_or_default();
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::DisablePlugin)
+					.unwrap_or_default()
+			},
+			Event::SelectSmartList(list) => {
+				self.page_title = Some(list.name());
+				self
+					.content
+					.sender()
+					.send(ContentComponentInput::SelectSmartList(list))
+					.unwrap_or_default();
+			},
+			Event::ToggleCompact(compact) => self
+				.content
+				.sender()
+				.send(ContentComponentInput::ToggleCompact(compact))
+				.unwrap(),
+		}
+		self.update_view(widgets, sender);
 	}
 }
 

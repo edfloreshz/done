@@ -1,23 +1,12 @@
 use crate::application::{
-	actions, gettext, info::APP_ID, localization, resources, services, settings,
+	actions, gettext, localization, resources, services, settings,
 };
 use anyhow::{Ok, Result};
-use once_cell::unsync::Lazy;
-use relm4::{adw, gtk, gtk::gio};
+use relm4::gtk;
 
 use super::appearance;
 
-thread_local! {
-	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::empty())});
-}
-
-pub fn main_app() -> adw::Application {
-	APP.with(|app| (*app).clone())
-}
-
-pub fn init() -> Result<adw::Application> {
-	let app = main_app();
-
+pub fn init_app() -> Result<()> {
 	gtk::init()?;
 	gettext::init();
 	localization::init();
@@ -28,9 +17,9 @@ pub fn init() -> Result<adw::Application> {
 		.with_max_level(tracing::Level::INFO)
 		.init();
 	resources::init()?;
-	actions::init(&app);
+	actions::init();
 
-	Ok(app)
+	Ok(())
 }
 
 pub async fn init_services() -> Result<()> {
