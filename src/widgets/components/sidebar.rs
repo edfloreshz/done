@@ -6,6 +6,7 @@ use crate::widgets::factory::list::ListFactoryModel;
 use crate::widgets::factory::plugin::{
 	PluginFactoryInit, PluginFactoryInput, PluginFactoryModel,
 };
+use gtk::traits::ButtonExt;
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::List;
@@ -77,6 +78,11 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						providers_container -> adw::PreferencesGroup {
 							set_hexpand: false,
 							set_title: fl!("services"),
+							#[wrap(Some)]
+							set_header_suffix = &gtk::Button {
+								add_css_class: "flat",
+								set_icon_name: "view-refresh-symbolic"
+							}
 						},
 						gtk::CenterBox {
 							#[watch]
