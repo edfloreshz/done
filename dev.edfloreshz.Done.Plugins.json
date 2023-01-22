@@ -15,9 +15,9 @@
         "pluginDescription": "Google tasks are stored here.",
         "pluginIcon": "",
         "pluginPort": 6006,
-        "pluginVersion": "1.0.0",
+        "pluginVersion": "1.0.1",
         "pluginProcessName": "google-plugin",
-        "pluginDownloadUrl": "https://github.com/done-devs/google-plugin/releases/download/v0.1.0/google-plugin"
+        "pluginDownloadUrl": "https://github.com/done-devs/google-plugin/releases/download/v0.1.1/google-plugin"
     },
     {
         "pluginId": "microsoft",
