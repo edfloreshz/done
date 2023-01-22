@@ -9,7 +9,6 @@ use crate::widgets::factory::task::{
 };
 use libset::format::FileFormat;
 use libset::project::Project;
-use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::{List, Task};
 
 use relm4::component::{
@@ -23,7 +22,6 @@ use relm4::{
 	Controller,
 };
 use relm4::{Component, ComponentController, RelmWidgetExt};
-use tonic::transport::Channel;
 
 use super::smart_lists::{
 	AllComponentModel, Next7DaysComponentModel, SmartList, StarredComponentModel,
@@ -37,7 +35,6 @@ pub struct ContentComponentModel {
 	today: Controller<TodayComponentModel>,
 	starred: Controller<StarredComponentModel>,
 	next7days: Controller<Next7DaysComponentModel>,
-	service: Option<ProviderClient<Channel>>,
 	plugin: Option<Plugin>,
 	parent_list: Option<List>,
 	selected_smart_list: Option<SmartList>,
@@ -127,7 +124,6 @@ impl AsyncComponent for ContentComponentModel {
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
 		let plugin = None;
-		let service = None;
 		let compact = Project::open("dev", "edfloreshz", "done")
 			.unwrap()
 			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
@@ -171,7 +167,6 @@ impl AsyncComponent for ContentComponentModel {
 			today,
 			starred,
 			next7days,
-			service,
 			plugin,
 			parent_list: None,
 			selected_smart_list: None,
@@ -191,85 +186,79 @@ impl AsyncComponent for ContentComponentModel {
 	) {
 		match message {
 			ContentComponentInput::AddTask(task) => {
-				let mut service = self.service.as_ref().unwrap().clone();
-				match relm4::spawn(
-					async move { service.create_task(task.clone()).await },
-				)
-				.await
-				.unwrap()
-				{
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful && response.task.is_some() {
-							let task = response.task.unwrap();
-							self.task_factory.guard().push_back(TaskFactoryInit::new(
-								self.plugin.clone().unwrap(),
-								task.id,
-								self.compact,
-							));
-						}
-						sender
-							.output(ContentComponentOutput::Notify(response.message, 1))
-							.unwrap_or_default();
-					},
-					Err(err) => {
-						sender
-							.output(ContentComponentOutput::Notify(err.to_string(), 2))
-							.unwrap_or_default();
-					},
-				}
+				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
+					match client.create_task(task.clone()).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful && response.task.is_some() {
+								let task = response.task.unwrap();
+								self.task_factory.guard().push_back(TaskFactoryInit::new(
+									task,
+									self.parent_list.as_ref().unwrap().clone(),
+									self.compact,
+								));
+							}
+							sender
+								.output(ContentComponentOutput::Notify(response.message, 1))
+								.unwrap_or_default();
+						},
+						Err(err) => {
+							sender
+								.output(ContentComponentOutput::Notify(err.to_string(), 2))
+								.unwrap_or_default();
+						},
+					}
+				} //TODO: Error handle
 			},
 			ContentComponentInput::RemoveTask(index) => {
 				let mut guard = self.task_factory.guard();
 				let task = guard.get(index.current_index()).unwrap().clone();
-				let mut service = self.service.as_ref().unwrap().clone();
-				match relm4::spawn(async move {
-					service.delete_task(task.clone().task.id).await
-				})
-				.await
-				.unwrap()
-				{
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful {
-							guard.remove(index.current_index());
-						}
-						sender
-							.output(ContentComponentOutput::Notify(response.message, 1))
-							.unwrap_or_default();
-					},
-					Err(err) => {
-						sender
-							.output(ContentComponentOutput::Notify(err.to_string(), 2))
-							.unwrap_or_default();
-					},
-				}
-			},
-			ContentComponentInput::UpdateTask(index, task) => {
-				match self.service.as_mut().unwrap().update_task(task).await {
-					Ok(response) => {
-						let response = response.into_inner();
-						if response.successful {
-							if let Some(index) = index {
-								if self.parent_list.as_ref().unwrap().provider == "starred" {
-									self.task_factory.guard().remove(index.current_index());
-								}
+				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
+					match client.delete_task(task.clone().task.id).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								guard.remove(index.current_index());
 							}
-						} else {
 							sender
 								.output(ContentComponentOutput::Notify(response.message, 1))
 								.unwrap_or_default();
-						}
-					},
-					Err(err) => {
-						sender
-							.output(ContentComponentOutput::Notify(err.to_string(), 2))
-							.unwrap_or_default();
-					},
+						},
+						Err(err) => {
+							sender
+								.output(ContentComponentOutput::Notify(err.to_string(), 2))
+								.unwrap_or_default();
+						},
+					}
+				}
+			},
+			ContentComponentInput::UpdateTask(index, task) => {
+				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
+					match client.update_task(task).await {
+						Ok(response) => {
+							let response = response.into_inner();
+							if response.successful {
+								if let Some(index) = index {
+									if self.parent_list.as_ref().unwrap().provider == "starred" {
+										self.task_factory.guard().remove(index.current_index());
+									}
+								}
+							} else {
+								sender
+									.output(ContentComponentOutput::Notify(response.message, 1))
+									.unwrap_or_default();
+							}
+						},
+						Err(err) => {
+							sender
+								.output(ContentComponentOutput::Notify(err.to_string(), 2))
+								.unwrap_or_default();
+						},
+					}
 				}
 			},
 			ContentComponentInput::TaskListSelected(model) => {
-				self.parent_list = Some(model.list.clone().unwrap());
+				self.parent_list = Some(model.list.clone());
 				self.selected_smart_list = None;
 				self
 					.task_entry
@@ -278,23 +267,32 @@ impl AsyncComponent for ContentComponentModel {
 						self.parent_list.clone(),
 					))
 					.unwrap_or_default();
-				self.plugin =
-					Some(Plugin::get_by_id(&model.list.unwrap().provider).unwrap());
-				let plugin = self.plugin.as_ref().unwrap().clone();
-				self.service = Some(
-					relm4::spawn(async move { plugin.connect().await.unwrap() })
-						.await
-						.unwrap(),
-				);
 
-				self.task_factory.guard().clear();
+				self.plugin = Some(model.plugin.clone());
+				if let Ok(mut client) = model.plugin.connect().await {
+					self.task_factory.guard().clear();
 
-				for task in model.tasks {
-					self.task_factory.guard().push_back(TaskFactoryInit::new(
-						self.plugin.clone().unwrap(),
-						task,
-						self.compact,
-					));
+					let (tx, mut rx) = relm4::tokio::sync::mpsc::channel(100);
+					relm4::spawn(async move {
+						let mut stream = client
+							.read_tasks_from_list(model.list.id)
+							.await
+							.unwrap()
+							.into_inner();
+						while let Some(response) = stream.message().await.unwrap() {
+							tx.send(response).await.unwrap()
+						}
+					});
+
+					while let Some(response) = rx.recv().await {
+						if response.successful {
+							self.task_factory.guard().push_back(TaskFactoryInit::new(
+								response.task.unwrap(),
+								self.parent_list.as_ref().unwrap().clone(),
+								self.compact,
+							));
+						}
+					}
 				}
 			},
 			ContentComponentInput::DisablePlugin => {
