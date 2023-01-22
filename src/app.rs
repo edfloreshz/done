@@ -93,7 +93,6 @@ impl AsyncComponent for App {
 	type Input = Event;
 	type Output = ();
 	type Init = ();
-	type Widgets = AppWidgets;
 
 	fn init_loading_widgets(
 		root: &mut Self::Root,
@@ -102,20 +101,28 @@ impl AsyncComponent for App {
 				#[local_ref]
 				root {
 						set_title: Some("Simple app"),
-						set_default_size: (300, 100),
+						set_default_size: (700, 700),
 
 						// This will replaced by the Box of the fully
 						// initialized view because Window can only have one child.
 						// If the root of the component was a Box which can have
 						// several children, you'd need to remove this again in init().
-						#[name(spinner)]
-						gtk::Spinner {
+						#[name(loading)]
+						gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							adw::HeaderBar {
+								set_show_end_title_buttons: true,
+								set_title_widget: Some(&gtk::Label::new(Some("Done"))),
+							},
+							gtk::Spinner {
 								start: (),
 								set_halign: gtk::Align::Center,
+								set_valign: gtk::Align::Center,
+							}
 						}
 				}
 		}
-		Some(LoadingWidgets::new(root, spinner))
+		Some(LoadingWidgets::new(root, loading))
 	}
 
 	async fn init(
