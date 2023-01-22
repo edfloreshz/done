@@ -116,7 +116,7 @@ sudo pacman -S libadwaita gtk4 protobuf
 ```
 Fedora:
 ```
-sudo dnf install libadwaita-devel gtk4-devel protobuf-compiler
+sudo dnf -y install libadwaita-devel gtk4-devel protobuf protobuf-compiler protobuf-devel
 ```
 
 ## Debug
