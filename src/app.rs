@@ -220,12 +220,12 @@ impl AsyncComponent for App {
 						#[wrap(Some)]
 						set_center_widget = &gtk::Image {
 							set_from_icon_name: Some(APP_ID),
-							set_size_request: (200, 200)
+							set_pixel_size: 200
 						},
 						#[wrap(Some)]
 						set_end_widget = &gtk::Spinner {
 							start: (),
-							set_size_request: (40, 40),
+							set_size_request: (50, 50),
 							set_halign: gtk::Align::Center,
 							set_valign: gtk::Align::Center,
 						},
