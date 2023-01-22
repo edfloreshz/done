@@ -25,7 +25,7 @@ use relm4::{
 	component::{AsyncComponent, AsyncComponentController},
 	gtk, Component, ComponentBuilder, ComponentController, Controller,
 };
-use relm4::{view, AsyncComponentSender};
+use relm4::{view, AsyncComponentSender, RelmWidgetExt};
 use sysinfo::{ProcessExt, System, SystemExt};
 
 pub struct App {
@@ -93,7 +93,6 @@ impl AsyncComponent for App {
 	type Input = Event;
 	type Output = ();
 	type Init = ();
-	type Widgets = AppWidgets;
 
 	fn init_loading_widgets(
 		root: &mut Self::Root,
@@ -101,21 +100,33 @@ impl AsyncComponent for App {
 		view! {
 				#[local_ref]
 				root {
-						set_title: Some("Simple app"),
-						set_default_size: (300, 100),
+					set_title: Some("Done"),
+					set_default_size: (700, 700),
 
-						// This will replaced by the Box of the fully
-						// initialized view because Window can only have one child.
-						// If the root of the component was a Box which can have
-						// several children, you'd need to remove this again in init().
-						#[name(spinner)]
-						gtk::Spinner {
-								start: (),
-								set_halign: gtk::Align::Center,
-						}
+					// This will replaced by the Box of the fully
+					// initialized view because Window can only have one child.
+					// If the root of the component was a Box which can have
+					// several children, you'd need to remove this again in init().
+					#[name(loading)]
+					gtk::CenterBox {
+						set_margin_all: 100,
+						set_orientation: gtk::Orientation::Vertical,
+						#[wrap(Some)]
+						set_center_widget = &gtk::Picture {
+							set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
+							set_margin_all: 150
+						},
+						#[wrap(Some)]
+						set_end_widget = &gtk::Spinner {
+							start: (),
+							set_size_request: (40, 40),
+							set_halign: gtk::Align::Center,
+							set_valign: gtk::Align::Center,
+						},
+					}
 				}
 		}
-		Some(LoadingWidgets::new(root, spinner))
+		Some(LoadingWidgets::new(root, loading))
 	}
 
 	async fn init(
