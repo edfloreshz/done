@@ -219,8 +219,8 @@ impl AsyncComponent for App {
 						set_orientation: gtk::Orientation::Vertical,
 						#[wrap(Some)]
 						set_center_widget = &gtk::Image {
-							set_icon_name: Some(APP_ID),
-							set_pixel_size: 200,
+							set_from_icon_name: Some(APP_ID),
+							set_size_request: (200, 200)
 						},
 						#[wrap(Some)]
 						set_end_widget = &gtk::Spinner {

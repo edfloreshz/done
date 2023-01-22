@@ -5,6 +5,7 @@
     "files.watcherExclude": {
         "**/.dart_tool": true,
         ".flatpak/**": true,
+        "flatpak_build/**": true,
         "_build/**": true
     },
     "rust-analyzer.server.path": "/home/eduardo/Developer/GitHub/done-devs/done/.flatpak/rust-analyzer.sh",
