@@ -17,7 +17,8 @@ pub(crate) async fn init() -> Result<()> {
 			new_file!("dev.edfloreshz.Done.Plugins").set_format(FileFormat::JSON),
 			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
 		])?;
-	let plugins: Vec<Plugin> = Plugin::fetch_plugins().await.unwrap();
+
+	let plugins: Vec<Plugin> = Plugin::fetch_plugins().await?;
 	project
 		.get_file("dev.edfloreshz.Done.Plugins", FileFormat::JSON)?
 		.set_content(plugins)?
