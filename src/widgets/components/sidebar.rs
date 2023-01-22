@@ -57,7 +57,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 	type Init = ();
 
 	view! {
-		sidebar = &gtk::Box {
+		gtk::Box {
 			set_orientation: gtk::Orientation::Vertical,
 			#[name(scroll_window)]
 			gtk::ScrolledWindow {

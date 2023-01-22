@@ -207,11 +207,6 @@ impl AsyncComponent for App {
 	fn init_loading_widgets(
 		root: &mut Self::Root,
 	) -> Option<relm4::loading_widgets::LoadingWidgets> {
-		let icon = if PROFILE == "Devel" {
-			"/dev/edfloreshz/Done/icons/scalable/apps/app-icon-devel.svg"
-		} else {
-			"/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"
-		};
 		view! {
 				#[local_ref]
 				root {
@@ -223,9 +218,9 @@ impl AsyncComponent for App {
 						set_margin_all: 100,
 						set_orientation: gtk::Orientation::Vertical,
 						#[wrap(Some)]
-						set_center_widget = &gtk::Picture {
-							set_resource: Some(icon),
-							set_margin_all: 150
+						set_center_widget = &gtk::Image {
+							set_icon_name: Some(APP_ID),
+							set_pixel_size: 200,
 						},
 						#[wrap(Some)]
 						set_end_widget = &gtk::Spinner {

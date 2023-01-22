@@ -5,6 +5,5 @@ pub const LOCALEDIR: &str = "/app/share/locale";
 pub const PKGDATADIR: &str = "/app/share/done";
 pub const PROFILE: &str = "Devel";
 #[allow(dead_code)]
-pub const RESOURCES_FILE: &str =
-	concat!("/app/share/done", "/resources.gresource");
-pub const VERSION: &str = "0.1.2-69c87c1";
+pub const RESOURCES_FILE: &str = concat!("/app/share/done", "/resources.gresource");
+pub const VERSION: &str = "0.1.2-85f168e";
