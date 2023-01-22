@@ -275,7 +275,7 @@ impl AsyncComponent for App {
 			Event::Quit => main_app().quit(),
 			Event::CloseWarning => self.warning_revealed = false,
 			Event::TaskListSelected(list) => {
-				self.page_title = Some(list.list.clone().unwrap().name);
+				self.page_title = Some(list.list.name.clone());
 				self
 					.content
 					.sender()

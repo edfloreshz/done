@@ -1,20 +1,16 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use proto_rust::provider::TaskStatus;
-use proto_rust::provider_client::ProviderClient;
-use proto_rust::Channel;
+use proto_rust::List;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
-use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
-	gtk, adw,
+	adw, gtk,
 	gtk::prelude::{
-		BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
-		EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
+		ButtonExt, CheckButtonExt, EditableExt, ListBoxRowExt, WidgetExt,
 	},
 	RelmWidgetExt,
 };
 
-use crate::application::plugin::Plugin;
 use crate::widgets::components::content::ContentComponentInput;
 use proto_rust::provider::Task;
 
@@ -35,15 +31,15 @@ pub enum TaskFactoryOutput {
 #[derive(Debug, Clone)]
 pub struct TaskFactoryModel {
 	pub task: Task,
-	pub client: ProviderClient<Channel>,
+	pub parent_list: List,
 	pub compact: bool,
 	pub first_load: bool,
 }
 
 #[derive(derive_new::new)]
 pub struct TaskFactoryInit {
-	plugin: Plugin,
-	id: String,
+	task: Task,
+	parent_list: List,
 	compact: bool,
 }
 
@@ -59,11 +55,16 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 
 	view! {
 		root = adw::EntryRow {
-			set_selectable: false,
-			set_title: "Task name",
+			set_title: self.parent_list.name.as_str(),
 			set_text: self.task.title.as_str(),
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,
+			#[watch]
+			set_margin_all: if self.compact {
+				0
+			} else {
+				2
+			},
 			#[name(check_button)]
 			add_prefix = &gtk::CheckButton {
 				set_active: self.task.status == 1,
@@ -78,7 +79,8 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				#[watch]
 				set_class_active: ("favorite", self.task.favorite),
 				set_icon_name: "star-filled-rounded-symbolic",
-				connect_toggled[sender, index] => move |_| {
+				set_valign: gtk::Align::Center,
+				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskFactoryInput::Favorite(index.clone()));
 				}
 			},
@@ -87,6 +89,7 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				add_css_class: "destructive-action",
 				add_css_class: "circular",
 				set_icon_name: "user-trash-full-symbolic",
+				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.output(TaskFactoryOutput::Remove(index.clone()))
 				}
@@ -107,25 +110,12 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let mut model = Self {
-			task: Task::default(),
-			client: init.plugin.connect().await.unwrap(),
+		Self {
+			task: init.task,
+			parent_list: init.parent_list,
 			compact: init.compact,
 			first_load: true,
-		};
-		let mut client = model.client.clone();
-		let id = init.id.clone();
-		match relm4::spawn(async move { client.read_task(id).await })
-			.await
-			.unwrap()
-		{
-			Ok(response) => match response.into_inner().task {
-				Some(task) => model.task = task,
-				None => tracing::error!("Failed to get task."),
-			},
-			Err(e) => tracing::error!("Failed to find tasks. {:?}", e),
 		}
-		model
 	}
 
 	fn init_widgets(

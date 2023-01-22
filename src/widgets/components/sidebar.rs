@@ -30,7 +30,7 @@ pub struct SidebarComponentModel {
 
 #[derive(Debug)]
 pub enum SidebarComponentInput {
-	AddListToProvider(usize, String, String),
+	AddListToProvider(usize, Plugin, String),
 	ListSelected(ListFactoryModel),
 	EnableService(Plugin),
 	DisableService(Plugin),
@@ -168,50 +168,22 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
-			SidebarComponentInput::AddListToProvider(index, provider_id, name) => {
-				match Plugin::get_plugins()
-					.unwrap()
-					.iter()
-					.find(|i| i.id == provider_id)
-				{
-					Some(provider) => {
-						let provider = provider.clone();
-						match relm4::spawn(async move { provider.connect().await })
-							.await
-							.unwrap()
-						{
-							Ok(mut service) => {
-								let list = List::new(&name, &provider_id);
-								let create_list = list.clone();
-								match relm4::spawn(async move {
-									service.create_list(create_list).await
-								})
-								.await
-								.unwrap()
-								{
-									Ok(response) => {
-										let response = response.into_inner();
-										if response.successful {
-											self
-												.provider_factory
-												.send(index, PluginFactoryInput::AddList(list));
-										}
-										sender
-											.output(SidebarComponentOutput::Notify(
-												response.message,
-												1,
-											))
-											.unwrap_or_default();
-									},
-									Err(err) => {
-										sender
-											.output(SidebarComponentOutput::Notify(
-												err.to_string(),
-												2,
-											))
-											.unwrap_or_default();
-									},
+			SidebarComponentInput::AddListToProvider(index, plugin, name) => {
+				match plugin.connect().await {
+					Ok(mut service) => {
+						let list = List::new(&name, &plugin.id);
+						let create_list = list.clone();
+						match service.create_list(create_list).await {
+							Ok(response) => {
+								let response = response.into_inner();
+								if response.successful {
+									self
+										.provider_factory
+										.send(index, PluginFactoryInput::AddList(list));
 								}
+								sender
+									.output(SidebarComponentOutput::Notify(response.message, 1))
+									.unwrap_or_default();
 							},
 							Err(err) => {
 								sender
@@ -220,12 +192,9 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							},
 						}
 					},
-					None => {
+					Err(err) => {
 						sender
-							.output(SidebarComponentOutput::Notify(
-								"Provider not found".to_string(),
-								2,
-							))
+							.output(SidebarComponentOutput::Notify(err.to_string(), 2))
 							.unwrap_or_default();
 					},
 				}

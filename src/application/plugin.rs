@@ -3,7 +3,7 @@ use directories::ProjectDirs;
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::provider_client::ProviderClient;
-use proto_rust::provider::{Empty, List};
+use proto_rust::provider::List;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -59,15 +59,6 @@ impl Plugin {
 				FileFormat::JSON,
 			)?;
 		Ok(plugins)
-	}
-
-	pub fn get_by_id(id: &str) -> Result<Plugin> {
-		let plugins = Self::get_plugins()?;
-		let plugin = plugins
-			.into_iter()
-			.find(|plugin| plugin.id == id)
-			.ok_or_else(|| anyhow::anyhow!("Plugin not found."))?;
-		Ok(plugin)
 	}
 
 	pub fn start(&self) -> Result<u32, std::io::Error> {
@@ -137,19 +128,6 @@ impl Plugin {
 				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
 			}
 		}
-	}
-
-	pub async fn lists(self) -> Result<Vec<String>> {
-		let response = relm4::spawn(async move {
-			let mut connector = self.connect().await.unwrap();
-			connector
-				.read_all_list_ids(Empty {})
-				.await
-				.unwrap()
-				.into_inner()
-		})
-		.await?;
-		Ok(response.lists)
 	}
 }
 

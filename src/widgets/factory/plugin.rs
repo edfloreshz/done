@@ -2,13 +2,14 @@ use crate::application::plugin::Plugin;
 use crate::widgets::factory::list::ListFactoryInit;
 use adw::prelude::{ExpanderRowExt, PreferencesRowExt};
 use proto_rust::provider::List;
-use proto_rust::provider_client::ProviderClient;
-use proto_rust::Channel;
+use proto_rust::Empty;
+use proto_rust::ListResponse;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::prelude::WidgetExt;
+use relm4::tokio::sync::mpsc::Receiver;
 use relm4::ComponentController;
 use relm4::{adw, Component, Controller};
 
@@ -20,16 +21,16 @@ use crate::widgets::factory::list::ListFactoryModel;
 #[derive(Debug)]
 pub struct PluginFactoryModel {
 	pub plugin: Plugin,
-	pub service: Option<ProviderClient<Channel>>,
 	pub enabled: bool,
 	pub last_list_selected: Option<ListFactoryModel>,
-	pub lists: Vec<String>,
 	pub list_factory: AsyncFactoryVecDeque<ListFactoryModel>,
 	pub new_list_controller: Controller<ListEntryModel>,
+	pub rx: Receiver<ListResponse>,
 }
 
 #[derive(Debug)]
 pub enum PluginFactoryInput {
+	FillTaskFactory,
 	RequestAddList(usize, String),
 	AddList(List),
 	DeleteTaskList(DynamicIndex, String),
@@ -42,7 +43,7 @@ pub enum PluginFactoryInput {
 
 #[derive(Debug)]
 pub enum PluginFactoryOutput {
-	AddListToProvider(usize, String, String),
+	AddListToProvider(usize, Plugin, String),
 	ListSelected(ListFactoryModel),
 	Notify(String),
 	Forward,
@@ -73,8 +74,8 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			#[watch]
 			set_icon_name: Some(self.plugin.icon.as_str()),
 			#[watch]
-			set_enable_expansion: !self.lists.is_empty() && self.plugin.is_running() && self.enabled,
-			set_expanded: !self.lists.is_empty(),
+			set_enable_expansion: !self.list_factory.is_empty() && self.plugin.is_running() && self.enabled,
+			set_expanded: !self.list_factory.is_empty(),
 			add_action = if self.plugin.is_running() {
 				gtk::MenuButton {
 					set_icon_name: "value-increase-symbolic",
@@ -96,35 +97,12 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		index: &DynamicIndex,
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
-		let index = index.current_index();
-		let plugin = init.plugin.clone();
-		let (service, lists) = relm4::spawn(async move {
-			(
-				init.plugin.connect().await.ok(),
-				init.plugin.lists().await.unwrap(),
-			)
-		})
-		.await
-		.unwrap();
-
-		Self {
-			plugin,
-			service,
-			enabled: init.enabled,
-			lists,
-			last_list_selected: None,
-			list_factory: AsyncFactoryVecDeque::new(
-				adw::ExpanderRow::default(),
-				sender.input_sender(),
-			),
-			new_list_controller: ListEntryModel::builder().launch(()).forward(
-				sender.input_sender(),
-				move |message| match message {
-					ListEntryOutput::AddTaskListToSidebar(name) => {
-						PluginFactoryInput::RequestAddList(index, name)
-					},
-				},
-			),
+		match init_model(init, index, sender).await {
+			Ok(model) => return model,
+			Err(err) => {
+				tracing::error!("{err}");
+				panic!("{err}") //TODO: Handle this better
+			},
 		}
 	}
 
@@ -136,17 +114,9 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
-
 		self.list_factory =
 			AsyncFactoryVecDeque::new(root.clone(), sender.input_sender());
-
-		for list in &self.lists {
-			self
-				.list_factory
-				.guard()
-				.push_back(ListFactoryInit::new(self.plugin.clone(), list.clone()));
-		}
-
+		sender.input(PluginFactoryInput::FillTaskFactory);
 		widgets
 	}
 
@@ -156,80 +126,46 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			PluginFactoryInput::FillTaskFactory => {
+				while let Some(response) = self.rx.recv().await {
+					if response.successful {
+						self.list_factory.guard().push_back(ListFactoryInit::new(
+							self.plugin.clone(),
+							response.list.unwrap(),
+						));
+					}
+				}
+			},
 			PluginFactoryInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());
-				let index = self
-					.lists
-					.iter()
-					.position(|list_id| list_id.eq(list_id))
-					.unwrap();
-				self.lists.remove(index);
 				tracing::info!("Deleted task list with id: {}", list_id);
 			},
 			PluginFactoryInput::RequestAddList(index, name) => {
 				sender.output(PluginFactoryOutput::AddListToProvider(
 					index,
-					self.plugin.id.clone(),
+					self.plugin.clone(),
 					name,
 				))
 			},
 			PluginFactoryInput::AddList(list) => {
-				self.list_factory.guard().push_back(ListFactoryInit::new(
-					self.plugin.clone(),
-					list.id.clone(),
-				));
-				self.lists.push(list.id);
+				self
+					.list_factory
+					.guard()
+					.push_back(ListFactoryInit::new(self.plugin.clone(), list));
 				tracing::info!("List added to {}", self.plugin.name);
 			},
 			PluginFactoryInput::Forward => {
 				sender.output(PluginFactoryOutput::Forward)
 			},
-			PluginFactoryInput::ListSelected(list) => {
-				let mut model = list;
-				let list = model.list.as_ref().unwrap();
-				let reload_neccessary = self.last_list_selected.is_none()
-					|| (self.last_list_selected.is_some()
-						&& self
-							.last_list_selected
-							.as_ref()
-							.unwrap()
-							.list
-							.as_ref()
-							.unwrap()
-							.id != list.id.clone());
-
-				if reload_neccessary {
-					self.last_list_selected = Some(model.clone());
-					if let Some(client) = &mut self.service {
-						let tasks =
-							match client.read_task_ids_from_list(list.id.clone()).await {
-								Ok(response) => response.into_inner().tasks,
-								Err(e) => {
-									tracing::error!("Failed to find tasks. {:?}", e);
-									vec![]
-								},
-							};
-						model.tasks = tasks;
-					}
-					sender.output(PluginFactoryOutput::ListSelected(model.clone()));
-				} else {
-					tracing::info!("Skipping task list refresh");
-				}
-				tracing::info!("List selected: {}", list.name);
+			PluginFactoryInput::ListSelected(model) => {
+				sender.output(PluginFactoryOutput::ListSelected(model.clone()));
+				tracing::info!("List selected: {}", model.list.name);
 			},
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))
 			},
 			PluginFactoryInput::Enable => {
 				self.enabled = true;
-
-				self.list_factory.guard().clear();
-				for list in &self.lists {
-					self
-						.list_factory
-						.guard()
-						.push_back(ListFactoryInit::new(self.plugin.clone(), list.clone()));
-				}
 			},
 			PluginFactoryInput::Disable => self.enabled = false,
 		}
@@ -241,11 +177,49 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 				SidebarComponentInput::ListSelected(list)
 			},
 			PluginFactoryOutput::Forward => SidebarComponentInput::Forward,
-			PluginFactoryOutput::AddListToProvider(index, provider_id, name) => {
-				SidebarComponentInput::AddListToProvider(index, provider_id, name)
+			PluginFactoryOutput::AddListToProvider(index, plugin, name) => {
+				SidebarComponentInput::AddListToProvider(index, plugin, name)
 			},
 			PluginFactoryOutput::Notify(msg) => SidebarComponentInput::Notify(msg),
 		};
 		Some(output)
 	}
+}
+
+async fn init_model(
+	init: PluginFactoryInit,
+	index: &DynamicIndex,
+	sender: AsyncFactorySender<PluginFactoryModel>,
+) -> anyhow::Result<PluginFactoryModel> {
+	let index = index.current_index();
+	let plugin = init.plugin.clone();
+	let mut client = init.plugin.connect().await?;
+
+	let (tx, rx) = relm4::tokio::sync::mpsc::channel(100);
+
+	let mut stream = client.read_all_lists(Empty {}).await?.into_inner();
+	relm4::spawn(async move {
+		while let Some(list) = stream.message().await.unwrap() {
+			tx.send(list).await.unwrap()
+		}
+	});
+
+	Ok(PluginFactoryModel {
+		plugin,
+		enabled: init.enabled,
+		last_list_selected: None,
+		list_factory: AsyncFactoryVecDeque::new(
+			adw::ExpanderRow::default(),
+			sender.input_sender(),
+		),
+		new_list_controller: ListEntryModel::builder().launch(()).forward(
+			sender.input_sender(),
+			move |message| match message {
+				ListEntryOutput::AddTaskListToSidebar(name) => {
+					PluginFactoryInput::RequestAddList(index, name)
+				},
+			},
+		),
+		rx,
+	})
 }
