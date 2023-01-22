@@ -1,3 +1,4 @@
+use adw::traits::{EntryRowExt, PreferencesRowExt};
 use proto_rust::provider::TaskStatus;
 use proto_rust::provider_client::ProviderClient;
 use proto_rust::Channel;
@@ -5,7 +6,7 @@ use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
-	gtk,
+	gtk, adw,
 	gtk::prelude::{
 		BoxExt, ButtonExt, CheckButtonExt, EditableExt, EntryBufferExtManual,
 		EntryExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
@@ -57,87 +58,48 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 	type Widgets = TaskWidgets;
 
 	view! {
-		root = gtk::ListBoxRow {
+		root = adw::EntryRow {
 			set_selectable: false,
-			#[name(container)]
-			gtk::Box {
-				set_orientation: gtk::Orientation::Horizontal,
-				set_spacing: 5,
+			set_title: "Task name",
+			set_text: self.task.title.as_str(),
+			set_show_apply_button: true,
+			set_enable_emoji_completion: true,
+			#[name(check_button)]
+			add_prefix = &gtk::CheckButton {
+				set_active: self.task.status == 1,
+				connect_toggled[sender] => move |checkbox| {
+					sender.input(TaskFactoryInput::SetCompleted(checkbox.is_active()));
+				}
+			},
+			#[name(favorite)]
+			add_suffix = &gtk::ToggleButton {
+				add_css_class: "opaque",
+				add_css_class: "circular",
 				#[watch]
-				set_margin_all: if self.compact {
-					2
-				} else {
-					10
-				},
-				#[name(check_button)]
-				gtk::CheckButton {
-					set_active: self.task.status == 1,
-					connect_toggled[sender] => move |checkbox| {
-						sender.input(TaskFactoryInput::SetCompleted(checkbox.is_active()));
-					}
-				},
-				gtk::Box {
-					set_orientation: gtk::Orientation::Horizontal,
-					set_spacing: 15,
-					#[name(entry)]
-					gtk::Entry {
-						add_css_class: "flat",
-						add_css_class: "no-border",
-						set_hexpand: true,
-						set_text: &self.task.title,
-						connect_activate[sender] => move |entry| {
-							let buffer = entry.buffer();
-							sender.input(TaskFactoryInput::ModifyTitle(buffer.text()));
-						},
-						connect_changed[sender] => move |entry| {
-							let buffer = entry.buffer();
-							sender.input(TaskFactoryInput::ModifyTitle(buffer.text()));
-						},
-					},
-					#[name(favorite)]
-					gtk::ToggleButton {
-						add_css_class: "opaque",
-						add_css_class: "circular",
-						#[watch]
-						set_class_active: ("favorite", self.task.favorite),
-						set_icon_name: "star-filled-rounded-symbolic",
-						connect_toggled[sender, index] => move |_| {
-							sender.input(TaskFactoryInput::Favorite(index.clone()));
-						}
-					},
-					#[name(delete)]
-					gtk::Button {
-						add_css_class: "destructive-action",
-						add_css_class: "circular",
-						set_icon_name: "user-trash-full-symbolic",
-						connect_clicked[sender, index] => move |_| {
-							sender.output(TaskFactoryOutput::Remove(index.clone()))
-						}
-					}
+				set_class_active: ("favorite", self.task.favorite),
+				set_icon_name: "star-filled-rounded-symbolic",
+				connect_toggled[sender, index] => move |_| {
+					sender.input(TaskFactoryInput::Favorite(index.clone()));
 				}
-			}
-		}
-	}
-
-	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
-		relm4::view! {
-			#[local_ref]
-			root {
-				#[name(spinner)]
-				gtk::Box {
-					set_halign: gtk::Align::Center,
-					set_valign: gtk::Align::Center,
-					set_hexpand: true,
-					set_vexpand: true,
-					set_margin_all: 10,
-					gtk::Spinner {
-						start: (),
-						set_hexpand: false,
-					}
+			},
+			#[name(delete)]
+			add_suffix = &gtk::Button {
+				add_css_class: "destructive-action",
+				add_css_class: "circular",
+				set_icon_name: "user-trash-full-symbolic",
+				connect_clicked[sender, index] => move |_| {
+					sender.output(TaskFactoryOutput::Remove(index.clone()))
 				}
-			}
+			},
+			connect_activate[sender] => move |entry| {
+				let buffer = entry.text().to_string();
+				sender.input(TaskFactoryInput::ModifyTitle(buffer));
+			},
+			connect_apply[sender] => move |entry| {
+				let buffer = entry.text().to_string();
+				sender.input(TaskFactoryInput::ModifyTitle(buffer));
+			},
 		}
-		Some(LoadingWidgets::new(root, spinner))
 	}
 
 	async fn init_model(

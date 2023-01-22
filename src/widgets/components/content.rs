@@ -152,6 +152,10 @@ impl AsyncComponent for ContentComponentModel {
 					.show_separators(true)
 					.css_classes(vec!["boxed-list".to_string()])
 					.valign(gtk::Align::Start)
+					.margin_top(5)
+					.margin_bottom(5)
+					.margin_start(5)
+					.margin_end(5)
 					.build(),
 				sender.input_sender(),
 			),
