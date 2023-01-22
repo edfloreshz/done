@@ -101,7 +101,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 		let (service, lists) = relm4::spawn(async move {
 			(
 				init.plugin.connect().await.ok(),
-				init.plugin.lists().await.unwrap(),
+				init.plugin.lists().await.ok(),
 			)
 		})
 		.await
@@ -111,7 +111,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			plugin,
 			service,
 			enabled: init.enabled,
-			lists,
+			lists: lists.unwrap_or_default(),
 			last_list_selected: None,
 			list_factory: AsyncFactoryVecDeque::new(
 				adw::ExpanderRow::default(),
