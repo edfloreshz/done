@@ -1,3 +1,4 @@
+use crate::widgets::components::preferences::Preferences;
 use anyhow::Result;
 use directories::ProjectDirs;
 use libset::format::FileFormat;
@@ -13,7 +14,7 @@ use std::process::Command;
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
-pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/main/dev.edfloreshz.Done.Plugins.json";
+pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/feat-update-services/dev.edfloreshz.Done.Plugins.json";
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub struct Plugin {
@@ -38,7 +39,7 @@ pub struct Plugin {
 }
 
 impl Plugin {
-	pub async fn fetch_plugins() -> Result<Vec<Plugin>> {
+	pub async fn fetch_remote() -> Result<Vec<Plugin>> {
 		let response = relm4::spawn(async move {
 			reqwest::get(PLUGINS_URL)
 				.await
@@ -52,12 +53,14 @@ impl Plugin {
 		Ok(plugins)
 	}
 
-	pub fn get_plugins() -> Result<Vec<Plugin>> {
-		let plugins = Project::open("dev", "edfloreshz", "done")?
-			.get_file_as::<Vec<Plugin>>(
-				"dev.edfloreshz.Done.Plugins",
-				FileFormat::JSON,
-			)?;
+	pub fn get_local() -> Result<Vec<Plugin>> {
+		let preferences = Project::open("dev", "edfloreshz", "done")?
+			.get_file_as::<Preferences>("preferences", FileFormat::JSON)?;
+		let plugins = preferences
+			.plugins
+			.iter()
+			.map(|pref| pref.plugin.clone())
+			.collect();
 		Ok(plugins)
 	}
 
@@ -95,14 +98,14 @@ impl Plugin {
 		is_running
 	}
 
-	pub async fn install(&self) -> Result<PathBuf> {
+	pub async fn install(&self) -> Result<()> {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
-		let path = download_file(
+		download_file(
 			&self.download_url,
 			project.data_dir().join("bin").join(&self.process_name),
 		)
 		.await?;
-		Ok(path)
+		Ok(())
 	}
 
 	pub fn is_installed(&self) -> bool {
@@ -128,6 +131,10 @@ impl Plugin {
 				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
 			}
 		}
+	}
+
+	pub async fn try_update(&self) -> Result<()> {
+		self.install().await
 	}
 }
 
