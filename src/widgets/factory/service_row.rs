@@ -15,6 +15,7 @@ pub struct ServiceRowModel {
 	pub plugin: Plugin,
 	pub enabled: bool,
 	pub installed: bool,
+	pub update: bool,
 	pub first_load: bool,
 }
 
@@ -24,9 +25,17 @@ pub enum ServiceRowInput {
 	EnablePlugin(DynamicIndex),
 	DisablePlugin(DynamicIndex),
 	RemovePlugin(DynamicIndex),
-	EnableInstallButton(bool),
-	EnableSwitch(bool),
+	UpdatePlugin(DynamicIndex),
+	ShowInstallButton(bool),
+	SwitchOn(bool),
 	ToggleSwitch(DynamicIndex, bool),
+	InformStatus(UpdateStatus),
+}
+
+#[derive(Debug)]
+pub enum UpdateStatus {
+	Completed,
+	Failed,
 }
 
 #[derive(Debug)]
@@ -35,6 +44,7 @@ pub enum ServiceRowOutput {
 	EnablePlugin(DynamicIndex, Plugin),
 	DisablePlugin(DynamicIndex, Plugin),
 	RemovePlugin(DynamicIndex, Plugin),
+	UpdatePlugin(DynamicIndex, Plugin),
 }
 
 #[relm4::factory(pub async)]
@@ -69,6 +79,14 @@ impl AsyncFactoryComponent for ServiceRowModel {
 						set_halign: gtk::Align::Center,
 						set_valign: gtk::Align::Center,
 						append = &gtk::Button {
+							#[watch]
+							set_visible: self.update && self.installed,
+							set_label: fl!("update"),
+							connect_clicked[sender, index] => move |_| {
+									sender.input(ServiceRowInput::UpdatePlugin(index.clone()));
+							}
+						},
+						append = &gtk::Button {
 								set_label: fl!("install"),
 								#[watch]
 								set_visible: !self.installed,
@@ -98,6 +116,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			plugin: plugin.plugin,
 			enabled: plugin.enabled,
 			installed: plugin.installed,
+			update: plugin.update,
 			first_load: true,
 		}
 	}
@@ -148,8 +167,14 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			},
 			ServiceRowInput::RemovePlugin(index) => sender
 				.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone())),
-			ServiceRowInput::EnableInstallButton(enable) => self.installed = !enable,
-			ServiceRowInput::EnableSwitch(enabled) => {
+			ServiceRowInput::UpdatePlugin(index) => sender
+				.output(ServiceRowOutput::UpdatePlugin(index, self.plugin.clone())),
+			ServiceRowInput::InformStatus(status) => match status {
+				UpdateStatus::Completed => self.update = false,
+				UpdateStatus::Failed => self.update = true,
+			},
+			ServiceRowInput::ShowInstallButton(enable) => self.installed = !enable,
+			ServiceRowInput::SwitchOn(enabled) => {
 				widgets.switch.set_state(enabled);
 			},
 		}
@@ -170,6 +195,9 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			},
 			ServiceRowOutput::RemovePlugin(index, plugin) => {
 				PreferencesComponentInput::RemovePlugin(index, plugin)
+			},
+			ServiceRowOutput::UpdatePlugin(index, plugin) => {
+				PreferencesComponentInput::UpdatePlugin(index, plugin)
 			},
 		};
 		Some(output)

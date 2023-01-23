@@ -5,8 +5,6 @@ use crate::{
 	application::info::VERSION, widgets::components::preferences::Preferences,
 };
 
-use super::plugin::Plugin;
-
 pub(crate) async fn init() -> Result<()> {
 	let project = Project::new("dev", "edfloreshz", "done")
 		.about("Done is a simple to do app.")
@@ -18,11 +16,6 @@ pub(crate) async fn init() -> Result<()> {
 			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
 		])?;
 
-	let plugins: Vec<Plugin> = Plugin::fetch_plugins().await?;
-	project
-		.get_file("dev.edfloreshz.Done.Plugins", FileFormat::JSON)?
-		.set_content(plugins)?
-		.write()?;
 	if !project.integrity_ok::<Preferences>("preferences", FileFormat::JSON) {
 		project
 			.get_file("preferences", FileFormat::JSON)?

@@ -50,6 +50,7 @@ color-scheme-default = System
 services = Services
 install = Install
 remove = Remove
+update = Update
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
