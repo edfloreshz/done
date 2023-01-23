@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use sysinfo::{ProcessExt, ProcessStatus, System, SystemExt};
 use tonic::transport::Channel;
 
-pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/feat-update-services/dev.edfloreshz.Done.Plugins.json";
+pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/main/dev.edfloreshz.Done.Plugins.json";
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub struct Plugin {
