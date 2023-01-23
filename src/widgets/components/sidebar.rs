@@ -147,10 +147,11 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 		let widgets = view_output!();
 
-		for plugin_preference in preferences.plugins.iter().filter(|plugin| plugin.installed)
+		for plugin_preference in
+			preferences.plugins.iter().filter(|plugin| plugin.installed)
 		{
 			match plugin_preference.plugin.start().await {
-				Ok(id) => { 
+				Ok(id) => {
 					if id.is_some() {
 						//TODO: Handle this id, it needs to be stored for proper process killing.
 					}
@@ -162,8 +163,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 								plugin_preference.plugin.clone(),
 								plugin_preference.enabled,
 							));
-					}
-					else {
+					} else {
 						tracing::error!("Failed to connect to plugin.")
 					}
 				},
@@ -236,9 +236,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.iter()
 					.position(|p| p.map_or(false, |p| p.plugin == plugin));
 				if let Some(index) = index {
-					self
-						.plugin_factory
-						.send(index, PluginFactoryInput::Enable);
+					self.plugin_factory.send(index, PluginFactoryInput::Enable);
 				} else {
 					// self
 					// 	.plugin_factory
@@ -253,9 +251,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.iter()
 					.position(|p| p.unwrap().plugin == plugin);
 				if let Some(index) = index {
-					self
-						.plugin_factory
-						.send(index, PluginFactoryInput::Disable);
+					self.plugin_factory.send(index, PluginFactoryInput::Disable);
 					sender
 						.output(SidebarComponentOutput::DisablePlugin)
 						.unwrap_or_default();

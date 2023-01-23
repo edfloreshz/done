@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
-use sysinfo::{ProcessExt, System, SystemExt, ProcessStatus};
+use sysinfo::{ProcessExt, ProcessStatus, System, SystemExt};
 use tonic::transport::Channel;
 
 pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/feat-update-services/dev.edfloreshz.Done.Plugins.json";
@@ -67,7 +67,10 @@ impl Plugin {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 		let process_name = self.process_name.clone();
 		let system = System::new_all();
-		if system.processes_by_exact_name(&process_name).all(|p| p.status() != ProcessStatus::Run) {
+		if system
+			.processes_by_exact_name(&process_name)
+			.all(|p| p.status() != ProcessStatus::Run)
+		{
 			relm4::spawn(async move {
 				let mut command =
 					tokio::process::Command::new(format!("./{}", process_name));
