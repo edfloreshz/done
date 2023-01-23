@@ -17,6 +17,7 @@ pub struct ServiceRowModel {
 	pub installed: bool,
 	pub update: bool,
 	pub first_load: bool,
+	pub process_id: usize,
 }
 
 #[derive(Debug)]
@@ -30,6 +31,7 @@ pub enum ServiceRowInput {
 	SwitchOn(bool),
 	ToggleSwitch(DynamicIndex, bool),
 	InformStatus(UpdateStatus),
+	UpdateChildId(usize),
 }
 
 #[derive(Debug)]
@@ -42,9 +44,9 @@ pub enum UpdateStatus {
 pub enum ServiceRowOutput {
 	InstallPlugin(DynamicIndex, Plugin),
 	EnablePlugin(DynamicIndex, Plugin),
-	DisablePlugin(DynamicIndex, Plugin),
-	RemovePlugin(DynamicIndex, Plugin),
-	UpdatePlugin(DynamicIndex, Plugin),
+	DisablePlugin(DynamicIndex, Plugin, usize),
+	RemovePlugin(DynamicIndex, Plugin, usize),
+	UpdatePlugin(DynamicIndex, Plugin, usize),
 }
 
 #[relm4::factory(pub async)]
@@ -118,6 +120,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			installed: plugin.installed,
 			update: plugin.update,
 			first_load: true,
+			process_id: 0,
 		}
 	}
 
@@ -142,6 +145,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			ServiceRowInput::UpdateChildId(id) => self.process_id = id,
 			ServiceRowInput::ToggleSwitch(index, state) => {
 				if state {
 					sender.input(ServiceRowInput::EnablePlugin(index));
@@ -161,14 +165,27 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			},
 			ServiceRowInput::DisablePlugin(index) => {
 				if !self.first_load {
-					sender
-						.output(ServiceRowOutput::DisablePlugin(index, self.plugin.clone()))
+					sender.output(ServiceRowOutput::DisablePlugin(
+						index,
+						self.plugin.clone(),
+						self.process_id,
+					))
 				}
 			},
-			ServiceRowInput::RemovePlugin(index) => sender
-				.output(ServiceRowOutput::RemovePlugin(index, self.plugin.clone())),
-			ServiceRowInput::UpdatePlugin(index) => sender
-				.output(ServiceRowOutput::UpdatePlugin(index, self.plugin.clone())),
+			ServiceRowInput::RemovePlugin(index) => {
+				sender.output(ServiceRowOutput::RemovePlugin(
+					index,
+					self.plugin.clone(),
+					self.process_id,
+				))
+			},
+			ServiceRowInput::UpdatePlugin(index) => {
+				sender.output(ServiceRowOutput::UpdatePlugin(
+					index,
+					self.plugin.clone(),
+					self.process_id,
+				))
+			},
 			ServiceRowInput::InformStatus(status) => match status {
 				UpdateStatus::Completed => self.update = false,
 				UpdateStatus::Failed => self.update = true,
@@ -190,14 +207,14 @@ impl AsyncFactoryComponent for ServiceRowModel {
 			ServiceRowOutput::EnablePlugin(index, plugin) => {
 				PreferencesComponentInput::EnablePlugin(index, plugin)
 			},
-			ServiceRowOutput::DisablePlugin(index, plugin) => {
-				PreferencesComponentInput::DisablePlugin(index, plugin)
+			ServiceRowOutput::DisablePlugin(index, plugin, process_id) => {
+				PreferencesComponentInput::DisablePlugin(index, plugin, process_id)
 			},
-			ServiceRowOutput::RemovePlugin(index, plugin) => {
-				PreferencesComponentInput::RemovePlugin(index, plugin)
+			ServiceRowOutput::RemovePlugin(index, plugin, process_id) => {
+				PreferencesComponentInput::RemovePlugin(index, plugin, process_id)
 			},
-			ServiceRowOutput::UpdatePlugin(index, plugin) => {
-				PreferencesComponentInput::UpdatePlugin(index, plugin)
+			ServiceRowOutput::UpdatePlugin(index, plugin, process_id) => {
+				PreferencesComponentInput::UpdatePlugin(index, plugin, process_id)
 			},
 		};
 		Some(output)

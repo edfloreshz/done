@@ -150,13 +150,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		for plugin_preference in
 			preferences.plugins.iter().filter(|plugin| plugin.installed)
 		{
-			model
-				.provider_factory
-				.guard()
-				.push_back(PluginFactoryInit::new(
-					plugin_preference.plugin.clone(),
-					plugin_preference.enabled,
-				));
+			if plugin_preference.plugin.connect().await.is_ok() {
+				model
+					.provider_factory
+					.guard()
+					.push_back(PluginFactoryInit::new(
+						plugin_preference.plugin.clone(),
+						plugin_preference.enabled,
+					));
+			}
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -200,14 +202,16 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				}
 			},
 			SidebarComponentInput::AddPluginToSidebar(plugin) => {
-				match plugin.start() {
+				match plugin.start().await {
 					Ok(_) => {
-						self
-							.provider_factory
-							.guard()
-							.push_back(PluginFactoryInit::new(plugin.clone(), true));
-						self.is_sidebar_empty = false;
-						tracing::info!("Added {:?} service to the sidebar", plugin.name);
+						if plugin.connect().await.is_ok() {
+							self
+								.provider_factory
+								.guard()
+								.push_back(PluginFactoryInit::new(plugin.clone(), true));
+							self.is_sidebar_empty = false;
+							tracing::info!("Added {:?} service to the sidebar", plugin.name);
+						}
 					},
 					Err(err) => sender
 						.output_sender()
@@ -222,10 +226,14 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.iter()
 					.position(|p| p.map_or(false, |p| p.plugin == plugin));
 				if let Some(index) = index {
-					println!("ENABLED SERVICE CORRECTLY");
 					self
 						.provider_factory
 						.send(index, PluginFactoryInput::Enable);
+				} else {
+					self
+						.provider_factory
+						.guard()
+						.push_back(PluginFactoryInit::new(plugin, true));
 				}
 			},
 			SidebarComponentInput::DisableService(plugin) => {

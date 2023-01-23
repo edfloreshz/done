@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
-use std::process::Command;
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
@@ -64,21 +63,24 @@ impl Plugin {
 		Ok(plugins)
 	}
 
-	pub fn start(&self) -> Result<u32, std::io::Error> {
+	pub async fn start(&self) -> Result<Option<u32>, std::io::Error> {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
-		let mut command = Command::new(format!("./{}", &self.process_name));
-		command.current_dir(project.data_dir().join("bin"));
-		match command.spawn() {
-			Ok(child) => Ok(child.id()),
-			Err(err) => Err(err),
-		}
+		let process_name = self.process_name.clone();
+		relm4::spawn(async move {
+			let mut command =
+				tokio::process::Command::new(format!("./{}", process_name));
+			command.current_dir(project.data_dir().join("bin"));
+			match command.spawn() {
+				Ok(child) => Ok(child.id()),
+				Err(err) => Err(err),
+			}
+		})
+		.await?
 	}
 
-	pub fn stop(&self) {
+	pub fn stop(&self, process_id: usize) {
 		let processes = System::new_all();
-		if let Some(process) =
-			processes.processes_by_exact_name(&self.process_name).next()
-		{
+		if let Some(process) = processes.process(sysinfo::Pid::from(process_id)) {
 			if process.kill() {
 				tracing::info!("Process was killed.");
 			} else {
@@ -119,27 +121,35 @@ impl Plugin {
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
 		let port = self.port;
-		loop {
-			match relm4::spawn(async move {
-				ProviderClient::connect(format!("http://[::1]:{}", port))
-					.await
-					.unwrap()
-			})
-			.await
-			{
-				Ok(client) => return Ok(client),
-				Err(err) => tracing::error!("Failed to connect to plugin: {err}"),
+		match relm4::spawn(async move {
+			match ProviderClient::connect(format!("http://[::1]:{}", port)).await {
+				Ok(client) => Ok(client),
+				Err(err) => Err(err),
 			}
+		})
+		.await
+		{
+			Ok(client) => match client {
+				Ok(client) => Ok(client),
+				Err(err) => Err(err.into()),
+			},
+			Err(err) => {
+				tracing::error!("Failed to connect to plugin: {err}");
+				Err(err.into())
+			},
 		}
 	}
 
-	pub async fn try_update(&self) -> Result<()> {
-		self.install().await
+	pub async fn try_update(&self, process_id: usize) -> Result<()> {
+		self.stop(process_id);
+		self.install().await?;
+		self.start().await?;
+		Ok(())
 	}
 }
 
 // Download a file from a URL and save it to a file
-async fn download_file(url: &str, path: PathBuf) -> Result<PathBuf> {
+async fn download_file(url: &str, path: PathBuf) -> Result<()> {
 	let client = Client::new();
 	let url = url.to_string();
 	let response =
@@ -148,13 +158,13 @@ async fn download_file(url: &str, path: PathBuf) -> Result<PathBuf> {
 	if status == 200 {
 		let bytes =
 			relm4::spawn(async move { response.bytes().await.unwrap() }).await?;
-		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-		let mut file = std::fs::File::create(path.clone()).unwrap();
+		std::fs::create_dir_all(path.parent().unwrap())?;
+		let mut file = std::fs::File::create(path.clone())?;
 		file
 			.set_permissions(std::fs::Permissions::from_mode(0o755))
 			.unwrap();
-		file.write_all(&bytes).unwrap();
-		Ok(path)
+		file.write_all(&bytes)?;
+		Ok(())
 	} else {
 		Err(anyhow::anyhow!("This service is unavailable."))
 	}
