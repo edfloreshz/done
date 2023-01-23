@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use crate::app::toast;
 use crate::application::plugin::Plugin;
 use crate::fl;
-use crate::widgets::factory::service_row::{ServiceRowInput, ServiceRowModel};
+use crate::widgets::factory::service_row::{
+	ServiceRowInput, ServiceRowModel, UpdateStatus,
+};
 use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
 use anyhow::Result;
 use directories::ProjectDirs;
@@ -39,14 +41,18 @@ impl Default for Preferences {
 	fn default() -> Self {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 
-		let plugins: Vec<PluginPreferences> = Plugin::get_plugins()
+		let plugins: Vec<PluginPreferences> = Plugin::get_local()
 			.unwrap()
 			.iter()
 			.map(|plugin| PluginPreferences {
 				plugin: plugin.clone(),
 				enabled: false,
 				installed: false,
-				executable: project.data_dir().join("bin").join(&plugin.process_name),
+				update: false,
+				executable: project
+					.data_dir()
+					.join("bin")
+					.join(plugin.process_name.as_str()),
 			})
 			.collect();
 		Self {
@@ -75,6 +81,8 @@ pub struct PluginPreferences {
 	pub plugin: Plugin,
 	pub enabled: bool,
 	pub installed: bool,
+	#[serde(default)]
+	pub update: bool,
 	pub executable: PathBuf,
 }
 
@@ -84,6 +92,7 @@ pub enum PreferencesComponentInput {
 	DisablePlugin(DynamicIndex, Plugin),
 	InstallPlugin(DynamicIndex, Plugin),
 	RemovePlugin(DynamicIndex, Plugin),
+	UpdatePlugin(DynamicIndex, Plugin),
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
@@ -198,19 +207,23 @@ impl AsyncComponent for PreferencesComponentModel {
 
 		let widgets = view_output!();
 
-		let plugins = relm4::spawn(Plugin::fetch_plugins())
-			.await
-			.unwrap()
-			.unwrap();
-
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 
 		model.preferences.plugins.clear();
-		for plugin in plugins {
+
+		for plugin in Plugin::get_local().unwrap() {
+			let has_update = match has_update(&plugin).await {
+				Ok(has_update) => has_update,
+				Err(err) => {
+					tracing::error!("Failed to fetch updates: {err}");
+					false
+				},
+			};
 			let preferences = PluginPreferences {
 				plugin: plugin.clone(),
 				enabled: plugin.clone().is_running(),
 				installed: plugin.clone().is_installed(),
+				update: has_update,
 				executable: project.data_dir().join("bin").join(&plugin.process_name),
 			};
 			model
@@ -256,10 +269,9 @@ impl AsyncComponent for PreferencesComponentModel {
 										plugin,
 									))
 									.unwrap();
-								self.service_row_factory.send(
-									index.current_index(),
-									ServiceRowInput::EnableSwitch(true),
-								);
+								self
+									.service_row_factory
+									.send(index.current_index(), ServiceRowInput::SwitchOn(true));
 							},
 							Err(e) => tracing::error!("{:?}", e),
 						}
@@ -296,10 +308,9 @@ impl AsyncComponent for PreferencesComponentModel {
 									plugin,
 								))
 								.unwrap();
-							self.service_row_factory.send(
-								index.current_index(),
-								ServiceRowInput::EnableSwitch(false),
-							);
+							self
+								.service_row_factory
+								.send(index.current_index(), ServiceRowInput::SwitchOn(false));
 						},
 						Err(e) => tracing::error!("{:?}", e),
 					}
@@ -332,11 +343,11 @@ impl AsyncComponent for PreferencesComponentModel {
 							.unwrap();
 						self.service_row_factory.send(
 							index.current_index(),
-							ServiceRowInput::EnableInstallButton(false),
+							ServiceRowInput::ShowInstallButton(false),
 						);
 						self
 							.service_row_factory
-							.send(index.current_index(), ServiceRowInput::EnableSwitch(true));
+							.send(index.current_index(), ServiceRowInput::SwitchOn(true));
 					},
 					Err(err) => {
 						tracing::error!("{err:?}");
@@ -360,11 +371,11 @@ impl AsyncComponent for PreferencesComponentModel {
 								Ok(_) => {
 									self.service_row_factory.send(
 										index.current_index(),
-										ServiceRowInput::EnableSwitch(false),
+										ServiceRowInput::SwitchOn(false),
 									);
 									self.service_row_factory.send(
 										index.current_index(),
-										ServiceRowInput::EnableInstallButton(true),
+										ServiceRowInput::ShowInstallButton(true),
 									);
 									sender
 										.output(
@@ -383,6 +394,21 @@ impl AsyncComponent for PreferencesComponentModel {
 							tracing::error!("Failed to remove plugin executable: {err}")
 						},
 					}
+				}
+			},
+			PreferencesComponentInput::UpdatePlugin(index, plugin) => {
+				match plugin.try_update().await {
+					Ok(_) => self.service_row_factory.send(
+						index.current_index(),
+						ServiceRowInput::InformStatus(UpdateStatus::Completed),
+					),
+					Err(err) => {
+						tracing::error!("Failed to update plugin: {}", err.to_string());
+						self.service_row_factory.send(
+							index.current_index(),
+							ServiceRowInput::InformStatus(UpdateStatus::Failed),
+						)
+					},
 				}
 			},
 			PreferencesComponentInput::SetDarkColorScheme => {
@@ -422,4 +448,16 @@ fn update_preferences(preferences: &Preferences) -> Result<()> {
 		.get_file("preferences", FileFormat::JSON)?
 		.set_content(preferences)?
 		.write()
+}
+
+async fn has_update(local_plugin: &Plugin) -> Result<bool> {
+	let remote_plugins = Plugin::fetch_remote().await?;
+	if let Some(remote_plugin) =
+		remote_plugins.iter().find(|r| r.name == local_plugin.name)
+	{
+		if local_plugin.version != remote_plugin.version {
+			return Ok(true);
+		}
+	}
+	Ok(false)
 }
