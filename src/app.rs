@@ -144,23 +144,27 @@ impl AsyncComponent for App {
 		let about_done: &str = fl!("about-done");
 		let quit: &str = fl!("quit");
 
-		let app = main_app();
-
-		app.connect_shutdown(|_| {
-			let processes = System::new_all();
-			let mut local = processes.processes_by_exact_name("local-plugin");
-			if let Some(process) = local.next() {
-				if process.kill() {
-					tracing::info!("The {} process was killed.", process.name());
-				} else {
-					tracing::error!("Failed to kill process.");
-				}
-			} else {
-				tracing::info!("Process is not running.");
-			}
-		});
-
 		let actions = RelmActionGroup::<WindowActionGroup>::new();
+
+		let preferences_controller = PreferencesComponentModel::builder()
+			.launch(())
+			.forward(sender.input_sender(), |message| match message {
+				PreferencesComponentOutput::AddPluginToSidebar(plugin) => {
+					Event::AddPluginToSidebar(plugin)
+				},
+				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
+					Event::EnablePluginOnSidebar(plugin)
+				},
+				PreferencesComponentOutput::DisablePluginOnSidebar(plugin) => {
+					Event::DisablePluginOnSidebar(plugin)
+				},
+				PreferencesComponentOutput::ToggleCompact(compact) => {
+					Event::ToggleCompact(compact)
+				},
+				PreferencesComponentOutput::RemovePluginFromSidebar(plugin) => {
+					Event::RemovePluginFromSidebar(plugin)
+				},
+			});
 
 		let sidebar_controller = SidebarComponentModel::builder()
 			.launch(())
@@ -183,26 +187,6 @@ impl AsyncComponent for App {
 			.forward(sender.input_sender(), |message| match message {
 				ContentComponentOutput::Notify(msg, timeout) => {
 					Event::Notify(msg, timeout)
-				},
-			});
-
-		let preferences_controller = PreferencesComponentModel::builder()
-			.launch(())
-			.forward(sender.input_sender(), |message| match message {
-				PreferencesComponentOutput::AddPluginToSidebar(plugin) => {
-					Event::AddPluginToSidebar(plugin)
-				},
-				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
-					Event::EnablePluginOnSidebar(plugin)
-				},
-				PreferencesComponentOutput::DisablePluginOnSidebar(plugin) => {
-					Event::DisablePluginOnSidebar(plugin)
-				},
-				PreferencesComponentOutput::ToggleCompact(compact) => {
-					Event::ToggleCompact(compact)
-				},
-				PreferencesComponentOutput::RemovePluginFromSidebar(plugin) => {
-					Event::RemovePluginFromSidebar(plugin)
 				},
 			});
 
@@ -272,7 +256,23 @@ impl AsyncComponent for App {
 		_root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => main_app().quit(),
+			Event::Quit => {
+				let processes = System::new_all();
+				for plugin in Plugin::get_local().unwrap() {
+					let mut plugin =
+						processes.processes_by_exact_name(&plugin.process_name);
+					if let Some(process) = plugin.next() {
+						if process.kill() {
+							tracing::info!("The {} process was killed.", process.name());
+						} else {
+							tracing::error!("Failed to kill process.");
+						}
+					} else {
+						tracing::info!("Process is not running.");
+					}
+				}
+				main_app().quit()
+			},
 			Event::CloseWarning => self.warning_revealed = false,
 			Event::TaskListSelected(list) => {
 				self.page_title = Some(list.list.name.clone());
