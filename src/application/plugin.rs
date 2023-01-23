@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::{ProcessExt, System, SystemExt, ProcessStatus};
 use tonic::transport::Channel;
 
 pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/feat-update-services/dev.edfloreshz.Done.Plugins.json";
@@ -66,16 +66,21 @@ impl Plugin {
 	pub async fn start(&self) -> Result<Option<u32>, std::io::Error> {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 		let process_name = self.process_name.clone();
-		relm4::spawn(async move {
-			let mut command =
-				tokio::process::Command::new(format!("./{}", process_name));
-			command.current_dir(project.data_dir().join("bin"));
-			match command.spawn() {
-				Ok(child) => Ok(child.id()),
-				Err(err) => Err(err),
-			}
-		})
-		.await?
+		let system = System::new_all();
+		if system.processes_by_exact_name(&process_name).all(|p| p.status() != ProcessStatus::Run) {
+			relm4::spawn(async move {
+				let mut command =
+					tokio::process::Command::new(format!("./{}", process_name));
+				command.current_dir(project.data_dir().join("bin"));
+				match command.spawn() {
+					Ok(child) => Ok(child.id()),
+					Err(err) => Err(err),
+				}
+			})
+			.await?
+		} else {
+			Ok(None)
+		}
 	}
 
 	pub fn stop(&self, process_id: usize) {
