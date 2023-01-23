@@ -5,7 +5,7 @@
         "pluginDescription": "Local tasks are stored here.",
         "pluginIcon": "user-home-symbolic",
         "pluginPort": 7007,
-        "pluginVersion": "1.0.1",
+        "pluginVersion": "0.1.0",
         "pluginProcessName": "local-plugin",
         "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.0/local-plugin"
     },
@@ -15,7 +15,7 @@
         "pluginDescription": "Google tasks are stored here.",
         "pluginIcon": "",
         "pluginPort": 6006,
-        "pluginVersion": "1.0.0",
+        "pluginVersion": "0.1.0",
         "pluginProcessName": "google-plugin",
         "pluginDownloadUrl": "https://github.com/done-devs/google-plugin/releases/download/v0.1.0/google-plugin"
     },
@@ -25,7 +25,7 @@
         "pluginDescription": "Microsoft To Do tasks are stored here.",
         "pluginIcon": "",
         "pluginPort": 3003,
-        "pluginVersion": "1.0.0",
+        "pluginVersion": "0.1.0",
         "pluginProcessName": "microsoft-plugin",
         "pluginDownloadUrl": "https://github.com/done-devs/microsoft-plugin/releases/download/v0.1.0/microsoft-plugin"
     },
@@ -35,7 +35,7 @@
         "pluginDescription": "Nextcloud tasks are stored here.",
         "pluginIcon": "",
         "pluginPort": 4004,
-        "pluginVersion": "1.0.0",
+        "pluginVersion": "0.1.0",
         "pluginProcessName": "nextcloud-plugin",
         "pluginDownloadUrl": "https://github.com/done-devs/nextcloud-plugin/releases/download/v0.1.0/nextcloud-plugin"
     }
