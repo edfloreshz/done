@@ -109,6 +109,7 @@ impl AsyncComponent for PreferencesComponentModel {
 	view! {
 		adw::PreferencesWindow {
 			set_title: Some(fl!("preferences")),
+			set_hide_on_close: true,
 			#[wrap(Some)]
 			#[name = "overlay"]
 			set_content = &adw::ToastOverlay {
