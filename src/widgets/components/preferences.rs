@@ -40,7 +40,7 @@ pub struct Preferences {
 impl Preferences {
 	pub async fn new() -> Self {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
-		let plugins: Vec<Plugin> = if let Ok(plugins) =  Plugin::get_local() {
+		let plugins: Vec<Plugin> = if let Ok(plugins) = Plugin::get_local() {
 			plugins
 		} else {
 			match Plugin::fetch_remote().await {
@@ -52,17 +52,19 @@ impl Preferences {
 			}
 		};
 
-		let plugins = plugins.iter().map(|plugin| PluginPreferences {
-			plugin: plugin.clone(),
-			enabled: false,
-			installed: false,
-			update: false,
-			executable: project
-				.data_dir()
-				.join("bin")
-				.join(plugin.process_name.as_str()),
-		})
-		.collect();
+		let plugins = plugins
+			.iter()
+			.map(|plugin| PluginPreferences {
+				plugin: plugin.clone(),
+				enabled: false,
+				installed: false,
+				update: false,
+				executable: project
+					.data_dir()
+					.join("bin")
+					.join(plugin.process_name.as_str()),
+			})
+			.collect();
 
 		Self {
 			plugins,
@@ -198,7 +200,8 @@ impl AsyncComponent for PreferencesComponentModel {
 		let preferences =
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
 				project
-					.get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap_or(Preferences::new().await)
+					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+					.unwrap_or(Preferences::new().await)
 			} else {
 				Preferences::new().await
 			};
@@ -229,13 +232,14 @@ impl AsyncComponent for PreferencesComponentModel {
 					false
 				},
 			};
-			let plugin_search = old_plugins
-				.iter()
-				.find(|p| p.plugin == plugin);
-			let plugin_enabled = plugin_search.is_some() && plugin_search.unwrap().enabled;
+			let plugin_search = old_plugins.iter().find(|p| p.plugin == plugin);
+			let plugin_enabled =
+				plugin_search.is_some() && plugin_search.unwrap().enabled;
 			if plugin_enabled {
 				sender
-					.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin.clone()))
+					.output(PreferencesComponentOutput::EnablePluginOnSidebar(
+						plugin.clone(),
+					))
 					.unwrap()
 			}
 			let preferences = PluginPreferences {
