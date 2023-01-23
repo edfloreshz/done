@@ -76,18 +76,14 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			#[watch]
 			set_enable_expansion: !self.list_factory.is_empty() && self.plugin.is_running() && self.enabled,
 			set_expanded: !self.list_factory.is_empty(),
-			add_action = if self.plugin.is_running() {
-				gtk::MenuButton {
-					set_icon_name: "value-increase-symbolic",
-					set_css_classes: &["flat", "image-button"],
-					set_valign: gtk::Align::Center,
-					set_direction: gtk::ArrowType::Right,
-					set_popover: Some(self.new_list_controller.widget())
-				}
-			} else {
-				gtk::Box {
-
-				}
+			add_action = &gtk::MenuButton {
+				#[watch]
+				set_visible: self.enabled,
+				set_icon_name: "value-increase-symbolic",
+				set_css_classes: &["flat", "image-button"],
+				set_valign: gtk::Align::Center,
+				set_direction: gtk::ArrowType::Right,
+				set_popover: Some(self.new_list_controller.widget())
 			},
 		}
 	}
