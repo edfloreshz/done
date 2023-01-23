@@ -3,7 +3,7 @@ use crate::fl;
 use crate::widgets::components::preferences::{
 	PluginPreferences, PreferencesComponentInput,
 };
-use adw::prelude::{ActionRowExt, BoxExt, ButtonExt, PreferencesRowExt};
+use adw::prelude::{ActionRowExt, ButtonExt, PreferencesRowExt};
 use relm4::adw;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -64,47 +64,46 @@ impl AsyncFactoryComponent for ServiceRowModel {
 		adw::ActionRow {
 				set_title: &self.plugin.name,
 				set_subtitle: &self.plugin.description,
-				add_suffix = &gtk::Box {
-						set_halign: gtk::Align::Center,
-						set_valign: gtk::Align::Center,
-						gtk::Button {
-							#[watch]
-							set_visible: self.installed,
-							set_icon_name: "user-trash-full-symbolic",
-							set_tooltip_text: Some(fl!("remove")),
-							connect_clicked[sender, index] => move |_| {
-								sender.input(ServiceRowInput::RemovePlugin(index.clone()));
-							}
-						}
+				add_suffix = &gtk::Button {
+					#[watch]
+					set_visible: self.installed,
+					set_icon_name: "user-trash-full-symbolic",
+					set_css_classes: &["destructive-action"],
+					set_tooltip_text: Some(fl!("remove")),
+					set_valign: gtk::Align::Center,
+					connect_clicked[sender, index] => move |_| {
+						sender.input(ServiceRowInput::RemovePlugin(index.clone()));
+					}
 				},
-				add_suffix = &gtk::Box {
-						set_halign: gtk::Align::Center,
-						set_valign: gtk::Align::Center,
-						append = &gtk::Button {
-							#[watch]
-							set_visible: self.update && self.installed,
-							set_label: fl!("update"),
-							connect_clicked[sender, index] => move |_| {
-									sender.input(ServiceRowInput::UpdatePlugin(index.clone()));
-							}
-						},
-						append = &gtk::Button {
-								set_label: fl!("install"),
-								#[watch]
-								set_visible: !self.installed,
-								connect_clicked[sender, index] => move |_| {
-										sender.input(ServiceRowInput::InstallPlugin(index.clone()));
-								}
-						},
-						#[name(switch)]
-						append = &gtk::Switch {
-								#[watch]
-								set_visible: self.installed,
-								connect_state_set[sender, index] => move |_, state| {
-									sender.input(ServiceRowInput::ToggleSwitch(index.clone(), state));
-									gtk::Inhibit(false)
-								}
-						}
+				add_suffix = &gtk::Button {
+					#[watch]
+					set_visible: self.update && self.installed,
+					set_icon_name: "software-update-available-symbolic",
+					set_css_classes: &["favorite"],
+					set_tooltip_text: Some(fl!("update")),
+					set_valign: gtk::Align::Center,
+					connect_clicked[sender, index] => move |_| {
+							sender.input(ServiceRowInput::UpdatePlugin(index.clone()));
+					}
+				},
+				add_suffix = &gtk::Button {
+					#[watch]
+					set_visible: !self.installed,
+					set_label: fl!("install"),
+					set_valign: gtk::Align::Center,
+					connect_clicked[sender, index] => move |_| {
+							sender.input(ServiceRowInput::InstallPlugin(index.clone()));
+					}
+				},
+				#[name(switch)]
+				add_suffix = &gtk::Switch {
+					set_valign: gtk::Align::Center,
+					#[watch]
+					set_visible: self.installed,
+					connect_state_set[sender, index] => move |_, state| {
+						sender.input(ServiceRowInput::ToggleSwitch(index.clone(), state));
+						gtk::Inhibit(false)
+					}
 				}
 		}
 	}

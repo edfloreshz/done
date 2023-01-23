@@ -1,5 +1,5 @@
 use crate::application::{
-	actions, gettext, info::APP_ID, localization, resources, services, settings,
+	actions, gettext, info::APP_ID, localization, resources, settings,
 };
 use anyhow::{Ok, Result};
 use once_cell::unsync::Lazy;
@@ -35,6 +35,5 @@ pub fn init() -> Result<adw::Application> {
 
 pub async fn init_services() -> Result<()> {
 	settings::init().await?;
-	services::init().await?;
 	Ok(())
 }

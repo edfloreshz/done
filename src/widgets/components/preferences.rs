@@ -37,24 +37,33 @@ pub struct Preferences {
 	pub compact: bool,
 }
 
-impl Default for Preferences {
-	fn default() -> Self {
+impl Preferences {
+	pub async fn new() -> Self {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+		let plugins: Vec<Plugin> = if let Ok(plugins) =  Plugin::get_local() {
+			plugins
+		} else {
+			match Plugin::fetch_remote().await {
+				Ok(plugins) => plugins,
+				Err(err) => {
+					tracing::error!("{err:?}");
+					vec![]
+				},
+			}
+		};
 
-		let plugins: Vec<PluginPreferences> = Plugin::get_local()
-			.unwrap()
-			.iter()
-			.map(|plugin| PluginPreferences {
-				plugin: plugin.clone(),
-				enabled: false,
-				installed: false,
-				update: false,
-				executable: project
-					.data_dir()
-					.join("bin")
-					.join(plugin.process_name.as_str()),
-			})
-			.collect();
+		let plugins = plugins.iter().map(|plugin| PluginPreferences {
+			plugin: plugin.clone(),
+			enabled: false,
+			installed: false,
+			update: false,
+			executable: project
+				.data_dir()
+				.join("bin")
+				.join(plugin.process_name.as_str()),
+		})
+		.collect();
+
 		Self {
 			plugins,
 			color_scheme: ColorScheme::Default,
@@ -189,10 +198,9 @@ impl AsyncComponent for PreferencesComponentModel {
 		let preferences =
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
 				project
-					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or_default()
+					.get_file_as::<Preferences>("preferences", FileFormat::JSON).unwrap_or(Preferences::new().await)
 			} else {
-				Preferences::default()
+				Preferences::new().await
 			};
 
 		let mut model = Self {
@@ -209,6 +217,8 @@ impl AsyncComponent for PreferencesComponentModel {
 
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 
+		let old_plugins = model.preferences.plugins.clone();
+
 		model.preferences.plugins.clear();
 
 		for plugin in Plugin::get_local().unwrap() {
@@ -219,9 +229,18 @@ impl AsyncComponent for PreferencesComponentModel {
 					false
 				},
 			};
+			let plugin_search = old_plugins
+				.iter()
+				.find(|p| p.plugin == plugin);
+			let plugin_enabled = plugin_search.is_some() && plugin_search.unwrap().enabled;
+			if plugin_enabled {
+				sender
+					.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin.clone()))
+					.unwrap()
+			}
 			let preferences = PluginPreferences {
 				plugin: plugin.clone(),
-				enabled: plugin.clone().is_running(),
+				enabled: plugin_enabled,
 				installed: plugin.clone().is_installed(),
 				update: has_update,
 				executable: project.data_dir().join("bin").join(&plugin.process_name),
@@ -231,16 +250,6 @@ impl AsyncComponent for PreferencesComponentModel {
 				.guard()
 				.push_back(preferences.clone());
 			model.preferences.plugins.push(preferences);
-			let plugin_search = model
-				.preferences
-				.plugins
-				.iter()
-				.find(|p| p.plugin == plugin);
-			if plugin_search.is_some() && plugin_search.unwrap().enabled {
-				sender
-					.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin))
-					.unwrap()
-			}
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -280,11 +289,13 @@ impl AsyncComponent for PreferencesComponentModel {
 
 						match update_preferences(&self.preferences) {
 							Ok(()) => {
-								sender
-									.output(PreferencesComponentOutput::EnablePluginOnSidebar(
-										plugin,
-									))
-									.unwrap();
+								if id.is_some() {
+									sender
+										.output(PreferencesComponentOutput::EnablePluginOnSidebar(
+											plugin,
+										))
+										.unwrap();
+								}
 								self
 									.service_row_factory
 									.send(index.current_index(), ServiceRowInput::SwitchOn(true));

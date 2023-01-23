@@ -164,9 +164,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))
 			},
-			PluginFactoryInput::Enable => {
-				self.enabled = true;
-			},
+			PluginFactoryInput::Enable => self.enabled = true,
 			PluginFactoryInput::Disable => self.enabled = false,
 		}
 	}
@@ -193,16 +191,17 @@ async fn init_model(
 ) -> anyhow::Result<PluginFactoryModel> {
 	let index = index.current_index();
 	let plugin = init.plugin.clone();
-	let mut client = init.plugin.connect().await?;
 
 	let (tx, rx) = relm4::tokio::sync::mpsc::channel(100);
-
-	let mut stream = client.read_all_lists(Empty {}).await?.into_inner();
-	relm4::spawn(async move {
-		while let Some(list) = stream.message().await.unwrap() {
-			tx.send(list).await.unwrap()
-		}
-	});
+	if plugin.start().await.is_ok() {
+		let mut client = init.plugin.connect().await?;
+		let mut stream = client.read_all_lists(Empty {}).await?.into_inner();
+		relm4::spawn(async move {
+			while let Some(list) = stream.message().await.unwrap() {
+				tx.send(list).await.unwrap()
+			}
+		});
+	}
 
 	Ok(PluginFactoryModel {
 		plugin,
