@@ -23,7 +23,7 @@ use relm4::{
 
 #[derive(Debug)]
 pub struct SidebarComponentModel {
-	provider_factory: AsyncFactoryVecDeque<PluginFactoryModel>,
+	plugin_factory: AsyncFactoryVecDeque<PluginFactoryModel>,
 	smart_list_controller: Controller<SmartListModel>,
 	is_sidebar_empty: bool,
 }
@@ -124,7 +124,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			.unwrap();
 
 		let mut model = SidebarComponentModel {
-			provider_factory: AsyncFactoryVecDeque::new(
+			plugin_factory: AsyncFactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
 			),
@@ -143,21 +143,31 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				.any(|preferences| preferences.installed),
 		};
 
-		let providers_container = model.provider_factory.widget();
+		let providers_container = model.plugin_factory.widget();
 
 		let widgets = view_output!();
 
-		for plugin_preference in
-			preferences.plugins.iter().filter(|plugin| plugin.installed)
+		for plugin_preference in preferences.plugins.iter().filter(|plugin| plugin.installed)
 		{
-			if plugin_preference.plugin.connect().await.is_ok() {
-				model
-					.provider_factory
-					.guard()
-					.push_back(PluginFactoryInit::new(
-						plugin_preference.plugin.clone(),
-						plugin_preference.enabled,
-					));
+			match plugin_preference.plugin.start().await {
+				Ok(id) => { 
+					if id.is_some() {
+						//TODO: Handle this id, it needs to be stored for proper process killing.
+					}
+					if plugin_preference.plugin.connect().await.is_ok() {
+						model
+							.plugin_factory
+							.guard()
+							.push_back(PluginFactoryInit::new(
+								plugin_preference.plugin.clone(),
+								plugin_preference.enabled,
+							));
+					}
+					else {
+						tracing::error!("Failed to connect to plugin.")
+					}
+				},
+				Err(_) => todo!(),
 			}
 		}
 
@@ -180,7 +190,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 								let response = response.into_inner();
 								if response.successful {
 									self
-										.provider_factory
+										.plugin_factory
 										.send(index, PluginFactoryInput::AddList(list));
 								}
 								sender
@@ -206,7 +216,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					Ok(_) => {
 						if plugin.connect().await.is_ok() {
 							self
-								.provider_factory
+								.plugin_factory
 								.guard()
 								.push_back(PluginFactoryInit::new(plugin.clone(), true));
 							self.is_sidebar_empty = false;
@@ -221,30 +231,30 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::EnableService(plugin) => {
 				let index = self
-					.provider_factory
+					.plugin_factory
 					.guard()
 					.iter()
 					.position(|p| p.map_or(false, |p| p.plugin == plugin));
 				if let Some(index) = index {
 					self
-						.provider_factory
+						.plugin_factory
 						.send(index, PluginFactoryInput::Enable);
 				} else {
-					self
-						.provider_factory
-						.guard()
-						.push_back(PluginFactoryInit::new(plugin, true));
+					// self
+					// 	.plugin_factory
+					// 	.guard()
+					// 	.push_back(PluginFactoryInit::new(plugin, true));
 				}
 			},
 			SidebarComponentInput::DisableService(plugin) => {
 				let index = self
-					.provider_factory
+					.plugin_factory
 					.guard()
 					.iter()
 					.position(|p| p.unwrap().plugin == plugin);
 				if let Some(index) = index {
 					self
-						.provider_factory
+						.plugin_factory
 						.send(index, PluginFactoryInput::Disable);
 					sender
 						.output(SidebarComponentOutput::DisablePlugin)
@@ -261,19 +271,19 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::RemoveService(plugin) => {
 				let index = self
-					.provider_factory
+					.plugin_factory
 					.guard()
 					.iter()
 					.position(|p| p.unwrap().plugin == plugin);
 				if let Some(index) = index {
-					match self.provider_factory.guard().remove(index) {
+					match self.plugin_factory.guard().remove(index) {
 						Some(provider) => {
 							tracing::info!("Removed {} service", provider.plugin.name)
 						},
 						None => tracing::error!("Failed to remove service from sidebar."),
 					}
 				}
-				if self.provider_factory.guard().is_empty() {
+				if self.plugin_factory.guard().is_empty() {
 					self.is_sidebar_empty = true;
 				}
 			},
