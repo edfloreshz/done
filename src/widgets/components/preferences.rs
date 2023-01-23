@@ -89,10 +89,10 @@ pub struct PluginPreferences {
 #[derive(Debug)]
 pub enum PreferencesComponentInput {
 	EnablePlugin(DynamicIndex, Plugin),
-	DisablePlugin(DynamicIndex, Plugin),
+	DisablePlugin(DynamicIndex, Plugin, usize),
 	InstallPlugin(DynamicIndex, Plugin),
-	RemovePlugin(DynamicIndex, Plugin),
-	UpdatePlugin(DynamicIndex, Plugin),
+	RemovePlugin(DynamicIndex, Plugin, usize),
+	UpdatePlugin(DynamicIndex, Plugin, usize),
 	SetDarkColorScheme,
 	SetLightColorScheme,
 	SetDefaultColorScheme,
@@ -231,6 +231,16 @@ impl AsyncComponent for PreferencesComponentModel {
 				.guard()
 				.push_back(preferences.clone());
 			model.preferences.plugins.push(preferences);
+			let plugin_search = model
+				.preferences
+				.plugins
+				.iter()
+				.find(|p| p.plugin == plugin);
+			if plugin_search.is_some() && plugin_search.unwrap().enabled {
+				sender
+					.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin))
+					.unwrap()
+			}
 		}
 
 		AsyncComponentParts { model, widgets }
@@ -245,8 +255,14 @@ impl AsyncComponent for PreferencesComponentModel {
 	) {
 		match message {
 			PreferencesComponentInput::EnablePlugin(index, plugin) => {
-				match plugin.start() {
-					Ok(_) => {
+				match plugin.start().await {
+					Ok(id) => {
+						if let Some(id) = id {
+							self.service_row_factory.send(
+								index.current_index(),
+								ServiceRowInput::UpdateChildId(id.try_into().unwrap()),
+							);
+						}
 						tracing::info!("Plugin {:?} started...", plugin);
 						widgets.overlay.add_toast(&toast("Service enabled.", 1));
 
@@ -284,8 +300,8 @@ impl AsyncComponent for PreferencesComponentModel {
 					},
 				}
 			},
-			PreferencesComponentInput::DisablePlugin(index, plugin) => {
-				plugin.stop();
+			PreferencesComponentInput::DisablePlugin(index, plugin, process_id) => {
+				plugin.stop(process_id);
 				tracing::info!("Plugin {:?} stopped.", plugin);
 				let previous_model = self.preferences.clone();
 				self.preferences.plugins = self
@@ -318,10 +334,7 @@ impl AsyncComponent for PreferencesComponentModel {
 			},
 			PreferencesComponentInput::InstallPlugin(index, plugin) => {
 				let install_plugin = plugin.clone();
-				match relm4::spawn(async move { install_plugin.install().await })
-					.await
-					.unwrap()
-				{
+				match install_plugin.install().await {
 					Ok(_) => {
 						if let Some(plugin) = self
 							.preferences
@@ -350,13 +363,13 @@ impl AsyncComponent for PreferencesComponentModel {
 							.send(index.current_index(), ServiceRowInput::SwitchOn(true));
 					},
 					Err(err) => {
-						tracing::error!("{err:?}");
+						tracing::error!("Failed to install plugin: {}", err.to_string());
 						widgets.overlay.add_toast(&toast(err, 2))
 					},
 				}
 			},
-			PreferencesComponentInput::RemovePlugin(index, plugin) => {
-				plugin.stop();
+			PreferencesComponentInput::RemovePlugin(index, plugin, process_id) => {
+				plugin.stop(process_id);
 				if let Some(preferences) = self
 					.preferences
 					.plugins
@@ -396,8 +409,8 @@ impl AsyncComponent for PreferencesComponentModel {
 					}
 				}
 			},
-			PreferencesComponentInput::UpdatePlugin(index, plugin) => {
-				match plugin.try_update().await {
+			PreferencesComponentInput::UpdatePlugin(index, plugin, process_id) => {
+				match plugin.try_update(process_id).await {
 					Ok(_) => self.service_row_factory.send(
 						index.current_index(),
 						ServiceRowInput::InformStatus(UpdateStatus::Completed),
