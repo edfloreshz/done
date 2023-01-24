@@ -229,11 +229,9 @@ impl AsyncComponent for ContentComponentModel {
 					|| self.selected_task.as_ref().unwrap().id != task.id
 				{
 					self.selected_task = Some(task.clone());
-					self.task_details_factory.guard().clear();
-					self
-						.task_details_factory
-						.guard()
-						.push_back(TaskDetailsFactoryInit::new(task, index));
+					let mut guard = self.task_details_factory.guard();
+					guard.clear();
+					guard.push_back(TaskDetailsFactoryInit::new(task, index));
 				}
 			},
 			ContentComponentInput::HideFlap => {
@@ -335,7 +333,8 @@ impl AsyncComponent for ContentComponentModel {
 
 				self.plugin = Some(model.plugin.clone());
 				if let Ok(mut client) = model.plugin.connect().await {
-					self.task_factory.guard().clear();
+					let mut guard = self.task_factory.guard();
+					guard.clear();
 
 					let (tx, mut rx) = relm4::tokio::sync::mpsc::channel(100);
 					relm4::spawn(async move {
@@ -351,7 +350,7 @@ impl AsyncComponent for ContentComponentModel {
 
 					while let Some(response) = rx.recv().await {
 						if response.successful {
-							self.task_factory.guard().push_back(TaskFactoryInit::new(
+							guard.push_back(TaskFactoryInit::new(
 								response.task.unwrap(),
 								self.parent_list.as_ref().unwrap().clone(),
 								self.compact,
