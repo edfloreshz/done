@@ -21,7 +21,6 @@ pub fn init() -> Result<adw::Application> {
 	gtk::init()?;
 	gettext::init();
 	localization::init();
-	appearance::init()?;
 	// Enable logging
 	tracing_subscriber::fmt()
 		.with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
@@ -35,5 +34,6 @@ pub fn init() -> Result<adw::Application> {
 
 pub async fn init_services() -> Result<()> {
 	settings::init().await?;
+	appearance::init()?;
 	Ok(())
 }
