@@ -7,6 +7,9 @@ use crate::widgets::factory::list::ListFactoryModel;
 use crate::widgets::factory::task::{
 	TaskFactoryInit, TaskFactoryInput, TaskFactoryModel,
 };
+use crate::widgets::factory::task_details::{
+	TaskDetailsFactoryInit, TaskDetailsFactoryInput, TaskDetailsFactoryModel,
+};
 use libset::format::FileFormat;
 use libset::project::Project;
 use proto_rust::provider::{List, Task};
@@ -17,7 +20,7 @@ use relm4::component::{
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::DynamicIndex;
 use relm4::{
-	gtk,
+	adw, gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 	Controller,
 };
@@ -30,6 +33,7 @@ use super::smart_lists::{
 
 pub struct ContentComponentModel {
 	task_factory: AsyncFactoryVecDeque<TaskFactoryModel>,
+	task_details_factory: AsyncFactoryVecDeque<TaskDetailsFactoryModel>,
 	task_entry: Controller<TaskEntryComponent>,
 	all: Controller<AllComponentModel>,
 	today: Controller<TodayComponentModel>,
@@ -39,6 +43,8 @@ pub struct ContentComponentModel {
 	parent_list: Option<List>,
 	selected_smart_list: Option<SmartList>,
 	compact: bool,
+	selected_task: Option<Task>,
+	show_task_details: bool,
 }
 
 #[derive(Debug)]
@@ -48,8 +54,10 @@ pub enum ContentComponentInput {
 	UpdateTask(Option<DynamicIndex>, Task),
 	TaskListSelected(ListFactoryModel),
 	SelectSmartList(SmartList),
+	RevealTaskDetails(DynamicIndex, Task),
 	ToggleCompact(bool),
 	DisablePlugin,
+	HideFlap,
 }
 
 #[derive(Debug)]
@@ -70,51 +78,73 @@ impl AsyncComponent for ContentComponentModel {
 			set_vexpand: true,
 			set_transition_duration: 250,
 			set_transition_type: gtk::StackTransitionType::Crossfade,
-			set_margin_all: 10,
-			gtk::Box {
-				set_orientation: gtk::Orientation::Vertical,
-				#[name(task_container)]
-				gtk::Stack {
-					set_transition_duration: 250,
-					set_transition_type: gtk::StackTransitionType::Crossfade,
-					gtk::ScrolledWindow {
-						#[watch]
-						set_visible: model.parent_list.is_some(),
-						set_vexpand: true,
-						set_hexpand: true,
-						set_child: Some(list_box),
+			set_width_request: 400,
+			#[name(flap)]
+			adw::Flap {
+				set_modal: true,
+				set_locked: true,
+				#[watch]
+				set_reveal_flap: model.show_task_details,
+				#[wrap(Some)]
+				set_content = &gtk::Box {
+					set_width_request: 300,
+					set_margin_all: 10,
+					set_orientation: gtk::Orientation::Vertical,
+					#[name(task_container)]
+					gtk::Stack {
+						set_transition_duration: 250,
+						set_transition_type: gtk::StackTransitionType::Crossfade,
+						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: model.parent_list.is_some(),
+							set_vexpand: true,
+							set_hexpand: true,
+							set_child: Some(list_box),
+						},
+						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::All,
+							set_vexpand: true,
+							set_hexpand: true,
+							set_child: Some(model.all.widget())
+						},
+						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Today,
+							set_vexpand: true,
+							set_hexpand: true,
+							set_child: Some(model.today.widget())
+						},
+						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Starred,
+							set_vexpand: true,
+							set_hexpand: true,
+							set_child: Some(model.starred.widget())
+						},
+						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Next7Days,
+							set_vexpand: true,
+							set_hexpand: true,
+							set_child: Some(model.next7days.widget())
+						},
 					},
-					gtk::ScrolledWindow {
-						#[watch]
-						set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::All,
-						set_vexpand: true,
-						set_hexpand: true,
-						set_child: Some(model.all.widget())
-					},
-					gtk::ScrolledWindow {
-						#[watch]
-						set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Today,
-						set_vexpand: true,
-						set_hexpand: true,
-						set_child: Some(model.today.widget())
-					},
-					gtk::ScrolledWindow {
-						#[watch]
-						set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Starred,
-						set_vexpand: true,
-						set_hexpand: true,
-						set_child: Some(model.starred.widget())
-					},
-					gtk::ScrolledWindow {
-						#[watch]
-						set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Next7Days,
-						set_vexpand: true,
-						set_hexpand: true,
-						set_child: Some(model.next7days.widget())
-					},
+					append: model.task_entry.widget()
 				},
-				append: model.task_entry.widget()
-			},
+				#[wrap(Some)]
+				#[local_ref]
+				set_flap = flap_container -> gtk::Box {
+					set_width_request: 300,
+					set_css_classes: &["background"],
+
+				},
+				#[wrap(Some)]
+				set_separator = &gtk::Separator {
+					set_orientation: gtk::Orientation::Vertical,
+				},
+				set_flap_position: gtk::PackType::End,
+			}
 		}
 	}
 
@@ -155,6 +185,10 @@ impl AsyncComponent for ContentComponentModel {
 					.build(),
 				sender.input_sender(),
 			),
+			task_details_factory: AsyncFactoryVecDeque::new(
+				gtk::Box::default(),
+				sender.input_sender(),
+			),
 			task_entry: TaskEntryComponent::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
@@ -171,10 +205,14 @@ impl AsyncComponent for ContentComponentModel {
 			parent_list: None,
 			selected_smart_list: None,
 			compact,
+			selected_task: None,
+			show_task_details: false,
 		};
 		let list_box = model.task_factory.widget();
+		let flap_container = model.task_details_factory.widget();
 
 		let widgets = view_output!();
+
 		AsyncComponentParts { model, widgets }
 	}
 
@@ -185,6 +223,29 @@ impl AsyncComponent for ContentComponentModel {
 		_root: &Self::Root,
 	) {
 		match message {
+			ContentComponentInput::RevealTaskDetails(index, task) => {
+				self.show_task_details = true;
+				if self.selected_task.is_none()
+					|| self.selected_task.as_ref().unwrap().id != task.id
+				{
+					self.selected_task = Some(task.clone());
+					self.task_details_factory.guard().clear();
+					self
+						.task_details_factory
+						.guard()
+						.push_back(TaskDetailsFactoryInit::new(task, index));
+				}
+			},
+			ContentComponentInput::HideFlap => {
+				self.show_task_details = false;
+				if let Some(list) = self.parent_list.clone() {
+					if let Some(plugin) = self.plugin.clone() {
+						sender.input(ContentComponentInput::TaskListSelected(
+							ListFactoryModel::new(list, plugin),
+						))
+					}
+				}
+			},
 			ContentComponentInput::AddTask(task) => {
 				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
 					match client.create_task(task.clone()).await {
@@ -239,6 +300,10 @@ impl AsyncComponent for ContentComponentModel {
 							let response = response.into_inner();
 							if response.successful {
 								if let Some(index) = index {
+									self.task_details_factory.send(
+										index.current_index(),
+										TaskDetailsFactoryInput::Notify(response.message),
+									);
 									if self.parent_list.as_ref().unwrap().provider == "starred" {
 										self.task_factory.guard().remove(index.current_index());
 									}

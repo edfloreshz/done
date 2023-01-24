@@ -237,11 +237,6 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					.position(|p| p.map_or(false, |p| p.plugin == plugin));
 				if let Some(index) = index {
 					self.plugin_factory.send(index, PluginFactoryInput::Enable);
-				} else {
-					// self
-					// 	.plugin_factory
-					// 	.guard()
-					// 	.push_back(PluginFactoryInit::new(plugin, true));
 				}
 			},
 			SidebarComponentInput::DisableService(plugin) => {

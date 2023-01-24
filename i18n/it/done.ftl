@@ -51,6 +51,8 @@ services = Servizi
 install = Installa
 remove = Remove
 update = Update
+save = Save
+cancel = Cancel
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
