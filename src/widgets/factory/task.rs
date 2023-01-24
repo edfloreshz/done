@@ -1,4 +1,7 @@
+use std::io::BufReader;
+
 use adw::traits::{EntryRowExt, PreferencesRowExt};
+use libset::project::Project;
 use proto_rust::provider::TaskStatus;
 use proto_rust::List;
 use relm4::factory::AsyncFactoryComponent;
@@ -151,6 +154,7 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				TaskFactoryOutput::RevealTaskDetails(index, self.task.clone()),
 			),
 			TaskFactoryInput::SetCompleted(toggled) => {
+				play_completed_sound();
 				self.task.status = if toggled {
 					TaskStatus::Completed as i32
 				} else {
@@ -201,4 +205,24 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 			},
 		})
 	}
+}
+
+fn play_completed_sound() {
+	std::thread::spawn(|| {
+		let path = Project::open("dev", "edfloreshz", "done")
+			.unwrap()
+			.path()
+			.unwrap()
+			.join("bell.mp3");
+
+		let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
+		let sink = rodio::Sink::try_new(&handle).unwrap();
+
+		let file = std::fs::File::open(path).unwrap();
+		sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
+
+		sink.sleep_until_end();
+	})
+	.join()
+	.unwrap()
 }

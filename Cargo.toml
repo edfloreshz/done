@@ -27,6 +27,7 @@ tonic = "0.8.2"
 glib = "0.16.2"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
+rodio = "0.16.0"
 
 [dependencies.chrono]
 version = "0.4.23"
