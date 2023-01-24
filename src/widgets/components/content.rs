@@ -8,7 +8,7 @@ use crate::widgets::factory::task::{
 	TaskFactoryInit, TaskFactoryInput, TaskFactoryModel,
 };
 use crate::widgets::factory::task_details::{
-	TaskDetailsFactoryInit, TaskDetailsFactoryInput, TaskDetailsFactoryModel,
+	TaskDetailsFactoryInit, TaskDetailsFactoryModel,
 };
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -51,7 +51,7 @@ pub struct ContentComponentModel {
 pub enum ContentComponentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, Task, TaskUpdater),
+	UpdateTask(Task),
 	TaskListSelected(ListFactoryModel),
 	SelectSmartList(SmartList),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
@@ -59,12 +59,6 @@ pub enum ContentComponentInput {
 	DisablePlugin,
 	CleanTaskEntry,
 	HideFlap,
-}
-
-#[derive(Debug)]
-pub enum TaskUpdater {
-	List,
-	Details,
 }
 
 #[derive(Debug)]
@@ -309,32 +303,18 @@ impl AsyncComponent for ContentComponentModel {
 					}
 				}
 			},
-			ContentComponentInput::UpdateTask(index, task, updater) => {
+			ContentComponentInput::UpdateTask(task) => {
 				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
 					match client.update_task(task).await {
 						Ok(response) => {
 							let response = response.into_inner();
 							if response.successful {
-								if let Some(index) = index {
-									match updater {
-										TaskUpdater::List => sender
-											.output(ContentComponentOutput::Notify(
-												response.message,
-												1,
-											))
-											.unwrap(),
-										TaskUpdater::Details => {
-											let index = index.current_index();
-											self.task_details_factory.send(
-												index,
-												TaskDetailsFactoryInput::Notify(response.message),
-											)
-										},
-									}
-								}
-							} else {
 								sender
 									.output(ContentComponentOutput::Notify(response.message, 1))
+									.unwrap_or_default()
+							} else {
+								sender
+									.output(ContentComponentOutput::Notify(response.message, 2))
 									.unwrap_or_default();
 							}
 						},

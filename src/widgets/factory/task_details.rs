@@ -26,11 +26,7 @@ use relm4::{
 	AsyncFactorySender, RelmWidgetExt,
 };
 
-use crate::{
-	app::toast,
-	fl,
-	widgets::components::content::{ContentComponentInput, TaskUpdater},
-};
+use crate::{fl, widgets::components::content::ContentComponentInput};
 
 pub struct TaskDetailsFactoryModel {
 	original_task: Task,
@@ -52,7 +48,6 @@ pub enum TaskDetailsFactoryInput {
 	SetStatus(bool),
 	SetDueDate(Option<NaiveDateTime>),
 	SetReminderDate(Option<NaiveDateTime>),
-	Notify(String),
 	CancelWarning,
 }
 
@@ -387,9 +382,6 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					sender.output(TaskDetailsFactoryOutput::CleanTaskEntry)
 				}
 			},
-			TaskDetailsFactoryInput::Notify(msg) => {
-				widgets.overlay.add_toast(&toast(msg, 1))
-			},
 			TaskDetailsFactoryInput::SetTitle(title) => {
 				self.task.title = title;
 			},
@@ -442,13 +434,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryOutput::CleanTaskEntry => {
 				ContentComponentInput::CleanTaskEntry
 			},
-			TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
+			TaskDetailsFactoryOutput::SaveTask(_, task, is_update) => {
 				if is_update {
-					ContentComponentInput::UpdateTask(
-						Some(index.unwrap()),
-						task,
-						TaskUpdater::Details,
-					)
+					ContentComponentInput::UpdateTask(task)
 				} else {
 					ContentComponentInput::AddTask(task)
 				}

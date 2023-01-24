@@ -11,7 +11,7 @@ use relm4::{
 	RelmWidgetExt,
 };
 
-use crate::widgets::components::content::{ContentComponentInput, TaskUpdater};
+use crate::widgets::components::content::ContentComponentInput;
 use proto_rust::provider::Task;
 
 #[derive(Debug)]
@@ -193,8 +193,8 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 			TaskFactoryOutput::Remove(index) => {
 				ContentComponentInput::RemoveTask(index)
 			},
-			TaskFactoryOutput::UpdateTask(index, task) => {
-				ContentComponentInput::UpdateTask(index, task, TaskUpdater::List)
+			TaskFactoryOutput::UpdateTask(_, task) => {
+				ContentComponentInput::UpdateTask(task)
 			},
 			TaskFactoryOutput::RevealTaskDetails(index, task) => {
 				ContentComponentInput::RevealTaskDetails(index, task)
