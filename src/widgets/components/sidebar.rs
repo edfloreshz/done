@@ -192,10 +192,18 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 									self
 										.plugin_factory
 										.send(index, PluginFactoryInput::AddList(list));
+									sender
+										.output(SidebarComponentOutput::Notify(response.message, 1))
+										.unwrap_or_default();
+								} else {
+									tracing::error!(response.message);
+									sender
+										.output(SidebarComponentOutput::Notify(
+											"Something went wrong...".into(),
+											2,
+										))
+										.unwrap_or_default();
 								}
-								sender
-									.output(SidebarComponentOutput::Notify(response.message, 1))
-									.unwrap_or_default();
 							},
 							Err(err) => {
 								sender
