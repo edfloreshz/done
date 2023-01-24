@@ -35,7 +35,8 @@ use crate::{
 pub struct TaskDetailsFactoryModel {
 	original_task: Task,
 	task: Task,
-	index: DynamicIndex,
+	task_details_index: DynamicIndex,
+	update: bool,
 	selected_due_date: Option<String>,
 	selected_reminder_date: Option<String>,
 	dirty: bool,
@@ -57,14 +58,15 @@ pub enum TaskDetailsFactoryInput {
 
 #[derive(Debug)]
 pub enum TaskDetailsFactoryOutput {
-	SaveTask(DynamicIndex, Task),
+	SaveTask(Option<DynamicIndex>, Task, bool),
+	CleanTaskEntry,
 	HideFlap,
 }
 
 #[derive(derive_new::new)]
 pub struct TaskDetailsFactoryInit {
 	task: Task,
-	index: DynamicIndex,
+	index: Option<DynamicIndex>,
 }
 
 #[relm4::factory(pub async)]
@@ -106,7 +108,6 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					},
 					adw::EntryRow {
 							set_title: "Title",
-							#[watch]
 							set_text: self.task.title.as_str(),
 							set_show_apply_button: true,
 							set_enable_emoji_completion: true,
@@ -122,6 +123,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									sender.input(TaskDetailsFactoryInput::SetFavorite(toggle.is_active()));
 								}
 							},
+							connect_changed[sender] => move |entry| {
+								let buffer = entry.text().to_string();
+								sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
+							},
 							connect_activate[sender] => move |entry| {
 								let buffer = entry.text().to_string();
 								sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
@@ -135,8 +140,15 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						set_title: "Body",
 						set_show_apply_button: true,
 						set_enable_emoji_completion: true,
-						#[watch]
 						set_text: self.task.body.as_deref().unwrap_or(""),
+						connect_changed[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							if buffer.is_empty() {
+								sender.input(TaskDetailsFactoryInput::SetBody(None));
+							} else {
+								sender.input(TaskDetailsFactoryInput::SetBody(Some(buffer)));
+							}
+						},
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.text().to_string();
 							if buffer.is_empty() {
@@ -284,13 +296,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 
 	async fn init_model(
 		init: Self::Init,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		Self {
 			original_task: init.task.clone(),
 			task: init.task.clone(),
-			index: init.index,
+			task_details_index: index.clone(),
+			update: init.index.is_some(),
 			selected_due_date: if let Some(date) = init.task.due_date {
 				NaiveDateTime::from_timestamp_opt(date, 0)
 					.map(|date| date.format("%m/%d/%Y").to_string())
@@ -355,10 +368,24 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				}
 			},
 			TaskDetailsFactoryInput::SaveTask => {
-				sender.output(TaskDetailsFactoryOutput::SaveTask(
-					self.index.clone(),
-					self.task.clone(),
-				));
+				if self.update {
+					sender.output(TaskDetailsFactoryOutput::SaveTask(
+						Some(self.task_details_index.clone()),
+						self.task.clone(),
+						self.update,
+					));
+					self.original_task = self.task.clone();
+					self.dirty = false;
+				} else {
+					sender.output(TaskDetailsFactoryOutput::SaveTask(
+						None,
+						self.task.clone(),
+						self.update,
+					));
+				}
+				if !self.update {
+					sender.output(TaskDetailsFactoryOutput::CleanTaskEntry)
+				}
 			},
 			TaskDetailsFactoryInput::Notify(msg) => {
 				widgets.overlay.add_toast(&toast(msg, 1))
@@ -412,12 +439,19 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
-			TaskDetailsFactoryOutput::SaveTask(index, task) => {
-				ContentComponentInput::UpdateTask(
-					Some(index),
-					task,
-					TaskUpdater::Details,
-				)
+			TaskDetailsFactoryOutput::CleanTaskEntry => {
+				ContentComponentInput::CleanTaskEntry
+			},
+			TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
+				if is_update {
+					ContentComponentInput::UpdateTask(
+						Some(index.unwrap()),
+						task,
+						TaskUpdater::Details,
+					)
+				} else {
+					ContentComponentInput::AddTask(task)
+				}
 			},
 			TaskDetailsFactoryOutput::HideFlap => ContentComponentInput::HideFlap,
 		};
