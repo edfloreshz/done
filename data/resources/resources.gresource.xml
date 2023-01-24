@@ -28,6 +28,12 @@
     <file alias="appointment-soon-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/appointment-soon-symbolic.svg</file>
     <file alias="office-calendar-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/office-calendar-symbolic.svg</file>
     <file alias="accessories-text-editor-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/accessories-text-editor-symbolic.svg</file>
+    <file alias="flag-outline-thin-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/flag-outline-thin-symbolic.svg</file>
+    <file alias="flag-outline-thick-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/flag-outline-thick-symbolic.svg</file>
+    <file alias="flag-filled-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/flag-filled-symbolic.svg</file>
+    <file alias="media-floppy-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/media-floppy-symbolic.svg</file>
+    <file alias="emblem-important-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/emblem-important-symbolic.svg</file>
+      <file alias="info-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/info-symbolic.svg</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
     <file alias="app-icon.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.svg</file>
