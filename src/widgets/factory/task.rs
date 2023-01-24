@@ -11,7 +11,7 @@ use relm4::{
 	RelmWidgetExt,
 };
 
-use crate::widgets::components::content::ContentComponentInput;
+use crate::widgets::components::content::{ContentComponentInput, TaskUpdater};
 use proto_rust::provider::Task;
 
 #[derive(Debug)]
@@ -86,16 +86,6 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 					sender.input(TaskFactoryInput::Favorite(index.clone()));
 				}
 			},
-			#[name(delete)]
-			add_suffix = &gtk::Button {
-				add_css_class: "destructive-action",
-				add_css_class: "circular",
-				set_icon_name: "user-trash-full-symbolic",
-				set_valign: gtk::Align::Center,
-				connect_clicked[sender, index] => move |_| {
-					sender.output(TaskFactoryOutput::Remove(index.clone()))
-				}
-			},
 			#[name(details)]
 			add_suffix = &gtk::Button {
 				add_css_class: "suggested-action",
@@ -104,6 +94,16 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskFactoryInput::RevealTaskDetails(index.clone()))
+				}
+			},
+			#[name(delete)]
+			add_suffix = &gtk::Button {
+				add_css_class: "destructive-action",
+				add_css_class: "circular",
+				set_icon_name: "user-trash-full-symbolic",
+				set_valign: gtk::Align::Center,
+				connect_clicked[sender, index] => move |_| {
+					sender.output(TaskFactoryOutput::Remove(index.clone()))
 				}
 			},
 			connect_activate[sender] => move |entry| {
@@ -194,7 +194,7 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				ContentComponentInput::RemoveTask(index)
 			},
 			TaskFactoryOutput::UpdateTask(index, task) => {
-				ContentComponentInput::UpdateTask(index, task)
+				ContentComponentInput::UpdateTask(index, task, TaskUpdater::List)
 			},
 			TaskFactoryOutput::RevealTaskDetails(index, task) => {
 				ContentComponentInput::RevealTaskDetails(index, task)
