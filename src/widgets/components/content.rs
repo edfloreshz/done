@@ -54,9 +54,10 @@ pub enum ContentComponentInput {
 	UpdateTask(Option<DynamicIndex>, Task, TaskUpdater),
 	TaskListSelected(ListFactoryModel),
 	SelectSmartList(SmartList),
-	RevealTaskDetails(DynamicIndex, Task),
+	RevealTaskDetails(Option<DynamicIndex>, Task),
 	ToggleCompact(bool),
 	DisablePlugin,
+	CleanTaskEntry,
 	HideFlap,
 }
 
@@ -198,6 +199,9 @@ impl AsyncComponent for ContentComponentModel {
 			task_entry: TaskEntryComponent::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
+					TaskEntryComponentOutput::EnterCreationMode(task) => {
+						ContentComponentInput::RevealTaskDetails(None, task)
+					},
 					TaskEntryComponentOutput::AddTask(task) => {
 						ContentComponentInput::AddTask(task)
 					},
@@ -231,11 +235,21 @@ impl AsyncComponent for ContentComponentModel {
 		match message {
 			ContentComponentInput::RevealTaskDetails(index, task) => {
 				self.show_task_details = true;
-				self.selected_task = Some(task.clone());
 				let mut guard = self.task_details_factory.guard();
-				guard.clear();
-				guard.push_back(TaskDetailsFactoryInit::new(task, index));
+				if let Some(task_index) = index {
+					self.selected_task = Some(task.clone());
+					guard.clear();
+					guard.push_back(TaskDetailsFactoryInit::new(task, Some(task_index)));
+				} else {
+					guard.clear();
+					guard.push_back(TaskDetailsFactoryInit::new(task, None));
+				}
 			},
+			ContentComponentInput::CleanTaskEntry => self
+				.task_entry
+				.sender()
+				.send(TaskEntryComponentInput::CleanTaskEntry)
+				.unwrap(),
 			ContentComponentInput::HideFlap => {
 				self.show_task_details = false;
 				if let Some(list) = self.parent_list.clone() {
@@ -246,7 +260,8 @@ impl AsyncComponent for ContentComponentModel {
 					}
 				}
 			},
-			ContentComponentInput::AddTask(task) => {
+			ContentComponentInput::AddTask(mut task) => {
+				task.parent = self.parent_list.as_ref().unwrap().id.clone();
 				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
 					match client.create_task(task.clone()).await {
 						Ok(response) => {
@@ -258,6 +273,7 @@ impl AsyncComponent for ContentComponentModel {
 									self.parent_list.as_ref().unwrap().clone(),
 									self.compact,
 								));
+								self.show_task_details = false;
 							}
 							sender
 								.output(ContentComponentOutput::Notify(response.message, 1))
@@ -307,10 +323,13 @@ impl AsyncComponent for ContentComponentModel {
 												1,
 											))
 											.unwrap(),
-										TaskUpdater::Details => self.task_details_factory.send(
-											index.current_index(),
-											TaskDetailsFactoryInput::Notify(response.message),
-										),
+										TaskUpdater::Details => {
+											let index = index.current_index();
+											self.task_details_factory.send(
+												index,
+												TaskDetailsFactoryInput::Notify(response.message),
+											)
+										},
 									}
 								}
 							} else {
