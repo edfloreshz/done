@@ -51,13 +51,19 @@ pub struct ContentComponentModel {
 pub enum ContentComponentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, Task),
+	UpdateTask(Option<DynamicIndex>, Task, TaskUpdater),
 	TaskListSelected(ListFactoryModel),
 	SelectSmartList(SmartList),
 	RevealTaskDetails(DynamicIndex, Task),
 	ToggleCompact(bool),
 	DisablePlugin,
 	HideFlap,
+}
+
+#[derive(Debug)]
+pub enum TaskUpdater {
+	List,
+	Details,
 }
 
 #[derive(Debug)]
@@ -225,14 +231,10 @@ impl AsyncComponent for ContentComponentModel {
 		match message {
 			ContentComponentInput::RevealTaskDetails(index, task) => {
 				self.show_task_details = true;
-				if self.selected_task.is_none()
-					|| self.selected_task.as_ref().unwrap().id != task.id
-				{
-					self.selected_task = Some(task.clone());
-					let mut guard = self.task_details_factory.guard();
-					guard.clear();
-					guard.push_back(TaskDetailsFactoryInit::new(task, index));
-				}
+				self.selected_task = Some(task.clone());
+				let mut guard = self.task_details_factory.guard();
+				guard.clear();
+				guard.push_back(TaskDetailsFactoryInit::new(task, index));
 			},
 			ContentComponentInput::HideFlap => {
 				self.show_task_details = false;
@@ -291,19 +293,24 @@ impl AsyncComponent for ContentComponentModel {
 					}
 				}
 			},
-			ContentComponentInput::UpdateTask(index, task) => {
+			ContentComponentInput::UpdateTask(index, task, updater) => {
 				if let Ok(mut client) = self.plugin.as_mut().unwrap().connect().await {
 					match client.update_task(task).await {
 						Ok(response) => {
 							let response = response.into_inner();
 							if response.successful {
 								if let Some(index) = index {
-									self.task_details_factory.send(
-										index.current_index(),
-										TaskDetailsFactoryInput::Notify(response.message),
-									);
-									if self.parent_list.as_ref().unwrap().provider == "starred" {
-										self.task_factory.guard().remove(index.current_index());
+									match updater {
+										TaskUpdater::List => sender
+											.output(ContentComponentOutput::Notify(
+												response.message,
+												1,
+											))
+											.unwrap(),
+										TaskUpdater::Details => self.task_details_factory.send(
+											index.current_index(),
+											TaskDetailsFactoryInput::Notify(response.message),
+										),
 									}
 								}
 							} else {

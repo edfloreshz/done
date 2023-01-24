@@ -2,14 +2,20 @@
 
 use std::str::FromStr;
 
-use adw::traits::{
-	ActionRowExt, EntryRowExt, PreferencesGroupExt, PreferencesRowExt,
+use adw::{
+	prelude::MessageDialogExtManual,
+	traits::{
+		ActionRowExt, EntryRowExt, MessageDialogExt, PreferencesGroupExt,
+		PreferencesRowExt,
+	},
 };
 use chrono::NaiveDateTime;
+use glib::{clone, Cast};
 use gtk::traits::{
-	BoxExt, ButtonExt, ListBoxRowExt, OrientableExt, ToggleButtonExt, WidgetExt,
+	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
+	ToggleButtonExt, WidgetExt,
 };
-use proto_rust::Task;
+use proto_rust::{Task, TaskImportance, TaskStatus};
 use relm4::{
 	adw,
 	factory::{AsyncFactoryComponent, FactoryView},
@@ -21,14 +27,18 @@ use relm4::{
 };
 
 use crate::{
-	app::toast, fl, widgets::components::content::ContentComponentInput,
+	app::toast,
+	fl,
+	widgets::components::content::{ContentComponentInput, TaskUpdater},
 };
 
 pub struct TaskDetailsFactoryModel {
+	original_task: Task,
 	task: Task,
 	index: DynamicIndex,
 	selected_due_date: Option<String>,
 	selected_reminder_date: Option<String>,
+	dirty: bool,
 }
 
 #[derive(Debug)]
@@ -41,8 +51,8 @@ pub enum TaskDetailsFactoryInput {
 	SetStatus(bool),
 	SetDueDate(Option<NaiveDateTime>),
 	SetReminderDate(Option<NaiveDateTime>),
-	HideFlap,
 	Notify(String),
+	CancelWarning,
 }
 
 #[derive(Debug)]
@@ -82,7 +92,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							set_icon_name: "go-previous-symbolic",
 							set_tooltip_text: Some(fl!("cancel")),
 							connect_clicked[sender] => move |_| {
-								sender.input(TaskDetailsFactoryInput::HideFlap)
+								sender.input(TaskDetailsFactoryInput::CancelWarning)
 							}
 						},
 						gtk::Button {
@@ -170,9 +180,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_tooltip_text: Some("Low"),
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
+								set_active: self.task.importance == TaskImportance::Low as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(0));
+										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::Low as i32));
 									}
 								}
 							},
@@ -182,9 +193,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
 								set_group: Some(&low_importance),
+								set_active: self.task.importance == TaskImportance::Normal as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(1));
+										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::Normal as i32));
 									}
 								}
 							},
@@ -194,9 +206,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
 								set_group: Some(&low_importance),
+								set_active: self.task.importance == TaskImportance::High as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(2));
+										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::High as i32));
 									}
 								}
 							}
@@ -275,6 +288,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
 		Self {
+			original_task: init.task.clone(),
 			task: init.task.clone(),
 			index: init.index,
 			selected_due_date: if let Some(date) = init.task.due_date {
@@ -289,6 +303,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			} else {
 				None
 			},
+			dirty: false,
 		}
 	}
 
@@ -310,28 +325,61 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			TaskDetailsFactoryInput::CancelWarning => {
+				if let Some(root) = widgets.overlay.root() {
+					let dialog = adw::MessageDialog::builder()
+						.transient_for(&root.downcast::<gtk::Window>().unwrap())
+						.heading("Discard Changes")
+						.body("Your changes will be lost, are you sure?")
+						.build();
+					dialog.add_responses(&[("no", "No"), ("yes", "Yes")]);
+					dialog.set_response_appearance(
+						"yes",
+						adw::ResponseAppearance::Destructive,
+					);
+					let dirty = self.dirty;
+					dialog.connect_response(
+						None,
+						clone!(@strong sender => move |dialog, response| {
+							if response == "yes" {
+								sender.output(TaskDetailsFactoryOutput::HideFlap)
+							}
+							dialog.close();
+						}),
+					);
+					if dirty {
+						dialog.present();
+					} else {
+						sender.output(TaskDetailsFactoryOutput::HideFlap)
+					}
+				}
+			},
 			TaskDetailsFactoryInput::SaveTask => {
 				sender.output(TaskDetailsFactoryOutput::SaveTask(
 					self.index.clone(),
 					self.task.clone(),
-				))
+				));
 			},
 			TaskDetailsFactoryInput::Notify(msg) => {
 				widgets.overlay.add_toast(&toast(msg, 1))
 			},
-			TaskDetailsFactoryInput::SetTitle(title) => self.task.title = title,
-			TaskDetailsFactoryInput::SetBody(body) => self.task.body = body,
+			TaskDetailsFactoryInput::SetTitle(title) => {
+				self.task.title = title;
+			},
+			TaskDetailsFactoryInput::SetBody(body) => {
+				self.task.body = body;
+			},
 			TaskDetailsFactoryInput::SetImportance(importance) => {
-				self.task.importance = importance
+				self.task.importance = importance;
 			},
 			TaskDetailsFactoryInput::SetFavorite(favorite) => {
-				self.task.favorite = favorite
+				self.task.favorite = favorite;
 			},
 			TaskDetailsFactoryInput::SetStatus(status) => {
 				if status {
-					self.task.status = 1;
+					self.task.status = TaskStatus::Completed as i32;
 				} else {
-					self.task.status = 0;
+					self.task.status = TaskStatus::NotStarted as i32;
 				}
 			},
 			TaskDetailsFactoryInput::SetDueDate(due_date) => {
@@ -355,9 +403,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					self.task.is_reminder_on = false;
 				}
 			},
-			TaskDetailsFactoryInput::HideFlap => {
-				sender.output(TaskDetailsFactoryOutput::HideFlap)
-			},
+		}
+		if self.task != self.original_task {
+			self.dirty = true;
 		}
 		self.update_view(widgets, sender);
 	}
@@ -365,7 +413,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			TaskDetailsFactoryOutput::SaveTask(index, task) => {
-				ContentComponentInput::UpdateTask(Some(index), task)
+				ContentComponentInput::UpdateTask(
+					Some(index),
+					task,
+					TaskUpdater::Details,
+				)
 			},
 			TaskDetailsFactoryOutput::HideFlap => ContentComponentInput::HideFlap,
 		};
