@@ -20,14 +20,14 @@ pub enum TaskFactoryInput {
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
 	ToggleCompact(bool),
-	RevealTaskDetails(DynamicIndex),
+	RevealTaskDetails(Option<DynamicIndex>),
 }
 
 #[derive(Debug)]
 pub enum TaskFactoryOutput {
 	Remove(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
-	RevealTaskDetails(DynamicIndex, Task),
+	RevealTaskDetails(Option<DynamicIndex>, Task),
 }
 
 #[derive(Debug, Clone)]
@@ -93,7 +93,7 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 				set_icon_name: "info-symbolic",
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
-					sender.input(TaskFactoryInput::RevealTaskDetails(index.clone()))
+					sender.input(TaskFactoryInput::RevealTaskDetails(Some(index.clone())))
 				}
 			},
 			#[name(delete)]

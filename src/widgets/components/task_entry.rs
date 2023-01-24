@@ -1,5 +1,4 @@
 use crate::fl;
-use chrono::NaiveDateTime;
 use proto_rust::provider::{List, Task};
 use relm4::{
 	gtk,
@@ -18,18 +17,17 @@ pub struct TaskEntryComponent {
 
 #[derive(Debug)]
 pub enum TaskEntryComponentInput {
-	AddToMyDay,
 	SetTitle(String),
-	SetReminder(NaiveDateTime),
-	SetDueDate(NaiveDateTime),
-	AddNote(String),
-	AddTask,
 	SetParentList(Option<List>),
+	AddTask,
+	EnterCreationMode,
+	CleanTaskEntry,
 }
 
 #[derive(Debug)]
 pub enum TaskEntryComponentOutput {
 	AddTask(Task),
+	EnterCreationMode(Task),
 }
 
 #[relm4::component(pub)]
@@ -42,70 +40,38 @@ impl Component for TaskEntryComponent {
 	view! {
 		#[root]
 		gtk::Box {
-			set_orientation: gtk::Orientation::Vertical,
-			gtk::Box {
-				set_orientation: gtk::Orientation::Horizontal,
-				set_margin_end: 12,
-				set_margin_start: 12,
-				set_margin_top: 12,
-				set_spacing: 5,
-				set_halign: gtk::Align::Center,
-				gtk::Button {
-					set_tooltip_text: Some(fl!("add-to-today")),
-					set_icon_name: "daytime-sunrise-symbolic",
-					connect_clicked[sender] => move |_| {
-						sender.input(TaskEntryComponentInput::AddToMyDay);
-					}
+			set_orientation: gtk::Orientation::Horizontal,
+			set_margin_all: 12,
+			set_spacing: 5,
+			#[name(entry)]
+			gtk::Entry {
+				set_hexpand: true,
+				#[watch]
+				set_visible: true,
+				set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
+				set_placeholder_text: Some(fl!("new-task")),
+				set_height_request: 42,
+				connect_changed[sender] => move |entry| {
+					let buffer = entry.buffer();
+					sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
 				},
-				gtk::Button {
-					set_tooltip_text: Some(fl!("set-time")),
-					set_icon_name: "appointment-soon-symbolic",
-					connect_clicked[sender] => move |_| {
-						sender.input(TaskEntryComponentInput::SetReminder(chrono::Utc::now().naive_utc()));
-					}
-				},
-				gtk::Button {
-					set_tooltip_text: Some(fl!("set-due-date")),
-					set_icon_name: "office-calendar-symbolic",
-					connect_clicked[sender] => move |_| {
-						sender.input(TaskEntryComponentInput::SetDueDate(chrono::Utc::now().naive_utc()));
-					}
-				},
-				gtk::Button {
-					set_tooltip_text: Some(fl!("more-details")),
-					set_icon_name: "text-editor-symbolic",
-					connect_clicked[sender] => move |_| {
-						sender.input(TaskEntryComponentInput::AddNote(String::new()));
-					}
-				},
+				connect_activate[sender] => move |entry| {
+					let buffer = entry.buffer();
+					sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
+					sender.input(TaskEntryComponentInput::AddTask);
+				}
 			},
-			gtk::Box {
-				set_orientation: gtk::Orientation::Horizontal,
-				set_margin_all: 12,
-				set_spacing: 5,
-				#[name(entry)]
-				gtk::Entry {
-					set_hexpand: true,
-					#[watch]
-					set_visible: true,
-					set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
-					set_placeholder_text: Some(fl!("new-task")),
-					set_height_request: 42,
-					connect_changed[sender] => move |entry| {
-						let buffer = entry.buffer();
-						sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
-					},
-					connect_activate[sender] => move |entry| {
-						let buffer = entry.buffer();
-						sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
-						sender.input(TaskEntryComponentInput::AddTask);
-					}
-				},
-				gtk::Button {
-					set_icon_name: "mail-send-symbolic",
-					connect_clicked[sender] => move |_| {
-						sender.input(TaskEntryComponentInput::AddTask);
-					}
+			gtk::Button {
+				set_tooltip_text: Some(fl!("more-details")),
+				set_icon_name: "text-editor-symbolic",
+				connect_clicked[sender] => move |_| {
+					sender.input(TaskEntryComponentInput::EnterCreationMode);
+				}
+			},
+			gtk::Button {
+				set_icon_name: "mail-send-symbolic",
+				connect_clicked[sender] => move |_| {
+					sender.input(TaskEntryComponentInput::AddTask);
 				}
 			}
 		}
@@ -133,16 +99,16 @@ impl Component for TaskEntryComponent {
 		_root: &Self::Root,
 	) {
 		match message {
-			TaskEntryComponentInput::AddToMyDay => (), // TODO: Add to my day.
+			TaskEntryComponentInput::CleanTaskEntry => {
+				self.task = Task::new(String::new(), String::new());
+				widgets.entry.set_text("");
+			},
+			TaskEntryComponentInput::EnterCreationMode => sender
+				.output(TaskEntryComponentOutput::EnterCreationMode(
+					self.task.clone(),
+				))
+				.unwrap(),
 			TaskEntryComponentInput::SetTitle(title) => self.task.title = title,
-			TaskEntryComponentInput::SetReminder(reminder) => {
-				self.task.reminder_date = Some(reminder.timestamp());
-				self.task.is_reminder_on = true;
-			},
-			TaskEntryComponentInput::SetDueDate(due) => {
-				self.task.due_date = Some(due.timestamp());
-			},
-			TaskEntryComponentInput::AddNote(note) => self.task.body = Some(note),
 			TaskEntryComponentInput::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
 					self.task.parent = self.parent_list.as_ref().unwrap().id.clone();
