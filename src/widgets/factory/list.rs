@@ -12,7 +12,7 @@ use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, derive_new::new)]
 pub struct ListFactoryModel {
 	pub list: List,
 	pub plugin: Plugin,

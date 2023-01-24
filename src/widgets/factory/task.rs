@@ -20,12 +20,14 @@ pub enum TaskFactoryInput {
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
 	ToggleCompact(bool),
+	RevealTaskDetails(DynamicIndex),
 }
 
 #[derive(Debug)]
 pub enum TaskFactoryOutput {
 	Remove(DynamicIndex),
 	UpdateTask(Option<DynamicIndex>, Task),
+	RevealTaskDetails(DynamicIndex, Task),
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +96,16 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 					sender.output(TaskFactoryOutput::Remove(index.clone()))
 				}
 			},
+			#[name(details)]
+			add_suffix = &gtk::Button {
+				add_css_class: "suggested-action",
+				add_css_class: "circular",
+				set_icon_name: "info-symbolic",
+				set_valign: gtk::Align::Center,
+				connect_clicked[sender, index] => move |_| {
+					sender.input(TaskFactoryInput::RevealTaskDetails(index.clone()))
+				}
+			},
 			connect_activate[sender] => move |entry| {
 				let buffer = entry.text().to_string();
 				sender.input(TaskFactoryInput::ModifyTitle(buffer));
@@ -135,6 +147,9 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			TaskFactoryInput::RevealTaskDetails(index) => sender.output(
+				TaskFactoryOutput::RevealTaskDetails(index, self.task.clone()),
+			),
 			TaskFactoryInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
 					TaskStatus::Completed as i32
@@ -180,6 +195,9 @@ impl AsyncFactoryComponent for TaskFactoryModel {
 			},
 			TaskFactoryOutput::UpdateTask(index, task) => {
 				ContentComponentInput::UpdateTask(index, task)
+			},
+			TaskFactoryOutput::RevealTaskDetails(index, task) => {
+				ContentComponentInput::RevealTaskDetails(index, task)
 			},
 		})
 	}
