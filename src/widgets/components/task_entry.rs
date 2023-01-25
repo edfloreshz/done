@@ -3,8 +3,7 @@ use proto_rust::provider::{List, Task};
 use relm4::{
 	gtk,
 	gtk::prelude::{
-		BoxExt, ButtonExt, EditableExt, EntryBufferExtManual, EntryExt,
-		OrientableExt, WidgetExt,
+		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
 	},
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
@@ -13,11 +12,11 @@ use relm4::{
 pub struct TaskEntryComponent {
 	task: Task,
 	parent_list: Option<List>,
+	buffer: gtk::EntryBuffer,
 }
 
 #[derive(Debug)]
 pub enum TaskEntryComponentInput {
-	SetTitle(String),
 	SetParentList(Option<List>),
 	AddTask,
 	EnterCreationMode,
@@ -45,21 +44,13 @@ impl Component for TaskEntryComponent {
 			set_spacing: 5,
 			#[name(entry)]
 			gtk::Entry {
+				set_buffer: &model.buffer,
 				set_hexpand: true,
 				#[watch]
 				set_visible: true,
 				set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
 				set_placeholder_text: Some(fl!("new-task")),
 				set_height_request: 42,
-				connect_changed[sender] => move |entry| {
-					let buffer = entry.buffer();
-					sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
-				},
-				connect_activate[sender] => move |entry| {
-					let buffer = entry.buffer();
-					sender.input(TaskEntryComponentInput::SetTitle(buffer.text()));
-					sender.input(TaskEntryComponentInput::AddTask);
-				}
 			},
 			gtk::Button {
 				set_tooltip_text: Some(fl!("more-details")),
@@ -85,15 +76,15 @@ impl Component for TaskEntryComponent {
 		let model = TaskEntryComponent {
 			task: Task::new(String::new(), String::new()),
 			parent_list: init,
+			buffer: gtk::EntryBuffer::new(None),
 		};
 
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
 	}
 
-	fn update_with_view(
+	fn update(
 		&mut self,
-		widgets: &mut Self::Widgets,
 		message: Self::Input,
 		sender: ComponentSender<Self>,
 		_root: &Self::Root,
@@ -101,15 +92,18 @@ impl Component for TaskEntryComponent {
 		match message {
 			TaskEntryComponentInput::CleanTaskEntry => {
 				self.task = Task::new(String::new(), String::new());
-				widgets.entry.set_text("");
+				self.buffer.set_text("");
 			},
-			TaskEntryComponentInput::EnterCreationMode => sender
-				.output(TaskEntryComponentOutput::EnterCreationMode(
-					self.task.clone(),
-				))
-				.unwrap(),
-			TaskEntryComponentInput::SetTitle(title) => self.task.title = title,
+			TaskEntryComponentInput::EnterCreationMode => {
+				self.task.title = self.buffer.text();
+				sender
+					.output(TaskEntryComponentOutput::EnterCreationMode(
+						self.task.clone(),
+					))
+					.unwrap()
+			},
 			TaskEntryComponentInput::AddTask => {
+				self.task.title = self.buffer.text();
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
 					self.task.parent = self.parent_list.as_ref().unwrap().id.clone();
 					sender
@@ -119,7 +113,7 @@ impl Component for TaskEntryComponent {
 						String::new(),
 						self.parent_list.as_ref().unwrap().id.clone(),
 					);
-					widgets.entry.set_text("");
+					self.buffer.set_text("");
 				}
 			},
 			TaskEntryComponentInput::SetParentList(list) => self.parent_list = list,
