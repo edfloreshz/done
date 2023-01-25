@@ -2,19 +2,18 @@ use crate::application::info::PROFILE;
 use crate::application::plugin::Plugin;
 use crate::application::setup::{self, main_app};
 use crate::fl;
-use crate::widgets::components::about_dialog::AboutDialog;
-use crate::widgets::components::content::{
-	ContentComponentInput, ContentComponentModel, ContentComponentOutput,
+use crate::widgets::about_dialog::AboutDialog;
+use crate::widgets::content::messages::{ContentInput, ContentOutput};
+use crate::widgets::content::model::ContentModel;
+use crate::widgets::preferences::messages::PreferencesComponentOutput;
+use crate::widgets::preferences::model::PreferencesComponentModel;
+use crate::widgets::sidebar::messages::{
+	SidebarComponentInput, SidebarComponentOutput,
 };
-use crate::widgets::components::preferences::{
-	PreferencesComponentModel, PreferencesComponentOutput,
-};
-use crate::widgets::components::sidebar::{
-	SidebarComponentInput, SidebarComponentModel, SidebarComponentOutput,
-};
-use crate::widgets::components::smart_lists::SmartList;
-use crate::widgets::components::welcome::WelcomeComponent;
-use crate::widgets::factory::list::ListFactoryModel;
+use crate::widgets::sidebar::model::SidebarComponentModel;
+use crate::widgets::smart_lists::sidebar::model::SmartList;
+use crate::widgets::task_list::model::ListFactoryModel;
+use crate::widgets::welcome::WelcomeComponent;
 use gtk::prelude::*;
 use relm4::adw::Toast;
 use relm4::component::{AsyncComponentParts, AsyncController};
@@ -30,7 +29,7 @@ use sysinfo::{ProcessExt, System, SystemExt};
 
 pub struct App {
 	sidebar: AsyncController<SidebarComponentModel>,
-	content: AsyncController<ContentComponentModel>,
+	content: AsyncController<ContentModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
 	welcome: Controller<WelcomeComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
@@ -41,7 +40,7 @@ pub struct App {
 impl App {
 	pub fn new(
 		sidebar: AsyncController<SidebarComponentModel>,
-		content: AsyncController<ContentComponentModel>,
+		content: AsyncController<ContentModel>,
 		preferences: AsyncController<PreferencesComponentModel>,
 		welcome: Controller<WelcomeComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
@@ -293,13 +292,12 @@ impl AsyncComponent for App {
 				},
 			});
 
-		let content_controller = ContentComponentModel::builder()
-			.launch(())
-			.forward(sender.input_sender(), |message| match message {
-				ContentComponentOutput::Notify(msg, timeout) => {
-					Event::Notify(msg, timeout)
-				},
-			});
+		let content_controller = ContentModel::builder().launch(()).forward(
+			sender.input_sender(),
+			|message| match message {
+				ContentOutput::Notify(msg, timeout) => Event::Notify(msg, timeout),
+			},
+		);
 
 		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
 
@@ -390,7 +388,7 @@ impl AsyncComponent for App {
 				self
 					.content
 					.sender()
-					.send(ContentComponentInput::TaskListSelected(list))
+					.send(ContentInput::TaskListSelected(list))
 					.unwrap_or_default();
 			},
 			Event::DisablePlugin => {
@@ -398,7 +396,7 @@ impl AsyncComponent for App {
 				self
 					.content
 					.sender()
-					.send(ContentComponentInput::DisablePlugin)
+					.send(ContentInput::DisablePlugin)
 					.unwrap_or_default();
 			},
 			Event::Notify(msg, timeout) => {
@@ -445,7 +443,7 @@ impl AsyncComponent for App {
 				self
 					.content
 					.sender()
-					.send(ContentComponentInput::DisablePlugin)
+					.send(ContentInput::DisablePlugin)
 					.unwrap_or_default()
 			},
 			Event::SelectSmartList(list) => {
@@ -453,13 +451,13 @@ impl AsyncComponent for App {
 				self
 					.content
 					.sender()
-					.send(ContentComponentInput::SelectSmartList(list))
+					.send(ContentInput::SelectSmartList(list))
 					.unwrap_or_default();
 			},
 			Event::ToggleCompact(compact) => self
 				.content
 				.sender()
-				.send(ContentComponentInput::ToggleCompact(compact))
+				.send(ContentInput::ToggleCompact(compact))
 				.unwrap(),
 		}
 		self.update_view(widgets, sender);

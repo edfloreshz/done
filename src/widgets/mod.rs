@@ -1,2 +1,12 @@
-pub mod components;
-pub mod factory;
+pub mod about_dialog;
+pub mod content;
+pub mod details;
+pub mod list_entry;
+pub mod plugin;
+pub mod preferences;
+pub mod service_row;
+pub mod sidebar;
+pub mod smart_lists;
+pub mod task_entry;
+pub mod task_list;
+pub mod welcome;

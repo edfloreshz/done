@@ -1,5 +1,6 @@
 {
     "rust-analyzer.check.overrideCommand": [
         "cargo", "clippy", "--no-deps", "--message-format=json"
-    ]
+    ],
+    "mesonbuild.configureOnOpen": true
 }

@@ -2,7 +2,8 @@ use anyhow::Result;
 use libset::{format::FileFormat, project::Project};
 use relm4::adw;
 
-use crate::widgets::components::preferences::{ColorScheme, Preferences};
+use crate::widgets::preferences::model::{ColorScheme, Preferences};
+
 pub(crate) fn init() -> Result<()> {
 	let project = Project::open("dev", "edfloreshz", "done").unwrap();
 	match project.get_file_as::<Preferences>("preferences", FileFormat::JSON) {

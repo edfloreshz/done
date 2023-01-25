@@ -2,7 +2,7 @@ use anyhow::Result;
 use libset::{format::FileFormat, new_file, project::Project};
 
 use crate::{
-	application::info::VERSION, widgets::components::preferences::Preferences,
+	application::info::VERSION, widgets::preferences::model::Preferences,
 };
 
 pub(crate) async fn init() -> Result<()> {
