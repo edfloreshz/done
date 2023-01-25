@@ -1,11 +1,23 @@
 @media (prefers-color-scheme: dark) {
     #screenshot {
-        content: url("dark.png");
+        content: url("https://github.com/done-devs/done/blob/v0.1.3/data/resources/screenshots/dark.png?raw=true");
+    }
+
+    #screenshot:hover {
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/dark_details.png?raw=true");
     }
 }
 
 @media (prefers-color-scheme: light) {
     #screenshot {
-        content: url("tasks.png");
+        content: url("https://github.com/done-devs/done/blob/v0.1.3/data/resources/screenshots/tasks.png?raw=true");
     }
+    #screenshot:hover {
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/task_details.png?raw=true");
+    }
+}
+
+.warning {
+    background-color: #ebb216;
+    color: black
 }
