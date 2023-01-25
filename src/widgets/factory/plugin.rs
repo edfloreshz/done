@@ -82,7 +82,7 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 				set_icon_name: "value-increase-symbolic",
 				set_css_classes: &["flat", "image-button"],
 				set_valign: gtk::Align::Center,
-				set_direction: gtk::ArrowType::Right,
+				set_direction: gtk::ArrowType::Up,
 				set_popover: Some(self.new_list_controller.widget())
 			},
 		}
