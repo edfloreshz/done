@@ -1,10 +1,10 @@
 [package]
 name = "done"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
-license = "GPL-2.0"
-description = "Done is a simple to do app that aims to improve on the existing set of features provided to do apps to deliver the ultimate experience"
+license = "MPL 2.0"
+description = "Done is the ultimate task management solution for seamless organization and efficiency. "
 homepage = "https://done.edfloreshz.dev/"
 documentation = "https://docs.rs/done"
 repository = "https://github.com/edfloreshz/done/"
