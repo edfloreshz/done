@@ -106,7 +106,7 @@ Meson:
 - gettext
 - pkg-config
 
-Ubuntu 22.04:
+Ubuntu 22.10:
 ```bash
 sudo apt install libadwaita-1-dev libgtk-4-dev protobuf-compiler
 ```
