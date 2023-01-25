@@ -2,10 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.3] - TBD
+## [0.1.3] - 2023-01-24
 
 ### Added
 
+- New look and feel.
+- Task list has a new look.
+- Sidebar has a welcome screen.
+- Tasks can now be edited.
+- Tasks can be edited before you create them.
+- New preferences pane added.
+- Switch the color scheme.
+- Add new providers.
+- New and improved icons.
+- New task service providers can be added in the preferences pane.
+- The app has in-app notifications.
+- Added Turkish 🇹🇷 translation
+- Added Spanish 🇪🇸 translation
 - Added Brazilian Portuguese 🇧🇷 translation
 - Moved Development banner to the bottom.
 - Added support for providers using gRPC.
