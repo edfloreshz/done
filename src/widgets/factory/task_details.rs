@@ -5,11 +5,11 @@ use std::str::FromStr;
 use adw::{
 	prelude::MessageDialogExtManual,
 	traits::{
-		ActionRowExt, EntryRowExt, MessageDialogExt, PreferencesGroupExt,
-		PreferencesRowExt,
+		ActionRowExt, EntryRowExt, ExpanderRowExt, MessageDialogExt,
+		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::NaiveDateTime;
+use chrono::{Datelike, Duration, Local, NaiveDateTime};
 use glib::{clone, Cast};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
@@ -49,6 +49,20 @@ pub enum TaskDetailsFactoryInput {
 	SetDueDate(Option<NaiveDateTime>),
 	SetReminderDate(Option<NaiveDateTime>),
 	CancelWarning,
+	SetDate(DateTpe, DateDay),
+}
+
+#[derive(Debug)]
+pub enum DateTpe {
+	Reminder,
+	DueDate,
+}
+
+#[derive(Debug)]
+pub enum DateDay {
+	Today,
+	Tomorrow,
+	None,
 }
 
 #[derive(Debug)]
@@ -222,56 +236,119 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							}
 						}
 					},
-					adw::ActionRow {
+					adw::ExpanderRow {
 						set_icon_name: Some("office-calendar-symbolic"),
 						set_title: "Due date",
 						set_subtitle: "Set the due date for this task",
-						add_suffix = &gtk::MenuButton {
+						set_enable_expansion: true,
+						#[name(due_date_label)]
+						add_action = &gtk::Label {
+							set_css_classes: &["accent"],
 							#[watch]
 							set_label: self.selected_due_date.as_deref().unwrap_or("No date set"),
-							set_css_classes: &["flat", "image-button"],
 							set_valign: gtk::Align::Center,
-							set_direction: gtk::ArrowType::Down,
-							#[wrap(Some)]
-							set_popover = &gtk::Popover {
-								gtk::Calendar {
-									connect_day_selected[sender] => move |calendar| {
-										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-											if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
-												sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
-											}
+						},
+						add_row = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							#[name(due_date_calendar)]
+							gtk::Calendar {
+								set_margin_all: 10,
+								add_css_class: "card",
+								connect_day_selected[sender] => move |calendar| {
+									if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
+										if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {
+											sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
 										}
 									}
+								}
+							},
+							gtk::Box {
+								set_margin_all: 10,
+								set_margin_bottom: 5,
+								set_margin_top: 5,
+								set_spacing: 10,
+								gtk::Button {
+									set_hexpand: true,
+									set_label: "Today",
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
+									}
+								},
+								gtk::Button {
+									set_hexpand: true,
+									set_label: "Tomorrow",
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
+									}
+								}
+							},
+							gtk::Button {
+								set_margin_all:10,
+								set_margin_top: 5,
+								set_label: "None",
+								connect_clicked[sender] => move |_| {
+									sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
 								}
 							}
 						}
 					},
-					adw::ActionRow {
+					adw::ExpanderRow {
 						set_icon_name: Some("appointment-soon-symbolic"),
 						set_title: "Reminder",
 						set_subtitle: "Set a date to get a reminder",
-						add_suffix = &gtk::MenuButton {
+						set_enable_expansion: true,
+						#[name(reminder_label)]
+						add_action = &gtk::Label {
+							set_css_classes: &["accent"],
 							#[watch]
 							set_label: self.selected_reminder_date.as_deref().unwrap_or("No date set"),
-							set_css_classes: &["flat", "image-button"],
 							set_valign: gtk::Align::Center,
-							set_direction: gtk::ArrowType::Down,
-							#[wrap(Some)]
-							set_popover = &gtk::Popover {
-								gtk::Calendar {
-									connect_day_selected[sender] => move |calendar| {
-										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-											if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
-												sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
-											}
+						},
+						add_row = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							#[name(reminder_calendar)]
+							gtk::Calendar {
+								set_margin_all: 10,
+								add_css_class: "card",
+								connect_day_selected[sender] => move |calendar| {
+									if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
+										if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
+											sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
 										}
 									}
+								}
+							},
+							gtk::Box {
+								set_margin_all: 10,
+								set_margin_bottom: 5,
+								set_margin_top: 5,
+								set_spacing: 10,
+								gtk::Button {
+									set_hexpand: true,
+									set_label: "Today",
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today));
+									}
+								},
+								gtk::Button {
+									set_hexpand: true,
+									set_label: "Tomorrow",
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow));
+									}
+								}
+							},
+							gtk::Button {
+								set_margin_all:10,
+								set_margin_top: 5,
+								set_label: "None",
+								connect_clicked[sender] => move |_| {
+									sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None));
 								}
 							}
 						}
 					}
 				},
-
 			}
 		}
 	}
@@ -333,6 +410,70 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			TaskDetailsFactoryInput::SetDate(calendar, date) => {
+				let date = match date {
+					DateDay::Today => Some(Local::now().naive_local()),
+					DateDay::Tomorrow => {
+						let date = Local::now()
+							.checked_add_signed(Duration::days(1))
+							.unwrap()
+							.naive_local();
+						Some(date)
+					},
+					DateDay::None => None,
+				};
+				match calendar {
+					DateTpe::Reminder => {
+						sender.input(TaskDetailsFactoryInput::SetReminderDate(date));
+						if let Some(date) = date {
+							self.task.reminder_date = Some(date.timestamp());
+							self.selected_reminder_date =
+								Some(date.format("%m/%d/%Y").to_string());
+							widgets.reminder_calendar.set_year(date.year());
+							widgets.reminder_calendar.set_month(date.month() as i32 - 1);
+							widgets.reminder_calendar.set_day(date.day() as i32);
+						} else {
+							self.task.reminder_date = None;
+							self.selected_reminder_date = None;
+						}
+					},
+					DateTpe::DueDate => {
+						sender.input(TaskDetailsFactoryInput::SetDueDate(date));
+						if let Some(date) = date {
+							self.task.due_date = Some(date.timestamp());
+							self.selected_due_date =
+								Some(date.format("%m/%d/%Y").to_string());
+							widgets.due_date_calendar.set_year(date.year());
+							widgets.due_date_calendar.set_month(date.month() as i32 - 1);
+							widgets.due_date_calendar.set_day(date.day() as i32);
+						} else {
+							self.task.due_date = None;
+							self.selected_due_date = None;
+						}
+					},
+				}
+			},
+			TaskDetailsFactoryInput::SetDueDate(due_date) => {
+				if let Some(date) = due_date {
+					self.selected_due_date = Some(date.format("%m/%d/%Y").to_string());
+					let timestamp = date.timestamp();
+					self.task.due_date = Some(timestamp);
+				} else {
+					self.task.due_date = None;
+				}
+			},
+			TaskDetailsFactoryInput::SetReminderDate(reminder_date) => {
+				if let Some(date) = reminder_date {
+					self.selected_reminder_date =
+						Some(date.format("%m/%d/%Y").to_string());
+					let timestamp = date.timestamp();
+					self.task.reminder_date = Some(timestamp);
+					self.task.is_reminder_on = true;
+				} else {
+					self.task.reminder_date = None;
+					self.task.is_reminder_on = false;
+				}
+			},
 			TaskDetailsFactoryInput::CancelWarning => {
 				if let Some(root) = widgets.overlay.root() {
 					let dialog = adw::MessageDialog::builder()
@@ -399,27 +540,6 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					self.task.status = TaskStatus::Completed as i32;
 				} else {
 					self.task.status = TaskStatus::NotStarted as i32;
-				}
-			},
-			TaskDetailsFactoryInput::SetDueDate(due_date) => {
-				if let Some(date) = due_date {
-					self.selected_due_date = Some(date.format("%m/%d/%Y").to_string());
-					let timestamp = date.timestamp();
-					self.task.due_date = Some(timestamp);
-				} else {
-					self.task.due_date = None;
-				}
-			},
-			TaskDetailsFactoryInput::SetReminderDate(reminder_date) => {
-				if let Some(date) = reminder_date {
-					self.selected_reminder_date =
-						Some(date.format("%m/%d/%Y").to_string());
-					let timestamp = date.timestamp();
-					self.task.reminder_date = Some(timestamp);
-					self.task.is_reminder_on = true;
-				} else {
-					self.task.reminder_date = None;
-					self.task.is_reminder_on = false;
 				}
 			},
 		}
