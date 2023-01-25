@@ -1,4 +1,3 @@
-use crate::widgets::components::preferences::Preferences;
 use anyhow::Result;
 use directories::ProjectDirs;
 use libset::format::FileFormat;
@@ -12,6 +11,8 @@ use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
 use sysinfo::{ProcessExt, ProcessStatus, System, SystemExt};
 use tonic::transport::Channel;
+
+use crate::widgets::preferences::model::Preferences;
 
 pub const PLUGINS_URL: &str = "https://raw.githubusercontent.com/done-devs/done/main/dev.edfloreshz.Done.Plugins.json";
 
