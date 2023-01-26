@@ -7,7 +7,7 @@ use crate::{
 	application::plugin::Plugin,
 	widgets::{
 		preferences::messages::PreferencesComponentOutput,
-		service_row::{messages::ServiceRowInput, model::UpdateStatus},
+		service::{messages::ServiceInput, model::UpdateStatus},
 	},
 };
 
@@ -24,7 +24,7 @@ pub async fn enable_plugin(
 	if let Some(id) = id {
 		model.service_row_factory.send(
 			index.current_index(),
-			ServiceRowInput::UpdateChildId(id.try_into()?),
+			ServiceInput::UpdateChildId(id.try_into()?),
 		);
 	}
 	tracing::info!("Plugin {:?} started...", plugin);
@@ -51,7 +51,7 @@ pub async fn enable_plugin(
 			}
 			model
 				.service_row_factory
-				.send(index.current_index(), ServiceRowInput::SwitchOn(true));
+				.send(index.current_index(), ServiceInput::SwitchOn(true));
 		},
 		Err(e) => tracing::error!("{:?}", e),
 	}
@@ -89,7 +89,7 @@ pub fn disable_plugin(
 					.unwrap();
 				model
 					.service_row_factory
-					.send(index.current_index(), ServiceRowInput::SwitchOn(false));
+					.send(index.current_index(), ServiceInput::SwitchOn(false));
 			},
 			Err(e) => tracing::error!("{:?}", e),
 		}
@@ -126,11 +126,11 @@ pub async fn install_plugin(
 				.unwrap();
 			model.service_row_factory.send(
 				index.current_index(),
-				ServiceRowInput::ShowInstallButton(false),
+				ServiceInput::ShowInstallButton(false),
 			);
 			model
 				.service_row_factory
-				.send(index.current_index(), ServiceRowInput::SwitchOn(true));
+				.send(index.current_index(), ServiceInput::SwitchOn(true));
 		},
 		Err(err) => {
 			tracing::error!("Failed to install plugin: {}", err.to_string());
@@ -162,10 +162,10 @@ pub fn remove_plugin(
 					Ok(_) => {
 						model
 							.service_row_factory
-							.send(index.current_index(), ServiceRowInput::SwitchOn(false));
+							.send(index.current_index(), ServiceInput::SwitchOn(false));
 						model.service_row_factory.send(
 							index.current_index(),
-							ServiceRowInput::ShowInstallButton(true),
+							ServiceInput::ShowInstallButton(true),
 						);
 						sender
 							.output(PreferencesComponentOutput::RemovePluginFromSidebar(
@@ -194,13 +194,13 @@ pub async fn update_plugin(
 	match plugin.try_update(process_id).await {
 		Ok(_) => model.service_row_factory.send(
 			index.current_index(),
-			ServiceRowInput::InformStatus(UpdateStatus::Completed),
+			ServiceInput::InformStatus(UpdateStatus::Completed),
 		),
 		Err(err) => {
 			tracing::error!("Failed to update plugin: {}", err.to_string());
 			model.service_row_factory.send(
 				index.current_index(),
-				ServiceRowInput::InformStatus(UpdateStatus::Failed),
+				ServiceInput::InformStatus(UpdateStatus::Failed),
 			)
 		},
 	}

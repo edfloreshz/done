@@ -5,7 +5,7 @@ use crate::application::plugin::Plugin;
 use super::model::UpdateStatus;
 
 #[derive(Debug)]
-pub enum ServiceRowInput {
+pub enum ServiceInput {
 	InstallPlugin(DynamicIndex),
 	EnablePlugin(DynamicIndex),
 	DisablePlugin(DynamicIndex),
@@ -19,10 +19,10 @@ pub enum ServiceRowInput {
 }
 
 #[derive(Debug)]
-pub enum ServiceRowOutput {
-	InstallPlugin(DynamicIndex, Plugin),
-	EnablePlugin(DynamicIndex, Plugin),
-	DisablePlugin(DynamicIndex, Plugin, usize),
-	RemovePlugin(DynamicIndex, Plugin, usize),
-	UpdatePlugin(DynamicIndex, Plugin, usize),
+pub enum ServiceOutput {
+	Install(DynamicIndex, Plugin),
+	Uninstall(DynamicIndex, Plugin, usize),
+	Update(DynamicIndex, Plugin, usize),
+	Enable(DynamicIndex, Plugin),
+	Disable(DynamicIndex, Plugin, usize),
 }

@@ -179,7 +179,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::ListSelected(list) => {
 				sender
-					.output(SidebarComponentOutput::ListSelected(list))
+					.output(SidebarComponentOutput::ListSelected(Box::new(list)))
 					.unwrap_or_default();
 			},
 			SidebarComponentInput::Forward => {

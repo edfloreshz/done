@@ -281,7 +281,7 @@ impl AsyncComponent for App {
 			.forward(sender.input_sender(), |message| match message {
 				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
 				SidebarComponentOutput::ListSelected(list) => {
-					Event::TaskListSelected(list)
+					Event::TaskListSelected(*list)
 				},
 				SidebarComponentOutput::Forward => Event::Forward,
 				SidebarComponentOutput::Notify(msg, timeout) => {

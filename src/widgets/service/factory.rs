@@ -8,16 +8,16 @@ use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::traits::WidgetExt;
 
-use super::messages::{ServiceRowInput, ServiceRowOutput};
-use super::model::{ServiceRowModel, UpdateStatus};
+use super::messages::{ServiceInput, ServiceOutput};
+use super::model::{ServiceModel, UpdateStatus};
 
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for ServiceRowModel {
+impl AsyncFactoryComponent for ServiceModel {
 	type ParentInput = PreferencesComponentInput;
 	type ParentWidget = adw::PreferencesGroup;
 	type CommandOutput = ();
-	type Input = ServiceRowInput;
-	type Output = ServiceRowOutput;
+	type Input = ServiceInput;
+	type Output = ServiceOutput;
 	type Init = PluginPreferences;
 
 	view! {
@@ -34,7 +34,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 					set_tooltip_text: Some(fl!("remove")),
 					set_valign: gtk::Align::Center,
 					connect_clicked[sender, index] => move |_| {
-						sender.input(ServiceRowInput::RemovePlugin(index.clone()));
+						sender.input(ServiceInput::RemovePlugin(index.clone()));
 					}
 				},
 				add_suffix = &gtk::Button {
@@ -45,7 +45,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 					set_tooltip_text: Some(fl!("update")),
 					set_valign: gtk::Align::Center,
 					connect_clicked[sender, index] => move |_| {
-							sender.input(ServiceRowInput::UpdatePlugin(index.clone()));
+							sender.input(ServiceInput::UpdatePlugin(index.clone()));
 					}
 				},
 				add_suffix = &gtk::Button {
@@ -54,7 +54,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 					set_label: fl!("install"),
 					set_valign: gtk::Align::Center,
 					connect_clicked[sender, index] => move |_| {
-							sender.input(ServiceRowInput::InstallPlugin(index.clone()));
+							sender.input(ServiceInput::InstallPlugin(index.clone()));
 					}
 				},
 				#[name(switch)]
@@ -63,7 +63,7 @@ impl AsyncFactoryComponent for ServiceRowModel {
 					#[watch]
 					set_visible: self.installed,
 					connect_state_set[sender, index] => move |_, state| {
-						sender.input(ServiceRowInput::ToggleSwitch(index.clone(), state));
+						sender.input(ServiceInput::ToggleSwitch(index.clone(), state));
 						gtk::Inhibit(false)
 					}
 				}
@@ -106,53 +106,43 @@ impl AsyncFactoryComponent for ServiceRowModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ServiceRowInput::UpdateChildId(id) => self.process_id = id,
-			ServiceRowInput::ToggleSwitch(index, state) => {
+			ServiceInput::UpdateChildId(id) => self.process_id = id,
+			ServiceInput::ToggleSwitch(index, state) => {
 				if state {
-					sender.input(ServiceRowInput::EnablePlugin(index));
+					sender.input(ServiceInput::EnablePlugin(index));
 				} else {
-					sender.input(ServiceRowInput::DisablePlugin(index));
+					sender.input(ServiceInput::DisablePlugin(index));
 				}
 			},
-			ServiceRowInput::InstallPlugin(index) => {
-				sender
-					.output(ServiceRowOutput::InstallPlugin(index, self.plugin.clone()));
+			ServiceInput::InstallPlugin(index) => {
+				sender.output(ServiceOutput::Install(index, self.plugin.clone()));
 			},
-			ServiceRowInput::EnablePlugin(index) => {
+			ServiceInput::EnablePlugin(index) => {
 				if !self.first_load {
-					sender
-						.output(ServiceRowOutput::EnablePlugin(index, self.plugin.clone()))
+					sender.output(ServiceOutput::Enable(index, self.plugin.clone()))
 				}
 			},
-			ServiceRowInput::DisablePlugin(index) => {
+			ServiceInput::DisablePlugin(index) => {
 				if !self.first_load {
-					sender.output(ServiceRowOutput::DisablePlugin(
+					sender.output(ServiceOutput::Disable(
 						index,
 						self.plugin.clone(),
 						self.process_id,
 					))
 				}
 			},
-			ServiceRowInput::RemovePlugin(index) => {
-				sender.output(ServiceRowOutput::RemovePlugin(
-					index,
-					self.plugin.clone(),
-					self.process_id,
-				))
-			},
-			ServiceRowInput::UpdatePlugin(index) => {
-				sender.output(ServiceRowOutput::UpdatePlugin(
-					index,
-					self.plugin.clone(),
-					self.process_id,
-				))
-			},
-			ServiceRowInput::InformStatus(status) => match status {
+			ServiceInput::RemovePlugin(index) => sender.output(
+				ServiceOutput::Uninstall(index, self.plugin.clone(), self.process_id),
+			),
+			ServiceInput::UpdatePlugin(index) => sender.output(
+				ServiceOutput::Update(index, self.plugin.clone(), self.process_id),
+			),
+			ServiceInput::InformStatus(status) => match status {
 				UpdateStatus::Completed => self.update = false,
 				UpdateStatus::Failed => self.update = true,
 			},
-			ServiceRowInput::ShowInstallButton(enable) => self.installed = !enable,
-			ServiceRowInput::SwitchOn(enabled) => {
+			ServiceInput::ShowInstallButton(enable) => self.installed = !enable,
+			ServiceInput::SwitchOn(enabled) => {
 				widgets.switch.set_state(enabled);
 			},
 		}
@@ -162,19 +152,19 @@ impl AsyncFactoryComponent for ServiceRowModel {
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
-			ServiceRowOutput::InstallPlugin(index, plugin) => {
+			ServiceOutput::Install(index, plugin) => {
 				PreferencesComponentInput::InstallPlugin(index, plugin)
 			},
-			ServiceRowOutput::EnablePlugin(index, plugin) => {
+			ServiceOutput::Enable(index, plugin) => {
 				PreferencesComponentInput::EnablePlugin(index, plugin)
 			},
-			ServiceRowOutput::DisablePlugin(index, plugin, process_id) => {
+			ServiceOutput::Disable(index, plugin, process_id) => {
 				PreferencesComponentInput::DisablePlugin(index, plugin, process_id)
 			},
-			ServiceRowOutput::RemovePlugin(index, plugin, process_id) => {
+			ServiceOutput::Uninstall(index, plugin, process_id) => {
 				PreferencesComponentInput::RemovePlugin(index, plugin, process_id)
 			},
-			ServiceRowOutput::UpdatePlugin(index, plugin, process_id) => {
+			ServiceOutput::Update(index, plugin, process_id) => {
 				PreferencesComponentInput::UpdatePlugin(index, plugin, process_id)
 			},
 		};

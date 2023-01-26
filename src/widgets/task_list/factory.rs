@@ -168,7 +168,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				}
 			},
 			ListFactoryInput::Select => {
-				sender.output(ListFactoryOutput::Select(self.clone()));
+				sender.output(ListFactoryOutput::Select(Box::new(self.clone())));
 			},
 		}
 	}
@@ -176,7 +176,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
 			ListFactoryOutput::Select(data) => {
-				Some(PluginFactoryInput::ListSelected(data))
+				Some(PluginFactoryInput::ListSelected(*data))
 			},
 			ListFactoryOutput::DeleteTaskList(index, list_id) => {
 				Some(PluginFactoryInput::DeleteTaskList(index, list_id))

@@ -21,7 +21,7 @@ pub enum SidebarComponentInput {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarComponentOutput {
-	ListSelected(ListFactoryModel),
+	ListSelected(Box<ListFactoryModel>),
 	Forward,
 	Notify(String, u32),
 	DisablePlugin,
