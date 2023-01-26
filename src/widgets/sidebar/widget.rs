@@ -119,27 +119,34 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 		let widgets = view_output!();
 
-		for plugin_preference in preferences
-			.plugins
-			.iter()
-			.filter(|plugin| plugin.installed && plugin.enabled)
+		for plugin_preference in
+			preferences.plugins.iter().filter(|plugin| plugin.installed)
 		{
-			match plugin_preference.plugin.start().await {
-				Ok(_) => {
-					if plugin_preference.plugin.connect().await.is_ok() {
-						model
-							.plugin_factory
-							.guard()
-							.push_back(PluginFactoryInit::new(
-								plugin_preference.plugin.clone(),
-								plugin_preference.enabled,
-							));
-					} else {
-						tracing::error!("Failed to connect to plugin.")
-					}
-				},
-				Err(_) => todo!(),
+			let plugin_name = plugin_preference.plugin.name.clone();
+			if plugin_preference.enabled {
+				match plugin_preference.plugin.start().await {
+					Ok(_) => {
+						tracing::info!("{plugin_name} plugin started.");
+					},
+					Err(_) => {
+						tracing::error!("{plugin_name} plugin was not able to start.");
+						sender
+							.output(SidebarComponentOutput::Notify(
+								"We had trouble starting some services, try restarting the app"
+									.into(),
+								2,
+							))
+							.unwrap();
+					},
+				}
 			}
+			model
+				.plugin_factory
+				.guard()
+				.push_back(PluginFactoryInit::new(
+					plugin_preference.plugin.clone(),
+					plugin_preference.enabled,
+				));
 		}
 
 		AsyncComponentParts { model, widgets }

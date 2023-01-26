@@ -16,8 +16,8 @@ use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 
 use super::helpers::{
-	disable_plugin, enable_plugin, install_plugin, remove_plugin,
-	set_color_scheme, set_compact, update_plugin,
+	disable_plugin, enable_plugin, install_plugin, set_color_scheme, set_compact,
+	uninstall_plugin, update_plugin,
 };
 use super::messages::{PreferencesComponentInput, PreferencesComponentOutput};
 use super::model::{
@@ -192,7 +192,7 @@ impl AsyncComponent for PreferencesComponentModel {
 				}
 			},
 			PreferencesComponentInput::RemovePlugin(index, plugin) => {
-				remove_plugin(self, index, &sender, plugin)
+				uninstall_plugin(self, index, &sender, plugin, &mut widgets.overlay)
 			},
 			PreferencesComponentInput::UpdatePlugin(index, plugin) => {
 				update_plugin(self, index, plugin).await

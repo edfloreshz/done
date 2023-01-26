@@ -21,8 +21,7 @@ pub async fn enable_plugin(
 	overlay: &mut adw::ToastOverlay,
 ) -> Result<()> {
 	plugin.start().await?;
-	tracing::info!("Plugin {:?} started...", plugin);
-	overlay.add_toast(&toast("Service enabled.", 1));
+	overlay.add_toast(&toast(format!("{} service enabled", plugin.name), 1));
 
 	model.preferences.plugins = model
 		.preferences
@@ -58,7 +57,6 @@ pub fn disable_plugin(
 	overlay: &mut adw::ToastOverlay,
 ) {
 	plugin.stop(&plugin.process_name);
-	tracing::info!("Plugin {:?} stopped.", plugin);
 	let previous_model = model.preferences.clone();
 	model.preferences.plugins = model
 		.preferences
@@ -72,7 +70,7 @@ pub fn disable_plugin(
 		})
 		.collect();
 	if previous_model != model.preferences {
-		overlay.add_toast(&toast("Service disabled.", 1));
+		overlay.add_toast(&toast(format!("{} service disabled", plugin.name), 1));
 		match update_preferences(&model.preferences) {
 			Ok(()) => {
 				sender
@@ -105,6 +103,10 @@ pub async fn install_plugin(
 			{
 				plugin.installed = true;
 				plugin.enabled = true;
+				overlay.add_toast(&toast(
+					format!("{} service was installed", plugin.plugin.name),
+					1,
+				));
 			} else {
 				tracing::error!("This plugin is not registered.")
 			}
@@ -131,11 +133,12 @@ pub async fn install_plugin(
 	Ok(())
 }
 
-pub fn remove_plugin(
+pub fn uninstall_plugin(
 	model: &mut PreferencesComponentModel,
 	index: DynamicIndex,
 	sender: &AsyncComponentSender<PreferencesComponentModel>,
 	plugin: Plugin,
+	overlay: &mut adw::ToastOverlay,
 ) {
 	plugin.stop(&plugin.process_name);
 	if let Some(preferences) = model
@@ -148,6 +151,10 @@ pub fn remove_plugin(
 			Ok(_) => {
 				preferences.enabled = false;
 				preferences.installed = false;
+				overlay.add_toast(&toast(
+					format!("{} service was uninstalled", plugin.name),
+					1,
+				));
 				match update_preferences(&model.preferences) {
 					Ok(_) => {
 						model
