@@ -180,15 +180,8 @@ impl AsyncComponent for PreferencesComponentModel {
 					tracing::error!("{err}")
 				}
 			},
-			PreferencesComponentInput::DisablePlugin(index, plugin, process_id) => {
-				disable_plugin(
-					self,
-					index,
-					&sender,
-					plugin,
-					process_id,
-					&mut widgets.overlay,
-				)
+			PreferencesComponentInput::DisablePlugin(index, plugin) => {
+				disable_plugin(self, index, &sender, plugin, &mut widgets.overlay)
 			},
 			PreferencesComponentInput::InstallPlugin(index, plugin) => {
 				if let Err(err) =
@@ -198,11 +191,11 @@ impl AsyncComponent for PreferencesComponentModel {
 					tracing::error!("{err}")
 				}
 			},
-			PreferencesComponentInput::RemovePlugin(index, plugin, process_id) => {
-				remove_plugin(self, index, &sender, plugin, process_id)
+			PreferencesComponentInput::RemovePlugin(index, plugin) => {
+				remove_plugin(self, index, &sender, plugin)
 			},
-			PreferencesComponentInput::UpdatePlugin(index, plugin, process_id) => {
-				update_plugin(self, index, process_id, plugin).await
+			PreferencesComponentInput::UpdatePlugin(index, plugin) => {
+				update_plugin(self, index, plugin).await
 			},
 			PreferencesComponentInput::SetColorScheme(color_scheme) => {
 				if let Err(err) = set_color_scheme(self, color_scheme) {

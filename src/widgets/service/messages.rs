@@ -15,14 +15,13 @@ pub enum ServiceInput {
 	SwitchOn(bool),
 	ToggleSwitch(DynamicIndex, bool),
 	InformStatus(UpdateStatus),
-	UpdateChildId(usize),
 }
 
 #[derive(Debug)]
 pub enum ServiceOutput {
 	Install(DynamicIndex, Plugin),
-	Uninstall(DynamicIndex, Plugin, usize),
-	Update(DynamicIndex, Plugin, usize),
+	Uninstall(DynamicIndex, Plugin),
+	Update(DynamicIndex, Plugin),
 	Enable(DynamicIndex, Plugin),
-	Disable(DynamicIndex, Plugin, usize),
+	Disable(DynamicIndex, Plugin),
 }

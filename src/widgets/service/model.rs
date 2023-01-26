@@ -7,7 +7,6 @@ pub struct ServiceModel {
 	pub installed: bool,
 	pub update: bool,
 	pub first_load: bool,
-	pub process_id: usize,
 }
 
 #[derive(Debug)]

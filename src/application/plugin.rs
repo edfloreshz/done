@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
-use sysinfo::{ProcessExt, ProcessStatus, System, SystemExt};
+use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
 use crate::widgets::preferences::model::Preferences;
@@ -50,6 +50,11 @@ impl Plugin {
 		})
 		.await?;
 		let plugins: Vec<Plugin> = serde_json::from_str(&response)?;
+		let project = Project::open("dev", "edfloreshz", "done")?;
+		project
+			.get_file("dev.edfloreshz.Done.Plugins.json", FileFormat::JSON)?
+			.set_content(plugins.clone())?
+			.write()?;
 		Ok(plugins)
 	}
 
@@ -64,40 +69,37 @@ impl Plugin {
 		Ok(plugins)
 	}
 
-	pub async fn start(&self) -> Result<Option<u32>, std::io::Error> {
+	pub async fn start(&self) -> Result<(), std::io::Error> {
 		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
 		let process_name = self.process_name.clone();
 		let system = System::new_all();
-		if system
-			.processes_by_exact_name(&process_name)
-			.all(|p| p.status() != ProcessStatus::Run)
-		{
-			relm4::spawn(async move {
-				let mut command =
-					tokio::process::Command::new(format!("./{}", process_name));
-				command.current_dir(project.data_dir().join("bin"));
-				match command.spawn() {
-					Ok(child) => Ok(child.id()),
-					Err(err) => Err(err),
-				}
-			})
-			.await?
-		} else {
-			Ok(None)
+
+		for process in system.processes_by_exact_name(&process_name) {
+			process.kill();
 		}
+
+		relm4::spawn(async move {
+			let mut command =
+				tokio::process::Command::new(format!("./{}", process_name));
+			command.current_dir(project.data_dir().join("bin"));
+			match command.spawn() {
+				Ok(_) => Ok(()),
+				Err(err) => Err(err),
+			}
+		})
+		.await?
 	}
 
-	pub fn stop(&self, process_id: usize) {
-		let processes = System::new_all();
-		if let Some(process) = processes.process(sysinfo::Pid::from(process_id)) {
+	pub fn stop(&self, name: &str) {
+		for process in System::new_all().processes_by_exact_name(name) {
 			if process.kill() {
-				tracing::info!("Process was killed.");
-			} else {
-				tracing::error!("Failed to kill process.");
+				if process.kill() {
+					tracing::info!("Process was killed.");
+				} else {
+					tracing::error!("Failed to kill process.");
+				}
 			}
-		} else {
-			tracing::info!("Process is not running.");
-		};
+		}
 	}
 
 	pub fn is_running(&self) -> bool {
@@ -109,13 +111,40 @@ impl Plugin {
 		is_running
 	}
 
-	pub async fn install(&self) -> Result<()> {
-		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
+	pub async fn install(&mut self) -> Result<()> {
+		let project = Project::open("dev", "edfloreshz", "done")?;
+		let remote_plugins = project.get_file_as::<Vec<Plugin>>(
+			"dev.edfloreshz.Done.Plugins.json",
+			FileFormat::JSON,
+		)?;
+		let mut local_plugins = project
+			.get_file_as::<Preferences>("preferences.json", FileFormat::JSON)?;
+
+		let remote_plugin = remote_plugins
+			.iter()
+			.find(|plugin| plugin.id == self.id)
+			.context("Plugin does not exist")?;
+
 		download_file(
-			&self.download_url,
-			project.data_dir().join("bin").join(&self.process_name),
+			&remote_plugin.download_url,
+			project.path().unwrap().join("bin").join(&self.process_name),
 		)
 		.await?;
+
+		self.download_url = remote_plugin.download_url.clone();
+		self.version = remote_plugin.version.clone();
+
+		for plugin in local_plugins.plugins.iter_mut() {
+			if plugin.plugin.id == *self.id {
+				plugin.plugin = self.clone()
+			}
+		}
+
+		project
+			.get_file("preferences.json", FileFormat::JSON)?
+			.set_content(local_plugins)?
+			.write()?;
+
 		Ok(())
 	}
 
@@ -149,8 +178,8 @@ impl Plugin {
 		}
 	}
 
-	pub async fn try_update(&self, process_id: usize) -> Result<()> {
-		self.stop(process_id);
+	pub async fn try_update(&mut self) -> Result<()> {
+		self.stop(&self.process_name);
 		self.install().await?;
 		self.start().await?;
 		Ok(())

@@ -81,7 +81,6 @@ impl AsyncFactoryComponent for ServiceModel {
 			installed: plugin.installed,
 			update: plugin.update,
 			first_load: true,
-			process_id: 0,
 		}
 	}
 
@@ -106,7 +105,6 @@ impl AsyncFactoryComponent for ServiceModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ServiceInput::UpdateChildId(id) => self.process_id = id,
 			ServiceInput::ToggleSwitch(index, state) => {
 				if state {
 					sender.input(ServiceInput::EnablePlugin(index));
@@ -124,19 +122,15 @@ impl AsyncFactoryComponent for ServiceModel {
 			},
 			ServiceInput::DisablePlugin(index) => {
 				if !self.first_load {
-					sender.output(ServiceOutput::Disable(
-						index,
-						self.plugin.clone(),
-						self.process_id,
-					))
+					sender.output(ServiceOutput::Disable(index, self.plugin.clone()))
 				}
 			},
-			ServiceInput::RemovePlugin(index) => sender.output(
-				ServiceOutput::Uninstall(index, self.plugin.clone(), self.process_id),
-			),
-			ServiceInput::UpdatePlugin(index) => sender.output(
-				ServiceOutput::Update(index, self.plugin.clone(), self.process_id),
-			),
+			ServiceInput::RemovePlugin(index) => {
+				sender.output(ServiceOutput::Uninstall(index, self.plugin.clone()))
+			},
+			ServiceInput::UpdatePlugin(index) => {
+				sender.output(ServiceOutput::Update(index, self.plugin.clone()))
+			},
 			ServiceInput::InformStatus(status) => match status {
 				UpdateStatus::Completed => self.update = false,
 				UpdateStatus::Failed => self.update = true,
@@ -158,14 +152,14 @@ impl AsyncFactoryComponent for ServiceModel {
 			ServiceOutput::Enable(index, plugin) => {
 				PreferencesComponentInput::EnablePlugin(index, plugin)
 			},
-			ServiceOutput::Disable(index, plugin, process_id) => {
-				PreferencesComponentInput::DisablePlugin(index, plugin, process_id)
+			ServiceOutput::Disable(index, plugin) => {
+				PreferencesComponentInput::DisablePlugin(index, plugin)
 			},
-			ServiceOutput::Uninstall(index, plugin, process_id) => {
-				PreferencesComponentInput::RemovePlugin(index, plugin, process_id)
+			ServiceOutput::Uninstall(index, plugin) => {
+				PreferencesComponentInput::RemovePlugin(index, plugin)
 			},
-			ServiceOutput::Update(index, plugin, process_id) => {
-				PreferencesComponentInput::UpdatePlugin(index, plugin, process_id)
+			ServiceOutput::Update(index, plugin) => {
+				PreferencesComponentInput::UpdatePlugin(index, plugin)
 			},
 		};
 		Some(output)
