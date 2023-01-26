@@ -5,9 +5,9 @@
         "pluginDescription": "Local tasks are stored here.",
         "pluginIcon": "user-home-symbolic",
         "pluginPort": 7007,
-        "pluginVersion": "0.1.1",
+        "pluginVersion": "0.1.2",
         "pluginProcessName": "local-plugin",
-        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.1/local-plugin"
+        "pluginDownloadUrl": "https://github.com/done-devs/local-plugin/releases/download/v0.1.2/local-plugin"
     },
     {
         "pluginId": "google",
