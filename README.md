@@ -80,11 +80,12 @@ To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
 - [ ] Add tags
 - [ ] Add to My Day
 - [x] Mark as Favorite
-- [ ] Add notes
+- [x] Add notes
 
 ### Reminders
-- [ ] Set a reminder
-- [ ] Set a due date
+- [x] Set a reminder date
+- [ ] Set a reminder time
+- [x] Set a due date
 - [ ] Set recurrence for a task
 
 ### Notifications
