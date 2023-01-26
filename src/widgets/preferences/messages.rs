@@ -7,10 +7,10 @@ use super::model::ColorScheme;
 #[derive(Debug)]
 pub enum PreferencesComponentInput {
 	EnablePlugin(DynamicIndex, Plugin),
-	DisablePlugin(DynamicIndex, Plugin, usize),
+	DisablePlugin(DynamicIndex, Plugin),
 	InstallPlugin(DynamicIndex, Plugin),
-	RemovePlugin(DynamicIndex, Plugin, usize),
-	UpdatePlugin(DynamicIndex, Plugin, usize),
+	RemovePlugin(DynamicIndex, Plugin),
+	UpdatePlugin(DynamicIndex, Plugin),
 	SetColorScheme(ColorScheme),
 	ToggleCompact(bool),
 }

@@ -20,13 +20,7 @@ pub async fn enable_plugin(
 	plugin: Plugin,
 	overlay: &mut adw::ToastOverlay,
 ) -> Result<()> {
-	let id = plugin.start().await?;
-	if let Some(id) = id {
-		model.service_row_factory.send(
-			index.current_index(),
-			ServiceInput::UpdateChildId(id.try_into()?),
-		);
-	}
+	plugin.start().await?;
 	tracing::info!("Plugin {:?} started...", plugin);
 	overlay.add_toast(&toast("Service enabled.", 1));
 
@@ -44,11 +38,9 @@ pub async fn enable_plugin(
 
 	match update_preferences(&model.preferences) {
 		Ok(()) => {
-			if id.is_some() {
-				sender
-					.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin))
-					.unwrap();
-			}
+			sender
+				.output(PreferencesComponentOutput::EnablePluginOnSidebar(plugin))
+				.unwrap();
 			model
 				.service_row_factory
 				.send(index.current_index(), ServiceInput::SwitchOn(true));
@@ -63,10 +55,9 @@ pub fn disable_plugin(
 	index: DynamicIndex,
 	sender: &AsyncComponentSender<PreferencesComponentModel>,
 	plugin: Plugin,
-	process_id: usize,
 	overlay: &mut adw::ToastOverlay,
 ) {
-	plugin.stop(process_id);
+	plugin.stop(&plugin.process_name);
 	tracing::info!("Plugin {:?} stopped.", plugin);
 	let previous_model = model.preferences.clone();
 	model.preferences.plugins = model
@@ -103,7 +94,7 @@ pub async fn install_plugin(
 	plugin: Plugin,
 	overlay: &mut adw::ToastOverlay,
 ) -> Result<()> {
-	let install_plugin = plugin.clone();
+	let mut install_plugin = plugin.clone();
 	match install_plugin.install().await {
 		Ok(_) => {
 			if let Some(plugin) = model
@@ -145,9 +136,8 @@ pub fn remove_plugin(
 	index: DynamicIndex,
 	sender: &AsyncComponentSender<PreferencesComponentModel>,
 	plugin: Plugin,
-	process_id: usize,
 ) {
-	plugin.stop(process_id);
+	plugin.stop(&plugin.process_name);
 	if let Some(preferences) = model
 		.preferences
 		.plugins
@@ -188,10 +178,9 @@ pub fn remove_plugin(
 pub async fn update_plugin(
 	model: &mut PreferencesComponentModel,
 	index: DynamicIndex,
-	process_id: usize,
-	plugin: Plugin,
+	mut plugin: Plugin,
 ) {
-	match plugin.try_update(process_id).await {
+	match plugin.try_update().await {
 		Ok(_) => model.service_row_factory.send(
 			index.current_index(),
 			ServiceInput::InformStatus(UpdateStatus::Completed),

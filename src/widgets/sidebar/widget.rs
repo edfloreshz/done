@@ -119,14 +119,13 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 		let widgets = view_output!();
 
-		for plugin_preference in
-			preferences.plugins.iter().filter(|plugin| plugin.installed)
+		for plugin_preference in preferences
+			.plugins
+			.iter()
+			.filter(|plugin| plugin.installed && plugin.enabled)
 		{
 			match plugin_preference.plugin.start().await {
-				Ok(id) => {
-					if id.is_some() {
-						//TODO: Handle this id, it needs to be stored for proper process killing.
-					}
+				Ok(_) => {
 					if plugin_preference.plugin.connect().await.is_ok() {
 						model
 							.plugin_factory
