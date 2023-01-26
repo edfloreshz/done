@@ -69,6 +69,7 @@ pub async fn add_task(
 			model.compact,
 		));
 		model.show_task_details = false;
+		sender.input(ContentInput::HideFlap);
 		sender
 			.output(ContentOutput::Notify(response.message, 1))
 			.unwrap();
@@ -123,6 +124,7 @@ pub async fn update_task(
 		.await?;
 	let response = client.update_task(task).await?.into_inner();
 	if response.successful {
+		sender.input(ContentInput::HideFlap);
 		sender
 			.output(ContentOutput::Notify(response.message, 1))
 			.unwrap_or_default()

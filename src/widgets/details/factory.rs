@@ -1,5 +1,3 @@
-//TODO: Create task details factory.
-
 use std::str::FromStr;
 
 use adw::{
