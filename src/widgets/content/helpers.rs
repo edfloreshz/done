@@ -158,7 +158,7 @@ pub async fn select_task_list(
 
 	relm4::spawn(async move {
 		let mut stream = client
-			.read_tasks_from_list(list_model.list.id)
+			.get_tasks_from_list(list_model.list.id)
 			.await
 			.unwrap()
 			.into_inner();

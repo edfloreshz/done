@@ -140,13 +140,24 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					},
 				}
 			}
-			model
-				.plugin_factory
-				.guard()
-				.push_back(PluginFactoryInit::new(
-					plugin_preference.plugin.clone(),
-					plugin_preference.enabled,
-				));
+			if plugin_preference.plugin.connect().await.is_ok() {
+				model
+					.plugin_factory
+					.guard()
+					.push_back(PluginFactoryInit::new(
+						plugin_preference.plugin.clone(),
+						plugin_preference.enabled,
+					));
+			} else {
+				sender.output(SidebarComponentOutput::Notify(format!("{plugin_name} service had trouble starting up, try updating the service or restarting the app."), 2)).unwrap();
+				model
+					.plugin_factory
+					.guard()
+					.push_back(PluginFactoryInit::new(
+						plugin_preference.plugin.clone(),
+						false,
+					));
+			}
 		}
 
 		AsyncComponentParts { model, widgets }

@@ -2,7 +2,6 @@ use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::task_list::model::ListFactoryInit;
 use adw::traits::ExpanderRowExt;
 use libadwaita::prelude::PreferencesRowExt;
-use proto_rust::Empty;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -150,9 +149,9 @@ async fn init_model(
 	let plugin = init.plugin.clone();
 
 	let (tx, rx) = relm4::tokio::sync::mpsc::channel(100);
-	if plugin.start().await.is_ok() {
+	if init.enabled && plugin.start().await.is_ok() {
 		let mut client = init.plugin.connect().await?;
-		let mut stream = client.read_all_lists(Empty {}).await?.into_inner();
+		let mut stream = client.get_lists(()).await?.into_inner();
 		relm4::spawn(async move {
 			while let Some(list) = stream.message().await.unwrap() {
 				tx.send(list).await.unwrap()

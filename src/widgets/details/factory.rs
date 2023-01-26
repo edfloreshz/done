@@ -7,13 +7,13 @@ use adw::{
 		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::{Datelike, Duration, Local, NaiveDateTime};
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDateTime};
 use glib::{clone, Cast};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
 };
-use proto_rust::{TaskImportance, TaskStatus};
+use proto_rust::{Priority, Status};
 use relm4::{
 	adw,
 	factory::{AsyncFactoryComponent, FactoryView},
@@ -99,32 +99,32 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							},
 					},
 					adw::EntryRow {
-						set_title: "Body",
+						set_title: "Notes",
 						set_show_apply_button: true,
 						set_enable_emoji_completion: true,
-						set_text: self.task.body.as_deref().unwrap_or(""),
+						set_text: self.task.notes.as_deref().unwrap_or(""),
 						connect_changed[sender] => move |entry| {
 							let buffer = entry.text().to_string();
 							if buffer.is_empty() {
-								sender.input(TaskDetailsFactoryInput::SetBody(None));
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
 							} else {
-								sender.input(TaskDetailsFactoryInput::SetBody(Some(buffer)));
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
 							}
 						},
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.text().to_string();
 							if buffer.is_empty() {
-								sender.input(TaskDetailsFactoryInput::SetBody(None));
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
 							} else {
-								sender.input(TaskDetailsFactoryInput::SetBody(Some(buffer)));
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
 							}
 						},
 						connect_apply[sender] => move |entry| {
 							let buffer = entry.text().to_string();
 							if buffer.is_empty() {
-								sender.input(TaskDetailsFactoryInput::SetBody(None));
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
 							} else {
-								sender.input(TaskDetailsFactoryInput::SetBody(Some(buffer)));
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
 							}
 						},
 					},
@@ -154,10 +154,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_tooltip_text: Some("Low"),
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
-								set_active: self.task.importance == TaskImportance::Low as i32,
+								set_active: self.task.priority == Priority::Low as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::Low as i32));
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
 									}
 								}
 							},
@@ -167,10 +167,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
 								set_group: Some(&low_importance),
-								set_active: self.task.importance == TaskImportance::Normal as i32,
+								set_active: self.task.priority == Priority::Normal as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::Normal as i32));
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
 									}
 								}
 							},
@@ -180,10 +180,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
 								set_group: Some(&low_importance),
-								set_active: self.task.importance == TaskImportance::High as i32,
+								set_active: self.task.priority == Priority::High as i32,
 								connect_toggled[sender] => move |toggle| {
 									if toggle.is_active() {
-										sender.input(TaskDetailsFactoryInput::SetImportance(TaskImportance::High as i32));
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
 									}
 								}
 							}
@@ -329,18 +329,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			task: init.task.clone(),
 			task_details_index: index.clone(),
 			update: init.index.is_some(),
-			selected_due_date: if let Some(date) = init.task.due_date {
-				NaiveDateTime::from_timestamp_opt(date, 0)
-					.map(|date| date.format("%m/%d/%Y").to_string())
-			} else {
-				None
-			},
-			selected_reminder_date: if let Some(date) = init.task.reminder_date {
-				NaiveDateTime::from_timestamp_opt(date, 0)
-					.map(|date| date.format("%m/%d/%Y").to_string())
-			} else {
-				None
-			},
+			selected_due_date: init
+				.task
+				.due_date
+				.map(|date| DateTime::from(date).format("%m/%d/%Y").to_string()),
+			selected_reminder_date: init
+				.task
+				.reminder_date
+				.map(|date| DateTime::from(date).format("%m/%d/%Y").to_string()),
 			dirty: false,
 		}
 	}
@@ -379,7 +375,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::Reminder => {
 						sender.input(TaskDetailsFactoryInput::SetReminderDate(date));
 						if let Some(date) = date {
-							self.task.reminder_date = Some(date.timestamp());
+							self.task.reminder_date = Some(date.into());
 							self.selected_reminder_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.reminder_calendar.set_year(date.year());
@@ -393,7 +389,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::DueDate => {
 						sender.input(TaskDetailsFactoryInput::SetDueDate(date));
 						if let Some(date) = date {
-							self.task.due_date = Some(date.timestamp());
+							self.task.due_date = Some(date.into());
 							self.selected_due_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.due_date_calendar.set_year(date.year());
@@ -409,8 +405,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryInput::SetDueDate(due_date) => {
 				if let Some(date) = due_date {
 					self.selected_due_date = Some(date.format("%m/%d/%Y").to_string());
-					let timestamp = date.timestamp();
-					self.task.due_date = Some(timestamp);
+					self.task.due_date = Some(date.into());
 				} else {
 					self.task.due_date = None;
 				}
@@ -419,12 +414,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				if let Some(date) = reminder_date {
 					self.selected_reminder_date =
 						Some(date.format("%m/%d/%Y").to_string());
-					let timestamp = date.timestamp();
-					self.task.reminder_date = Some(timestamp);
-					self.task.is_reminder_on = true;
+					self.task.reminder_date = Some(date.into());
 				} else {
 					self.task.reminder_date = None;
-					self.task.is_reminder_on = false;
 				}
 			},
 			TaskDetailsFactoryInput::CancelWarning => {
@@ -460,7 +452,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				if self.update {
 					sender.output(TaskDetailsFactoryOutput::SaveTask(
 						Some(self.task_details_index.clone()),
-						self.task.clone(),
+						Box::new(self.task.clone()),
 						self.update,
 					));
 					self.original_task = self.task.clone();
@@ -468,7 +460,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				} else {
 					sender.output(TaskDetailsFactoryOutput::SaveTask(
 						None,
-						self.task.clone(),
+						Box::new(self.task.clone()),
 						self.update,
 					));
 				}
@@ -479,20 +471,20 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryInput::SetTitle(title) => {
 				self.task.title = title;
 			},
-			TaskDetailsFactoryInput::SetBody(body) => {
-				self.task.body = body;
+			TaskDetailsFactoryInput::SetNotes(notes) => {
+				self.task.notes = notes;
 			},
-			TaskDetailsFactoryInput::SetImportance(importance) => {
-				self.task.importance = importance;
+			TaskDetailsFactoryInput::SetPriority(priority) => {
+				self.task.priority = priority;
 			},
 			TaskDetailsFactoryInput::SetFavorite(favorite) => {
 				self.task.favorite = favorite;
 			},
 			TaskDetailsFactoryInput::SetStatus(status) => {
 				if status {
-					self.task.status = TaskStatus::Completed as i32;
+					self.task.status = Status::Completed as i32;
 				} else {
-					self.task.status = TaskStatus::NotStarted as i32;
+					self.task.status = Status::NotStarted as i32;
 				}
 			},
 		}
@@ -507,9 +499,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryOutput::CleanTaskEntry => ContentInput::CleanTaskEntry,
 			TaskDetailsFactoryOutput::SaveTask(_, task, is_update) => {
 				if is_update {
-					ContentInput::UpdateTask(task)
+					ContentInput::UpdateTask(*task)
 				} else {
-					ContentInput::AddTask(task)
+					ContentInput::AddTask(*task)
 				}
 			},
 			TaskDetailsFactoryOutput::HideFlap => ContentInput::HideFlap,
