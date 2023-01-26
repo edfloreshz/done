@@ -5,14 +5,14 @@ use relm4::factory::AsyncFactoryVecDeque;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-	application::plugin::Plugin, widgets::service_row::model::ServiceRowModel,
+	application::plugin::Plugin, widgets::service::model::ServiceModel,
 };
 
 #[derive(Debug)]
 
 pub struct PreferencesComponentModel {
 	pub preferences: Preferences,
-	pub service_row_factory: AsyncFactoryVecDeque<ServiceRowModel>,
+	pub service_row_factory: AsyncFactoryVecDeque<ServiceModel>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

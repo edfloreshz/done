@@ -1,7 +1,7 @@
 use crate::application::plugin::Plugin;
 
 #[derive(Debug, Default)]
-pub struct ServiceRowModel {
+pub struct ServiceModel {
 	pub plugin: Plugin,
 	pub enabled: bool,
 	pub installed: bool,

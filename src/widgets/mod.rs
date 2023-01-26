@@ -4,7 +4,7 @@ pub mod details;
 pub mod list_entry;
 pub mod plugin;
 pub mod preferences;
-pub mod service_row;
+pub mod service;
 pub mod sidebar;
 pub mod smart_lists;
 pub mod task_entry;

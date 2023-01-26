@@ -1,0 +1,4 @@
+# Added temporarily to cope with Relm4's redundant cloning.
+allow = [
+  "clippy::redundant_clone",
+]

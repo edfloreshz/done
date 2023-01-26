@@ -12,7 +12,7 @@ pub enum ListFactoryInput {
 
 #[derive(Debug)]
 pub enum ListFactoryOutput {
-	Select(ListFactoryModel),
+	Select(Box<ListFactoryModel>),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),
