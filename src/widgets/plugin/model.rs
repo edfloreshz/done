@@ -1,4 +1,4 @@
-use proto_rust::ListResponse;
+use proto_rust::ProviderResponse;
 use relm4::tokio::sync::mpsc::Receiver;
 use relm4::{factory::AsyncFactoryVecDeque, Controller};
 
@@ -12,7 +12,7 @@ pub struct PluginFactoryModel {
 	pub last_list_selected: Option<ListFactoryModel>,
 	pub list_factory: AsyncFactoryVecDeque<ListFactoryModel>,
 	pub new_list_controller: Controller<ListEntryModel>,
-	pub rx: Receiver<ListResponse>,
+	pub rx: Receiver<ProviderResponse>,
 }
 
 #[derive(derive_new::new)]

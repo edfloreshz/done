@@ -1,5 +1,5 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use proto_rust::provider::TaskStatus;
+use proto_rust::provider::Status;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
@@ -121,9 +121,9 @@ impl AsyncFactoryComponent for TaskModel {
 			},
 			TaskInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
-					TaskStatus::Completed as i32
+					Status::Completed as i32
 				} else {
-					TaskStatus::NotStarted as i32
+					Status::NotStarted as i32
 				};
 				if !self.first_load {
 					sender

@@ -8,8 +8,8 @@ use super::model::{DateDay, DateTpe};
 pub enum TaskDetailsFactoryInput {
 	SaveTask,
 	SetTitle(String),
-	SetBody(Option<String>),
-	SetImportance(i32),
+	SetNotes(Option<String>),
+	SetPriority(i32),
 	SetFavorite(bool),
 	SetStatus(bool),
 	SetDueDate(Option<NaiveDateTime>),
@@ -20,7 +20,7 @@ pub enum TaskDetailsFactoryInput {
 
 #[derive(Debug)]
 pub enum TaskDetailsFactoryOutput {
-	SaveTask(Option<DynamicIndex>, Task, bool),
+	SaveTask(Option<DynamicIndex>, Box<Task>, bool),
 	CleanTaskEntry,
 	HideFlap,
 }
