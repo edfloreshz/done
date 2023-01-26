@@ -125,6 +125,13 @@ To enable logging set `RUST_LOG` to `info`.
 RUST_LOG=info
 ```
 
+To test metainfo:
+```bash
+gnome-software --show-metainfo=data/dev.edfloreshz.Done.metainfo.xml.in.in,icon=data/icons/dev.edfloreshz.Done.Devel.svg
+```
+
+Use absolute paths for the icon.
+
 ## Deploy
 To deploy the app, head to [RELEASE.md](RELEASE.md)
 
