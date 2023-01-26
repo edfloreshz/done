@@ -6,9 +6,9 @@ use proto_rust::provider::provider_client::ProviderClient;
 use proto_rust::provider::List;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::io::Write;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
+use std::{io::Write, time::Duration};
 use sysinfo::{ProcessExt, System, SystemExt};
 use tonic::transport::Channel;
 
@@ -159,23 +159,21 @@ impl Plugin {
 
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
 		let port = self.port;
-		match relm4::spawn(async move {
+		let client = relm4::spawn(async move {
 			match ProviderClient::connect(format!("http://[::1]:{}", port)).await {
 				Ok(client) => Ok(client),
-				Err(err) => Err(err),
+				Err(err) => {
+					std::thread::sleep(Duration::from_secs(1));
+					match ProviderClient::connect(format!("http://[::1]:{}", port)).await
+					{
+						Ok(client) => Ok(client),
+						Err(_) => Err(err.into()),
+					}
+				},
 			}
 		})
-		.await
-		{
-			Ok(client) => match client {
-				Ok(client) => Ok(client),
-				Err(err) => Err(err.into()),
-			},
-			Err(err) => {
-				tracing::error!("Failed to connect to plugin: {err}");
-				Err(err.into())
-			},
-		}
+		.await?;
+		client
 	}
 
 	pub async fn try_update(&mut self) -> Result<()> {

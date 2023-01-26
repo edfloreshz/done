@@ -10,11 +10,9 @@
     "finish-args": [
         "--share=network",
         "--share=ipc",
-        "--socket=session-bus",
         "--socket=fallback-x11",
         "--socket=wayland",
-        "--device=dri",
-        "--filesystem=xdg-run/gvfsd"
+        "--device=dri"
     ],
     "build-options": {
         "append-path": "/usr/lib/sdk/rust-stable/bin",
