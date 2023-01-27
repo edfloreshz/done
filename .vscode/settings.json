@@ -1,7 +1,4 @@
 {
-    "rust-analyzer.check.overrideCommand": [
-        "cargo", "clippy", "--no-deps", "--message-format=json"
-    ],
     "files.watcherExclude": {
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
@@ -10,11 +7,4 @@
         ".flatpak/**": true,
         "_build/**": true
     },
-    "mesonbuild.configureOnOpen": false,
-    "mesonbuild.buildFolder": "_build",
-    "mesonbuild.mesonPath": "/home/eduardo/Developer/GitHub/edfloreshz/done/.flatpak/meson.sh",
-    "rust-analyzer.runnables.command": "/home/eduardo/Developer/GitHub/edfloreshz/done/.flatpak/cargo.sh",
-    "rust-analyzer.files.excludeDirs": [
-        ".flatpak"
-    ]
 }

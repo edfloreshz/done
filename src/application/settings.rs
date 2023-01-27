@@ -15,7 +15,7 @@ pub(crate) async fn init() -> Result<()> {
 			new_file!("dev.edfloreshz.Done.Plugins").set_format(FileFormat::JSON),
 		])?;
 
-	if !project.integrity_ok::<Preferences>("preferences", FileFormat::JSON) {
+	if !project.integrity::<Preferences>("preferences", FileFormat::JSON) {
 		project
 			.get_file("preferences", FileFormat::JSON)?
 			.set_content(Preferences::new().await)?
