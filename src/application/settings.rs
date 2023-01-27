@@ -13,7 +13,6 @@ pub(crate) async fn init() -> Result<()> {
 		.add_files(&[
 			new_file!("preferences").set_format(FileFormat::JSON),
 			new_file!("dev.edfloreshz.Done.Plugins").set_format(FileFormat::JSON),
-			new_file!("dev.edfloreshz.Done.db").set_format(FileFormat::Plain),
 		])?;
 
 	if !project.integrity_ok::<Preferences>("preferences", FileFormat::JSON) {
