@@ -124,7 +124,9 @@ pub async fn update_task(
 		.await?;
 	let response = client.update_task(task).await?.into_inner();
 	if response.successful {
-		sender.input(ContentInput::HideFlap);
+		if model.show_task_details {
+			sender.input(ContentInput::HideFlap);
+		}
 		sender
 			.output(ContentOutput::Notify(response.message, 1))
 			.unwrap_or_default()

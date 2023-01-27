@@ -30,7 +30,6 @@ pub struct TaskModel {
 	pub task: Task,
 	pub parent_list: List,
 	pub compact: bool,
-	pub first_load: bool,
 }
 
 #[derive(derive_new::new)]

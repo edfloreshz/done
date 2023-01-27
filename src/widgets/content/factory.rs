@@ -95,7 +95,6 @@ impl AsyncFactoryComponent for TaskModel {
 			task: init.task,
 			parent_list: init.parent_list,
 			compact: init.compact,
-			first_load: true,
 		}
 	}
 
@@ -125,12 +124,10 @@ impl AsyncFactoryComponent for TaskModel {
 				} else {
 					Status::NotStarted as i32
 				};
-				if !self.first_load {
-					sender
-						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.task.clone()))
-						.unwrap_or_default();
-				}
+				sender
+					.output_sender()
+					.send(TaskOutput::UpdateTask(None, self.task.clone()))
+					.unwrap_or_default();
 			},
 			TaskInput::Favorite(index) => {
 				self.task.favorite = !self.task.favorite;
@@ -151,7 +148,6 @@ impl AsyncFactoryComponent for TaskModel {
 			},
 			TaskInput::ToggleCompact(compact) => self.compact = compact,
 		}
-		self.first_load = false;
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
