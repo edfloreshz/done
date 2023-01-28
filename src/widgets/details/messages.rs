@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use proto_rust::Task;
+use proto_rust::{SubTask, Task};
 use relm4::prelude::DynamicIndex;
 
 use super::model::{DateDay, DateTpe};
@@ -12,6 +12,9 @@ pub enum TaskDetailsFactoryInput {
 	SetPriority(i32),
 	SetFavorite(bool),
 	SetStatus(bool),
+	CreateSubTask,
+	UpdateSubTask(DynamicIndex, SubTask),
+	RemoveSubTask(DynamicIndex),
 	SetDueDate(Option<NaiveDateTime>),
 	SetReminderDate(Option<NaiveDateTime>),
 	CancelWarning,
