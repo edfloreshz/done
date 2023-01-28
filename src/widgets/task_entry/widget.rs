@@ -1,10 +1,10 @@
 use crate::fl;
+use adw::traits::{EntryRowExt, PreferencesRowExt};
+use gtk::traits::{EditableExt, ListBoxRowExt};
 use proto_rust::provider::{List, Task};
 use relm4::{
-	gtk,
-	gtk::prelude::{
-		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, OrientableExt, WidgetExt,
-	},
+	adw, gtk,
+	gtk::prelude::{ButtonExt, EntryBufferExtManual, WidgetExt},
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
 
@@ -21,33 +21,39 @@ impl Component for TaskEntryModel {
 
 	view! {
 		#[root]
-		gtk::Box {
-			set_orientation: gtk::Orientation::Horizontal,
+		adw::EntryRow {
+			#[watch]
+			set_visible: true,
+			set_hexpand: true,
+			add_css_class: "card",
+			set_title: fl!("new-task"),
 			set_margin_all: 12,
-			set_spacing: 5,
-			#[name(entry)]
-			gtk::Entry {
-				set_buffer: &model.buffer,
-				set_hexpand: true,
-				#[watch]
-				set_visible: true,
-				set_icon_from_icon_name: (gtk::EntryIconPosition::Primary, Some("value-increase-symbolic")),
-				set_placeholder_text: Some(fl!("new-task")),
-				set_height_request: 42,
-			},
-			gtk::Button {
+			set_height_request: 42,
+			set_show_apply_button: true,
+			set_enable_emoji_completion: true,
+			add_suffix = &gtk::Button {
 				set_tooltip_text: Some(fl!("more-details")),
+				add_css_class: "suggested-action",
+				add_css_class: "circular",
 				set_icon_name: "text-editor-symbolic",
+				set_valign: gtk::Align::Center,
 				connect_clicked[sender] => move |_| {
 					sender.input(TaskEntryInput::EnterCreationMode);
 				}
 			},
-			gtk::Button {
-				set_icon_name: "mail-send-symbolic",
-				connect_clicked[sender] => move |_| {
-					sender.input(TaskEntryInput::AddTask);
-				}
-			}
+			connect_apply[sender] => move |entry| {
+				sender.input(TaskEntryInput::AddTask);
+				entry.set_text("")
+			},
+			connect_activate[sender] => move |entry| {
+				let text = entry.text().to_string();
+				sender.input(TaskEntryInput::Rename(text));
+				entry.set_text("")
+			},
+			connect_changed[sender] => move |entry| {
+				let text = entry.text().to_string();
+				sender.input(TaskEntryInput::Rename(text));
+			},
 		}
 	}
 
@@ -70,21 +76,20 @@ impl Component for TaskEntryModel {
 		&mut self,
 		message: Self::Input,
 		sender: ComponentSender<Self>,
-		_root: &Self::Root,
+		root: &Self::Root,
 	) {
 		match message {
 			TaskEntryInput::CleanTaskEntry => {
 				self.task = Task::new(String::new(), String::new());
-				self.buffer.set_text("");
+				root.set_text("");
 			},
-			TaskEntryInput::EnterCreationMode => {
-				self.task.title = self.buffer.text();
-				sender
-					.output(TaskEntryOutput::EnterCreationMode(self.task.clone()))
-					.unwrap()
+			TaskEntryInput::EnterCreationMode => sender
+				.output(TaskEntryOutput::EnterCreationMode(self.task.clone()))
+				.unwrap(),
+			TaskEntryInput::Rename(title) => {
+				self.task.title = title;
 			},
 			TaskEntryInput::AddTask => {
-				self.task.title = self.buffer.text();
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
 					self.task.parent = self.parent_list.as_ref().unwrap().id.clone();
 					sender
