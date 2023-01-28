@@ -4,6 +4,7 @@ use proto_rust::{List, Task};
 pub enum TaskEntryInput {
 	SetParentList(Option<List>),
 	AddTask,
+	Rename(String),
 	EnterCreationMode,
 	CleanTaskEntry,
 }

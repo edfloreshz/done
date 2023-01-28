@@ -13,10 +13,10 @@ use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
 };
-use proto_rust::{Priority, Status};
+use proto_rust::{Priority, Status, SubTask};
 use relm4::{
 	adw,
-	factory::{AsyncFactoryComponent, FactoryView},
+	factory::{AsyncFactoryComponent, FactoryVecDeque, FactoryView},
 	gtk,
 	gtk::prelude::EditableExt,
 	loading_widgets::LoadingWidgets,
@@ -26,9 +26,12 @@ use relm4::{
 
 use crate::{fl, widgets::content::messages::ContentInput};
 
-use super::messages::{TaskDetailsFactoryInput, TaskDetailsFactoryOutput};
 use super::model::{
 	DateDay, DateTpe, TaskDetailsFactoryInit, TaskDetailsFactoryModel,
+};
+use super::{
+	messages::{TaskDetailsFactoryInput, TaskDetailsFactoryOutput},
+	sub_tasks::model::SubTaskInit,
 };
 
 #[relm4::factory(pub async)]
@@ -300,6 +303,19 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							}
 						}
+					},
+					#[local_ref]
+					sub_tasks -> adw::PreferencesGroup {
+						set_margin_top: 10,
+						set_title: "Sub tasks",
+						#[wrap(Some)]
+						set_header_suffix = &gtk::Button {
+							add_css_class: "flat",
+							set_icon_name: "value-increase-symbolic",
+							connect_clicked[sender] => move |_| {
+								sender.input(TaskDetailsFactoryInput::CreateSubTask)
+							}
+						}
 					}
 				},
 			}
@@ -322,9 +338,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 	async fn init_model(
 		init: Self::Init,
 		index: &DynamicIndex,
-		_sender: AsyncFactorySender<Self>,
+		sender: AsyncFactorySender<Self>,
 	) -> Self {
-		Self {
+		let mut model = Self {
 			original_task: init.task.clone(),
 			task: init.task.clone(),
 			task_details_index: index.clone(),
@@ -337,8 +353,19 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				.task
 				.reminder_date
 				.map(|date| DateTime::from(date).format("%m/%d/%Y").to_string()),
+			sub_tasks: FactoryVecDeque::new(
+				adw::PreferencesGroup::default(),
+				sender.input_sender(),
+			),
 			dirty: false,
+		};
+		for sub_task in init.task.sub_tasks {
+			model
+				.sub_tasks
+				.guard()
+				.push_back(SubTaskInit::new(sub_task));
 		}
+		model
 	}
 
 	fn init_widgets(
@@ -348,6 +375,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
+		let sub_tasks = self.sub_tasks.widget();
 		let widgets = view_output!();
 		widgets
 	}
@@ -359,6 +387,35 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			TaskDetailsFactoryInput::CreateSubTask => {
+				let index = self.sub_tasks.guard().push_back(SubTaskInit {
+					sub_task: SubTask::default(),
+				});
+				self
+					.task
+					.sub_tasks
+					.insert(index.current_index(), SubTask::default());
+			},
+			TaskDetailsFactoryInput::UpdateSubTask(index, sub_task) => {
+				self
+					.task
+					.sub_tasks
+					.iter_mut()
+					.enumerate()
+					.for_each(|(i, x)| {
+						if i == index.current_index() {
+							*x = sub_task.clone()
+						}
+					});
+			},
+			TaskDetailsFactoryInput::RemoveSubTask(index) => {
+				self.task.sub_tasks.remove(index.current_index());
+				self
+					.sub_tasks
+					.guard()
+					.remove(index.current_index())
+					.unwrap();
+			},
 			TaskDetailsFactoryInput::SetDate(calendar, date) => {
 				let date = match date {
 					DateDay::Today => Some(Local::now().naive_local()),
