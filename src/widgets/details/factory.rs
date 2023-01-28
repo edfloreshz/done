@@ -359,12 +359,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			),
 			dirty: false,
 		};
+		let mut guard = model.sub_tasks.guard();
 		for sub_task in init.task.sub_tasks {
-			model
-				.sub_tasks
-				.guard()
-				.push_back(SubTaskInit::new(sub_task));
+			guard.push_back(SubTaskInit::new(sub_task));
 		}
+		guard.drop();
 		model
 	}
 
