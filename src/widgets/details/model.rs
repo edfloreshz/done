@@ -1,7 +1,7 @@
 use proto_rust::Task;
 use relm4::{factory::FactoryVecDeque, prelude::DynamicIndex};
 
-use super::sub_tasks::model::SubTaskModel;
+use super::{sub_tasks::model::SubTaskModel, tags::factory::TagModel};
 
 pub struct TaskDetailsFactoryModel {
 	pub original_task: Task,
@@ -11,11 +11,11 @@ pub struct TaskDetailsFactoryModel {
 	pub selected_due_date: Option<String>,
 	pub selected_reminder_date: Option<String>,
 	pub sub_tasks: FactoryVecDeque<SubTaskModel>,
-	// pub tags: FactoryVecDeque<TagModel>,
+	pub tags: FactoryVecDeque<TagModel>,
 	pub dirty: bool,
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct TaskDetailsFactoryInit {
 	pub task: Task,
 	pub index: Option<DynamicIndex>,

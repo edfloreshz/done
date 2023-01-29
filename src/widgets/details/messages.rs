@@ -13,6 +13,8 @@ pub enum TaskDetailsFactoryInput {
 	SetFavorite(bool),
 	SetStatus(bool),
 	CreateSubTask,
+	AddTag(String),
+	RemoveTag(DynamicIndex),
 	UpdateSubTask(DynamicIndex, SubTask),
 	RemoveSubTask(DynamicIndex),
 	SetDueDate(Option<NaiveDateTime>),

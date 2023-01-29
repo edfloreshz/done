@@ -26,12 +26,13 @@ use relm4::{
 
 use crate::{fl, widgets::content::messages::ContentInput};
 
-use super::model::{
-	DateDay, DateTpe, TaskDetailsFactoryInit, TaskDetailsFactoryModel,
-};
 use super::{
 	messages::{TaskDetailsFactoryInput, TaskDetailsFactoryOutput},
 	sub_tasks::model::SubTaskInit,
+};
+use super::{
+	model::{DateDay, DateTpe, TaskDetailsFactoryInit, TaskDetailsFactoryModel},
+	tags::factory::TagInit,
 };
 
 #[relm4::factory(pub async)]
@@ -130,6 +131,27 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
 							}
 						},
+					},
+					adw::EntryRow {
+						set_title: "Add tags...",
+						set_show_apply_button: true,
+						connect_apply[sender] => move |entry| {
+							let text = entry.text().to_string();
+							if !text.is_empty() {
+								sender.input(TaskDetailsFactoryInput::AddTag(text));
+								entry.set_text("")
+							}
+						}
+					},
+					adw::ActionRow {
+						#[watch]
+						set_visible: !self.task.tags.is_empty(),
+						#[local_ref]
+						add_prefix = tags -> gtk::FlowBox {
+							set_width_request: 300,
+							set_orientation: gtk::Orientation::Horizontal,
+							set_hexpand: true
+						}
 					},
 					adw::ActionRow {
 						set_icon_name: Some("checkbox-checked-symbolic"),
@@ -357,13 +379,22 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
 			),
+			tags: FactoryVecDeque::new(
+				gtk::FlowBox::default(),
+				sender.input_sender(),
+			),
 			dirty: false,
 		};
-		let mut guard = model.sub_tasks.guard();
+		let mut sub_tasks_guard = model.sub_tasks.guard();
 		for sub_task in init.task.sub_tasks {
-			guard.push_back(SubTaskInit::new(sub_task));
+			sub_tasks_guard.push_back(SubTaskInit::new(sub_task));
 		}
-		guard.drop();
+		let mut tags_guard = model.tags.guard();
+		for tag in init.task.tags {
+			tags_guard.push_back(TagInit::new(tag));
+		}
+		sub_tasks_guard.drop();
+		tags_guard.drop();
 		model
 	}
 
@@ -375,6 +406,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let sub_tasks = self.sub_tasks.widget();
+		let tags = self.tags.widget();
 		let widgets = view_output!();
 		widgets
 	}
@@ -386,6 +418,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
+			TaskDetailsFactoryInput::AddTag(title) => {
+				let index = self.tags.guard().push_back(TagInit::new(title.clone()));
+				self.task.tags.insert(index.current_index(), title);
+			},
+			TaskDetailsFactoryInput::RemoveTag(index) => {
+				self.tags.guard().remove(index.current_index());
+				self.task.tags.remove(index.current_index());
+			},
 			TaskDetailsFactoryInput::CreateSubTask => {
 				let index = self.sub_tasks.guard().push_back(SubTaskInit {
 					sub_task: SubTask::default(),
