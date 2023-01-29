@@ -4,7 +4,7 @@ use gtk::traits::{EditableExt, ListBoxRowExt};
 use proto_rust::provider::{List, Task};
 use relm4::{
 	adw, gtk,
-	gtk::prelude::{ButtonExt, EntryBufferExtManual, WidgetExt},
+	gtk::prelude::{ButtonExt, WidgetExt},
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
 
@@ -41,14 +41,11 @@ impl Component for TaskEntryModel {
 					sender.input(TaskEntryInput::EnterCreationMode);
 				}
 			},
-			connect_apply[sender] => move |entry| {
+			connect_apply[sender] => move |_| {
 				sender.input(TaskEntryInput::AddTask);
-				entry.set_text("")
 			},
-			connect_activate[sender] => move |entry| {
-				let text = entry.text().to_string();
-				sender.input(TaskEntryInput::Rename(text));
-				entry.set_text("")
+			connect_activate[sender] => move |_| {
+				sender.input(TaskEntryInput::AddTask);
 			},
 			connect_changed[sender] => move |entry| {
 				let text = entry.text().to_string();
@@ -99,7 +96,7 @@ impl Component for TaskEntryModel {
 						String::new(),
 						self.parent_list.as_ref().unwrap().id.clone(),
 					);
-					self.buffer.set_text("");
+					sender.input(TaskEntryInput::CleanTaskEntry);
 				}
 			},
 			TaskEntryInput::SetParentList(list) => self.parent_list = list,

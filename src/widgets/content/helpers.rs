@@ -159,18 +159,16 @@ pub async fn select_task_list(
 	guard.clear();
 
 	relm4::spawn(async move {
-		let mut stream = client
-			.get_tasks_from_list(list_model.list.id)
-			.await
-			.unwrap()
-			.into_inner();
-		while let Some(response) = stream.message().await.unwrap() {
-			tx.send(response).await.unwrap()
+		if let Ok(stream) = client.get_tasks_from_list(list_model.list.id).await {
+			let mut stream = stream.into_inner();
+			while let Some(response) = stream.message().await.unwrap() {
+				tx.send(response).await.unwrap()
+			}
 		}
 	});
 
 	while let Some(response) = rx.recv().await {
-		if response.successful {
+		if response.successful && response.task.is_some() {
 			guard.push_back(TaskInit::new(
 				response.task.unwrap(),
 				model.parent_list.as_ref().unwrap().clone(),
