@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2023-01-28
+
+### Added
+- New option to include sub-tasks inside tasks
+
 ## [0.1.3] - 2023-01-24
 
 ### Added
