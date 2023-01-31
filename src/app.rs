@@ -118,7 +118,7 @@ impl AsyncComponent for App {
 			},
 
 			gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
+				set_orientation: gtk::Orientation::Vertical,
 				#[name(overlay)]
 				adw::ToastOverlay {
 					#[wrap(Some)]
@@ -185,22 +185,22 @@ impl AsyncComponent for App {
 						}
 					}
 				},
-                gtk::InfoBar {
-                    set_message_type: gtk::MessageType::Warning,
-										set_visible: PROFILE == "Devel",
-										#[watch]
-										set_revealed: model.warning_revealed,
-										set_show_close_button: true,
-										connect_response[sender] => move |_, _| {
-                        sender.input_sender().send(Event::CloseWarning).unwrap()
-                    },
-										gtk4::Label {
-                        set_wrap: true,
-											set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
-											add_css_class: "warning",
-											set_text: fl!("alpha-warning")
-                    }
-                },
+				gtk::InfoBar {
+					set_message_type: gtk::MessageType::Warning,
+					set_visible: PROFILE == "Devel",
+					#[watch]
+					set_revealed: model.warning_revealed,
+					set_show_close_button: true,
+					connect_response[sender] => move |_, _| {
+						sender.input_sender().send(Event::CloseWarning).unwrap()
+					},
+					gtk4::Label {
+						set_wrap: true,
+						set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
+						add_css_class: "warning",
+						set_text: fl!("alpha-warning")
+					}
+				},
 			}
 		}
 	}
