@@ -51,7 +51,7 @@ impl AsyncFactoryComponent for SmartSidebarFactoryListModel {
 				#[watch]
 				set_icon_name: Some(self.icon.as_str()),
 			},
-			add_controller = &gtk::GestureClick {
+			add_controller = gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
 					sender.input(SmartSidebarFactoryListInput::SelectSmartList);
 					sender.output(SmartSidebarFactoryListOutput::Forward)

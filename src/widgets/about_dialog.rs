@@ -1,6 +1,5 @@
 use gtk::prelude::GtkWindowExt;
-use libadwaita as adw;
-use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use relm4::{adw, gtk, ComponentParts, ComponentSender, SimpleComponent};
 
 use crate::{
 	application::info::{APP_ID, VERSION},
@@ -50,20 +49,20 @@ impl SimpleComponent for AboutDialog {
 			.website("https://done.edfloreshz.dev/")
 			.issue_url("https://github.com/done-devs/done/issues")
 			.version(VERSION)
-			.translator_credits(&fl!("translator-credits").replace("\\n", "\n"))
+			.translator_credits(fl!("translator-credits").replace("\\n", "\n"))
 			.modal(true)
 			.transient_for(&widgets.main_window)
 			.developers(vec![
-				"Eduardo Flores <edfloreshz@gmail.com>".into(),
-				"Abraham Toriz Cruz <categulario@gmail.com>".into(),
-				"GageBerz".into(),
-				"adamijak".into()
+				"Eduardo Flores <edfloreshz@gmail.com>",
+				"Abraham Toriz Cruz <categulario@gmail.com>",
+				"GageBerz",
+				"adamijak"
 			])
 			.artists(vec![
-				"Eduardo Flores <edfloreshz@gmail.com>".into(),
-				"David Lapshin <ddaudix@gmail.com>".into()
-				])
-			.documenters(vec!["Eduardo Flores <edfloreshz@gmail.com>".into()])
+				"Eduardo Flores <edfloreshz@gmail.com>",
+				"David Lapshin <ddaudix@gmail.com>"
+			])
+			.documenters(vec!["Eduardo Flores <edfloreshz@gmail.com>"])
 			.comments("The ultimate task management solution for seamless organization and efficiency.")
 			.build();
 		dialog.present();

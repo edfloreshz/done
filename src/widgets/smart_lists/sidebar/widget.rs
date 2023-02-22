@@ -4,7 +4,7 @@ use relm4::{
 		self,
 		traits::{BoxExt, OrientableExt},
 	},
-	ComponentParts, ComponentSender, SimpleComponent,
+	ComponentParts, SimpleComponent,
 };
 
 use crate::widgets::smart_lists::sidebar::model::{

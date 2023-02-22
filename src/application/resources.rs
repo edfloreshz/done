@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 use gettextrs::gettext;
-use libadwaita::{gdk, gio};
+use relm4::adw::{gdk, gio};
 use relm4::gtk;
 
 use crate::application::info::APP_ID;

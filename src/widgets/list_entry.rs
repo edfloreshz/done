@@ -35,7 +35,7 @@ impl SimpleComponent for ListEntryModel {
 						connect_activate[sender] => move |entry| {
 							let buffer = entry.buffer();
 							if !buffer.text().is_empty() {
-								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
+								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text().to_string())).unwrap_or_default();
 							}
 						}
 					},
@@ -46,7 +46,7 @@ impl SimpleComponent for ListEntryModel {
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
 							if !buffer.text().is_empty() {
-								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text())).unwrap_or_default();
+								sender.output(ListEntryOutput::AddTaskListToSidebar(buffer.text().to_string())).unwrap_or_default();
 							}
 							new_list_entry.set_text("");
 						})

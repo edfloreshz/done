@@ -194,9 +194,9 @@ impl AsyncComponent for App {
 					connect_response[sender] => move |_, _| {
 						sender.input_sender().send(Event::CloseWarning).unwrap()
 					},
-					gtk4::Label {
+					gtk::Label {
 						set_wrap: true,
-						set_natural_wrap_mode: gtk4::NaturalWrapMode::None,
+						set_natural_wrap_mode: gtk::NaturalWrapMode::None,
 						add_css_class: "warning",
 						set_text: fl!("alpha-warning")
 					}
@@ -401,7 +401,7 @@ impl AsyncComponent for App {
 					.unwrap_or_default();
 			},
 			Event::Notify(msg, timeout) => {
-				widgets.overlay.add_toast(&toast(msg, timeout))
+				widgets.overlay.add_toast(toast(msg, timeout))
 			},
 			Event::Folded => {
 				if self.page_title.is_some() {

@@ -1,12 +1,12 @@
-use adw::traits::{EntryRowExt, PreferencesRowExt};
-use gtk::traits::{BoxExt, ListBoxRowExt};
+use relm4::adw::{prelude::EntryRowExt, traits::PreferencesRowExt};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
+use relm4::gtk::prelude::{ButtonExt, EditableExt, WidgetExt};
+use relm4::gtk::traits::{BoxExt, ListBoxRowExt};
+use relm4::loading_widgets::LoadingWidgets;
 use relm4::AsyncFactorySender;
 
-use crate::gtk::prelude::{ButtonExt, EditableExt, WidgetExt};
 use crate::widgets::plugin::messages::PluginFactoryInput;
-use relm4::loading_widgets::LoadingWidgets;
 
 use crate::{adw, gtk};
 
@@ -70,7 +70,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 					sender.input(ListFactoryInput::Delete(index.clone()));
 				}
 			},
-			add_controller = &gtk::GestureClick {
+			add_controller = gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
 					sender.input(ListFactoryInput::Select);
 					sender.output(ListFactoryOutput::Forward);
