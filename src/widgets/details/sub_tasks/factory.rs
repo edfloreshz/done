@@ -1,6 +1,6 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
-use gtk4::traits::EditableExt;
+use relm4::gtk::traits::EditableExt;
 use relm4::{
 	adw,
 	factory::FactoryView,

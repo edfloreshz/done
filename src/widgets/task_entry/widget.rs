@@ -62,7 +62,7 @@ impl Component for TaskEntryModel {
 		let model = TaskEntryModel {
 			task: Task::new(String::new(), String::new()),
 			parent_list: init,
-			buffer: gtk::EntryBuffer::new(None),
+			buffer: gtk::EntryBuffer::new(None::<String>),
 		};
 
 		let widgets = view_output!();

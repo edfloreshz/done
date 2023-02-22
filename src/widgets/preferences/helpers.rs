@@ -21,7 +21,7 @@ pub async fn enable_plugin(
 	overlay: &mut adw::ToastOverlay,
 ) -> Result<()> {
 	plugin.start().await?;
-	overlay.add_toast(&toast(format!("{} service enabled", plugin.name), 1));
+	overlay.add_toast(toast(format!("{} service enabled", plugin.name), 1));
 
 	model.preferences.plugins = model
 		.preferences
@@ -70,7 +70,7 @@ pub fn disable_plugin(
 		})
 		.collect();
 	if previous_model != model.preferences {
-		overlay.add_toast(&toast(format!("{} service disabled", plugin.name), 1));
+		overlay.add_toast(toast(format!("{} service disabled", plugin.name), 1));
 		match update_preferences(&model.preferences) {
 			Ok(()) => {
 				sender
@@ -103,7 +103,7 @@ pub async fn install_plugin(
 			{
 				plugin.installed = true;
 				plugin.enabled = true;
-				overlay.add_toast(&toast(
+				overlay.add_toast(toast(
 					format!("{} service was installed", plugin.plugin.name),
 					1,
 				));
@@ -127,7 +127,7 @@ pub async fn install_plugin(
 		},
 		Err(err) => {
 			tracing::error!("Failed to install plugin: {}", err.to_string());
-			overlay.add_toast(&toast(err, 2))
+			overlay.add_toast(toast(err, 2))
 		},
 	}
 	Ok(())
@@ -151,7 +151,7 @@ pub fn uninstall_plugin(
 			Ok(_) => {
 				preferences.enabled = false;
 				preferences.installed = false;
-				overlay.add_toast(&toast(
+				overlay.add_toast(toast(
 					format!("{} service was uninstalled", plugin.name),
 					1,
 				));

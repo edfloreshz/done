@@ -1,7 +1,7 @@
 use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::task_list::model::ListFactoryInit;
+use adw::prelude::PreferencesRowExt;
 use adw::traits::ExpanderRowExt;
-use libadwaita::prelude::PreferencesRowExt;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};

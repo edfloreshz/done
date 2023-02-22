@@ -10,7 +10,7 @@ mod widgets;
 
 fn main() -> Result<()> {
 	let main_app = setup::init()?;
-	let app = RelmApp::with_app(main_app);
+	let app = RelmApp::from_app(main_app);
 	app.run_async::<App>(());
 	Ok(())
 }
