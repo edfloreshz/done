@@ -140,7 +140,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					},
 				}
 			}
-			if plugin_preference.plugin.connect().await.is_ok() {
+			if plugin_preference.installed {
 				model
 					.plugin_factory
 					.guard()
@@ -148,15 +148,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						plugin_preference.plugin.clone(),
 						plugin_preference.enabled,
 					));
-			} else {
-				sender.output(SidebarComponentOutput::Notify(format!("{plugin_name} service had trouble starting up, try updating the service or restarting the app."), 2)).unwrap();
-				model
-					.plugin_factory
-					.guard()
-					.push_back(PluginFactoryInit::new(
-						plugin_preference.plugin.clone(),
-						false,
-					));
+			}
+
+			if plugin_preference.enabled {
+				match plugin_preference.plugin.connect().await {
+					Ok(_) => continue,
+					Err(_) => {
+						sender.output(SidebarComponentOutput::Notify(format!("{plugin_name} service had trouble starting up, try updating the service or restarting the app."), 2)).unwrap();
+					},
+				}
 			}
 		}
 
