@@ -120,7 +120,10 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 			PluginFactoryInput::Notify(msg) => {
 				sender.output(PluginFactoryOutput::Notify(msg))
 			},
-			PluginFactoryInput::Enable => self.enabled = true,
+			PluginFactoryInput::Enable => {
+				self.enabled = true;
+				sender.input(PluginFactoryInput::FillTaskFactory);
+			},
 			PluginFactoryInput::Disable => self.enabled = false,
 		}
 	}

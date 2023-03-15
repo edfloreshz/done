@@ -229,19 +229,19 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_valign: gtk::Align::Center,
 								},
 								add_row = &gtk::Box {
-																set_orientation: gtk::Orientation::Vertical,
+									set_orientation: gtk::Orientation::Vertical,
 									#[name(due_date_calendar)]
 									gtk::Calendar {
-																set_margin_all: 10,
+										set_margin_all: 10,
 										add_css_class: "card",
 										connect_day_selected[sender] => move |calendar| {
-																				if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-																						if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {
-																								sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
-																						}
-																				}
-																		}
-																},
+											if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
+												if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {
+														sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
+												}
+											}
+										}
+									},
 									gtk::Box {
 																		set_margin_all: 10,
 										set_margin_bottom: 5,
