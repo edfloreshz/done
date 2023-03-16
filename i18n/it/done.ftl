@@ -29,7 +29,7 @@ all-desc = Tutti i compiti
 today = Oggi
 today-desc = Compiti in scadenza oggi
 starred = Preferiti
-starred-desc = Favoriti
+starred-desc = Preferiti
 next-7-days = Prossimi 7 giorni
 next-7-days-desc = Compiti in scadenza nei prossimi 7 giorni
 
@@ -49,10 +49,10 @@ color-scheme-dark = Scuro
 color-scheme-default = Sistema
 services = Servizi
 install = Installa
-remove = Remove
-update = Update
-save = Save
-cancel = Cancel
+remove = Rimuovi
+update = aggiornamento
+save = Salva
+cancel = Cancella
 
 # Translator credits
 translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
