@@ -20,8 +20,7 @@
             "--share=network"
         ],
         "env": {
-            "CARGO_HOME": "/run/build/done/cargo",
-            "PROTOC": "/app/bin/protoc"
+            "CARGO_HOME": "/run/build/done/cargo"
         }
     },
     "cleanup": [
@@ -36,43 +35,6 @@
         "*.a"
     ],
     "modules": [
-        {
-            "name": "protobuf-compiler",
-            "buildsystem": "simple",
-            "build-commands": [
-                "unzip protobuf.zip -d protobuf",
-                "mkdir -p $FLATPAK_DEST/bin/",
-                "chmod 755 protobuf/bin/protoc",
-                "cp protobuf/bin/protoc $FLATPAK_DEST/bin/",
-                "cp -dr protobuf/include $C_INCLUDE_PATH/"
-            ],
-            "sources": [
-                {
-                    "type": "file",
-                    "url": "https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip",
-                    "dest-filename": "protobuf.zip",
-                    "sha256": "3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8"
-                }
-            ]
-        },
-        {
-            "name": "libprotobuf-dev",
-            "buildsystem": "simple",
-            "build-commands": [
-                "ar x libprotobuf-dev.deb",
-                "tar -xf data.tar.xz",
-                "mkdir -p $FLATPAK_DEST/lib/pkgconfig",
-                "cp -dr usr/lib/x86_64-linux-gnu/pkgconfig/* $FLATPAK_DEST/lib/pkgconfig"
-            ],
-            "sources": [
-                {
-                    "type": "file",
-                    "url": "http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf-dev_3.21.12-1+b1_amd64.deb",
-                    "dest-filename": "libprotobuf-dev.deb",
-                    "sha256": "cccdf6cb30a00c5c72543dbffe78059b23c7819ceeb9d26818319bb7c5b2ed2e"
-                }
-            ]
-        },
         {
             "name": "done",
             "builddir": true,
