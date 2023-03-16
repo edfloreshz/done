@@ -2,12 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.4] - 2023-01-28
-
-### Added
-- New option to include sub-tasks inside tasks
-
-## [0.1.3] - 2023-01-24
+## [0.1.3] - 2023-03-16
 
 ### Added
 
@@ -36,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Added two new strings to localization files.
 - Missing translations in German, Italian and Portuguese.
 - The app makes use of `adw::Toast` to display notifications.
+- New option to include sub-tasks inside tasks
 
 ## [0.1.2] - 2022-08-22
 
