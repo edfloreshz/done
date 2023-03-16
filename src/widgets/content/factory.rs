@@ -1,5 +1,5 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use proto_rust::provider::Status;
+use done_provider::provider::Status;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{

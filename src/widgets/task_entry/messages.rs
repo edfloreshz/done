@@ -1,4 +1,4 @@
-use proto_rust::{List, Task};
+use done_provider::{List, Task};
 
 #[derive(Debug)]
 pub enum TaskEntryInput {

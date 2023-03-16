@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use proto_rust::Task;
+use done_provider::Task;
 
 use crate::application::plugin::Plugin;
 

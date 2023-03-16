@@ -7,12 +7,14 @@ use adw::{
 		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::{DateTime, Datelike, Duration, Local, NaiveDateTime};
+use chrono::{Datelike, Duration, Local, NaiveDateTime};
+use done_provider::{
+	date_from_timestamp, timestamp_from_date, Priority, Status, SubTask,
+};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
 };
-use proto_rust::{Priority, Status, SubTask};
 use relm4::{
 	adw,
 	factory::{AsyncFactoryComponent, FactoryVecDeque, FactoryView},
@@ -373,11 +375,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			selected_due_date: init
 				.task
 				.due_date
-				.map(|date| DateTime::from(date).format("%m/%d/%Y").to_string()),
+				.map(|date| date_from_timestamp(date).format("%m/%d/%Y").to_string()),
 			selected_reminder_date: init
 				.task
 				.reminder_date
-				.map(|date| DateTime::from(date).format("%m/%d/%Y").to_string()),
+				.map(|date| date_from_timestamp(date).format("%m/%d/%Y").to_string()),
 			sub_tasks: FactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
@@ -476,7 +478,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::Reminder => {
 						sender.input(TaskDetailsFactoryInput::SetReminderDate(date));
 						if let Some(date) = date {
-							self.task.reminder_date = Some(date.into());
+							self.task.reminder_date = Some(timestamp_from_date(date));
 							self.selected_reminder_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.reminder_calendar.set_year(date.year());
@@ -490,7 +492,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::DueDate => {
 						sender.input(TaskDetailsFactoryInput::SetDueDate(date));
 						if let Some(date) = date {
-							self.task.due_date = Some(date.into());
+							self.task.due_date = Some(timestamp_from_date(date));
 							self.selected_due_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.due_date_calendar.set_year(date.year());
@@ -506,7 +508,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryInput::SetDueDate(due_date) => {
 				if let Some(date) = due_date {
 					self.selected_due_date = Some(date.format("%m/%d/%Y").to_string());
-					self.task.due_date = Some(date.into());
+					self.task.due_date = Some(timestamp_from_date(date));
 				} else {
 					self.task.due_date = None;
 				}
@@ -515,7 +517,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				if let Some(date) = reminder_date {
 					self.selected_reminder_date =
 						Some(date.format("%m/%d/%Y").to_string());
-					self.task.reminder_date = Some(date.into());
+					self.task.reminder_date = Some(timestamp_from_date(date));
 				} else {
 					self.task.reminder_date = None;
 				}

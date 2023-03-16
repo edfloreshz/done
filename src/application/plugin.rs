@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
+use done_provider::provider::provider_client::ProviderClient;
+use done_provider::provider::List;
 use libset::format::FileFormat;
 use libset::project::Project;
-use proto_rust::provider::provider_client::ProviderClient;
-use proto_rust::provider::List;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::os::unix::prelude::PermissionsExt;

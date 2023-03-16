@@ -1,5 +1,6 @@
 {
     "files.watcherExclude": {
+        "**/.dart_tool": true,
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/node_modules/*/**": true,
@@ -7,4 +8,9 @@
         ".flatpak/**": true,
         "_build/**": true
     },
+    "rust-analyzer.server.path": "/home/eduardo/Developer/GitHub/done-devs/done/.flatpak/rust-analyzer.sh",
+    "rust-analyzer.runnables.command": "/home/eduardo/Developer/GitHub/done-devs/done/.flatpak/cargo.sh",
+    "rust-analyzer.files.excludeDirs": [
+        ".flatpak"
+    ],
 }

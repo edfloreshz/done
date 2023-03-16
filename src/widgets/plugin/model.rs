@@ -1,4 +1,4 @@
-use proto_rust::ProviderResponse;
+use done_provider::ProviderResponse;
 use relm4::tokio::sync::mpsc::Receiver;
 use relm4::{factory::AsyncFactoryVecDeque, Controller};
 

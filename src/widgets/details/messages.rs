@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use proto_rust::{SubTask, Task};
+use done_provider::{SubTask, Task};
 use relm4::prelude::DynamicIndex;
 
 use super::model::{DateDay, DateTpe};
