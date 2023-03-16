@@ -2,7 +2,7 @@
 
 pkgname=done-git
 pkgrel=1
-pkgver=0.1.4
+pkgver=0.1.3
 pkgdesc="Done is a simple to do app that lets you combine your existing set of task providers into one database, easily."
 arch=('x86_64')
 url="https://github.com/edfloreshz/done"
