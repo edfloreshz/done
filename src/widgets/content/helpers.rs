@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use proto_rust::Task;
+use done_provider::Task;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender, ComponentController};
 
 use crate::widgets::{

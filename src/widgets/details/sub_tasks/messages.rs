@@ -1,4 +1,4 @@
-use proto_rust::SubTask;
+use done_provider::SubTask;
 use relm4::prelude::DynamicIndex;
 
 #[derive(Debug)]

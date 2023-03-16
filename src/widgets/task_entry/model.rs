@@ -1,4 +1,4 @@
-use proto_rust::{List, Task};
+use done_provider::{List, Task};
 use relm4::gtk;
 
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-use proto_rust::List;
+use done_provider::List;
 
 use crate::application::plugin::Plugin;
 

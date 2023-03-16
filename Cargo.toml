@@ -59,7 +59,7 @@ branch = "beta"
 [dependencies.directories]
 git = "https://github.com/edfloreshz/directories-rs"
 
-[dependencies.proto_rust]
+[dependencies.done_provider]
 git = "https://github.com/done-devel/proto-rust"
 
 [build-dependencies]

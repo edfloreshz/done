@@ -6,8 +6,8 @@ use crate::{
 	},
 };
 use anyhow::Result;
+use done_provider::List;
 use libset::{format::FileFormat, project::Project};
-use proto_rust::List;
 use relm4::AsyncComponentSender;
 
 use super::{messages::SidebarComponentOutput, model::SidebarComponentModel};
