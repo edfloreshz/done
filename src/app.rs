@@ -205,9 +205,7 @@ impl AsyncComponent for App {
 		}
 	}
 
-	fn init_loading_widgets(
-		root: &mut Self::Root,
-	) -> Option<relm4::loading_widgets::LoadingWidgets> {
+	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
 		view! {
 				#[local_ref]
 				root {
