@@ -1,10 +1,13 @@
 use crate::application::info::PROFILE;
 use crate::application::plugin::Plugin;
 use crate::application::setup::{self, main_app};
+use crate::factories::task_list::model::TaskListFactoryModel;
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::content::model::ContentModel;
+use crate::widgets::lists::messages::{TaskListsInput, TaskListsOutput};
+use crate::widgets::lists::model::TaskListsModel;
 use crate::widgets::preferences::messages::PreferencesComponentOutput;
 use crate::widgets::preferences::model::PreferencesComponentModel;
 use crate::widgets::sidebar::messages::{
@@ -12,7 +15,6 @@ use crate::widgets::sidebar::messages::{
 };
 use crate::widgets::sidebar::model::SidebarComponentModel;
 use crate::widgets::smart_lists::sidebar::model::SmartList;
-use crate::widgets::task_list::model::ListFactoryModel;
 use crate::widgets::welcome::WelcomeComponent;
 use gtk::prelude::*;
 use relm4::adw::Toast;
@@ -31,6 +33,7 @@ pub struct App {
 	sidebar: AsyncController<SidebarComponentModel>,
 	content: AsyncController<ContentModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
+	task_lists: AsyncController<TaskListsModel>,
 	welcome: Controller<WelcomeComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
@@ -42,6 +45,7 @@ impl App {
 		sidebar: AsyncController<SidebarComponentModel>,
 		content: AsyncController<ContentModel>,
 		preferences: AsyncController<PreferencesComponentModel>,
+		task_lists: AsyncController<TaskListsModel>,
 		welcome: Controller<WelcomeComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
 	) -> Self {
@@ -49,6 +53,7 @@ impl App {
 			sidebar,
 			content,
 			preferences,
+			task_lists,
 			welcome,
 			about_dialog,
 			page_title: None,
@@ -59,8 +64,9 @@ impl App {
 
 #[derive(Debug)]
 pub enum Event {
-	TaskListSelected(ListFactoryModel),
+	TaskListSelected(TaskListFactoryModel),
 	Notify(String, u32),
+	PluginSelected(Plugin),
 	EnablePluginOnSidebar(Plugin),
 	AddPluginToSidebar(Plugin),
 	DisablePluginOnSidebar(Plugin),
@@ -96,7 +102,7 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_width: 700,
+			set_default_width: 800,
 			set_default_height: 700,
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
@@ -122,68 +128,75 @@ impl AsyncComponent for App {
 				#[name(overlay)]
 				adw::ToastOverlay {
 					#[wrap(Some)]
-					set_child: stack = &gtk::Stack {
-						set_hexpand: true,
-						set_vexpand: true,
-						set_transition_duration: 250,
-						set_transition_type: gtk::StackTransitionType::Crossfade,
-						add_child = &gtk::Box {
-							set_orientation: gtk::Orientation::Vertical,
-							append: leaflet = &adw::Leaflet {
-								set_can_navigate_back: true,
-								append: sidebar = &gtk::Box {
+					set_child: leaflet = &adw::Leaflet {
+						set_can_navigate_back: true,
+						append: sidebar = &gtk::Box {
+							set_width_request: 300,
+							adw::Leaflet {
+								gtk::Box {
+									set_css_classes: &["view"],
 									set_orientation: gtk::Orientation::Vertical,
-									set_width_request: 280,
-									#[name = "sidebar_header"]
-									adw::HeaderBar {
-										set_show_end_title_buttons: false,
-										set_title_widget: Some(&gtk::Label::new(Some("Done"))),
-										pack_end = &gtk::MenuButton {
+									set_width_request: 20,
+									#[name = "services_sidebar_header"]
+									gtk::CenterBox {
+										set_height_request: 46,
+										#[wrap(Some)]
+										set_center_widget = &gtk::MenuButton {
+											set_valign: gtk::Align::Center,
+											set_css_classes: &["flat"],
 											set_icon_name: "open-menu-symbolic",
 											set_menu_model: Some(&primary_menu),
 										},
 									},
+									gtk::Separator::default(),
 									append: model.sidebar.widget(),
 								},
-								append: &gtk::Separator::default(),
-								#[name(content)]
-								append = &gtk::Box {
-									set_orientation: gtk::Orientation::Vertical,
-									#[name = "content_header"]
-									append = &adw::HeaderBar {
-										set_hexpand: true,
-										set_show_start_title_buttons: true,
-										#[watch]
-										set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
-										pack_start: go_back_button = &gtk::Button {
-											set_icon_name: "go-previous-symbolic",
-											set_visible: false,
-											connect_clicked[sender] => move |_| {
-												sender.input(Event::Back);
-											}
-										}
-									},
-									append = &gtk::Box {
-										#[watch]
-										set_visible: model.page_title.is_none(),
-										append: model.welcome.widget()
-									},
-									append = &gtk::Box {
-										#[watch]
-										set_visible: model.page_title.is_some(),
-										append: model.content.widget()
-									},
-								},
-								connect_folded_notify[sender] => move |leaflet| {
-									if leaflet.is_folded() {
-										sender.input(Event::Folded);
-									} else {
-										sender.input(Event::Unfolded);
-									}
-								}
+								gtk::Separator::default(),
+								append: model.task_lists.widget(),
 							},
+						},
+						append: &gtk::Separator::default(),
+						#[name(content)]
+						append = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							#[name = "content_header"]
+							append = &adw::HeaderBar {
+								set_hexpand: true,
+								set_css_classes: &["flat"],
+								set_show_start_title_buttons: false,
+								set_show_end_title_buttons: true,
+								#[watch]
+								set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
+								pack_start = &gtk::Button {
+									set_icon_name: "file-search-symbolic",
+								},
+								pack_start: go_back_button = &gtk::Button {
+									set_icon_name: "go-previous-symbolic",
+									set_visible: false,
+									connect_clicked[sender] => move |_| {
+										sender.input(Event::Back);
+									}
+								},
+							},
+							append = &gtk::Box {
+								#[watch]
+								set_visible: model.page_title.is_none(),
+								append: model.welcome.widget()
+							},
+							append = &gtk::Box {
+								#[watch]
+								set_visible: model.page_title.is_some(),
+								append: model.content.widget()
+							},
+						},
+						connect_folded_notify[sender] => move |leaflet| {
+							if leaflet.is_folded() {
+								sender.input(Event::Folded);
+							} else {
+								sender.input(Event::Unfolded);
+							}
 						}
-					}
+					},
 				},
 				gtk::InfoBar {
 					set_message_type: gtk::MessageType::Warning,
@@ -210,12 +223,8 @@ impl AsyncComponent for App {
 				#[local_ref]
 				root {
 					set_title: Some("Done"),
-					set_default_size: (700, 700),
+					set_default_size: (800, 700),
 
-					// This will replaced by the Box of the fully
-					// initialized view because Window can only have one child.
-					// If the root of the component was a Box which can have
-					// several children, you'd need to remove this again in init().
 					#[name(loading)]
 					gtk::CenterBox {
 						set_margin_all: 100,
@@ -278,6 +287,9 @@ impl AsyncComponent for App {
 		let sidebar_controller = SidebarComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
+				SidebarComponentOutput::PluginSelected(plugin) => {
+					Event::PluginSelected(plugin)
+				},
 				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
 				SidebarComponentOutput::ListSelected(list) => {
 					Event::TaskListSelected(*list)
@@ -298,12 +310,24 @@ impl AsyncComponent for App {
 			},
 		);
 
+		let task_lists_controller = TaskListsModel::builder().launch(None).forward(
+			sender.input_sender(),
+			|message| match message {
+				TaskListsOutput::Forward => Event::Forward,
+				TaskListsOutput::Notify(_) => todo!(),
+				TaskListsOutput::ListSelected(task_list) => {
+					Event::TaskListSelected(*task_list)
+				},
+			},
+		);
+
 		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
 
 		let mut model = App::new(
 			sidebar_controller,
 			content_controller,
 			preferences_controller,
+			task_lists_controller,
 			welcome_controller,
 			None,
 		);
@@ -382,6 +406,11 @@ impl AsyncComponent for App {
 				main_app().quit()
 			},
 			Event::CloseWarning => self.warning_revealed = false,
+			Event::PluginSelected(plugin) => self
+				.task_lists
+				.sender()
+				.send(TaskListsInput::PluginSelected(plugin))
+				.unwrap_or_default(),
 			Event::TaskListSelected(list) => {
 				self.page_title = Some(list.list.name.clone());
 				self
@@ -408,13 +437,13 @@ impl AsyncComponent for App {
 					widgets.leaflet.set_visible_child(&widgets.sidebar);
 				}
 				widgets.go_back_button.set_visible(true);
-				widgets.sidebar_header.set_show_start_title_buttons(true);
-				widgets.sidebar_header.set_show_end_title_buttons(true);
+				// widgets.sidebar_header.set_show_start_title_buttons(true);
+				// widgets.sidebar_header.set_show_end_title_buttons(true);
 			},
 			Event::Unfolded => {
 				widgets.go_back_button.set_visible(false);
-				widgets.sidebar_header.set_show_start_title_buttons(false);
-				widgets.sidebar_header.set_show_end_title_buttons(false);
+				// widgets.sidebar_header.set_show_start_title_buttons(false);
+				// widgets.sidebar_header.set_show_end_title_buttons(false);
 			},
 			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
 			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
@@ -447,6 +476,11 @@ impl AsyncComponent for App {
 			},
 			Event::SelectSmartList(list) => {
 				self.page_title = Some(list.name());
+				self
+					.task_lists
+					.sender()
+					.send(TaskListsInput::SmartListSelected)
+					.unwrap_or_default();
 				self
 					.content
 					.sender()

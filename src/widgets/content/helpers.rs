@@ -2,14 +2,15 @@ use anyhow::{anyhow, Context, Result};
 use done_provider::Task;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender, ComponentController};
 
-use crate::widgets::{
+use crate::factories::task::model::TaskInit;
+use crate::factories::{
 	details::model::TaskDetailsFactoryInit, task_entry::messages::TaskEntryInput,
-	task_list::model::ListFactoryModel,
+	task_list::model::TaskListFactoryModel,
 };
 
 use super::{
 	messages::{ContentInput, ContentOutput},
-	model::{ContentModel, TaskInit},
+	model::ContentModel,
 };
 
 pub fn reveal_task_details(
@@ -36,7 +37,7 @@ pub fn hide_flap(
 	model.show_task_details = false;
 	if let Some(list) = model.parent_list.clone() {
 		if let Some(plugin) = model.plugin.clone() {
-			sender.input(ContentInput::TaskListSelected(ListFactoryModel::new(
+			sender.input(ContentInput::TaskListSelected(TaskListFactoryModel::new(
 				list, plugin,
 			)))
 		}
@@ -140,7 +141,7 @@ pub async fn update_task(
 
 pub async fn select_task_list(
 	model: &mut ContentModel,
-	list_model: ListFactoryModel,
+	list_model: TaskListFactoryModel,
 ) -> Result<()> {
 	let (tx, mut rx) = relm4::tokio::sync::mpsc::channel(100);
 

@@ -4,7 +4,7 @@ use relm4::{
 		AsyncComponent, AsyncComponentController, AsyncComponentParts,
 		AsyncController,
 	},
-	gtk, AsyncComponentSender,
+	gtk, AsyncComponentSender, RelmWidgetExt,
 };
 
 use super::{
@@ -42,29 +42,34 @@ impl AsyncComponent for SmartListContainerModel {
 	type Init = SmartListContainerInit;
 
 	view! {
-				#[root]
-				gtk::Box {
-						gtk::Box {
-								#[watch]
-								set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::All,
-								append: model.all.widget()
-						},
-						gtk::Box {
-								#[watch]
-								set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Today,
-								append: model.today.widget()
-						},
-						gtk::Box {
-								#[watch]
-								set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Starred,
-								append: model.starred.widget()
-						},
-						gtk::Box {
-								#[watch]
-								set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Next7Days,
-								append: model.next7days.widget()
-						}
-				}
+		#[root]
+		gtk::Box {
+			set_margin_all: 10,
+			gtk::Box {
+				set_hexpand: true,
+				#[watch]
+				set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::All,
+				append: model.all.widget()
+			},
+			gtk::Box {
+				set_hexpand: true,
+				#[watch]
+				set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Today,
+				append: model.today.widget()
+			},
+			gtk::Box {
+				set_hexpand: true,
+				#[watch]
+				set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Starred,
+				append: model.starred.widget()
+			},
+			gtk::Box {
+				set_hexpand: true,
+				#[watch]
+				set_visible: model.selected_smart_list.is_some() && model.selected_smart_list.as_ref().unwrap() == &SmartList::Next7Days,
+				append: model.next7days.widget()
+			}
+		}
 	}
 
 	async fn init(

@@ -6,6 +6,7 @@ use app::App;
 
 mod app;
 mod application;
+mod factories;
 mod widgets;
 
 fn main() -> Result<()> {

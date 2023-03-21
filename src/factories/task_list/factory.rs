@@ -6,23 +6,22 @@ use relm4::gtk::traits::{BoxExt, ListBoxRowExt};
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::AsyncFactorySender;
 
-use crate::widgets::plugin::messages::PluginFactoryInput;
-
+use crate::widgets::lists::messages::TaskListsInput;
 use crate::{adw, gtk};
 
 use super::{
-	messages::{ListFactoryInput, ListFactoryOutput},
-	model::{ListFactoryInit, ListFactoryModel},
+	messages::{TaskListFactoryInput, TaskListFactoryOutput},
+	model::{TaskListFactoryInit, TaskListFactoryModel},
 };
 
 #[relm4::factory(pub async)]
-impl AsyncFactoryComponent for ListFactoryModel {
-	type ParentInput = PluginFactoryInput;
-	type ParentWidget = adw::ExpanderRow;
+impl AsyncFactoryComponent for TaskListFactoryModel {
+	type ParentInput = TaskListsInput;
+	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
-	type Input = ListFactoryInput;
-	type Output = ListFactoryOutput;
-	type Init = ListFactoryInit;
+	type Input = TaskListFactoryInput;
+	type Output = TaskListFactoryOutput;
+	type Init = TaskListFactoryInit;
 	type Widgets = ListWidgets;
 
 	view! {
@@ -34,11 +33,11 @@ impl AsyncFactoryComponent for ListFactoryModel {
 			set_text: self.list.name.as_str(),
 			connect_activate[sender] => move |entry| {
 				let buffer = entry.text().to_string();
-				sender.input(ListFactoryInput::Rename(buffer));
+				sender.input(TaskListFactoryInput::Rename(buffer));
 			},
 			connect_apply[sender] => move |entry| {
 				let buffer = entry.text().to_string();
-				sender.input(ListFactoryInput::Rename(buffer));
+				sender.input(TaskListFactoryInput::Rename(buffer));
 			},
 			add_prefix = &gtk::MenuButton {
 				#[watch]
@@ -52,7 +51,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				#[wrap(Some)]
 				set_popover = &gtk::EmojiChooser{
 					connect_emoji_picked[sender] => move |_, emoji| {
-						sender.input(ListFactoryInput::ChangeIcon(emoji.to_string()));
+						sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
 					}
 				}
 			},
@@ -67,13 +66,13 @@ impl AsyncFactoryComponent for ListFactoryModel {
 				set_css_classes: &["circular", "image-button", "destructive-action"],
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
-					sender.input(ListFactoryInput::Delete(index.clone()));
+					sender.input(TaskListFactoryInput::Delete(index.clone()));
 				}
 			},
 			add_controller = gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input(ListFactoryInput::Select);
-					sender.output(ListFactoryOutput::Forward);
+					sender.input(TaskListFactoryInput::Select);
+					sender.output(TaskListFactoryOutput::Forward);
 				}
 			}
 		}
@@ -90,7 +89,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
-		ListFactoryModel {
+		TaskListFactoryModel {
 			list: init.list,
 			plugin: init.plugin,
 		}
@@ -113,7 +112,7 @@ impl AsyncFactoryComponent for ListFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ListFactoryInput::Rename(name) => {
+			TaskListFactoryInput::Rename(name) => {
 				let mut list = self.list.clone();
 				list.name = name.clone();
 				if let Ok(client) = &mut self.plugin.connect().await {
@@ -123,33 +122,34 @@ impl AsyncFactoryComponent for ListFactoryModel {
 							if response.successful {
 								self.list.name = name;
 							}
-							sender.output(ListFactoryOutput::Notify(response.message));
+							sender.output(TaskListFactoryOutput::Notify(response.message));
 						},
 						Err(err) => {
-							sender.output(ListFactoryOutput::Notify(err.to_string()))
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
 						},
 					}
 				}
 			},
-			ListFactoryInput::Delete(index) => {
+			TaskListFactoryInput::Delete(index) => {
 				let list_id = self.list.id.clone();
 				if let Ok(client) = &mut self.plugin.connect().await {
 					match client.delete_list(list_id.clone()).await {
 						Ok(response) => {
 							let response = response.into_inner();
 							if response.successful {
-								sender
-									.output(ListFactoryOutput::DeleteTaskList(index, list_id));
+								sender.output(TaskListFactoryOutput::DeleteTaskList(
+									index, list_id,
+								));
 							}
-							sender.output(ListFactoryOutput::Notify(response.message));
+							sender.output(TaskListFactoryOutput::Notify(response.message));
 						},
 						Err(err) => {
-							sender.output(ListFactoryOutput::Notify(err.to_string()))
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
 						},
 					}
 				}
 			},
-			ListFactoryInput::ChangeIcon(icon) => {
+			TaskListFactoryInput::ChangeIcon(icon) => {
 				if let Ok(client) = &mut self.plugin.connect().await {
 					let mut list = self.list.clone();
 					list.icon = Some(icon.clone());
@@ -159,30 +159,30 @@ impl AsyncFactoryComponent for ListFactoryModel {
 							if response.successful {
 								self.list.icon = Some(icon);
 							}
-							sender.output(ListFactoryOutput::Notify(response.message));
+							sender.output(TaskListFactoryOutput::Notify(response.message));
 						},
 						Err(err) => {
-							sender.output(ListFactoryOutput::Notify(err.to_string()))
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
 						},
 					}
 				}
 			},
-			ListFactoryInput::Select => {
-				sender.output(ListFactoryOutput::Select(Box::new(self.clone())));
+			TaskListFactoryInput::Select => {
+				sender.output(TaskListFactoryOutput::Select(Box::new(self.clone())));
 			},
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
-			ListFactoryOutput::Select(data) => {
-				Some(PluginFactoryInput::ListSelected(*data))
+			TaskListFactoryOutput::Select(data) => {
+				Some(TaskListsInput::ListSelected(data))
 			},
-			ListFactoryOutput::DeleteTaskList(index, list_id) => {
-				Some(PluginFactoryInput::DeleteTaskList(index, list_id))
+			TaskListFactoryOutput::DeleteTaskList(index, list_id) => {
+				Some(TaskListsInput::DeleteTaskList(index, list_id))
 			},
-			ListFactoryOutput::Forward => Some(PluginFactoryInput::Forward),
-			ListFactoryOutput::Notify(msg) => Some(PluginFactoryInput::Notify(msg)),
+			TaskListFactoryOutput::Forward => Some(TaskListsInput::Forward),
+			TaskListFactoryOutput::Notify(msg) => Some(TaskListsInput::Notify(msg)),
 		}
 	}
 }

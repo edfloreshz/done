@@ -1,43 +1,13 @@
 use crate::{
 	application::plugin::Plugin,
-	widgets::{
-		plugin::{messages::PluginFactoryInput, model::PluginFactoryInit},
-		preferences::model::Preferences,
-	},
+	factories::plugin::{messages::PluginFactoryInput, model::PluginFactoryInit},
+	widgets::preferences::model::Preferences,
 };
 use anyhow::Result;
-use done_provider::List;
 use libset::{format::FileFormat, project::Project};
 use relm4::AsyncComponentSender;
 
 use super::{messages::SidebarComponentOutput, model::SidebarComponentModel};
-
-pub async fn add_list_to_provider(
-	model: &mut SidebarComponentModel,
-	sender: AsyncComponentSender<SidebarComponentModel>,
-	index: usize,
-	plugin: Plugin,
-	name: String,
-) -> Result<()> {
-	let mut client = plugin.connect().await?;
-	let list = List::new(&name);
-	let create_list = list.clone();
-	let response = client.create_list(create_list).await?.into_inner();
-	if response.successful {
-		model
-			.plugin_factory
-			.send(index, PluginFactoryInput::AddList(list));
-		sender
-			.output(SidebarComponentOutput::Notify(response.message, 1))
-			.unwrap_or_default();
-	} else {
-		tracing::error!(response.message);
-		sender
-			.output(SidebarComponentOutput::Notify(response.message, 2))
-			.unwrap_or_default();
-	}
-	Ok(())
-}
 
 pub async fn add_plugin_to_sidebar(
 	model: &mut SidebarComponentModel,

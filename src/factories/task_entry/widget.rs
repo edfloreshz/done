@@ -8,7 +8,7 @@ use relm4::{
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
 
-use crate::widgets::task_entry::model::TaskEntryModel;
+use crate::factories::task_entry::model::TaskEntryModel;
 
 use super::messages::{TaskEntryInput, TaskEntryOutput};
 

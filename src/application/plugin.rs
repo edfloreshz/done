@@ -102,7 +102,7 @@ impl Plugin {
 		}
 	}
 
-	pub fn is_running(&self) -> bool {
+	pub fn _is_running(&self) -> bool {
 		let processes = System::new_all();
 		let is_running = processes
 			.processes_by_exact_name(&self.process_name)
