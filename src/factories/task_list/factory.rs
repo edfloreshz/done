@@ -25,16 +25,33 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 
 	view! {
 		#[root]
-		gtk::Box {
-			set_orientation: gtk::Orientation::Vertical,
-			set_margin_all: 10,
+		gtk::ListBoxRow {
+			#[name(container)]
 			gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
 				gtk::Box {
 					set_css_classes: &["linked"],
 					#[watch]
 					set_visible: !self.edit_mode,
+					gtk::MenuButton {
+						#[watch]
+						set_label: if self.list.icon.is_some() {
+							self.list.icon.as_ref().unwrap().as_str()
+						} else {
+							""
+						},
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						#[wrap(Some)]
+						set_popover = &gtk::EmojiChooser{
+							connect_emoji_picked[sender] => move |_, emoji| {
+								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+							}
+						}
+					},
 					gtk::Box {
 						set_orientation: gtk::Orientation::Vertical,
+						set_margin_all: 10,
 						gtk::Label {
 							set_hexpand: true,
 							set_css_classes: &["dim-label", "caption"],
@@ -48,27 +65,17 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 							#[watch]
 							set_text: &self.list.name
 						},
-					},
-					gtk::MenuButton {
-						#[watch]
-						set_label: if self.list.icon.is_some() {
-							self.list.icon.as_ref().unwrap().as_str()
-						} else {
-							""
-						},
-						set_css_classes: &["flat", "image-button"],
-						set_valign: gtk::Align::Center,
-						#[wrap(Some)]
-						set_popover = &gtk::EmojiChooser{
-							connect_emoji_picked[sender] => move |_, emoji| {
-								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+						add_controller = gtk::GestureClick {
+							connect_pressed[sender] => move |_, _, _, _| {
+								sender.input(TaskListFactoryInput::Select);
+								sender.output(TaskListFactoryOutput::Forward);
 							}
 						}
 					},
 					gtk::Button {
 						set_icon_name: "document-edit-symbolic",
 						set_valign: gtk::Align::Center,
-						connect_clicked => TaskListFactoryInput::EditMode
+						connect_clicked => TaskListFactoryInput::EditMode,
 					},
 					gtk::Button {
 						set_icon_name: "user-trash-full-symbolic",
@@ -82,10 +89,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					set_css_classes: &["linked"],
 					#[watch]
 					set_visible: self.edit_mode,
-					gtk::Entry {
-						set_hexpand: true,
-						set_buffer: &self.entry,
-					},
+					set_margin_all: 10,
 					gtk::MenuButton {
 						#[watch]
 						set_label: if self.list.icon.is_some() {
@@ -101,6 +105,10 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
 							}
 						}
+					},
+					gtk::Entry {
+						set_hexpand: true,
+						set_buffer: &self.entry,
 					},
 					gtk::Button {
 						set_icon_name: "emblem-default-symbolic",
@@ -116,12 +124,6 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					},
 				},
 			},
-			add_controller = gtk::GestureClick {
-				connect_pressed[sender] => move |_, _, _, _| {
-					sender.input(TaskListFactoryInput::Select);
-					sender.output(TaskListFactoryOutput::Forward);
-				}
-			}
 		}
 	}
 

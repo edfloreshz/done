@@ -102,7 +102,7 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_width: 800,
+			set_default_width: 850,
 			set_default_height: 700,
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
@@ -131,29 +131,26 @@ impl AsyncComponent for App {
 					set_child: leaflet = &adw::Leaflet {
 						set_can_navigate_back: true,
 						append: sidebar = &gtk::Box {
-							set_width_request: 300,
-							adw::Leaflet {
-								gtk::Box {
-									set_css_classes: &["view"],
-									set_orientation: gtk::Orientation::Vertical,
-									set_width_request: 20,
-									#[name = "services_sidebar_header"]
-									gtk::CenterBox {
-										set_height_request: 46,
-										#[wrap(Some)]
-										set_center_widget = &gtk::MenuButton {
-											set_valign: gtk::Align::Center,
-											set_css_classes: &["flat"],
-											set_icon_name: "open-menu-symbolic",
-											set_menu_model: Some(&primary_menu),
-										},
+							gtk::Box {
+								set_css_classes: &["view"],
+								set_orientation: gtk::Orientation::Vertical,
+								set_width_request: 20,
+								#[name = "services_sidebar_header"]
+								gtk::CenterBox {
+									set_height_request: 46,
+									#[wrap(Some)]
+									set_center_widget = &gtk::MenuButton {
+										set_valign: gtk::Align::Center,
+										set_css_classes: &["flat"],
+										set_icon_name: "open-menu-symbolic",
+										set_menu_model: Some(&primary_menu),
 									},
-									gtk::Separator::default(),
-									append: model.sidebar.widget(),
 								},
 								gtk::Separator::default(),
-								append: model.task_lists.widget(),
+								append: model.sidebar.widget(),
 							},
+							gtk::Separator::default(),
+							append: model.task_lists.widget(),
 						},
 						append: &gtk::Separator::default(),
 						#[name(content)]
@@ -223,7 +220,7 @@ impl AsyncComponent for App {
 				#[local_ref]
 				root {
 					set_title: Some("Done"),
-					set_default_size: (800, 700),
+					set_default_size: (850, 700),
 
 					#[name(loading)]
 					gtk::CenterBox {
