@@ -7,7 +7,7 @@ use crate::widgets::lists::model::TaskListsModel;
 use relm4::component::{AsyncComponentParts, SimpleAsyncComponent};
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::gtk::traits::{ButtonExt, OrientableExt, WidgetExt};
-use relm4::{adw, gtk, AsyncComponentSender, Component, ComponentController};
+use relm4::{adw, gtk, AsyncComponentSender, Component};
 
 #[relm4::component(pub async)]
 impl SimpleAsyncComponent for TaskListsModel {
@@ -27,12 +27,11 @@ impl SimpleAsyncComponent for TaskListsModel {
 				pack_end = &gtk::Button {
 					set_icon_name: "file-search-symbolic",
 				},
-				pack_start = &gtk::MenuButton {
+				pack_start = &gtk::Button {
 					set_icon_name: "value-increase-symbolic",
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
-					set_direction: gtk::ArrowType::Up,
-					set_popover: Some(model.new_list_controller.widget())
+					connect_clicked => TaskListsInput::AddTaskList(String::from("New list"))
 				},
 			},
 			#[local_ref]
