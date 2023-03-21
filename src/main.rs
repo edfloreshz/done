@@ -1,6 +1,6 @@
 use anyhow::Result;
 use application::setup;
-use relm4::{adw, gtk, RelmApp};
+use relm4::{gtk, RelmApp};
 
 use app::App;
 

@@ -1,7 +1,7 @@
 use done_provider::Task;
 use relm4::prelude::DynamicIndex;
 
-use crate::factories::task_list::model::TaskListFactoryModel;
+use crate::factories::task_list::model::TaskListFactoryInit;
 
 use crate::widgets::smart_lists::sidebar::model::SmartList;
 
@@ -10,7 +10,7 @@ pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Task),
-	TaskListSelected(TaskListFactoryModel),
+	TaskListSelected(TaskListFactoryInit),
 	SelectSmartList(SmartList),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 	ToggleCompact(bool),

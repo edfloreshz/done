@@ -1,13 +1,12 @@
-use relm4::adw::{prelude::EntryRowExt, traits::PreferencesRowExt};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
-use relm4::gtk::prelude::{ButtonExt, EditableExt, WidgetExt};
-use relm4::gtk::traits::{BoxExt, ListBoxRowExt};
+use relm4::gtk::prelude::{ButtonExt, EntryBufferExtManual, WidgetExt};
+use relm4::gtk::traits::{BoxExt, EntryExt, OrientableExt};
 use relm4::loading_widgets::LoadingWidgets;
-use relm4::AsyncFactorySender;
+use relm4::{AsyncFactorySender, RelmWidgetExt};
 
+use crate::gtk;
 use crate::widgets::lists::messages::TaskListsInput;
-use crate::{adw, gtk};
 
 use super::{
 	messages::{TaskListFactoryInput, TaskListFactoryOutput},
@@ -26,48 +25,76 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 
 	view! {
 		#[root]
-		adw::EntryRow {
-			set_title: self.plugin.name.as_str(),
-			set_show_apply_button: true,
-			set_enable_emoji_completion: true,
-			set_text: self.list.name.as_str(),
-			connect_activate[sender] => move |entry| {
-				let buffer = entry.text().to_string();
-				sender.input(TaskListFactoryInput::Rename(buffer));
-			},
-			connect_apply[sender] => move |entry| {
-				let buffer = entry.text().to_string();
-				sender.input(TaskListFactoryInput::Rename(buffer));
-			},
-			add_prefix = &gtk::MenuButton {
-				#[watch]
-				set_label: if self.list.icon.is_some() {
-					self.list.icon.as_ref().unwrap().as_str()
-				} else {
-					""
-				},
-				set_css_classes: &["flat", "image-button"],
-				set_valign: gtk::Align::Center,
-				#[wrap(Some)]
-				set_popover = &gtk::EmojiChooser{
-					connect_emoji_picked[sender] => move |_, emoji| {
-						sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+		gtk::Box {
+			set_orientation: gtk::Orientation::Vertical,
+			set_css_classes: &["linked"],
+			set_margin_all: 5,
+			gtk::Box {
+				gtk::MenuButton {
+					#[watch]
+					set_label: if self.list.icon.is_some() {
+						self.list.icon.as_ref().unwrap().as_str()
+					} else {
+						""
+					},
+					set_css_classes: &["flat", "image-button"],
+					set_valign: gtk::Align::Center,
+					#[wrap(Some)]
+					set_popover = &gtk::EmojiChooser{
+						connect_emoji_picked[sender] => move |_, emoji| {
+							sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+						}
 					}
-				}
+				},
+				gtk::Label {
+					set_hexpand: true,
+					set_halign: gtk::Align::Start,
+					#[watch]
+					set_text: &self.plugin.name
+				},
+				gtk::Button {
+					set_icon_name: "user-trash-full-symbolic",
+					set_css_classes: &["image-button", "destructive-action"],
+					set_valign: gtk::Align::Center,
+					connect_clicked[sender, index] => move |_| {
+						sender.input(TaskListFactoryInput::Delete(index.clone()));
+					}
+				},
 			},
-			add_suffix = &gtk::Label {
-				set_halign: gtk::Align::End,
-				set_css_classes: &["dim-label", "caption"],
-				// #[watch]
-				// set_text: self.count.to_string().as_str(),
-			},
-			add_suffix = &gtk::Button {
-				set_icon_name: "user-trash-full-symbolic",
-				set_css_classes: &["circular", "image-button", "destructive-action"],
-				set_valign: gtk::Align::Center,
-				connect_clicked[sender, index] => move |_| {
-					sender.input(TaskListFactoryInput::Delete(index.clone()));
-				}
+			gtk::Box {
+				gtk::Box {
+					set_css_classes: &["linked"],
+					#[watch]
+					set_visible: !self.edit_mode,
+					gtk::Label {
+						set_hexpand: true,
+						set_halign: gtk::Align::Start,
+						#[watch]
+						set_text: &self.list.name
+					},
+					gtk::Button {
+						set_icon_name: "document-edit-symbolic",
+						set_css_classes: &["flat", "image-button", "edit"],
+						set_valign: gtk::Align::Center,
+						connect_clicked => TaskListFactoryInput::EditMode
+					},
+				},
+				gtk::Box {
+					set_css_classes: &["linked"],
+					#[watch]
+					set_visible: self.edit_mode,
+					gtk::Entry {
+						set_hexpand: true,
+						set_buffer: &self.entry,
+						set_css_classes: &["heading"],
+					},
+					gtk::Button {
+						set_icon_name: "emblem-default-symbolic",
+						set_css_classes: &["flat", "image-button", "edit"],
+						set_valign: gtk::Align::Center,
+						connect_clicked => TaskListFactoryInput::Rename
+					},
+				},
 			},
 			add_controller = gtk::GestureClick {
 				connect_pressed[sender] => move |_, _, _, _| {
@@ -89,9 +116,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		_index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
+		let init_text = init.list.name.clone();
 		TaskListFactoryModel {
 			list: init.list,
 			plugin: init.plugin,
+			entry: gtk::EntryBuffer::new(Some(init_text)),
+			edit_mode: false,
 		}
 	}
 
@@ -112,15 +142,17 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			TaskListFactoryInput::Rename(name) => {
+			TaskListFactoryInput::EditMode => self.edit_mode = true,
+			TaskListFactoryInput::Rename => {
+				self.edit_mode = false;
 				let mut list = self.list.clone();
-				list.name = name.clone();
+				list.name = self.entry.text().to_string();
 				if let Ok(client) = &mut self.plugin.connect().await {
 					match client.update_list(list).await {
 						Ok(response) => {
 							let response = response.into_inner();
 							if response.successful {
-								self.list.name = name;
+								self.list.name = self.entry.text().to_string();
 							}
 							sender.output(TaskListFactoryOutput::Notify(response.message));
 						},
@@ -168,7 +200,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				}
 			},
 			TaskListFactoryInput::Select => {
-				sender.output(TaskListFactoryOutput::Select(Box::new(self.clone())));
+				sender.output(TaskListFactoryOutput::Select(Box::new(
+					TaskListFactoryInit::new(self.plugin.clone(), self.list.clone()),
+				)));
 			},
 		}
 	}
@@ -176,7 +210,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
 			TaskListFactoryOutput::Select(data) => {
-				Some(TaskListsInput::ListSelected(data))
+				Some(TaskListsInput::ListSelected(Box::new(
+					TaskListFactoryInit::new(data.plugin, data.list),
+				)))
 			},
 			TaskListFactoryOutput::DeleteTaskList(index, list_id) => {
 				Some(TaskListsInput::DeleteTaskList(index, list_id))

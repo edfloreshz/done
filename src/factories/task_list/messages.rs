@@ -1,18 +1,19 @@
 use relm4::prelude::DynamicIndex;
 
-use super::model::TaskListFactoryModel;
+use super::model::TaskListFactoryInit;
 
 #[derive(Debug)]
 pub enum TaskListFactoryInput {
 	Select,
+	EditMode,
 	Delete(DynamicIndex),
-	Rename(String),
+	Rename,
 	ChangeIcon(String),
 }
 
 #[derive(Debug)]
 pub enum TaskListFactoryOutput {
-	Select(Box<TaskListFactoryModel>),
+	Select(Box<TaskListFactoryInit>),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),

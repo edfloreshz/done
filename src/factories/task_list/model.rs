@@ -1,4 +1,5 @@
 use done_provider::List;
+use relm4::gtk;
 
 use crate::application::plugin::Plugin;
 
@@ -6,9 +7,11 @@ use crate::application::plugin::Plugin;
 pub struct TaskListFactoryModel {
 	pub list: List,
 	pub plugin: Plugin,
+	pub entry: gtk::EntryBuffer,
+	pub edit_mode: bool,
 }
 
-#[derive(derive_new::new)]
+#[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryInit {
 	pub plugin: Plugin,
 	pub list: List,

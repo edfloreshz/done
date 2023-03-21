@@ -18,8 +18,6 @@ impl SimpleAsyncComponent for TaskListsModel {
 	view! {
 		#[root]
 		gtk::Box {
-			#[watch]
-			set_visible: model.show_pane,
 			set_orientation: gtk::Orientation::Vertical,
 			set_hexpand: true,
 			adw::HeaderBar {
@@ -77,9 +75,6 @@ impl SimpleAsyncComponent for TaskListsModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
-			TaskListsInput::SmartListSelected => {
-				self.show_pane = false;
-			},
 			TaskListsInput::PluginSelected(plugin) => {
 				self.list_factory.guard().clear();
 				self.plugin = Some(plugin.clone());
@@ -126,8 +121,8 @@ impl SimpleAsyncComponent for TaskListsModel {
 			TaskListsInput::ListSelected(list) => {
 				sender.output(TaskListsOutput::ListSelected(list)).unwrap()
 			},
-			TaskListsInput::Notify(msg) => {
-				sender.output(TaskListsOutput::Notify(msg)).unwrap()
+			TaskListsInput::Notify(_msg) => {
+				// sender.output(TaskListsOutput::Notify(msg)).unwrap()
 			},
 			TaskListsInput::DeleteTaskList(index, list_id) => {
 				self.list_factory.guard().remove(index.current_index());

@@ -1,7 +1,7 @@
 use crate::application::info::PROFILE;
 use crate::application::plugin::Plugin;
 use crate::application::setup::{self, main_app};
-use crate::factories::task_list::model::TaskListFactoryModel;
+use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
@@ -64,7 +64,7 @@ impl App {
 
 #[derive(Debug)]
 pub enum Event {
-	TaskListSelected(TaskListFactoryModel),
+	TaskListSelected(TaskListFactoryInit),
 	Notify(String, u32),
 	PluginSelected(Plugin),
 	EnablePluginOnSidebar(Plugin),
@@ -476,11 +476,6 @@ impl AsyncComponent for App {
 			},
 			Event::SelectSmartList(list) => {
 				self.page_title = Some(list.name());
-				self
-					.task_lists
-					.sender()
-					.send(TaskListsInput::SmartListSelected)
-					.unwrap_or_default();
 				self
 					.content
 					.sender()
