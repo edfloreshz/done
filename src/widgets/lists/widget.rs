@@ -19,7 +19,7 @@ impl SimpleAsyncComponent for TaskListsModel {
 		#[root]
 		gtk::Box {
 			set_orientation: gtk::Orientation::Vertical,
-			set_hexpand: true,
+			set_width_request: 350,
 			adw::HeaderBar {
 				set_css_classes: &["flat"],
 				set_show_end_title_buttons: false,
