@@ -27,56 +27,55 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		#[root]
 		gtk::Box {
 			set_orientation: gtk::Orientation::Vertical,
-			set_css_classes: &["linked"],
-			set_margin_all: 5,
-			gtk::Box {
-				gtk::MenuButton {
-					#[watch]
-					set_label: if self.list.icon.is_some() {
-						self.list.icon.as_ref().unwrap().as_str()
-					} else {
-						""
-					},
-					set_css_classes: &["flat", "image-button"],
-					set_valign: gtk::Align::Center,
-					#[wrap(Some)]
-					set_popover = &gtk::EmojiChooser{
-						connect_emoji_picked[sender] => move |_, emoji| {
-							sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
-						}
-					}
-				},
-				gtk::Label {
-					set_hexpand: true,
-					set_halign: gtk::Align::Start,
-					#[watch]
-					set_text: &self.plugin.name
-				},
-				gtk::Button {
-					set_icon_name: "user-trash-full-symbolic",
-					set_css_classes: &["image-button", "destructive-action"],
-					set_valign: gtk::Align::Center,
-					connect_clicked[sender, index] => move |_| {
-						sender.input(TaskListFactoryInput::Delete(index.clone()));
-					}
-				},
-			},
+			set_margin_all: 10,
 			gtk::Box {
 				gtk::Box {
 					set_css_classes: &["linked"],
 					#[watch]
 					set_visible: !self.edit_mode,
-					gtk::Label {
-						set_hexpand: true,
-						set_halign: gtk::Align::Start,
+					gtk::Box {
+						set_orientation: gtk::Orientation::Vertical,
+						gtk::Label {
+							set_hexpand: true,
+							set_css_classes: &["dim-label", "caption"],
+							set_halign: gtk::Align::Start,
+							#[watch]
+							set_text: &self.plugin.name
+						},
+						gtk::Label {
+							set_hexpand: true,
+							set_halign: gtk::Align::Start,
+							#[watch]
+							set_text: &self.list.name
+						},
+					},
+					gtk::MenuButton {
 						#[watch]
-						set_text: &self.list.name
+						set_label: if self.list.icon.is_some() {
+							self.list.icon.as_ref().unwrap().as_str()
+						} else {
+							""
+						},
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						#[wrap(Some)]
+						set_popover = &gtk::EmojiChooser{
+							connect_emoji_picked[sender] => move |_, emoji| {
+								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+							}
+						}
 					},
 					gtk::Button {
 						set_icon_name: "document-edit-symbolic",
-						set_css_classes: &["flat", "image-button", "edit"],
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::EditMode
+					},
+					gtk::Button {
+						set_icon_name: "user-trash-full-symbolic",
+						set_valign: gtk::Align::Center,
+						connect_clicked[sender, index] => move |_| {
+							sender.input(TaskListFactoryInput::Delete(index.clone()));
+						}
 					},
 				},
 				gtk::Box {
@@ -86,13 +85,34 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					gtk::Entry {
 						set_hexpand: true,
 						set_buffer: &self.entry,
-						set_css_classes: &["heading"],
+					},
+					gtk::MenuButton {
+						#[watch]
+						set_label: if self.list.icon.is_some() {
+							self.list.icon.as_ref().unwrap().as_str()
+						} else {
+							""
+						},
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						#[wrap(Some)]
+						set_popover = &gtk::EmojiChooser{
+							connect_emoji_picked[sender] => move |_, emoji| {
+								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+							}
+						}
 					},
 					gtk::Button {
 						set_icon_name: "emblem-default-symbolic",
-						set_css_classes: &["flat", "image-button", "edit"],
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::Rename
+					},
+					gtk::Button {
+						set_icon_name: "user-trash-full-symbolic",
+						set_valign: gtk::Align::Center,
+						connect_clicked[sender, index] => move |_| {
+							sender.input(TaskListFactoryInput::Delete(index.clone()));
+						}
 					},
 				},
 			},
