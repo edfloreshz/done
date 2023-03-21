@@ -1,18 +1,16 @@
 use relm4::prelude::DynamicIndex;
 
 use crate::{
-	application::plugin::Plugin,
-	factories::task_list::model::TaskListFactoryModel,
+	application::plugin::Plugin, factories::task_list::model::TaskListFactoryInit,
 };
 
 #[derive(Debug)]
 pub enum TaskListsInput {
 	PluginSelected(Plugin),
-	SmartListSelected,
 	AddTaskList(String),
 	Forward,
 	Notify(String),
-	ListSelected(Box<TaskListFactoryModel>),
+	ListSelected(Box<TaskListFactoryInit>),
 	DeleteTaskList(DynamicIndex, String),
 }
 
@@ -20,5 +18,5 @@ pub enum TaskListsInput {
 pub enum TaskListsOutput {
 	Forward,
 	Notify(String),
-	ListSelected(Box<TaskListFactoryModel>),
+	ListSelected(Box<TaskListFactoryInit>),
 }

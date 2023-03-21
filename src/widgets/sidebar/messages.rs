@@ -1,6 +1,6 @@
 use crate::{
 	application::plugin::Plugin,
-	factories::task_list::model::TaskListFactoryModel,
+	factories::task_list::model::TaskListFactoryInit,
 	widgets::smart_lists::sidebar::model::SmartList,
 };
 
@@ -18,7 +18,7 @@ pub enum SidebarComponentInput {
 #[derive(Debug)]
 pub enum SidebarComponentOutput {
 	PluginSelected(Plugin),
-	ListSelected(Box<TaskListFactoryModel>),
+	ListSelected(Box<TaskListFactoryInit>),
 	Forward,
 	Notify(String, u32),
 	DisablePlugin,

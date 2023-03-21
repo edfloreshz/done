@@ -3,9 +3,9 @@ use done_provider::Task;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender, ComponentController};
 
 use crate::factories::task::model::TaskInit;
+use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::factories::{
 	details::model::TaskDetailsFactoryInit, task_entry::messages::TaskEntryInput,
-	task_list::model::TaskListFactoryModel,
 };
 
 use super::{
@@ -37,8 +37,8 @@ pub fn hide_flap(
 	model.show_task_details = false;
 	if let Some(list) = model.parent_list.clone() {
 		if let Some(plugin) = model.plugin.clone() {
-			sender.input(ContentInput::TaskListSelected(TaskListFactoryModel::new(
-				list, plugin,
+			sender.input(ContentInput::TaskListSelected(TaskListFactoryInit::new(
+				plugin, list,
 			)))
 		}
 	}
@@ -141,7 +141,7 @@ pub async fn update_task(
 
 pub async fn select_task_list(
 	model: &mut ContentModel,
-	list_model: TaskListFactoryModel,
+	list_model: TaskListFactoryInit,
 ) -> Result<()> {
 	let (tx, mut rx) = relm4::tokio::sync::mpsc::channel(100);
 
