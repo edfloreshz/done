@@ -6,7 +6,7 @@ use relm4::{
 	FactorySender,
 };
 
-use crate::widgets::details::messages::TaskDetailsFactoryInput;
+use crate::factories::details::messages::TaskDetailsFactoryInput;
 
 pub struct TagModel {
 	pub title: String,

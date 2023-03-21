@@ -1,11 +1,11 @@
+use crate::factories::task_entry::messages::{TaskEntryInput, TaskEntryOutput};
+use crate::factories::task_entry::model::TaskEntryModel;
 use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::smart_lists::widget::{
 	SmartListContainerInit, SmartListContainerInput, SmartListContainerModel,
 };
-use crate::widgets::task_entry::messages::{TaskEntryInput, TaskEntryOutput};
-use crate::widgets::task_entry::model::TaskEntryModel;
 use libset::format::FileFormat;
 use libset::project::Project;
 

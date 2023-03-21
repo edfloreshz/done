@@ -1,3 +1,4 @@
+use crate::factories::task::model::{TaskInit, TaskModel};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use done_provider::provider::Status;
 use relm4::factory::AsyncFactoryComponent;
@@ -12,7 +13,6 @@ use relm4::{
 
 use crate::widgets::content::messages::ContentInput;
 use crate::widgets::content::messages::{TaskInput, TaskOutput};
-use crate::widgets::content::model::{TaskInit, TaskModel};
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskModel {

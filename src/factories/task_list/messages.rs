@@ -1,9 +1,9 @@
 use relm4::prelude::DynamicIndex;
 
-use super::model::ListFactoryModel;
+use super::model::TaskListFactoryModel;
 
 #[derive(Debug)]
-pub enum ListFactoryInput {
+pub enum TaskListFactoryInput {
 	Select,
 	Delete(DynamicIndex),
 	Rename(String),
@@ -11,8 +11,8 @@ pub enum ListFactoryInput {
 }
 
 #[derive(Debug)]
-pub enum ListFactoryOutput {
-	Select(Box<ListFactoryModel>),
+pub enum TaskListFactoryOutput {
+	Select(Box<TaskListFactoryModel>),
 	DeleteTaskList(DynamicIndex, String),
 	Forward,
 	Notify(String),
