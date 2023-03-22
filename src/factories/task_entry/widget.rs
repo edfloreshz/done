@@ -35,7 +35,7 @@ impl Component for TaskEntryModel {
 				set_tooltip_text: Some(fl!("more-details")),
 				add_css_class: "suggested-action",
 				add_css_class: "circular",
-				set_icon_name: "editor",
+				set_icon_name: "pencil-and-paper",
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender] => move |_| {
 					sender.input(TaskEntryInput::EnterCreationMode);

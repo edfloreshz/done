@@ -3,7 +3,7 @@
         "pluginId": "local",
         "pluginName": "Local",
         "pluginDescription": "Local tasks are stored here.",
-        "pluginIcon": "user-home-symbolic",
+        "pluginIcon": "computer",
         "pluginPort": 7007,
         "pluginVersion": "0.1.2",
         "pluginProcessName": "local-plugin",

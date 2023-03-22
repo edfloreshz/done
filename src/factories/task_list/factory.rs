@@ -73,7 +73,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						}
 					},
 					gtk::Button {
-						set_icon_name: "editor",
+						set_icon_name: "pencil-and-paper",
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::EditMode,
 					},
