@@ -1,4 +1,5 @@
 use relm4::factory::AsyncFactoryVecDeque;
+use relm4_icons::icon_name;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -52,10 +53,10 @@ impl SmartList {
 
 	pub fn icon(&self) -> &str {
 		match self {
-			SmartList::All => "clipboard",
-			SmartList::Today => "image-adjust-brightness",
-			SmartList::Starred => "star-rounded",
-			SmartList::Next7Days => "work-week",
+			SmartList::All => icon_name::CLIPBOARD,
+			SmartList::Today => icon_name::IMAGE_ADJUST_BRIGHTNESS,
+			SmartList::Starred => icon_name::STAR_FILLED_ROUNDED,
+			SmartList::Next7Days => icon_name::WORK_WEEK,
 		}
 	}
 }
