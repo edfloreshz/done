@@ -1,12 +1,13 @@
 use crate::application::plugin::Plugin;
 use crate::factories::task_list::model::TaskListFactoryInit;
+use crate::fl;
 use crate::widgets::list_entry::{ListEntryModel, ListEntryOutput};
 use crate::widgets::lists::helpers::add_list_to_provider;
 use crate::widgets::lists::messages::{TaskListsInput, TaskListsOutput};
 use crate::widgets::lists::model::TaskListsModel;
 use relm4::component::{AsyncComponentParts, SimpleAsyncComponent};
 use relm4::factory::AsyncFactoryVecDeque;
-use relm4::gtk::traits::{ButtonExt, OrientableExt, WidgetExt};
+use relm4::gtk::traits::{BoxExt, ButtonExt, OrientableExt, WidgetExt};
 use relm4::{adw, gtk, AsyncComponentSender, Component};
 use relm4_icons::icon_name;
 
@@ -26,9 +27,13 @@ impl SimpleAsyncComponent for TaskListsModel {
 				set_show_end_title_buttons: false,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
 				pack_end = &gtk::Button {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Search"),
 					set_icon_name: icon_name::LOUPE,
 				},
 				pack_start = &gtk::Button {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Add new task list"),
 					set_icon_name: icon_name::PLUS,
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
@@ -38,6 +43,29 @@ impl SimpleAsyncComponent for TaskListsModel {
 			#[local_ref]
 			list_widget -> gtk::ListBox {
 				set_css_classes: &["navigation-sidebar"],
+			},
+			gtk::CenterBox {
+				#[watch]
+				set_visible: model.show_pane,
+				set_orientation: gtk::Orientation::Vertical,
+				set_halign: gtk::Align::Center,
+				set_vexpand: true,
+				set_valign: gtk::Align::Start,
+				set_margin_top: 15,
+				#[wrap(Some)]
+				set_center_widget = &gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
+					set_spacing: 24,
+					gtk::Label {
+						set_label: fl!("empty-sidebar"),
+						set_css_classes: &["title-4", "accent"],
+						set_wrap: true
+					},
+					gtk::Label {
+						set_label: fl!("open-preferences"),
+						set_wrap: true
+					}
+				}
 			}
 		}
 	}
@@ -75,6 +103,14 @@ impl SimpleAsyncComponent for TaskListsModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
+			TaskListsInput::RemoveService(plugin) => {
+				if let Some(service) = &self.plugin {
+					if service == &plugin {
+						self.list_factory.guard().clear();
+						self.show_pane = true;
+					}
+				}
+			},
 			TaskListsInput::PluginSelected(plugin) => {
 				self.list_factory.guard().clear();
 				self.plugin = Some(plugin.clone());
@@ -83,6 +119,7 @@ impl SimpleAsyncComponent for TaskListsModel {
 						let mut client = plugin.connect().await.unwrap();
 						let mut stream = client.get_lists(()).await.unwrap().into_inner();
 						while let Some(response) = stream.message().await.unwrap() {
+							self.show_pane = false;
 							self
 								.list_factory
 								.guard()

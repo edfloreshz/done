@@ -5,5 +5,4 @@ use crate::factories::plugin::model::PluginFactoryModel;
 #[derive(Debug)]
 pub struct SidebarComponentModel {
 	pub plugin_factory: AsyncFactoryVecDeque<PluginFactoryModel>,
-	pub is_sidebar_empty: bool,
 }

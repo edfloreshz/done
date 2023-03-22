@@ -74,6 +74,8 @@ pub enum Event {
 	RemovePluginFromSidebar(Plugin),
 	SelectSmartList(SmartList),
 	ToggleCompact(bool),
+	RemoveService(Plugin),
+	OpenPreferences,
 	DisablePlugin,
 	CloseWarning,
 	Folded,
@@ -166,6 +168,8 @@ impl AsyncComponent for App {
 								#[watch]
 								set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
 								pack_start: go_back_button = &gtk::Button {
+									set_has_tooltip: true,
+									set_tooltip_text: Some("Back"),
 									set_icon_name: icon_name::LEFT,
 									set_visible: false,
 									connect_clicked[sender] => move |_| {
@@ -173,6 +177,8 @@ impl AsyncComponent for App {
 									}
 								},
 								pack_start = &gtk::Button {
+									set_has_tooltip: true,
+									set_tooltip_text: Some("Search"),
 									set_icon_name: icon_name::LOUPE,
 								},
 							},
@@ -285,8 +291,12 @@ impl AsyncComponent for App {
 		let sidebar_controller = SidebarComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
+				SidebarComponentOutput::OpenPreferences => Event::OpenPreferences,
 				SidebarComponentOutput::PluginSelected(plugin) => {
 					Event::PluginSelected(plugin)
+				},
+				SidebarComponentOutput::RemoveService(plugin) => {
+					Event::RemoveService(plugin)
 				},
 				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
 				SidebarComponentOutput::ListSelected(list) => {
@@ -403,7 +413,16 @@ impl AsyncComponent for App {
 				}
 				main_app().quit()
 			},
+			Event::OpenPreferences => {
+				let preferences = self.preferences.widget().clone();
+				preferences.present();
+			},
 			Event::CloseWarning => self.warning_revealed = false,
+			Event::RemoveService(plugin) => self
+				.task_lists
+				.sender()
+				.send(TaskListsInput::RemoveService(plugin))
+				.unwrap_or_default(),
 			Event::PluginSelected(plugin) => self
 				.task_lists
 				.sender()

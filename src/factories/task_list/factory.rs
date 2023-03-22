@@ -40,6 +40,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					set_valign: gtk::Align::Center,
 					#[wrap(Some)]
 					set_popover = &gtk::EmojiChooser{
+						set_has_tooltip: true,
+						set_tooltip_text: Some("Set list icon"),
 						connect_emoji_picked[sender] => move |_, emoji| {
 							sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
 						}
@@ -74,11 +76,15 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					gtk::Box {
 						set_css_classes: &["linked"],
 						gtk::Button {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Edit task list name"),
 							set_icon_name: icon_name::PENCIL_AND_PAPER,
 							set_valign: gtk::Align::Center,
 							connect_clicked => TaskListFactoryInput::EditMode,
 						},
 						gtk::Button {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Remove task list"),
 							set_icon_name: icon_name::X_CIRCULAR,
 							set_valign: gtk::Align::Center,
 							connect_clicked[sender, index] => move |_| {
@@ -97,11 +103,15 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_buffer: &self.entry,
 					},
 					gtk::Button {
+						set_has_tooltip: true,
+						set_tooltip_text: Some("Rename list"),
 						set_icon_name: icon_name::CHECK_ROUND_OUTLINE_WHOLE,
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::Rename
 					},
 					gtk::Button {
+						set_has_tooltip: true,
+						set_tooltip_text: Some("Remove task list"),
 						set_icon_name: icon_name::X_CIRCULAR,
 						set_valign: gtk::Align::Center,
 						connect_clicked[sender, index] => move |_| {

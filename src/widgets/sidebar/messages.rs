@@ -12,6 +12,7 @@ pub enum SidebarComponentInput {
 	RemoveService(Plugin),
 	AddPluginToSidebar(Plugin),
 	SelectSmartList(SmartList),
+	OpenPreferences,
 }
 
 #[allow(dead_code)]
@@ -22,5 +23,7 @@ pub enum SidebarComponentOutput {
 	Forward,
 	Notify(String, u32),
 	DisablePlugin,
+	RemoveService(Plugin),
 	SelectSmartList(SmartList),
+	OpenPreferences,
 }

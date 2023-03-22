@@ -55,6 +55,7 @@ features = [
     "image-adjust-brightness",
     "file-cabinet",
     "star-outline-rounded",
+    "controls"
 ]
 
 [dependencies.chrono]

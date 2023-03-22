@@ -51,6 +51,8 @@ impl FactoryComponent for TagModel {
 			gtk::Button {
 				set_icon_name: icon_name::SMALL_X,
 				set_valign: gtk::Align::Center,
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Remove tag"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TagInput::RemoveTag(index.clone()))
 				}
