@@ -41,7 +41,7 @@ impl FactoryComponent for SubTaskModel {
 			},
 			add_suffix = &gtk::Button {
 				set_valign: gtk::Align::Center,
-				set_icon_name: "user-trash-full-symbolic",
+				set_icon_name: "user-trash-full",
 				set_css_classes: &["destructive-action", "circular"],
 				connect_clicked[sender, index] => move |_| {
 					sender.input(SubTaskInput::Remove(index.clone()));

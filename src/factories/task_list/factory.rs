@@ -73,12 +73,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						}
 					},
 					gtk::Button {
-						set_icon_name: "document-edit-symbolic",
+						set_icon_name: "editor",
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::EditMode,
 					},
 					gtk::Button {
-						set_icon_name: "user-trash-full-symbolic",
+						set_icon_name: "user-trash-full",
 						set_valign: gtk::Align::Center,
 						connect_clicked[sender, index] => move |_| {
 							sender.input(TaskListFactoryInput::Delete(index.clone()));
@@ -111,12 +111,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_buffer: &self.entry,
 					},
 					gtk::Button {
-						set_icon_name: "emblem-default-symbolic",
+						set_icon_name: "emblem-default",
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::Rename
 					},
 					gtk::Button {
-						set_icon_name: "user-trash-full-symbolic",
+						set_icon_name: "user-trash-full",
 						set_valign: gtk::Align::Center,
 						connect_clicked[sender, index] => move |_| {
 							sender.input(TaskListFactoryInput::Delete(index.clone()));

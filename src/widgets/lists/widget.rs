@@ -25,10 +25,10 @@ impl SimpleAsyncComponent for TaskListsModel {
 				set_show_end_title_buttons: false,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
 				pack_end = &gtk::Button {
-					set_icon_name: "file-search-symbolic",
+					set_icon_name: "loupe",
 				},
 				pack_start = &gtk::Button {
-					set_icon_name: "value-increase-symbolic",
+					set_icon_name: "plus",
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					connect_clicked => TaskListsInput::AddTaskList(String::from("New list"))

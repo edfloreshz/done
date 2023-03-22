@@ -41,7 +41,7 @@ impl SimpleComponent for ListEntryModel {
 					},
 					#[name = "add_button"]
 					gtk::Button {
-						set_icon_name: "checkmark-small-symbolic",
+						set_icon_name: "checkmark-small",
 						set_css_classes: &["suggested-action"],
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
@@ -53,7 +53,7 @@ impl SimpleComponent for ListEntryModel {
 					},
 					#[name = "cancel_button"]
 					gtk::Button {
-						set_icon_name: "small-x-symbolic",
+						set_icon_name: "small-x",
 						connect_clicked: clone!(@strong root, @strong new_list_entry, @strong sender => move |_| {
 							new_list_entry.set_text("");
 							root.popdown();

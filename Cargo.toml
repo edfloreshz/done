@@ -28,6 +28,33 @@ glib = "0.16.2"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 
+[dependencies.relm4-icons]
+version = "0.6.0-beta.1"
+features = [
+    "menu",
+    "loupe",
+    "floppy",
+    "star-filled-rounded",
+    "checkmark",
+    "left",
+    "warning",
+    "flag-outline-thin",
+    "flag-outline-thick",
+    "flag-filled",
+    "table",
+    "alarm",
+    "plus",
+    "user-trash-full",
+    "small-x",
+    "info",
+    "editor",
+    "checkmark-small",
+    "update",
+    "clipboard",
+    "sun-alt",
+    "star-outline-rounded",
+]
+
 [dependencies.chrono]
 version = "0.4.23"
 features = ["serde"]

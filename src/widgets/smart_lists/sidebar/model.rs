@@ -52,10 +52,10 @@ impl SmartList {
 
 	pub fn icon(&self) -> &str {
 		match self {
-			SmartList::All => "edit-paste-symbolic",
-			SmartList::Today => "sun-alt-symbolic",
-			SmartList::Starred => "star-outline-rounded-symbolic",
-			SmartList::Next7Days => "org.gnome.Calendar.Devel-symbolic",
+			SmartList::All => "clipboard",
+			SmartList::Today => "sun-alt",
+			SmartList::Starred => "star-rounded",
+			SmartList::Next7Days => "table",
 		}
 	}
 }

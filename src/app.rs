@@ -142,7 +142,7 @@ impl AsyncComponent for App {
 									set_center_widget = &gtk::MenuButton {
 										set_valign: gtk::Align::Center,
 										set_css_classes: &["flat"],
-										set_icon_name: "open-menu-symbolic",
+										set_icon_name: "menu",
 										set_menu_model: Some(&primary_menu),
 									},
 								},
@@ -165,10 +165,10 @@ impl AsyncComponent for App {
 								#[watch]
 								set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
 								pack_start = &gtk::Button {
-									set_icon_name: "file-search-symbolic",
+									set_icon_name: "loupe",
 								},
 								pack_start: go_back_button = &gtk::Button {
-									set_icon_name: "go-previous-symbolic",
+									set_icon_name: "loupe",
 									set_visible: false,
 									connect_clicked[sender] => move |_| {
 										sender.input(Event::Back);

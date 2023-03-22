@@ -27,6 +27,7 @@ pub fn init() -> Result<adw::Application> {
 		.with_max_level(tracing::Level::INFO)
 		.init();
 	resources::init()?;
+	relm4_icons::initialize_icons();
 	actions::init(&app);
 
 	Ok(app)

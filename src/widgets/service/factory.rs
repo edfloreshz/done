@@ -29,7 +29,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				add_suffix = &gtk::Button {
 					#[watch]
 					set_visible: self.installed,
-					set_icon_name: "user-trash-full-symbolic",
+					set_icon_name: "user-trash-full",
 					set_css_classes: &["destructive-action"],
 					set_tooltip_text: Some(fl!("remove")),
 					set_valign: gtk::Align::Center,
@@ -40,7 +40,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				add_suffix = &gtk::Button {
 					#[watch]
 					set_visible: self.update && self.installed,
-					set_icon_name: "software-update-available-symbolic",
+					set_icon_name: "update",
 					set_css_classes: &["favorite"],
 					set_tooltip_text: Some(fl!("update")),
 					set_valign: gtk::Align::Center,
