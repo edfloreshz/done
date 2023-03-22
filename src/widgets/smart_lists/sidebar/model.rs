@@ -55,7 +55,7 @@ impl SmartList {
 			SmartList::All => "clipboard",
 			SmartList::Today => "sun-alt",
 			SmartList::Starred => "star-rounded",
-			SmartList::Next7Days => "table",
+			SmartList::Next7Days => "work-week",
 		}
 	}
 }
