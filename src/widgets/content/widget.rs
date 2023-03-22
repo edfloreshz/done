@@ -66,10 +66,7 @@ impl AsyncComponent for ContentModel {
 								set_show_separators: true,
 								set_css_classes: &["boxed-list"],
 								set_valign: gtk::Align::Start,
-								set_margin_top: 5,
-								set_margin_bottom: 5,
-								set_margin_start: 5,
-								set_margin_end: 5,
+								set_margin_all: 5,
 							},
 						},
 						gtk::ScrolledWindow {

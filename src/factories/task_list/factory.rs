@@ -31,11 +31,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			gtk::Box {
 				gtk::MenuButton {
 					#[watch]
-					set_label: if self.list.icon.is_some() {
-						self.list.icon.as_ref().unwrap().as_str()
-					} else {
-						""
-					},
+					set_label: self.list.icon.as_deref().unwrap_or_default(),
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					#[wrap(Some)]
