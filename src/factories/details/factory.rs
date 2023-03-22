@@ -58,22 +58,22 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 												set_title: "Details",
 							#[wrap(Some)]
 							set_header_suffix = &gtk::Box {
-														set_spacing: 5,
+								set_spacing: 5,
 								gtk::Button {
-																set_icon_name: "go-previous-symbolic",
+									set_icon_name: "left",
 									set_tooltip_text: Some(fl!("cancel")),
 									connect_clicked[sender] => move |_| {
-																		sender.input(TaskDetailsFactoryInput::CancelWarning)
-																}
-														},
-														gtk::Button {
-																set_icon_name: "media-floppy-symbolic",
+										sender.input(TaskDetailsFactoryInput::CancelWarning)
+									}
+								},
+								gtk::Button {
+									set_icon_name: "floppy",
 									set_tooltip_text: Some(fl!("save")),
 									set_css_classes: &["suggested-action"],
 									connect_clicked[sender] => move |_| {
-																		sender.input(TaskDetailsFactoryInput::SaveTask)
-																}
-														},
+										sender.input(TaskDetailsFactoryInput::SaveTask)
+									}
+								},
 							},
 							adw::EntryRow {
 														set_title: "Title",
@@ -86,7 +86,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 																add_css_class: "circular",
 																#[watch]
 																set_class_active: ("favorite", self.task.favorite),
-																set_icon_name: "star-filled-rounded-symbolic",
+																set_icon_name: "star-filled-rounded",
 																set_valign: gtk::Align::Center,
 																connect_toggled[sender] => move |toggle| {
 																		sender.input(TaskDetailsFactoryInput::SetFavorite(toggle.is_active()));
@@ -158,7 +158,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 														}
 												},
 							adw::ActionRow {
-														set_icon_name: Some("checkbox-checked-symbolic"),
+														set_icon_name: Some("checkmark-small"),
 								set_title: "Completed",
 								set_subtitle: "Sets wether the task is completed",
 								add_suffix = &gtk::Switch {
@@ -172,14 +172,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 														}
 												},
 							adw::ActionRow {
-														set_icon_name: Some("emblem-important-symbolic"),
+														set_icon_name: Some("warning"),
 								set_title: "Importance",
 								set_subtitle: "Set the importance for this task",
 								add_suffix = &gtk::Box {
 																set_css_classes: &["linked"],
 									#[name(low_importance)]
 									gtk::ToggleButton {
-																		set_icon_name: "flag-outline-thin-symbolic",
+																		set_icon_name: "flag-outline-thin",
 										set_tooltip_text: Some("Low"),
 										set_css_classes: &["flat", "image-button"],
 										set_valign: gtk::Align::Center,
@@ -191,7 +191,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 																		}
 																},
 									gtk::ToggleButton {
-																		set_icon_name: "flag-outline-thick-symbolic",
+																		set_icon_name: "flag-outline-thick",
 										set_tooltip_text: Some("Medium"),
 										set_css_classes: &["flat", "image-button"],
 										set_valign: gtk::Align::Center,
@@ -204,7 +204,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 																		}
 																},
 									gtk::ToggleButton {
-																		set_icon_name: "flag-filled-symbolic",
+																		set_icon_name: "flag-filled",
 										set_tooltip_text: Some("High"),
 										set_css_classes: &["flat", "image-button"],
 										set_valign: gtk::Align::Center,
@@ -219,7 +219,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 														}
 												},
 							adw::ExpanderRow {
-														set_icon_name: Some("office-calendar-symbolic"),
+								set_icon_name: Some("table"),
 								set_title: "Due date",
 								set_subtitle: "Set the due date for this task",
 								set_enable_expansion: true,
@@ -275,7 +275,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 														}
 												},
 									adw::ExpanderRow {
-											set_icon_name: Some("appointment-soon-symbolic"),
+											set_icon_name: Some("alarm"),
 											set_title: "Reminder",
 											set_subtitle: "Set a date to get a reminder",
 											set_enable_expansion: true,
@@ -337,7 +337,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 													#[wrap(Some)]
 													set_header_suffix = &gtk::Button {
 															add_css_class: "flat",
-															set_icon_name: "value-increase-symbolic",
+															set_icon_name: "plus",
 															connect_clicked[sender] => move |_| {
 																	sender.input(TaskDetailsFactoryInput::CreateSubTask)
 															}

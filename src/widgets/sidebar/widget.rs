@@ -41,7 +41,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("edit-paste-symbolic")
+								set_icon_name: Some("clipboard")
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -53,7 +53,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("sun-alt-symbolic")
+								set_icon_name: Some("sun-alt")
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -65,7 +65,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("star-outline-rounded-symbolic")
+								set_icon_name: Some("star-filled-rounded")
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -77,7 +77,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("org.gnome.Calendar.Devel-symbolic")
+								set_icon_name: Some("table")
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {

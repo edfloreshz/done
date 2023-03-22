@@ -49,7 +49,7 @@ impl AsyncFactoryComponent for TaskModel {
 				add_css_class: "circular",
 				#[watch]
 				set_class_active: ("favorite", self.task.favorite),
-				set_icon_name: "star-filled-rounded-symbolic",
+				set_icon_name: "star-filled-rounded",
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::Favorite(index.clone()));
@@ -59,7 +59,7 @@ impl AsyncFactoryComponent for TaskModel {
 			add_suffix = &gtk::Button {
 				add_css_class: "suggested-action",
 				add_css_class: "circular",
-				set_icon_name: "info-symbolic",
+				set_icon_name: "info",
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::RevealTaskDetails(Some(index.clone())))
@@ -69,7 +69,7 @@ impl AsyncFactoryComponent for TaskModel {
 			add_suffix = &gtk::Button {
 				add_css_class: "destructive-action",
 				add_css_class: "circular",
-				set_icon_name: "user-trash-full-symbolic",
+				set_icon_name: "user-trash-full",
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.output(TaskOutput::Remove(index.clone()))

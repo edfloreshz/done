@@ -80,7 +80,7 @@ impl Plugin {
 
 		relm4::spawn(async move {
 			let mut command =
-				tokio::process::Command::new(format!("./{}", process_name));
+				tokio::process::Command::new(format!("./{process_name}"));
 			command.current_dir(project.data_dir().join("bin"));
 			match command.spawn() {
 				Ok(_) => Ok(()),
@@ -160,12 +160,11 @@ impl Plugin {
 	pub async fn connect(&self) -> Result<ProviderClient<Channel>> {
 		let port = self.port;
 		let client = relm4::spawn(async move {
-			match ProviderClient::connect(format!("http://[::1]:{}", port)).await {
+			match ProviderClient::connect(format!("http://[::1]:{port}")).await {
 				Ok(client) => Ok(client),
 				Err(err) => {
 					std::thread::sleep(Duration::from_secs(1));
-					match ProviderClient::connect(format!("http://[::1]:{}", port)).await
-					{
+					match ProviderClient::connect(format!("http://[::1]:{port}")).await {
 						Ok(client) => Ok(client),
 						Err(_) => Err(err.into()),
 					}
