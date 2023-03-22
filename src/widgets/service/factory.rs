@@ -7,6 +7,7 @@ use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
 use relm4::gtk::traits::WidgetExt;
+use relm4_icons::icon_name;
 
 use super::messages::{ServiceInput, ServiceOutput};
 use super::model::{ServiceModel, UpdateStatus};
@@ -29,7 +30,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				add_suffix = &gtk::Button {
 					#[watch]
 					set_visible: self.installed,
-					set_icon_name: "user-trash-full",
+					set_icon_name: icon_name::X_CIRCULAR,
 					set_css_classes: &["destructive-action"],
 					set_tooltip_text: Some(fl!("remove")),
 					set_valign: gtk::Align::Center,
@@ -40,7 +41,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				add_suffix = &gtk::Button {
 					#[watch]
 					set_visible: self.update && self.installed,
-					set_icon_name: "update",
+					set_icon_name: icon_name::UPDATE,
 					set_css_classes: &["favorite"],
 					set_tooltip_text: Some(fl!("update")),
 					set_valign: gtk::Align::Center,

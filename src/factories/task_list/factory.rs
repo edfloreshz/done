@@ -4,6 +4,7 @@ use relm4::gtk::prelude::{ButtonExt, EntryBufferExtManual, WidgetExt};
 use relm4::gtk::traits::{BoxExt, EntryExt, OrientableExt};
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::{AsyncFactorySender, RelmWidgetExt};
+use relm4_icons::icon_name;
 
 use crate::gtk;
 use crate::widgets::lists::messages::TaskListsInput;
@@ -73,12 +74,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						}
 					},
 					gtk::Button {
-						set_icon_name: "pencil-and-paper",
+						set_icon_name: icon_name::PENCIL_AND_PAPER,
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::EditMode,
 					},
 					gtk::Button {
-						set_icon_name: "user-trash-full",
+						set_icon_name: icon_name::X_CIRCULAR,
 						set_valign: gtk::Align::Center,
 						connect_clicked[sender, index] => move |_| {
 							sender.input(TaskListFactoryInput::Delete(index.clone()));
@@ -111,12 +112,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_buffer: &self.entry,
 					},
 					gtk::Button {
-						set_icon_name: "emblem-default",
+						set_icon_name: icon_name::CHECK_ROUND_OUTLINE_WHOLE,
 						set_valign: gtk::Align::Center,
 						connect_clicked => TaskListFactoryInput::Rename
 					},
 					gtk::Button {
-						set_icon_name: "user-trash-full",
+						set_icon_name: icon_name::X_CIRCULAR,
 						set_valign: gtk::Align::Center,
 						connect_clicked[sender, index] => move |_| {
 							sender.input(TaskListFactoryInput::Delete(index.clone()));

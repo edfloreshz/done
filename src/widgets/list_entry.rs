@@ -4,6 +4,7 @@ use gtk::prelude::{
 	OrientableExt, PopoverExt, WidgetExt,
 };
 use relm4::{gtk, ComponentParts, ComponentSender, SimpleComponent};
+use relm4_icons::icon_name;
 
 use crate::fl;
 
@@ -41,7 +42,7 @@ impl SimpleComponent for ListEntryModel {
 					},
 					#[name = "add_button"]
 					gtk::Button {
-						set_icon_name: "checkmark",
+						set_icon_name: icon_name::CHECKMARK,
 						set_css_classes: &["suggested-action"],
 						connect_clicked: clone!(@strong new_list_entry, @strong sender => move |_| {
 							let buffer = new_list_entry.buffer();
@@ -53,7 +54,7 @@ impl SimpleComponent for ListEntryModel {
 					},
 					#[name = "cancel_button"]
 					gtk::Button {
-						set_icon_name: "small-x",
+						set_icon_name: icon_name::SMALL_X,
 						connect_clicked: clone!(@strong root, @strong new_list_entry, @strong sender => move |_| {
 							new_list_entry.set_text("");
 							root.popdown();

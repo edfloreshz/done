@@ -8,6 +8,7 @@ use relm4::{
 	prelude::{DynamicIndex, FactoryComponent},
 	FactorySender,
 };
+use relm4_icons::icon_name;
 
 use crate::factories::details::messages::TaskDetailsFactoryInput;
 
@@ -41,7 +42,7 @@ impl FactoryComponent for SubTaskModel {
 			},
 			add_suffix = &gtk::Button {
 				set_valign: gtk::Align::Center,
-				set_icon_name: "user-trash-full",
+				set_icon_name: icon_name::X_CIRCULAR,
 				set_css_classes: &["destructive-action", "circular"],
 				connect_clicked[sender, index] => move |_| {
 					sender.input(SubTaskInput::Remove(index.clone()));

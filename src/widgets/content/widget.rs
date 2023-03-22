@@ -61,7 +61,16 @@ impl AsyncComponent for ContentModel {
 							set_visible: model.parent_list.is_some(),
 							set_vexpand: true,
 							set_hexpand: true,
-							set_child: Some(list_box),
+							#[local_ref]
+							list_box -> gtk::ListBox {
+								set_show_separators: true,
+								set_css_classes: &["boxed-list"],
+								set_valign: gtk::Align::Start,
+								set_margin_top: 5,
+								set_margin_bottom: 5,
+								set_margin_start: 5,
+								set_margin_end: 5,
+							},
 						},
 						gtk::ScrolledWindow {
 							#[watch]
@@ -105,15 +114,7 @@ impl AsyncComponent for ContentModel {
 
 		let model = ContentModel {
 			task_factory: AsyncFactoryVecDeque::new(
-				gtk::ListBox::builder()
-					.show_separators(true)
-					.css_classes(vec!["boxed-list".to_string()])
-					.valign(gtk::Align::Start)
-					.margin_top(5)
-					.margin_bottom(5)
-					.margin_start(5)
-					.margin_end(5)
-					.build(),
+				gtk::ListBox::default(),
 				sender.input_sender(),
 			),
 			task_details_factory: AsyncFactoryVecDeque::new(
