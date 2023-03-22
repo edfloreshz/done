@@ -6,6 +6,7 @@ use crate::{
 
 #[derive(Debug)]
 pub enum TaskListsInput {
+	RemoveService(Plugin),
 	PluginSelected(Plugin),
 	AddTaskList(String),
 	Forward,

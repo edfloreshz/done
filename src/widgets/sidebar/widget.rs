@@ -8,9 +8,10 @@ use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
 };
 use relm4::factory::AsyncFactoryVecDeque;
+use relm4::gtk::traits::ButtonExt;
 use relm4::{
 	gtk,
-	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
+	gtk::prelude::{ListBoxRowExt, OrientableExt, WidgetExt},
 };
 use relm4_icons::icon_name;
 
@@ -44,6 +45,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							}
 						},
 						gtk::ListBoxRow {
+							set_has_tooltip: true,
+							set_tooltip_text: Some(fl!("all")),
 							gtk::CenterBox {
 								set_css_classes: &["plugin"],
 								#[wrap(Some)]
@@ -54,6 +57,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::All)
 						},
 						gtk::ListBoxRow {
+							set_has_tooltip: true,
+							set_tooltip_text: Some(fl!("today")),
 							gtk::CenterBox {
 								set_css_classes: &["plugin"],
 								#[wrap(Some)]
@@ -64,6 +69,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Today)
 						},
 						gtk::ListBoxRow {
+							set_has_tooltip: true,
+							set_tooltip_text: Some(fl!("starred")),
 							gtk::CenterBox {
 								set_css_classes: &["plugin"],
 								#[wrap(Some)]
@@ -74,6 +81,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Starred)
 						},
 						gtk::ListBoxRow {
+							set_has_tooltip: true,
+							set_tooltip_text: Some(fl!("next-7-days")),
 							gtk::CenterBox {
 								set_css_classes: &["plugin"],
 								#[wrap(Some)]
@@ -85,27 +94,22 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						},
 					},
 					gtk::CenterBox {
-						#[watch]
-						set_visible: model.is_sidebar_empty,
-						set_orientation: gtk::Orientation::Vertical,
-						set_halign: gtk::Align::Center,
 						set_vexpand: true,
-						set_valign: gtk::Align::Start,
-						set_margin_top: 15,
+						set_valign: gtk::Align::End,
+						set_css_classes: &["navigation-sidebar"],
+						set_has_tooltip: true,
+						set_tooltip_text: Some("Preferences"),
 						#[wrap(Some)]
-						set_center_widget = &gtk::Box {
-							set_orientation: gtk::Orientation::Vertical,
-							set_spacing: 24,
-							gtk::Label {
-								set_label: fl!("empty-sidebar"),
-								set_css_classes: &["title-4", "accent"],
-								set_wrap: true
+						set_center_widget = &gtk::Button {
+							set_css_classes: &["flat"],
+							gtk::CenterBox {
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_icon_name: Some("controls")
+								},
 							},
-							gtk::Label {
-								set_label: fl!("open-preferences"),
-								set_wrap: true
-							}
-						}
+							connect_clicked => SidebarComponentInput::OpenPreferences
+						},
 					}
 				}
 			},
@@ -127,10 +131,6 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				gtk::ListBox::default(),
 				sender.input_sender(),
 			),
-			is_sidebar_empty: !preferences
-				.plugins
-				.iter()
-				.any(|preferences| preferences.installed),
 		};
 
 		let providers_container = model.plugin_factory.widget();
@@ -189,6 +189,9 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
+			SidebarComponentInput::OpenPreferences => sender
+				.output(SidebarComponentOutput::OpenPreferences)
+				.unwrap_or_default(),
 			SidebarComponentInput::PluginSelected(plugin) => sender
 				.output(SidebarComponentOutput::PluginSelected(plugin))
 				.unwrap(),
@@ -206,8 +209,13 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				}
 			},
 			SidebarComponentInput::RemoveService(plugin) => {
-				if let Err(err) = remove_service(self, plugin) {
+				if let Err(err) = remove_service(self, plugin.clone()) {
 					tracing::error!("{err}");
+				}
+				if self.plugin_factory.guard().is_empty() {
+					sender
+						.output(SidebarComponentOutput::RemoveService(plugin))
+						.unwrap_or_default()
 				}
 			},
 			SidebarComponentInput::SelectSmartList(list) => sender

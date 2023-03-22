@@ -83,6 +83,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_enable_emoji_completion: true,
 								#[name(favorite)]
 								add_suffix = &gtk::ToggleButton {
+									set_tooltip_text: Some("Favorite task"),
 									add_css_class: "opaque",
 									add_css_class: "circular",
 									#[watch]
@@ -163,6 +164,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_title: "Completed",
 								set_subtitle: "Sets wether the task is completed",
 								add_suffix = &gtk::Switch {
+									set_tooltip_text: Some("Complete task"),
 									#[watch]
 									set_active: self.task.status == 1,
 									set_valign: gtk::Align::Center,
@@ -253,6 +255,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: "Today",
+										set_has_tooltip: true,
+										set_tooltip_text: Some("Set date to today"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
 										}
@@ -260,6 +264,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: "Tomorrow",
+										set_has_tooltip: true,
+										set_tooltip_text: Some("Set date to tomorrow"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
 										}
@@ -269,6 +275,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_margin_all:10,
 									set_margin_top: 5,
 									set_label: "None",
+									set_has_tooltip: true,
+									set_tooltip_text: Some("Unset date"),
 									connect_clicked[sender] => move |_| {
 										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
 									}
@@ -309,6 +317,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: "Today",
+										set_has_tooltip: true,
+										set_tooltip_text: Some("Set date to today"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today));
 										}
@@ -316,6 +326,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: "Tomorrow",
+										set_has_tooltip: true,
+										set_tooltip_text: Some("Set date to tomorrow"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow));
 										}
@@ -325,6 +337,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_margin_all:10,
 									set_margin_top: 5,
 									set_label: "None",
+									set_has_tooltip: true,
+									set_tooltip_text: Some("Unset date"),
 									connect_clicked[sender] => move |_| {
 										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None));
 									}
@@ -339,6 +353,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							set_header_suffix = &gtk::Button {
 								add_css_class: "flat",
 								set_icon_name: icon_name::PLUS,
+								set_has_tooltip: true,
+								set_tooltip_text: Some("Add sub-task"),
 								connect_clicked[sender] => move |_| {
 									sender.input(TaskDetailsFactoryInput::CreateSubTask)
 								}

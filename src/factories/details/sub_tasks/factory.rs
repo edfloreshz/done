@@ -44,6 +44,8 @@ impl FactoryComponent for SubTaskModel {
 				set_valign: gtk::Align::Center,
 				set_icon_name: icon_name::X_CIRCULAR,
 				set_css_classes: &["destructive-action", "circular"],
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Remove sub-task"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(SubTaskInput::Remove(index.clone()));
 				}

@@ -39,6 +39,8 @@ impl AsyncFactoryComponent for TaskModel {
 			},
 			#[name(check_button)]
 			add_prefix = &gtk::CheckButton {
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Complete task"),
 				set_active: self.task.status == 1,
 				connect_toggled[sender] => move |checkbox| {
 					sender.input(TaskInput::SetCompleted(checkbox.is_active()));
@@ -52,6 +54,8 @@ impl AsyncFactoryComponent for TaskModel {
 				set_class_active: ("favorite", self.task.favorite),
 				set_icon_name: icon_name::STAR_FILLED_ROUNDED,
 				set_valign: gtk::Align::Center,
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Favorite task"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::Favorite(index.clone()));
 				}
@@ -62,6 +66,8 @@ impl AsyncFactoryComponent for TaskModel {
 				add_css_class: "circular",
 				set_icon_name: icon_name::INFO,
 				set_valign: gtk::Align::Center,
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Edit task details"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::RevealTaskDetails(Some(index.clone())))
 				}
@@ -71,6 +77,8 @@ impl AsyncFactoryComponent for TaskModel {
 				add_css_class: "destructive-action",
 				add_css_class: "circular",
 				set_icon_name: icon_name::X_CIRCULAR,
+				set_has_tooltip: true,
+				set_tooltip_text: Some("Remove task"),
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
 					sender.output(TaskOutput::Remove(index.clone()))

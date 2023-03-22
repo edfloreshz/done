@@ -28,6 +28,8 @@ impl AsyncFactoryComponent for ServiceModel {
 				set_title: &self.plugin.name,
 				set_subtitle: &self.plugin.description,
 				add_suffix = &gtk::Button {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Remove service"),
 					#[watch]
 					set_visible: self.installed,
 					set_icon_name: icon_name::X_CIRCULAR,
@@ -39,6 +41,8 @@ impl AsyncFactoryComponent for ServiceModel {
 					}
 				},
 				add_suffix = &gtk::Button {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Update service"),
 					#[watch]
 					set_visible: self.update && self.installed,
 					set_icon_name: icon_name::UPDATE,
@@ -50,6 +54,8 @@ impl AsyncFactoryComponent for ServiceModel {
 					}
 				},
 				add_suffix = &gtk::Button {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Install service"),
 					#[watch]
 					set_visible: !self.installed,
 					set_label: fl!("install"),
@@ -60,6 +66,8 @@ impl AsyncFactoryComponent for ServiceModel {
 				},
 				#[name(switch)]
 				add_suffix = &gtk::Switch {
+					set_has_tooltip: true,
+					set_tooltip_text: Some("Set service state"),
 					set_valign: gtk::Align::Center,
 					#[watch]
 					set_visible: self.installed,

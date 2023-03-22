@@ -20,6 +20,8 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 	view! {
 		#[root]
 		gtk::ListBoxRow {
+			set_has_tooltip: true,
+			set_tooltip_text: Some(&self.plugin.name),
 			gtk::CenterBox {
 				set_css_classes: &["plugin"],
 				#[wrap(Some)]
