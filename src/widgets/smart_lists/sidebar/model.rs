@@ -53,7 +53,7 @@ impl SmartList {
 	pub fn icon(&self) -> &str {
 		match self {
 			SmartList::All => "clipboard",
-			SmartList::Today => "sun-alt",
+			SmartList::Today => "image-adjust-brightness",
 			SmartList::Starred => "star-rounded",
 			SmartList::Next7Days => "work-week",
 		}

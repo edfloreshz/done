@@ -12,6 +12,7 @@ use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 };
+use relm4_icons::icon_name;
 
 use super::helpers::{
 	add_plugin_to_sidebar, disable_service, enable_service, remove_service,
@@ -41,7 +42,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("clipboard")
+								set_icon_name: Some(icon_name::CLIPBOARD)
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -53,7 +54,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("sun-alt")
+								set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -65,7 +66,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("star-filled-rounded")
+								set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED)
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -77,7 +78,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 							set_css_classes: &["plugin"],
 							#[wrap(Some)]
 							set_center_widget = &gtk::Image {
-								set_icon_name: Some("work-week")
+								set_icon_name: Some(icon_name::WORK_WEEK)
 							},
 							add_controller = gtk::GestureClick {
 								connect_pressed[sender] => move |_,_,_,_| {
@@ -160,15 +161,13 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					},
 				}
 			}
-			if plugin_preference.installed {
-				model
-					.plugin_factory
-					.guard()
-					.push_back(PluginFactoryInit::new(
-						plugin_preference.plugin.clone(),
-						plugin_preference.enabled,
-					));
-			}
+			model
+				.plugin_factory
+				.guard()
+				.push_back(PluginFactoryInit::new(
+					plugin_preference.plugin.clone(),
+					plugin_preference.enabled,
+				));
 
 			if plugin_preference.enabled {
 				match plugin_preference.plugin.connect().await {

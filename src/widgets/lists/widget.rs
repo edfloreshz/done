@@ -8,6 +8,7 @@ use relm4::component::{AsyncComponentParts, SimpleAsyncComponent};
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::gtk::traits::{ButtonExt, OrientableExt, WidgetExt};
 use relm4::{adw, gtk, AsyncComponentSender, Component};
+use relm4_icons::icon_name;
 
 #[relm4::component(pub async)]
 impl SimpleAsyncComponent for TaskListsModel {
@@ -25,10 +26,10 @@ impl SimpleAsyncComponent for TaskListsModel {
 				set_show_end_title_buttons: false,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
 				pack_end = &gtk::Button {
-					set_icon_name: "loupe",
+					set_icon_name: icon_name::LOUPE,
 				},
 				pack_start = &gtk::Button {
-					set_icon_name: "plus",
+					set_icon_name: icon_name::PLUS,
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					connect_clicked => TaskListsInput::AddTaskList(String::from("New list"))

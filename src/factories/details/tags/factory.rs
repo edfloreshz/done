@@ -5,6 +5,7 @@ use relm4::{
 	prelude::{DynamicIndex, FactoryComponent},
 	FactorySender,
 };
+use relm4_icons::icon_name;
 
 use crate::factories::details::messages::TaskDetailsFactoryInput;
 
@@ -38,23 +39,23 @@ impl FactoryComponent for TagModel {
 	type CommandOutput = ();
 
 	view! {
-			#[root]
-			gtk::Box {
-					set_valign: gtk::Align::Center,
-					add_css_class: "linked",
-					#[name(tag_label)]
-					gtk::Button {
-							set_label: &self.title,
-					},
-					#[name(close_button)]
-					gtk::Button {
-							set_icon_name: "small-x",
-							set_valign: gtk::Align::Center,
-							connect_clicked[sender, index] => move |_| {
-									sender.input(TagInput::RemoveTag(index.clone()))
-							}
-					}
+		#[root]
+		gtk::Box {
+			set_valign: gtk::Align::Center,
+			add_css_class: "linked",
+			#[name(tag_label)]
+			gtk::Button {
+				set_label: &self.title,
+			},
+			#[name(close_button)]
+			gtk::Button {
+				set_icon_name: icon_name::SMALL_X,
+				set_valign: gtk::Align::Center,
+				connect_clicked[sender, index] => move |_| {
+					sender.input(TagInput::RemoveTag(index.clone()))
+				}
 			}
+		}
 	}
 
 	fn init_model(

@@ -45,14 +45,15 @@ features = [
     "work-week",
     "alarm",
     "plus",
-    "user-trash",
+    "x-circular",
     "small-x",
     "info",
     "editor",
     "pencil-and-paper",
     "update",
     "clipboard",
-    "sun-alt",
+    "image-adjust-brightness",
+    "file-cabinet",
     "star-outline-rounded",
 ]
 

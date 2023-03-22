@@ -25,6 +25,7 @@ use relm4::{
 	prelude::DynamicIndex,
 	AsyncFactorySender, RelmWidgetExt,
 };
+use relm4_icons::icon_name;
 
 use crate::{fl, widgets::content::messages::ContentInput};
 
@@ -60,14 +61,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							set_header_suffix = &gtk::Box {
 								set_spacing: 5,
 								gtk::Button {
-									set_icon_name: "left",
+									set_icon_name: icon_name::LEFT,
 									set_tooltip_text: Some(fl!("cancel")),
 									connect_clicked[sender] => move |_| {
 										sender.input(TaskDetailsFactoryInput::CancelWarning)
 									}
 								},
 								gtk::Button {
-									set_icon_name: "floppy",
+									set_icon_name: icon_name::FLOPPY,
 									set_tooltip_text: Some(fl!("save")),
 									set_css_classes: &["suggested-action"],
 									connect_clicked[sender] => move |_| {
@@ -86,7 +87,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									add_css_class: "circular",
 									#[watch]
 									set_class_active: ("favorite", self.task.favorite),
-									set_icon_name: "star-filled-rounded",
+									set_icon_name: icon_name::STAR_FILLED_ROUNDED,
 									set_valign: gtk::Align::Center,
 									connect_toggled[sender] => move |toggle| {
 										sender.input(TaskDetailsFactoryInput::SetFavorite(toggle.is_active()));
@@ -158,7 +159,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
-								set_icon_name: Some("check-round-outline-whole"),
+								set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE),
 								set_title: "Completed",
 								set_subtitle: "Sets wether the task is completed",
 								add_suffix = &gtk::Switch {
@@ -172,14 +173,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
-								set_icon_name: Some("warning"),
+								set_icon_name: Some(icon_name::WARNING),
 								set_title: "Importance",
 								set_subtitle: "Set the importance for this task",
 								add_suffix = &gtk::Box {
 								set_css_classes: &["linked"],
 								#[name(low_importance)]
 								gtk::ToggleButton {
-									set_icon_name: "flag-outline-thin",
+									set_icon_name: icon_name::FLAG_OUTLINE_THIN,
 									set_tooltip_text: Some("Low"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
@@ -191,7 +192,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									}
 								},
 								gtk::ToggleButton {
-									set_icon_name: "flag-outline-thick",
+									set_icon_name: icon_name::FLAG_OUTLINE_THICK,
 									set_tooltip_text: Some("Medium"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
@@ -204,7 +205,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									}
 								},
 								gtk::ToggleButton {
-									set_icon_name: "flag-filled",
+									set_icon_name: icon_name::FLAG_FILLED,
 									set_tooltip_text: Some("High"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
@@ -219,7 +220,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							}
 						},
 						adw::ExpanderRow {
-							set_icon_name: Some("work-week"),
+							set_icon_name: Some(icon_name::WORK_WEEK),
 							set_title: "Due date",
 							set_subtitle: "Set the due date for this task",
 							set_enable_expansion: true,
@@ -275,7 +276,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							}
 						},
 						adw::ExpanderRow {
-							set_icon_name: Some("alarm"),
+							set_icon_name: Some(icon_name::ALARM),
 							set_title: "Reminder",
 							set_subtitle: "Set a date to get a reminder",
 							set_enable_expansion: true,
@@ -337,7 +338,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							#[wrap(Some)]
 							set_header_suffix = &gtk::Button {
 								add_css_class: "flat",
-								set_icon_name: "plus",
+								set_icon_name: icon_name::PLUS,
 								connect_clicked[sender] => move |_| {
 									sender.input(TaskDetailsFactoryInput::CreateSubTask)
 								}

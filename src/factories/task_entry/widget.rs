@@ -7,6 +7,7 @@ use relm4::{
 	gtk::prelude::{ButtonExt, WidgetExt},
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
+use relm4_icons::icon_name;
 
 use crate::factories::task_entry::model::TaskEntryModel;
 
@@ -35,7 +36,7 @@ impl Component for TaskEntryModel {
 				set_tooltip_text: Some(fl!("more-details")),
 				add_css_class: "suggested-action",
 				add_css_class: "circular",
-				set_icon_name: "pencil-and-paper",
+				set_icon_name: icon_name::PENCIL_AND_PAPER,
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender] => move |_| {
 					sender.input(TaskEntryInput::EnterCreationMode);
