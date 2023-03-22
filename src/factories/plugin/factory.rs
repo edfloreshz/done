@@ -2,6 +2,7 @@ use crate::widgets::sidebar::messages::SidebarComponentInput;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::gtk;
+use relm4::gtk::prelude::ListBoxRowExt;
 use relm4::gtk::traits::WidgetExt;
 
 use super::messages::{PluginFactoryInput, PluginFactoryOutput};
@@ -18,17 +19,15 @@ impl AsyncFactoryComponent for PluginFactoryModel {
 
 	view! {
 		#[root]
-		gtk::CenterBox {
-			set_css_classes: &["plugin"],
-			#[wrap(Some)]
-			set_center_widget = &gtk::Image {
-				set_icon_name: Some(self.plugin.icon.as_str())
-			},
-			add_controller = gtk::GestureClick {
-				connect_pressed[sender] => move |_,_,_,_| {
-					sender.input(PluginFactoryInput::PluginSelected)
+		gtk::ListBoxRow {
+			gtk::CenterBox {
+				set_css_classes: &["plugin"],
+				#[wrap(Some)]
+				set_center_widget = &gtk::Image {
+					set_icon_name: Some(self.plugin.icon.as_str())
 				}
 			},
+			connect_activate => PluginFactoryInput::PluginSelected
 		}
 	}
 

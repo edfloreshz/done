@@ -10,7 +10,7 @@ use relm4::component::{
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::{
 	gtk,
-	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
+	gtk::prelude::{BoxExt, ListBoxRowExt, OrientableExt, WidgetExt},
 };
 use relm4_icons::icon_name;
 
@@ -38,53 +38,50 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					#[local_ref]
 					providers_container -> gtk::ListBox {
 						set_css_classes: &["navigation-sidebar"],
-						gtk::CenterBox {
-							set_css_classes: &["plugin"],
-							#[wrap(Some)]
-							set_center_widget = &gtk::Image {
-								set_icon_name: Some(icon_name::CLIPBOARD)
-							},
-							add_controller = gtk::GestureClick {
-								connect_pressed[sender] => move |_,_,_,_| {
-									sender.input(SidebarComponentInput::SelectSmartList(SmartList::All))
-								}
-							},
+						connect_row_selected => move |_, listbox_row| {
+							if let Some(row) = listbox_row {
+								row.activate();
+							}
 						},
-						gtk::CenterBox {
-							set_css_classes: &["plugin"],
-							#[wrap(Some)]
-							set_center_widget = &gtk::Image {
-								set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
+						gtk::ListBoxRow {
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_icon_name: Some(icon_name::CLIPBOARD)
+								},
 							},
-							add_controller = gtk::GestureClick {
-								connect_pressed[sender] => move |_,_,_,_| {
-									sender.input(SidebarComponentInput::SelectSmartList(SmartList::Today))
-								}
-							},
+							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::All)
 						},
-						gtk::CenterBox {
-							set_css_classes: &["plugin"],
-							#[wrap(Some)]
-							set_center_widget = &gtk::Image {
-								set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED)
+						gtk::ListBoxRow {
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
+								},
 							},
-							add_controller = gtk::GestureClick {
-								connect_pressed[sender] => move |_,_,_,_| {
-									sender.input(SidebarComponentInput::SelectSmartList(SmartList::Starred))
-								}
-							},
+							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Today)
 						},
-						gtk::CenterBox {
-							set_css_classes: &["plugin"],
-							#[wrap(Some)]
-							set_center_widget = &gtk::Image {
-								set_icon_name: Some(icon_name::WORK_WEEK)
+						gtk::ListBoxRow {
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED)
+								},
 							},
-							add_controller = gtk::GestureClick {
-								connect_pressed[sender] => move |_,_,_,_| {
-									sender.input(SidebarComponentInput::SelectSmartList(SmartList::Next7Days))
-								}
+							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Starred)
+						},
+						gtk::ListBoxRow {
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_icon_name: Some(icon_name::WORK_WEEK)
+								},
 							},
+							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Next7Days)
 						},
 					},
 					gtk::CenterBox {
@@ -178,6 +175,10 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				}
 			}
 		}
+
+		let row: Option<gtk::ListBoxRow> =
+			widgets.providers_container.row_at_index(0);
+		widgets.providers_container.select_row(row.as_ref());
 
 		AsyncComponentParts { model, widgets }
 	}
