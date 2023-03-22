@@ -165,15 +165,15 @@ impl AsyncComponent for App {
 								set_show_end_title_buttons: true,
 								#[watch]
 								set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
-								pack_start = &gtk::Button {
-									set_icon_name: icon_name::LOUPE,
-								},
 								pack_start: go_back_button = &gtk::Button {
-									set_icon_name: icon_name::LOUPE,
+									set_icon_name: icon_name::LEFT,
 									set_visible: false,
 									connect_clicked[sender] => move |_| {
 										sender.input(Event::Back);
 									}
+								},
+								pack_start = &gtk::Button {
+									set_icon_name: icon_name::LOUPE,
 								},
 							},
 							append = &gtk::Box {
