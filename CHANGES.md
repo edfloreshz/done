@@ -2,8 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.4] - TBD
-
+## [0.1.4] - 2023-03-22
+- Revamped design to make it look more professional.
+- Tags added to tasks.
+- Added French 🇫🇷 translation.
 
 
 ## [0.1.3] - 2023-03-16
