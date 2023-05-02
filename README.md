@@ -2,6 +2,12 @@
   <br>
   <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.svg" width="150" />
   <h1>Done</h1>
+  
+  <h2>
+    Done development has stopped and the repository has been marked as read-only. <br>
+    We recommend switching to <a href="https://github.com/dgsasha/remembrance">Rememberance</a>
+  </h2>
+  
   <h3>To-do lists reimagined</h3>
   <h4>The ultimate task management solution for seamless organization and efficiency.</h4>
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
