@@ -4,7 +4,7 @@
   <h1>Done</h1>
   
   <h3>To-do lists reimagined</h3>
-  <h4>The ultimate task management solution for seamless organization and efficiency.</h4>
+  <h4>A simple task management solution for seamless organization and efficiency.</h4>
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/edfloreshz/done/ci.yml?style=for-the-badge" alt="build"/>
   </a>
@@ -32,7 +32,7 @@
   ![Screenshot](./data/resources/screenshots/tasks.png#gh-light-mode-only)
   ![Screenshot](./data/resources/screenshots/dark.png#gh-dark-mode-only)
 
-Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
+Our user-friendly app allows you to effortlessly consolidate your existing tasks into a single application for optimal productivity and organization.
 
 
 
