@@ -18,10 +18,11 @@ pub fn main_app() -> adw::Application {
 pub fn init() -> Result<adw::Application> {
 	let app = main_app();
 
+	done_local_storage::setup::init()?;
+
 	gtk::init()?;
 	gettext::init();
 	localization::init();
-	// Enable logging
 	tracing_subscriber::fmt()
 		.with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
 		.with_max_level(tracing::Level::INFO)

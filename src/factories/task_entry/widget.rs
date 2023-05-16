@@ -1,6 +1,6 @@
 use crate::fl;
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_provider::provider::{List, Task};
+use done_local_storage::models::{List, Task};
 use gtk::traits::{EditableExt, ListBoxRowExt};
 use relm4::{
 	adw, gtk,

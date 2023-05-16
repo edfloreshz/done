@@ -1,4 +1,5 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
+use done_local_storage::models::Status;
 use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::EditableExt;
 use relm4::{
@@ -35,9 +36,9 @@ impl FactoryComponent for SubTaskModel {
 			set_show_apply_button: true,
 			set_text: self.sub_task.title.as_str(),
 			add_prefix = &gtk::CheckButton {
-				set_active: self.sub_task.completed,
+				set_active: self.sub_task.status == Status::Completed,
 				connect_toggled[sender, index] => move |checkbox| {
-					sender.input(SubTaskInput::SetCompleted(index.clone(), checkbox.is_active()));
+					sender.input(SubTaskInput::SetStatus(index.clone(), checkbox.is_active()));
 				}
 			},
 			add_suffix = &gtk::Button {
@@ -85,8 +86,12 @@ impl FactoryComponent for SubTaskModel {
 
 	fn update(&mut self, message: Self::Input, sender: FactorySender<Self>) {
 		match message {
-			SubTaskInput::SetCompleted(index, completed) => {
-				self.sub_task.completed = completed;
+			SubTaskInput::SetStatus(index, completed) => {
+				if completed {
+					self.sub_task.status = Status::Completed;
+				} else {
+					self.sub_task.status = Status::NotStarted;
+				}
 				sender.output(SubTaskOutput::Update(index, self.sub_task.clone()))
 			},
 			SubTaskInput::ModifyTitle(index, title) => {

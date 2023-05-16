@@ -1,8 +1,5 @@
-use crate::application::plugin::Plugin;
 use crate::fl;
-use crate::widgets::preferences::helpers::has_update;
 use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
-use directories::ProjectDirs;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::prelude::{
@@ -11,18 +8,12 @@ use relm4::adw::prelude::{
 };
 use relm4::adw::traits::ComboRowExt;
 use relm4::component::{AsyncComponent, AsyncComponentParts};
-use relm4::factory::AsyncFactoryVecDeque;
 use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 
-use super::helpers::{
-	disable_plugin, enable_plugin, install_plugin, set_color_scheme, set_compact,
-	uninstall_plugin, update_plugin,
-};
+use super::helpers::{set_color_scheme, set_compact, set_extended};
 use super::messages::{PreferencesComponentInput, PreferencesComponentOutput};
-use super::model::{
-	ColorScheme, PluginPreferences, Preferences, PreferencesComponentModel,
-};
+use super::model::{ColorScheme, Preferences, PreferencesComponentModel};
 
 #[relm4::component(pub async)]
 impl AsyncComponent for PreferencesComponentModel {
@@ -52,6 +43,7 @@ impl AsyncComponent for PreferencesComponentModel {
 								adw::ComboRow {
 									set_title: fl!("color-scheme"),
 									set_subtitle: fl!("color-scheme-description"),
+									set_icon_name: Some("dark-mode-symbolic"),
 									set_model: Some(&gtk::StringList::new(&[
 										fl!("color-scheme-light"),
 										fl!("color-scheme-dark"),
@@ -73,6 +65,7 @@ impl AsyncComponent for PreferencesComponentModel {
 								adw::ActionRow {
 									set_title: fl!("compact"),
 									set_subtitle: fl!("compact-description"),
+									set_icon_name: Some("list-large-symbolic"),
 									add_suffix = &gtk::Box {
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,
@@ -84,12 +77,24 @@ impl AsyncComponent for PreferencesComponentModel {
 											}
 										}
 									}
+								},
+								adw::ActionRow {
+									set_title: fl!("extended-sidebar"),
+									set_subtitle: fl!("extended-sidebar-description"),
+									set_icon_name: Some("dock-left-symbolic"),
+									add_suffix = &gtk::Box {
+										set_halign: gtk::Align::Center,
+										set_valign: gtk::Align::Center,
+										append = &gtk::Switch {
+											set_active: model.preferences.extended,
+											connect_state_set[sender] => move |_, state| {
+												sender.input(PreferencesComponentInput::ToggleExtended(state));
+												gtk::Inhibit::default()
+											}
+										}
+									}
 								}
-							},
-							#[local_ref]
-							add = services_container -> adw::PreferencesGroup {
-								set_title: fl!("services"),
-							},
+							}
 						}
 					}
 				}
@@ -111,55 +116,9 @@ impl AsyncComponent for PreferencesComponentModel {
 				Preferences::new().await
 			};
 
-		let mut model = Self {
-			preferences,
-			service_row_factory: AsyncFactoryVecDeque::new(
-				adw::PreferencesGroup::default(),
-				sender.input_sender(),
-			),
-		};
-
-		let services_container = model.service_row_factory.widget();
+		let model = Self { preferences };
 
 		let widgets = view_output!();
-
-		let project = ProjectDirs::from("dev", "edfloreshz", "done").unwrap();
-
-		let old_plugins = model.preferences.plugins.clone();
-
-		model.preferences.plugins.clear();
-
-		for plugin in Plugin::get_local().unwrap() {
-			let has_update = match has_update(&plugin).await {
-				Ok(has_update) => has_update,
-				Err(err) => {
-					tracing::error!("Failed to fetch updates: {err}");
-					false
-				},
-			};
-			let plugin_search = old_plugins.iter().find(|p| p.plugin == plugin);
-			let plugin_enabled =
-				plugin_search.is_some() && plugin_search.unwrap().enabled;
-			if plugin_enabled {
-				sender
-					.output(PreferencesComponentOutput::EnablePluginOnSidebar(
-						plugin.clone(),
-					))
-					.unwrap()
-			}
-			let preferences = PluginPreferences {
-				plugin: plugin.clone(),
-				enabled: plugin_enabled,
-				installed: plugin.clone().is_installed(),
-				update: has_update,
-				executable: project.data_dir().join("bin").join(&plugin.process_name),
-			};
-			model
-				.service_row_factory
-				.guard()
-				.push_back(preferences.clone());
-			model.preferences.plugins.push(preferences);
-		}
 
 		AsyncComponentParts { model, widgets }
 	}
@@ -172,31 +131,6 @@ impl AsyncComponent for PreferencesComponentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			PreferencesComponentInput::EnablePlugin(index, plugin) => {
-				if let Err(err) =
-					enable_plugin(self, index, &sender, plugin, &mut widgets.overlay)
-						.await
-				{
-					tracing::error!("{err}")
-				}
-			},
-			PreferencesComponentInput::DisablePlugin(index, plugin) => {
-				disable_plugin(self, index, &sender, plugin, &mut widgets.overlay)
-			},
-			PreferencesComponentInput::InstallPlugin(index, plugin) => {
-				if let Err(err) =
-					install_plugin(self, index, &sender, plugin, &mut widgets.overlay)
-						.await
-				{
-					tracing::error!("{err}")
-				}
-			},
-			PreferencesComponentInput::RemovePlugin(index, plugin) => {
-				uninstall_plugin(self, index, &sender, plugin, &mut widgets.overlay)
-			},
-			PreferencesComponentInput::UpdatePlugin(index, plugin) => {
-				update_plugin(self, index, plugin).await
-			},
 			PreferencesComponentInput::SetColorScheme(color_scheme) => {
 				if let Err(err) = set_color_scheme(self, color_scheme) {
 					tracing::error!("{err}")
@@ -204,6 +138,11 @@ impl AsyncComponent for PreferencesComponentModel {
 			},
 			PreferencesComponentInput::ToggleCompact(compact) => {
 				if let Err(err) = set_compact(self, &sender, compact) {
+					tracing::error!("{err}")
+				}
+			},
+			PreferencesComponentInput::ToggleExtended(compact) => {
+				if let Err(err) = set_extended(self, &sender, compact) {
 					tracing::error!("{err}")
 				}
 			},

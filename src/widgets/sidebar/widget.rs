@@ -1,23 +1,22 @@
-use crate::factories::plugin::model::PluginFactoryInit;
+use crate::factories::task_list::messages::TaskListFactoryInput;
+use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::fl;
 use crate::widgets::preferences::model::Preferences;
-use crate::widgets::smart_lists::sidebar::model::SmartList;
+use crate::widgets::sidebar::model::SidebarList;
+use done_local_storage::LocalStorage;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::component::{
 	AsyncComponentParts, AsyncComponentSender, SimpleAsyncComponent,
 };
 use relm4::factory::AsyncFactoryVecDeque;
-use relm4::gtk::traits::ButtonExt;
+use relm4::gtk::traits::{BoxExt, ButtonExt};
+use relm4::RelmWidgetExt;
 use relm4::{
 	gtk,
 	gtk::prelude::{ListBoxRowExt, OrientableExt, WidgetExt},
 };
-use relm4_icons::icon_name;
 
-use super::helpers::{
-	add_plugin_to_sidebar, disable_service, enable_service, remove_service,
-};
 use super::messages::{SidebarComponentInput, SidebarComponentOutput};
 use super::model::SidebarComponentModel;
 
@@ -32,87 +31,182 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			set_orientation: gtk::Orientation::Vertical,
 			#[name(scroll_window)]
 			gtk::ScrolledWindow {
-				#[wrap(Some)]
-				set_child = &gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					set_vexpand: true,
-					#[local_ref]
-					providers_container -> gtk::ListBox {
-						set_css_classes: &["navigation-sidebar"],
-						connect_row_selected => move |_, listbox_row| {
-							if let Some(row) = listbox_row {
-								row.activate();
+				set_policy: (gtk::PolicyType::Never, gtk::PolicyType::Automatic),
+				set_vexpand: true,
+				#[local_ref]
+				list_box -> gtk::ListBox {
+					#[watch]
+					set_width_request: if model.extended { 200 } else { 50 },
+					set_css_classes: &["navigation-sidebar"],
+					connect_row_selected => move |_, listbox_row| {
+						if let Some(row) = listbox_row {
+							row.activate();
+						}
+					},
+					gtk::ListBoxRow {
+						set_has_tooltip: true,
+						set_tooltip_text: Some(fl!("all")),
+						gtk::Box {
+							gtk::Box {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: model.extended,
+								append = &gtk::Image {
+									set_icon_name: Some(SidebarList::All.icon()),
+									set_margin_all: 5,
+								},
+								append = &gtk::Label {
+									set_text: SidebarList::All.name().as_str(),
+									set_margin_all: 5,
+								},
+							},
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: !model.extended,
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_margin_all: 5,
+									set_icon_name: Some(SidebarList::All.icon())
+								},
+							},
+						},
+						connect_activate => SidebarComponentInput::SelectList(SidebarList::All)
+					},
+					gtk::ListBoxRow {
+						set_has_tooltip: true,
+						set_tooltip_text: Some(fl!("today")),
+						gtk::Box {
+							gtk::Box {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: model.extended,
+								append = &gtk::Image {
+									set_icon_name: Some(SidebarList::Today.icon()),
+									set_margin_all: 5,
+								},
+								append = &gtk::Label {
+									set_text: SidebarList::Today.name().as_str(),
+									set_margin_all: 5,
+								},
+							},
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: !model.extended,
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_margin_all: 5,
+									set_icon_name: Some(SidebarList::Today.icon())
+								},
+							},
+						},
+						connect_activate => SidebarComponentInput::SelectList(SidebarList::Today)
+					},
+					gtk::ListBoxRow {
+						set_has_tooltip: true,
+						set_tooltip_text: Some(fl!("starred")),
+						gtk::Box {
+							gtk::Box {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: model.extended,
+								append = &gtk::Image {
+									set_icon_name: Some(SidebarList::Starred.icon()),
+									set_margin_all: 5,
+								},
+								append = &gtk::Label {
+									set_text: SidebarList::Starred.name().as_str(),
+									set_margin_all: 5,
+								},
+							},
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: !model.extended,
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_margin_all: 5,
+									set_icon_name: Some(SidebarList::Starred.icon())
+								},
 							}
 						},
-						gtk::ListBoxRow {
-							set_has_tooltip: true,
-							set_tooltip_text: Some(fl!("all")),
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_icon_name: Some(icon_name::CLIPBOARD)
-								},
-							},
-							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::All)
-						},
-						gtk::ListBoxRow {
-							set_has_tooltip: true,
-							set_tooltip_text: Some(fl!("today")),
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
-								},
-							},
-							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Today)
-						},
-						gtk::ListBoxRow {
-							set_has_tooltip: true,
-							set_tooltip_text: Some(fl!("starred")),
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED)
-								},
-							},
-							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Starred)
-						},
-						gtk::ListBoxRow {
-							set_has_tooltip: true,
-							set_tooltip_text: Some(fl!("next-7-days")),
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_icon_name: Some(icon_name::WORK_WEEK)
-								},
-							},
-							connect_activate => SidebarComponentInput::SelectSmartList(SmartList::Next7Days)
-						},
+						connect_activate => SidebarComponentInput::SelectList(SidebarList::Starred)
 					},
-					gtk::CenterBox {
-						set_vexpand: true,
-						set_valign: gtk::Align::End,
-						set_css_classes: &["navigation-sidebar"],
+					gtk::ListBoxRow {
 						set_has_tooltip: true,
-						set_tooltip_text: Some("Preferences"),
-						#[wrap(Some)]
-						set_center_widget = &gtk::Button {
-							set_css_classes: &["flat"],
-							gtk::CenterBox {
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_icon_name: Some("controls")
+						set_tooltip_text: Some(fl!("next-7-days")),
+						gtk::Box {
+							gtk::Box {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: model.extended,
+								append = &gtk::Image {
+									set_icon_name: Some(SidebarList::Next7Days.icon()),
+									set_margin_all: 5,
+								},
+								append = &gtk::Label {
+									set_text: SidebarList::Next7Days.name().as_str(),
+									set_margin_all: 5,
 								},
 							},
-							connect_clicked => SidebarComponentInput::OpenPreferences
+							gtk::CenterBox {
+								set_css_classes: &["plugin"],
+								#[watch]
+								set_visible: !model.extended,
+								#[wrap(Some)]
+								set_center_widget = &gtk::Image {
+									set_margin_all: 5,
+									set_icon_name: Some(SidebarList::Next7Days.icon())
+								},
+							}
 						},
-					}
+						connect_activate => SidebarComponentInput::SelectList(SidebarList::Next7Days)
+					},
 				}
 			},
+			gtk::CenterBox {
+				#[watch]
+				set_visible: !model.extended,
+				set_css_classes: &["navigation-sidebar"],
+				set_has_tooltip: true,
+				set_tooltip_text: Some(fl!("preferences")),
+				#[wrap(Some)]
+				set_center_widget = &gtk::Button {
+					set_css_classes: &["flat"],
+					gtk::CenterBox {
+						#[wrap(Some)]
+						set_center_widget = &gtk::Image {
+							set_icon_name: Some("controls")
+						},
+					},
+					connect_clicked => SidebarComponentInput::OpenPreferences
+				},
+			},
+			gtk::CenterBox {
+				#[watch]
+				set_visible: model.extended,
+				set_css_classes: &["navigation-sidebar"],
+				set_has_tooltip: true,
+				set_tooltip_text: Some(fl!("preferences")),
+				#[wrap(Some)]
+				set_center_widget = &gtk::Button {
+					set_css_classes: &["flat"],
+					gtk::Box {
+						set_orientation: gtk::Orientation::Horizontal,
+						gtk::Image {
+							set_margin_all: 5,
+							set_icon_name: Some("controls")
+						},
+						append = &gtk::Label {
+							set_hexpand: true,
+							set_text: fl!("preferences"),
+							set_margin_all: 5,
+						},
+					},
+					connect_clicked => SidebarComponentInput::OpenPreferences
+				},
+			}
 		}
 	}
 
@@ -121,64 +215,34 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		let project = Project::open("dev", "edfloreshz", "done").unwrap();
-		let preferences = project
-			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-			.unwrap();
-
+		let preferences =
+			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
+				project
+					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+					.unwrap_or(Preferences::new().await)
+			} else {
+				Preferences::new().await
+			};
+		let list_factory =
+			AsyncFactoryVecDeque::new(gtk::ListBox::new(), sender.input_sender());
 		let mut model = SidebarComponentModel {
-			plugin_factory: AsyncFactoryVecDeque::new(
-				gtk::ListBox::default(),
-				sender.input_sender(),
-			),
+			list_factory,
+			extended: preferences.extended,
 		};
 
-		let providers_container = model.plugin_factory.widget();
+		let local = LocalStorage::new();
 
+		let list_box = model.list_factory.widget();
 		let widgets = view_output!();
 
-		for plugin_preference in
-			preferences.plugins.iter().filter(|plugin| plugin.installed)
 		{
-			let plugin_name = plugin_preference.plugin.name.clone();
-			if plugin_preference.enabled {
-				match plugin_preference.plugin.start().await {
-					Ok(_) => {
-						tracing::info!("{plugin_name} plugin started.");
-					},
-					Err(_) => {
-						tracing::error!("{plugin_name} plugin was not able to start.");
-						sender
-							.output(SidebarComponentOutput::Notify(
-								"We had trouble starting some services, try restarting the app"
-									.into(),
-								2,
-							))
-							.unwrap();
-					},
-				}
-			}
-			model
-				.plugin_factory
-				.guard()
-				.push_back(PluginFactoryInit::new(
-					plugin_preference.plugin.clone(),
-					plugin_preference.enabled,
-				));
-
-			if plugin_preference.enabled {
-				match plugin_preference.plugin.connect().await {
-					Ok(_) => continue,
-					Err(_) => {
-						sender.output(SidebarComponentOutput::Notify(format!("{plugin_name} service had trouble starting up, try updating the service or restarting the app."), 2)).unwrap();
-					},
+			let mut guard = model.list_factory.guard();
+			if let Ok(lists) = local.get_lists().await {
+				for list in lists {
+					guard.push_front(TaskListFactoryInit::new(list));
 				}
 			}
 		}
-
-		let row: Option<gtk::ListBoxRow> =
-			widgets.providers_container.row_at_index(0);
-		widgets.providers_container.select_row(row.as_ref());
 
 		AsyncComponentParts { model, widgets }
 	}
@@ -192,35 +256,33 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			SidebarComponentInput::OpenPreferences => sender
 				.output(SidebarComponentOutput::OpenPreferences)
 				.unwrap_or_default(),
-			SidebarComponentInput::PluginSelected(plugin) => sender
-				.output(SidebarComponentOutput::PluginSelected(plugin))
-				.unwrap(),
-			SidebarComponentInput::AddPluginToSidebar(plugin) => {
-				if let Err(err) = add_plugin_to_sidebar(self, plugin).await {
-					tracing::error!("{err}");
-				}
-			},
-			SidebarComponentInput::EnableService(plugin) => {
-				enable_service(self, plugin)
-			},
-			SidebarComponentInput::DisableService(plugin) => {
-				if let Err(err) = disable_service(self, sender, plugin) {
-					tracing::error!("{err}");
-				}
-			},
-			SidebarComponentInput::RemoveService(plugin) => {
-				if let Err(err) = remove_service(self, plugin.clone()) {
-					tracing::error!("{err}");
-				}
-				if self.plugin_factory.guard().is_empty() {
-					sender
-						.output(SidebarComponentOutput::RemoveService(plugin))
-						.unwrap_or_default()
-				}
-			},
-			SidebarComponentInput::SelectSmartList(list) => sender
-				.output(SidebarComponentOutput::SelectSmartList(list))
+			SidebarComponentInput::SelectList(list) => sender
+				.output(SidebarComponentOutput::SelectList(list))
 				.unwrap_or_default(),
+			SidebarComponentInput::ToggleExtended(extended) => {
+				self.extended = extended;
+				let guard = self.list_factory.guard();
+				for index in 0..guard.len() {
+					guard.send(index, TaskListFactoryInput::ToggleExtended(extended))
+				}
+			},
+			SidebarComponentInput::DeleteTaskList(index, id) => {
+				let local = LocalStorage::new();
+				match local.delete_list(id).await {
+					Ok(_) => {
+						let mut guard = self.list_factory.guard();
+						guard.remove(index.current_index());
+					},
+					Err(err) => {
+						sender
+							.output(SidebarComponentOutput::Notify(err.to_string(), 2))
+							.unwrap_or_default();
+					},
+				}
+			},
+			SidebarComponentInput::Notify(msg) => sender
+				.output(SidebarComponentOutput::Notify(msg, 1))
+				.unwrap(),
 		}
 	}
 }

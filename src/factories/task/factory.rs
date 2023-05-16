@@ -1,6 +1,6 @@
 use crate::factories::task::model::{TaskInit, TaskModel};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_provider::provider::Status;
+use done_local_storage::models::Status;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
@@ -27,7 +27,11 @@ impl AsyncFactoryComponent for TaskModel {
 
 	view! {
 		root = adw::EntryRow {
-			set_title: self.parent_list.name.as_str(),
+			set_title: if let Some(list) = self.parent_list.as_ref() {
+				list.name.as_str()
+			} else {
+				""
+			},
 			set_text: self.task.title.as_str(),
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,
@@ -41,7 +45,7 @@ impl AsyncFactoryComponent for TaskModel {
 			add_prefix = &gtk::CheckButton {
 				set_has_tooltip: true,
 				set_tooltip_text: Some("Complete task"),
-				set_active: self.task.status == 1,
+				set_active: self.task.status == Status::Completed,
 				connect_toggled[sender] => move |checkbox| {
 					sender.input(TaskInput::SetCompleted(checkbox.is_active()));
 				}
@@ -129,9 +133,9 @@ impl AsyncFactoryComponent for TaskModel {
 			},
 			TaskInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
-					Status::Completed as i32
+					Status::Completed
 				} else {
-					Status::NotStarted as i32
+					Status::NotStarted
 				};
 				sender
 					.output_sender()

@@ -1,12 +1,14 @@
 use anyhow::{anyhow, Context, Result};
-use done_provider::Task;
+use chrono::{NaiveDateTime, Utc};
+use done_local_storage::models::Task;
+use done_local_storage::LocalStorage;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender, ComponentController};
 
 use crate::factories::task::model::TaskInit;
-use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::factories::{
 	details::model::TaskDetailsFactoryInit, task_entry::messages::TaskEntryInput,
 };
+use crate::widgets::sidebar::model::SidebarList;
 
 use super::{
 	messages::{ContentInput, ContentOutput},
@@ -36,11 +38,7 @@ pub fn hide_flap(
 ) {
 	model.show_task_details = false;
 	if let Some(list) = model.parent_list.clone() {
-		if let Some(plugin) = model.plugin.clone() {
-			sender.input(ContentInput::TaskListSelected(TaskListFactoryInit::new(
-				plugin, list,
-			)))
-		}
+		sender.input(ContentInput::SelectList(SidebarList::Custom(list)))
 	}
 }
 
@@ -55,30 +53,27 @@ pub async fn add_task(
 		.ok_or_else(|| anyhow!("This task doesn't have a parent list."))?
 		.id
 		.clone();
-	let mut client = model
-		.plugin
-		.as_mut()
-		.context("There is no plugin present, please select one first")?
-		.connect()
-		.await?;
-	let response = client.create_task(task.clone()).await?.into_inner();
-	if response.successful && response.task.is_some() {
-		let task = response.task.unwrap();
-		model.task_factory.guard().push_back(TaskInit::new(
-			task,
-			model.parent_list.as_ref().unwrap().clone(),
-			model.compact,
-		));
-		model.show_task_details = false;
-		sender.input(ContentInput::HideFlap);
-		sender
-			.output(ContentOutput::Notify(response.message, 1))
-			.unwrap();
-	} else {
-		sender
-			.output(ContentOutput::Notify(response.message, 2))
-			.unwrap();
+	let local = LocalStorage::new();
+	match local.create_task(task.clone()).await {
+		Ok(_) => {
+			model.task_factory.guard().push_back(TaskInit::new(
+				task.clone(),
+				model.parent_list.clone(),
+				model.compact,
+			));
+			model.show_task_details = false;
+			sender.input(ContentInput::HideFlap);
+			sender
+				.output(ContentOutput::Notify("Task added successfully".into(), 1))
+				.unwrap();
+		},
+		Err(_) => {
+			sender
+				.output(ContentOutput::Notify("Error adding task".into(), 2))
+				.unwrap();
+		},
 	}
+
 	Ok(())
 }
 
@@ -91,24 +86,24 @@ pub async fn remove_task(
 	let task = guard
 		.get(index.current_index())
 		.context("The task you're trying to remove does not currently exist")?;
-	let mut client = model
-		.plugin
-		.as_mut()
-		.context("There is no plugin present, please select one first")?
-		.connect()
-		.await?;
-	let response = client.delete_task(task.clone().task.id).await?.into_inner();
-
-	if response.successful {
-		guard.remove(index.current_index());
-		sender
-			.output(ContentOutput::Notify(response.message, 1))
-			.unwrap_or_default();
-	} else {
-		sender
-			.output(ContentOutput::Notify(response.message, 2))
-			.unwrap_or_default();
+	let local = LocalStorage::new();
+	match local.delete_task(task.clone().task.id).await {
+		Ok(_) => {
+			guard.remove(index.current_index());
+			sender
+				.output(ContentOutput::Notify(
+					"Task removed successfully.".into(),
+					1,
+				))
+				.unwrap_or_default();
+		},
+		Err(_) => {
+			sender
+				.output(ContentOutput::Notify("Error removing task.".into(), 2))
+				.unwrap_or_default();
+		},
 	}
+
 	Ok(())
 }
 
@@ -117,65 +112,115 @@ pub async fn update_task(
 	sender: AsyncComponentSender<ContentModel>,
 	task: Task,
 ) -> Result<()> {
-	let mut client = model
-		.plugin
-		.as_mut()
-		.context("There is no plugin present, please select one first")?
-		.connect()
-		.await?;
-	let response = client.update_task(task).await?.into_inner();
-	if response.successful {
-		if model.show_task_details {
-			sender.input(ContentInput::HideFlap);
-		}
-		sender
-			.output(ContentOutput::Notify(response.message, 1))
-			.unwrap_or_default()
-	} else {
-		sender
-			.output(ContentOutput::Notify(response.message, 2))
-			.unwrap_or_default();
+	let local = LocalStorage::new();
+	match local.update_task(task).await {
+		Ok(_) => {
+			if model.show_task_details {
+				sender.input(ContentInput::HideFlap);
+			}
+			sender
+				.output(ContentOutput::Notify("Task updated successfully".into(), 1))
+				.unwrap_or_default()
+		},
+		Err(_) => {
+			sender
+				.output(ContentOutput::Notify(
+					"An error ocurred while updating this task.".into(),
+					2,
+				))
+				.unwrap_or_default();
+		},
 	}
+
 	Ok(())
 }
 
 pub async fn select_task_list(
 	model: &mut ContentModel,
-	list_model: TaskListFactoryInit,
+	list: SidebarList,
 ) -> Result<()> {
-	let (tx, mut rx) = relm4::tokio::sync::mpsc::channel(100);
-
-	model.parent_list = Some(list_model.list.clone());
-	model.plugin = Some(list_model.plugin.clone());
-	model.selected_smart_list = None;
-	model
-		.task_entry
-		.sender()
-		.send(TaskEntryInput::SetParentList(model.parent_list.clone()))
-		.unwrap();
-
-	let mut client = list_model.plugin.connect().await?;
+	let local = LocalStorage::new();
 	let mut guard = model.task_factory.guard();
-
 	guard.clear();
-
-	relm4::spawn(async move {
-		if let Ok(stream) = client.get_tasks_from_list(list_model.list.id).await {
-			let mut stream = stream.into_inner();
-			while let Some(response) = stream.message().await.unwrap() {
-				tx.send(response).await.unwrap()
+	match list {
+		SidebarList::All => {
+			model.parent_list = None;
+			if let Ok(response) = local.get_all_tasks().await {
+				for task in response {
+					guard.push_back(TaskInit::new(
+						task,
+						model.parent_list.clone(),
+						model.compact,
+					));
+				}
 			}
-		}
-	});
+		},
+		SidebarList::Today => {
+			model.parent_list = None;
+			if let Ok(response) = local.get_all_tasks().await {
+				for task in response.iter().filter(|task| task.today) {
+					guard.push_back(TaskInit::new(
+						task.clone(),
+						model.parent_list.clone(),
+						model.compact,
+					));
+				}
+			}
+		},
+		SidebarList::Starred => {
+			model.parent_list = None;
+			if let Ok(response) = local.get_all_tasks().await {
+				for task in response.iter().filter(|task| task.favorite) {
+					guard.push_back(TaskInit::new(
+						task.clone(),
+						model.parent_list.clone(),
+						model.compact,
+					));
+				}
+			}
+		},
+		SidebarList::Next7Days => {
+			model.parent_list = None;
+			if let Ok(response) = local.get_all_tasks().await {
+				for task in response.iter().filter(|task: &&Task| {
+					task.due_date.is_some()
+						&& is_within_next_7_days(task.due_date.unwrap())
+				}) {
+					guard.push_back(TaskInit::new(
+						task.clone(),
+						model.parent_list.clone(),
+						model.compact,
+					));
+				}
+			}
+		},
+		SidebarList::Custom(list) => {
+			model.parent_list = Some(list.clone());
+			model
+				.task_entry
+				.sender()
+				.send(TaskEntryInput::SetParentList(model.parent_list.clone()))
+				.unwrap();
 
-	while let Some(response) = rx.recv().await {
-		if response.successful && response.task.is_some() {
-			guard.push_back(TaskInit::new(
-				response.task.unwrap(),
-				model.parent_list.as_ref().unwrap().clone(),
-				model.compact,
-			));
-		}
+			guard.clear();
+
+			if let Ok(response) = local.get_tasks_from_list(list.id).await {
+				for task in response {
+					guard.push_back(TaskInit::new(
+						task,
+						model.parent_list.clone(),
+						model.compact,
+					));
+				}
+			}
+		},
 	}
+
 	Ok(())
+}
+
+fn is_within_next_7_days(date: NaiveDateTime) -> bool {
+	let now = Utc::now().naive_utc();
+	let next_7_days = now + chrono::Duration::days(7);
+	date >= now && date <= next_7_days
 }

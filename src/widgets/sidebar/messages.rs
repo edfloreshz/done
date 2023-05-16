@@ -1,29 +1,22 @@
-use crate::{
-	application::plugin::Plugin,
-	factories::task_list::model::TaskListFactoryInit,
-	widgets::smart_lists::sidebar::model::SmartList,
-};
+use relm4::prelude::DynamicIndex;
+
+use super::model::SidebarList;
 
 #[derive(Debug)]
 pub enum SidebarComponentInput {
-	PluginSelected(Plugin),
-	EnableService(Plugin),
-	DisableService(Plugin),
-	RemoveService(Plugin),
-	AddPluginToSidebar(Plugin),
-	SelectSmartList(SmartList),
+	ToggleExtended(bool),
+	SelectList(SidebarList),
+	DeleteTaskList(DynamicIndex, String),
+	Notify(String),
 	OpenPreferences,
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarComponentOutput {
-	PluginSelected(Plugin),
-	ListSelected(Box<TaskListFactoryInit>),
-	Forward,
+	// Forward,
 	Notify(String, u32),
 	DisablePlugin,
-	RemoveService(Plugin),
-	SelectSmartList(SmartList),
+	SelectList(SidebarList),
 	OpenPreferences,
 }

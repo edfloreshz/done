@@ -1,4 +1,4 @@
-use done_provider::Task;
+use done_local_storage::models::Task;
 use relm4::{factory::FactoryVecDeque, prelude::DynamicIndex};
 
 use super::{sub_tasks::model::SubTaskModel, tags::factory::TagModel};

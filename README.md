@@ -3,11 +3,6 @@
   <img src="https://raw.githubusercontent.com/edfloreshz/done/main/data/icons/dev.edfloreshz.Done.svg" width="150" />
   <h1>Done</h1>
   
-  <h2>
-    Done development has stopped and the repository has been marked as read-only. <br>
-    We recommend switching to <a href="https://github.com/dgsasha/remembrance">Rememberance</a>
-  </h2>
-  
   <h3>To-do lists reimagined</h3>
   <h4>The ultimate task management solution for seamless organization and efficiency.</h4>
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
@@ -39,66 +34,12 @@
 
 Our user-friendly app allows you to effortlessly consolidate your existing task providers into a single application for optimal productivity and organization.
 
-#### **This is still in very early development. Be aware it is a work in progress and far from complete yet.**
 
 
 ## Installation
 | Platform   | Command                                 |
 |------------|-----------------------------------------|
-| Arch Linux | `paru -S done-git`                    |
 | Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
-
-## Plugins
-In order to realize its full potential, the Done app has been designed with a strong focus on versatility, flexibility and extensibility.
-
-This is why we have implemented a plugin system, allowing for the addition of new task services, making it the go-to choice for 
-anyone looking for a comprehensive and complete to-do list solution.
-
-To get started creating plug-ins, head to [`PLUGINS.md`](PLUGINS.md).
-
-## To do
-
-### Accounts
-
-- [ ] Allow multiple providers (Google, Microsoft To Do, Microsoft Exchange, Todoist, Nextcloud)
-
-### Lists
-
-- [x] Show lists
-- [x] Add a new list
-- [x] Delete an existing list
-- [x] Rename an existing list
-- [x] Update task counters
-
-### Smart Lists
-- [x] Today
-- [x] Next 7 Days
-- [x] All
-- [x] Starred
-
-### Tasks
-- [x] Add a new task
-- [x] Show tasks for every list
-- [x] Mark a task as completed
-- [x] Delete a task
-- [x] Rename a task
-- [ ] Add steps
-- [ ] Add tags
-- [ ] Add to My Day
-- [x] Mark as Favorite
-- [x] Add notes
-
-### Reminders
-- [x] Set a reminder date
-- [ ] Set a reminder time
-- [x] Set a due date
-- [ ] Set recurrence for a task
-
-### Notifications
-- [ ] Send notifications
-
-### Backups
-- [ ] Export tasks
 
 # Build
 

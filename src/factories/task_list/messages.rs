@@ -5,16 +5,16 @@ use super::model::TaskListFactoryInit;
 #[derive(Debug)]
 pub enum TaskListFactoryInput {
 	Select,
-	EditMode,
-	Delete(DynamicIndex),
 	Rename,
+	OpenRightClickMenu,
+	Delete(DynamicIndex),
 	ChangeIcon(String),
+	ToggleExtended(bool),
 }
 
 #[derive(Debug)]
 pub enum TaskListFactoryOutput {
 	Select(Box<TaskListFactoryInit>),
 	DeleteTaskList(DynamicIndex, String),
-	Forward,
 	Notify(String),
 }

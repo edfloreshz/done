@@ -5,6 +5,7 @@ alpha-warning = You are running an early stage development version. Be aware it 
 
 # New task dialog
 new-task = New task...
+add-list = Add list
 add-to-today = Add to Today
 set-time = Set time
 set-due-date = Set due date
@@ -42,6 +43,8 @@ preferences = Preferences
 appearance = Appearance
 compact = Compact tasks
 compact-description = Toggle this to make tasks smaller
+extended-sidebar = Extended sidebar
+extended-sidebar-description = Extend the sidebar to include icons and labels.
 color-scheme = Color scheme
 color-scheme-description = Set the color scheme of the app
 color-scheme-light = Light

@@ -1,0 +1,23 @@
+[package]
+name = "done_local_storage"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+diesel = { version = "2.0.2", features = ["sqlite", "chrono"] }
+chrono = { version = "0.4.19", features = ["serde"] }
+anyhow = "1.0.66"
+uuid = { version = "1.2.1", features = ["v4"] }
+diesel_migrations = "2.0.0"
+tokio-stream = "0.1.11"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
+
+[dependencies.libset]
+git = "https://github.com/edfloreshz/libset"
+branch = "beta"

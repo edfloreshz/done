@@ -1,4 +1,4 @@
-use done_provider::{List, Task};
+use done_local_storage::models::{List, Task};
 use relm4::gtk;
 
 #[derive(Debug)]

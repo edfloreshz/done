@@ -3,15 +3,12 @@ use crate::factories::task_entry::model::TaskEntryModel;
 use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::preferences::model::Preferences;
-use crate::widgets::smart_lists::widget::{
-	SmartListContainerInit, SmartListContainerInput, SmartListContainerModel,
-};
+
 use libset::format::FileFormat;
 use libset::project::Project;
 
 use relm4::component::{
-	AsyncComponent, AsyncComponentController, AsyncComponentParts,
-	AsyncComponentSender,
+	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::{
@@ -57,8 +54,6 @@ impl AsyncComponent for ContentModel {
 						set_transition_duration: 250,
 						set_transition_type: gtk::StackTransitionType::Crossfade,
 						gtk::ScrolledWindow {
-							#[watch]
-							set_visible: model.parent_list.is_some(),
 							set_vexpand: true,
 							set_hexpand: true,
 							#[local_ref]
@@ -68,13 +63,6 @@ impl AsyncComponent for ContentModel {
 								set_valign: gtk::Align::Start,
 								set_margin_all: 5,
 							},
-						},
-						gtk::ScrolledWindow {
-							#[watch]
-							set_visible: model.selected_smart_list.is_some(),
-							set_vexpand: true,
-							set_hexpand: true,
-							set_child: Some(model.smart_lists.widget())
 						},
 					},
 					append: model.task_entry.widget()
@@ -105,9 +93,6 @@ impl AsyncComponent for ContentModel {
 			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
 			.unwrap()
 			.compact;
-		let smart_lists = SmartListContainerModel::builder()
-			.launch(SmartListContainerInit::new(None))
-			.forward(sender.input_sender(), |message| match message {});
 
 		let model = ContentModel {
 			task_factory: AsyncFactoryVecDeque::new(
@@ -127,10 +112,7 @@ impl AsyncComponent for ContentModel {
 					TaskEntryOutput::AddTask(task) => ContentInput::AddTask(task),
 				},
 			),
-			smart_lists,
-			plugin: None,
 			parent_list: None,
-			selected_smart_list: None,
 			compact,
 			selected_task: None,
 			show_task_details: false,
@@ -165,19 +147,10 @@ impl AsyncComponent for ContentModel {
 					tracing::error!("{err}");
 				}
 			},
-			ContentInput::TaskListSelected(list_model) => {
-				if let Err(err) = select_task_list(self, list_model).await {
+			ContentInput::SelectList(list) => {
+				if let Err(err) = select_task_list(self, list).await {
 					tracing::error!("{err}");
 				}
-			},
-			ContentInput::SelectSmartList(list) => {
-				self.selected_smart_list = Some(list.clone());
-				self
-					.smart_lists
-					.sender()
-					.send(SmartListContainerInput::SetSmartList(list))
-					.unwrap();
-				self.parent_list = None;
 			},
 			ContentInput::RevealTaskDetails(index, task) => {
 				reveal_task_details(self, index, task)

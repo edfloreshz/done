@@ -1,22 +1,23 @@
 use crate::application::info::PROFILE;
-use crate::application::plugin::Plugin;
 use crate::application::setup::{self, main_app};
-use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::content::model::ContentModel;
-use crate::widgets::lists::messages::{TaskListsInput, TaskListsOutput};
-use crate::widgets::lists::model::TaskListsModel;
+use crate::widgets::list_entry::ListEntryComponent;
 use crate::widgets::preferences::messages::PreferencesComponentOutput;
-use crate::widgets::preferences::model::PreferencesComponentModel;
+use crate::widgets::preferences::model::{
+	Preferences, PreferencesComponentModel,
+};
 use crate::widgets::sidebar::messages::{
 	SidebarComponentInput, SidebarComponentOutput,
 };
 use crate::widgets::sidebar::model::SidebarComponentModel;
-use crate::widgets::smart_lists::sidebar::model::SmartList;
+use crate::widgets::sidebar::model::SidebarList;
 use crate::widgets::welcome::WelcomeComponent;
 use gtk::prelude::*;
+use libset::format::FileFormat;
+use libset::project::Project;
 use relm4::adw::Toast;
 use relm4::component::{AsyncComponentParts, AsyncController};
 use relm4::loading_widgets::LoadingWidgets;
@@ -28,17 +29,17 @@ use relm4::{
 };
 use relm4::{view, AsyncComponentSender, RelmWidgetExt};
 use relm4_icons::icon_name;
-use sysinfo::{ProcessExt, System, SystemExt};
 
 pub struct App {
 	sidebar: AsyncController<SidebarComponentModel>,
 	content: AsyncController<ContentModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
-	task_lists: AsyncController<TaskListsModel>,
 	welcome: Controller<WelcomeComponent>,
+	list_entry: Controller<ListEntryComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
 	warning_revealed: bool,
+	extended: bool,
 }
 
 impl App {
@@ -46,42 +47,39 @@ impl App {
 		sidebar: AsyncController<SidebarComponentModel>,
 		content: AsyncController<ContentModel>,
 		preferences: AsyncController<PreferencesComponentModel>,
-		task_lists: AsyncController<TaskListsModel>,
 		welcome: Controller<WelcomeComponent>,
+		list_entry: Controller<ListEntryComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
+		extended: bool,
 	) -> Self {
 		Self {
 			sidebar,
 			content,
 			preferences,
-			task_lists,
 			welcome,
+			list_entry,
 			about_dialog,
 			page_title: None,
 			warning_revealed: true,
+			extended,
 		}
 	}
 }
 
 #[derive(Debug)]
 pub enum Event {
-	TaskListSelected(TaskListFactoryInit),
 	Notify(String, u32),
-	PluginSelected(Plugin),
-	EnablePluginOnSidebar(Plugin),
-	AddPluginToSidebar(Plugin),
-	DisablePluginOnSidebar(Plugin),
-	RemovePluginFromSidebar(Plugin),
-	SelectSmartList(SmartList),
+	SelectList(SidebarList),
+	AddTaskList,
 	ToggleCompact(bool),
-	RemoveService(Plugin),
+	ToggleExtended(bool),
 	OpenPreferences,
 	DisablePlugin,
 	CloseWarning,
-	Folded,
-	Unfolded,
-	Forward,
-	Back,
+	// Folded,
+	// Unfolded,
+	// Forward,
+	// Back,
 	Quit,
 }
 
@@ -102,10 +100,21 @@ impl AsyncComponent for App {
 	type Output = ();
 	type Init = ();
 
+	menu! {
+		primary_menu: {
+			section! {
+				preferences => PreferencesAction,
+				keyboard_shortcuts => ShortcutsAction,
+				about_done => AboutAction,
+				quit => QuitAction,
+			}
+		}
+	}
+
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_width: 850,
+			set_default_width: 500,
 			set_default_height: 700,
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
@@ -127,96 +136,113 @@ impl AsyncComponent for App {
 			},
 
 			gtk::Box {
-				set_orientation: gtk::Orientation::Vertical,
-				#[name(overlay)]
-				adw::ToastOverlay {
-					#[wrap(Some)]
-					set_child: leaflet = &adw::Leaflet {
-						set_can_navigate_back: true,
-						append: sidebar = &gtk::Box {
-							gtk::Box {
-								set_css_classes: &["view"],
-								set_orientation: gtk::Orientation::Vertical,
-								set_width_request: 20,
-								#[name = "services_sidebar_header"]
-								gtk::CenterBox {
-									set_height_request: 46,
-									#[wrap(Some)]
-									set_center_widget = &gtk::MenuButton {
-										set_valign: gtk::Align::Center,
-										set_css_classes: &["flat"],
-										set_icon_name: icon_name::MENU,
-										set_menu_model: Some(&primary_menu),
-									},
-								},
-								gtk::Separator::default(),
-								append: model.sidebar.widget(),
-							},
-							gtk::Separator::default(),
-							append: model.task_lists.widget(),
+				set_orientation: gtk::Orientation::Horizontal,
+				#[name = "sidebar"]
+				gtk::Box {
+					set_css_classes: &["view"],
+					set_orientation: gtk::Orientation::Vertical,
+					#[watch]
+					set_width_request: if model.extended { 200 } else { 50 },
+					#[name = "services_sidebar_header"]
+					adw::HeaderBar {
+						#[watch]
+						set_visible: model.extended,
+						set_css_classes: &["flat"],
+						set_show_end_title_buttons: false,
+						set_show_start_title_buttons: false,
+						pack_start = &gtk::MenuButton {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Menu"),
+							set_valign: gtk::Align::Center,
+							set_css_classes: &["flat"],
+							set_icon_name: icon_name::MENU,
+							set_menu_model: Some(&primary_menu),
 						},
-						append: &gtk::Separator::default(),
-						#[name(content)]
-						append = &gtk::Box {
-							set_orientation: gtk::Orientation::Vertical,
-							#[name = "content_header"]
-							append = &adw::HeaderBar {
-								set_hexpand: true,
-								set_css_classes: &["flat"],
-								set_show_start_title_buttons: false,
-								set_show_end_title_buttons: true,
-								#[watch]
-								set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
-								pack_start: go_back_button = &gtk::Button {
-									set_has_tooltip: true,
-									set_tooltip_text: Some("Back"),
-									set_icon_name: icon_name::LEFT,
-									set_visible: false,
-									connect_clicked[sender] => move |_| {
-										sender.input(Event::Back);
-									}
-								},
-								pack_start = &gtk::Button {
-									set_has_tooltip: true,
-									set_tooltip_text: Some("Search"),
-									set_icon_name: icon_name::LOUPE,
-								},
-							},
-							append = &gtk::Box {
+						#[wrap(Some)]
+						set_title_widget = &gtk::Label {
+							set_hexpand: true,
+							set_text: fl!("done"),
+						},
+						pack_end = &gtk::Button {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Add new task list"),
+							set_icon_name: icon_name::PLUS,
+							set_css_classes: &["flat", "image-button"],
+							set_valign: gtk::Align::Center,
+							connect_clicked => Event::AddTaskList
+						},
+					},
+					gtk::CenterBox {
+						#[watch]
+						set_visible: !model.extended,
+						set_height_request: 46,
+						#[wrap(Some)]
+						set_center_widget = &gtk::MenuButton {
+							set_valign: gtk::Align::Center,
+							set_css_classes: &["flat"],
+							set_icon_name: icon_name::MENU,
+							set_menu_model: Some(&primary_menu),
+						},
+					},
+					gtk::Separator::default(),
+					append: model.sidebar.widget(),
+				},
+				gtk::Separator::default(),
+				#[name(content)]
+				gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
+					#[name = "content_header"]
+					append = &adw::HeaderBar {
+						set_hexpand: true,
+						set_css_classes: &["flat"],
+						set_show_start_title_buttons: false,
+						set_show_end_title_buttons: true,
+						#[watch]
+						set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
+						pack_start: go_back_button = &gtk::Button {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Back"),
+							set_icon_name: icon_name::LEFT,
+							set_visible: false,
+						},
+						pack_start = &gtk::Button {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Search"),
+							set_icon_name: icon_name::LOUPE,
+						},
+					},
+					#[name(overlay)]
+					adw::ToastOverlay {
+						#[wrap(Some)]
+						set_child = &gtk::Box {
+							gtk::Box {
 								#[watch]
 								set_visible: model.page_title.is_none(),
 								append: model.welcome.widget()
 							},
-							append = &gtk::Box {
+							gtk::Box {
 								#[watch]
 								set_visible: model.page_title.is_some(),
 								append: model.content.widget()
 							},
-						},
-						connect_folded_notify[sender] => move |leaflet| {
-							if leaflet.is_folded() {
-								sender.input(Event::Folded);
-							} else {
-								sender.input(Event::Unfolded);
-							}
 						}
 					},
-				},
-				gtk::InfoBar {
-					set_message_type: gtk::MessageType::Warning,
-					set_visible: PROFILE == "Devel",
-					#[watch]
-					set_revealed: model.warning_revealed,
-					set_show_close_button: true,
-					connect_response[sender] => move |_, _| {
-						sender.input_sender().send(Event::CloseWarning).unwrap()
+					gtk::InfoBar {
+						set_message_type: gtk::MessageType::Warning,
+						set_visible: PROFILE == "Devel",
+						#[watch]
+						set_revealed: model.warning_revealed,
+						set_show_close_button: true,
+						connect_response[sender] => move |_, _| {
+							sender.input_sender().send(Event::CloseWarning).unwrap()
+						},
+						gtk::Label {
+							set_wrap: true,
+							set_natural_wrap_mode: gtk::NaturalWrapMode::None,
+							add_css_class: "warning",
+							set_text: fl!("alpha-warning")
+						}
 					},
-					gtk::Label {
-						set_wrap: true,
-						set_natural_wrap_mode: gtk::NaturalWrapMode::None,
-						add_css_class: "warning",
-						set_text: fl!("alpha-warning")
-					}
 				},
 			}
 		}
@@ -271,20 +297,11 @@ impl AsyncComponent for App {
 		let preferences_controller = PreferencesComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
-				PreferencesComponentOutput::AddPluginToSidebar(plugin) => {
-					Event::AddPluginToSidebar(plugin)
-				},
-				PreferencesComponentOutput::EnablePluginOnSidebar(plugin) => {
-					Event::EnablePluginOnSidebar(plugin)
-				},
-				PreferencesComponentOutput::DisablePluginOnSidebar(plugin) => {
-					Event::DisablePluginOnSidebar(plugin)
-				},
 				PreferencesComponentOutput::ToggleCompact(compact) => {
 					Event::ToggleCompact(compact)
 				},
-				PreferencesComponentOutput::RemovePluginFromSidebar(plugin) => {
-					Event::RemovePluginFromSidebar(plugin)
+				PreferencesComponentOutput::ToggleExtended(extended) => {
+					Event::ToggleExtended(extended)
 				},
 			});
 
@@ -292,23 +309,12 @@ impl AsyncComponent for App {
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
 				SidebarComponentOutput::OpenPreferences => Event::OpenPreferences,
-				SidebarComponentOutput::PluginSelected(plugin) => {
-					Event::PluginSelected(plugin)
-				},
-				SidebarComponentOutput::RemoveService(plugin) => {
-					Event::RemoveService(plugin)
-				},
 				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
-				SidebarComponentOutput::ListSelected(list) => {
-					Event::TaskListSelected(*list)
-				},
-				SidebarComponentOutput::Forward => Event::Forward,
+				// SidebarComponentOutput::Forward => Event::Forward,
 				SidebarComponentOutput::Notify(msg, timeout) => {
 					Event::Notify(msg, timeout)
 				},
-				SidebarComponentOutput::SelectSmartList(list) => {
-					Event::SelectSmartList(list)
-				},
+				SidebarComponentOutput::SelectList(list) => Event::SelectList(list),
 			});
 
 		let content_controller = ContentModel::builder().launch(()).forward(
@@ -318,26 +324,27 @@ impl AsyncComponent for App {
 			},
 		);
 
-		let task_lists_controller = TaskListsModel::builder().launch(None).forward(
-			sender.input_sender(),
-			|message| match message {
-				TaskListsOutput::Forward => Event::Forward,
-				TaskListsOutput::Notify(_) => todo!(),
-				TaskListsOutput::ListSelected(task_list) => {
-					Event::TaskListSelected(*task_list)
-				},
-			},
-		);
-
 		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
+		let list_entry_controller =
+			ListEntryComponent::builder().launch(()).detach();
+
+		let current_preferences =
+			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
+				project
+					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
+					.unwrap_or(Preferences::new().await)
+			} else {
+				Preferences::new().await
+			};
 
 		let mut model = App::new(
 			sidebar_controller,
 			content_controller,
 			preferences_controller,
-			task_lists_controller,
 			welcome_controller,
+			list_entry_controller,
 			None,
+			current_preferences.extended,
 		);
 
 		let widgets = view_output!();
@@ -396,46 +403,16 @@ impl AsyncComponent for App {
 		_root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => {
-				let processes = System::new_all();
-				for plugin in Plugin::get_local().unwrap() {
-					let mut plugin =
-						processes.processes_by_exact_name(&plugin.process_name);
-					if let Some(process) = plugin.next() {
-						if process.kill() {
-							tracing::info!("The {} process was killed.", process.name());
-						} else {
-							tracing::error!("Failed to kill process.");
-						}
-					} else {
-						tracing::info!("Process is not running.");
-					}
-				}
-				main_app().quit()
+			Event::Quit => main_app().quit(),
+			Event::AddTaskList => {
+				let list_entry = self.list_entry.widget();
+				list_entry.present();
 			},
 			Event::OpenPreferences => {
-				let preferences = self.preferences.widget().clone();
+				let preferences = self.preferences.widget();
 				preferences.present();
 			},
 			Event::CloseWarning => self.warning_revealed = false,
-			Event::RemoveService(plugin) => self
-				.task_lists
-				.sender()
-				.send(TaskListsInput::RemoveService(plugin))
-				.unwrap_or_default(),
-			Event::PluginSelected(plugin) => self
-				.task_lists
-				.sender()
-				.send(TaskListsInput::PluginSelected(plugin))
-				.unwrap_or_default(),
-			Event::TaskListSelected(list) => {
-				self.page_title = Some(list.list.name.clone());
-				self
-					.content
-					.sender()
-					.send(ContentInput::TaskListSelected(list))
-					.unwrap_or_default();
-			},
 			Event::DisablePlugin => {
 				self.page_title = None;
 				self
@@ -447,56 +424,29 @@ impl AsyncComponent for App {
 			Event::Notify(msg, timeout) => {
 				widgets.overlay.add_toast(toast(msg, timeout))
 			},
-			Event::Folded => {
-				if self.page_title.is_some() {
-					widgets.leaflet.set_visible_child(&widgets.content);
-				} else {
-					widgets.leaflet.set_visible_child(&widgets.sidebar);
-				}
-				widgets.go_back_button.set_visible(true);
-				// widgets.sidebar_header.set_show_start_title_buttons(true);
-				// widgets.sidebar_header.set_show_end_title_buttons(true);
-			},
-			Event::Unfolded => {
-				widgets.go_back_button.set_visible(false);
-				// widgets.sidebar_header.set_show_start_title_buttons(false);
-				// widgets.sidebar_header.set_show_end_title_buttons(false);
-			},
-			Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
-			Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
-			Event::AddPluginToSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::AddPluginToSidebar(plugin))
-				.unwrap(),
-			Event::EnablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::EnableService(plugin))
-				.unwrap_or_default(),
-			Event::DisablePluginOnSidebar(plugin) => self
-				.sidebar
-				.sender()
-				.send(SidebarComponentInput::DisableService(plugin))
-				.unwrap_or_default(),
-			Event::RemovePluginFromSidebar(plugin) => {
-				self
-					.sidebar
-					.sender()
-					.send(SidebarComponentInput::RemoveService(plugin))
-					.unwrap_or_default();
-				self
-					.content
-					.sender()
-					.send(ContentInput::DisablePlugin)
-					.unwrap_or_default()
-			},
-			Event::SelectSmartList(list) => {
+			// Event::Folded => {
+			// 	if self.page_title.is_some() {
+			// 		widgets.leaflet.set_visible_child(&widgets.content);
+			// 	} else {
+			// 		widgets.leaflet.set_visible_child(&widgets.sidebar);
+			// 	}
+			// 	widgets.go_back_button.set_visible(true);
+			// 	// widgets.sidebar_header.set_show_start_title_buttons(true);
+			// 	// widgets.sidebar_header.set_show_end_title_buttons(true);
+			// },
+			// Event::Unfolded => {
+			// 	widgets.go_back_button.set_visible(false);
+			// 	// widgets.sidebar_header.set_show_start_title_buttons(false);
+			// 	// widgets.sidebar_header.set_show_end_title_buttons(false);
+			// },
+			// Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
+			// Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
+			Event::SelectList(list) => {
 				self.page_title = Some(list.name());
 				self
 					.content
 					.sender()
-					.send(ContentInput::SelectSmartList(list))
+					.send(ContentInput::SelectList(list))
 					.unwrap_or_default();
 			},
 			Event::ToggleCompact(compact) => self
@@ -504,19 +454,17 @@ impl AsyncComponent for App {
 				.sender()
 				.send(ContentInput::ToggleCompact(compact))
 				.unwrap(),
+
+			Event::ToggleExtended(extended) => {
+				self.extended = extended;
+				self
+					.sidebar
+					.sender()
+					.send(SidebarComponentInput::ToggleExtended(extended))
+					.unwrap()
+			},
 		}
 		self.update_view(widgets, sender);
-	}
-
-	menu! {
-		primary_menu: {
-			section! {
-				preferences => PreferencesAction,
-				keyboard_shortcuts => ShortcutsAction,
-				about_done => AboutAction,
-				quit => QuitAction,
-			}
-		}
 	}
 }
 

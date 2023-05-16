@@ -1,9 +1,6 @@
 pub mod about_dialog;
 pub mod content;
 pub mod list_entry;
-pub mod lists;
 pub mod preferences;
-pub mod service;
 pub mod sidebar;
-pub mod smart_lists;
 pub mod welcome;

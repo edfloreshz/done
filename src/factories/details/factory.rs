@@ -8,9 +8,7 @@ use adw::{
 	},
 };
 use chrono::{Datelike, Duration, Local, NaiveDateTime};
-use done_provider::{
-	date_from_timestamp, timestamp_from_date, Priority, Status, SubTask,
-};
+use done_local_storage::models::{Priority, Status, Task};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
@@ -166,7 +164,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								add_suffix = &gtk::Switch {
 									set_tooltip_text: Some("Complete task"),
 									#[watch]
-									set_active: self.task.status == 1,
+									set_active: self.task.status == Status::Completed,
 									set_valign: gtk::Align::Center,
 									connect_state_set[sender] => move |_, state| {
 										sender.input(TaskDetailsFactoryInput::SetStatus(state));
@@ -186,7 +184,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_tooltip_text: Some("Low"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
-									set_active: self.task.priority == Priority::Low as i32,
+									set_active: self.task.priority == Priority::Low,
 									connect_toggled[sender] => move |toggle| {
 										if toggle.is_active() {
 											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
@@ -199,7 +197,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
-									set_active: self.task.priority == Priority::Normal as i32,
+									set_active: self.task.priority == Priority::Normal,
 									connect_toggled[sender] => move |toggle| {
 										if toggle.is_active() {
 											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
@@ -212,7 +210,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
-									set_active: self.task.priority == Priority::High as i32,
+									set_active: self.task.priority == Priority::High,
 									connect_toggled[sender] => move |toggle| {
 										if toggle.is_active() {
 											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
@@ -392,11 +390,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			selected_due_date: init
 				.task
 				.due_date
-				.map(|date| date_from_timestamp(date).format("%m/%d/%Y").to_string()),
+				.map(|date| date.format("%m/%d/%Y").to_string()),
 			selected_reminder_date: init
 				.task
 				.reminder_date
-				.map(|date| date_from_timestamp(date).format("%m/%d/%Y").to_string()),
+				.map(|date| date.format("%m/%d/%Y").to_string()),
 			sub_tasks: FactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
@@ -452,12 +450,12 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			},
 			TaskDetailsFactoryInput::CreateSubTask => {
 				let index = self.sub_tasks.guard().push_back(SubTaskInit {
-					sub_task: SubTask::default(),
+					sub_task: Task::default(),
 				});
 				self
 					.task
 					.sub_tasks
-					.insert(index.current_index(), SubTask::default());
+					.insert(index.current_index(), Task::default());
 			},
 			TaskDetailsFactoryInput::UpdateSubTask(index, sub_task) => {
 				self
@@ -495,7 +493,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::Reminder => {
 						sender.input(TaskDetailsFactoryInput::SetReminderDate(date));
 						if let Some(date) = date {
-							self.task.reminder_date = Some(timestamp_from_date(date));
+							self.task.reminder_date = Some(date);
 							self.selected_reminder_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.reminder_calendar.set_year(date.year());
@@ -509,7 +507,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					DateTpe::DueDate => {
 						sender.input(TaskDetailsFactoryInput::SetDueDate(date));
 						if let Some(date) = date {
-							self.task.due_date = Some(timestamp_from_date(date));
+							self.task.due_date = Some(date);
 							self.selected_due_date =
 								Some(date.format("%m/%d/%Y").to_string());
 							widgets.due_date_calendar.set_year(date.year());
@@ -525,7 +523,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryInput::SetDueDate(due_date) => {
 				if let Some(date) = due_date {
 					self.selected_due_date = Some(date.format("%m/%d/%Y").to_string());
-					self.task.due_date = Some(timestamp_from_date(date));
+					self.task.due_date = Some(date);
 				} else {
 					self.task.due_date = None;
 				}
@@ -534,7 +532,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				if let Some(date) = reminder_date {
 					self.selected_reminder_date =
 						Some(date.format("%m/%d/%Y").to_string());
-					self.task.reminder_date = Some(timestamp_from_date(date));
+					self.task.reminder_date = Some(date);
 				} else {
 					self.task.reminder_date = None;
 				}
@@ -595,16 +593,16 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				self.task.notes = notes;
 			},
 			TaskDetailsFactoryInput::SetPriority(priority) => {
-				self.task.priority = priority;
+				self.task.priority = priority.into();
 			},
 			TaskDetailsFactoryInput::SetFavorite(favorite) => {
 				self.task.favorite = favorite;
 			},
 			TaskDetailsFactoryInput::SetStatus(status) => {
 				if status {
-					self.task.status = Status::Completed as i32;
+					self.task.status = Status::Completed;
 				} else {
-					self.task.status = Status::NotStarted as i32;
+					self.task.status = Status::NotStarted;
 				}
 			},
 		}

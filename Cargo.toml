@@ -14,7 +14,6 @@ readme = "README.md"
 
 [dependencies]
 tokio = { version = "1.25", features = ["process"]}
-strum_macros = "0.24.3"
 i18n-embed-fl = "0.6.4"
 once_cell = "1.13.0"
 derive-new = "0.5.9"
@@ -23,7 +22,7 @@ sysinfo = "0.27.5"
 serde_json = "1.0"
 anyhow = "1.0.56"
 strum = "0.24.1"
-tonic = "0.8.2"
+strum_macros = "0.24.3"
 glib = "0.16.2"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
@@ -55,8 +54,14 @@ features = [
     "image-adjust-brightness",
     "file-cabinet",
     "star-outline-rounded",
-    "controls"
+    "controls",
+    "dark-mode",
+    "list-large",
+    "dock-left"
 ]
+
+[dependencies.done_local_storage]
+path = "core"
 
 [dependencies.chrono]
 version = "0.4.23"
@@ -88,9 +93,6 @@ branch = "beta"
 
 [dependencies.directories]
 git = "https://github.com/edfloreshz/directories-rs"
-
-[dependencies.done_provider]
-git = "https://github.com/done-devel/proto-rust"
 
 [build-dependencies]
 glib-build-tools = "0.16.3"

@@ -1,17 +1,14 @@
-use done_provider::Task;
+use done_local_storage::models::Task;
 use relm4::prelude::DynamicIndex;
 
-use crate::factories::task_list::model::TaskListFactoryInit;
-
-use crate::widgets::smart_lists::sidebar::model::SmartList;
+use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
 pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Task),
-	TaskListSelected(TaskListFactoryInit),
-	SelectSmartList(SmartList),
+	SelectList(SidebarList),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 	ToggleCompact(bool),
 	DisablePlugin,
