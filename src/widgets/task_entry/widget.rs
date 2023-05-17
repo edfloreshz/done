@@ -1,4 +1,4 @@
-use crate::fl;
+use crate::{fl, widgets::sidebar::model::SidebarList};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use done_local_storage::models::{List, Task};
 use gtk::traits::{EditableExt, ListBoxRowExt};
@@ -100,7 +100,11 @@ impl Component for TaskEntryModel {
 					sender.input(TaskEntryInput::CleanTaskEntry);
 				}
 			},
-			TaskEntryInput::SetParentList(list) => self.parent_list = list,
+			TaskEntryInput::SetParentList(list) => {
+				if let Some(SidebarList::Custom(list)) = list {
+					self.parent_list = Some(list);
+				}
+			},
 		}
 	}
 }

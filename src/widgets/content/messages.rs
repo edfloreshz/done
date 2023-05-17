@@ -14,6 +14,7 @@ pub enum ContentInput {
 	DisablePlugin,
 	CleanTaskEntry,
 	HideFlap,
+	Refresh,
 }
 
 #[derive(Debug)]

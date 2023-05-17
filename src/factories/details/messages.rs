@@ -12,6 +12,7 @@ pub enum TaskDetailsFactoryInput {
 	SetPriority(i32),
 	SetFavorite(bool),
 	SetStatus(bool),
+	SetToday(bool),
 	CreateSubTask,
 	AddTag(String),
 	RemoveTag(DynamicIndex),
