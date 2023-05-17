@@ -1,8 +1,10 @@
-use done_local_storage::models::{List, Task};
+use done_local_storage::models::Task;
+
+use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
 pub enum TaskEntryInput {
-	SetParentList(Option<List>),
+	SetParentList(Option<SidebarList>),
 	AddTask,
 	Rename(String),
 	EnterCreationMode,

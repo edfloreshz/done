@@ -107,7 +107,7 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_size: (600, 800),
+			set_default_size: (650, 700),
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
 				gtk::Inhibit(true)
@@ -258,7 +258,6 @@ impl AsyncComponent for App {
 				#[local_ref]
 				root {
 					set_title: Some("Done"),
-					set_default_size: (850, 700),
 
 					#[name(loading)]
 					gtk::CenterBox {

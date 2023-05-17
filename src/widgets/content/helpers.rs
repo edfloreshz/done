@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use chrono::{NaiveDateTime, Utc};
 use done_local_storage::models::Task;
 use done_local_storage::LocalStorage;
@@ -39,8 +39,8 @@ pub fn hide_flap(
 	sender: AsyncComponentSender<ContentModel>,
 ) {
 	model.show_task_details = false;
-	if let Some(list) = model.parent_list.clone() {
-		sender.input(ContentInput::SelectList(SidebarList::Custom(list)))
+	if let Some(list) = &model.parent_list {
+		sender.input(ContentInput::SelectList(list.clone()))
 	}
 }
 
@@ -49,31 +49,28 @@ pub async fn add_task(
 	sender: AsyncComponentSender<ContentModel>,
 	task: &mut Task,
 ) -> Result<()> {
-	task.parent = model
-		.parent_list
-		.as_ref()
-		.ok_or_else(|| anyhow!("This task doesn't have a parent list."))?
-		.id
-		.clone();
-	let local = LocalStorage::new();
-	match local.create_task(task.clone()).await {
-		Ok(_) => {
-			model.task_factory.guard().push_back(TaskInit::new(
-				task.clone(),
-				model.parent_list.clone(),
-				model.compact,
-			));
-			model.show_task_details = false;
-			sender.input(ContentInput::HideFlap);
-			sender
-				.output(ContentOutput::Notify("Task added successfully".into(), 1))
-				.unwrap();
-		},
-		Err(_) => {
-			sender
-				.output(ContentOutput::Notify("Error adding task".into(), 2))
-				.unwrap();
-		},
+	if let Some(SidebarList::Custom(parent)) = &model.parent_list {
+		task.parent = parent.id.clone();
+		let local = LocalStorage::new();
+		match local.create_task(task.clone()).await {
+			Ok(_) => {
+				model.task_factory.guard().push_back(TaskInit::new(
+					task.clone(),
+					Some(parent.clone()),
+					model.compact,
+				));
+				model.show_task_details = false;
+				sender.input(ContentInput::HideFlap);
+				sender
+					.output(ContentOutput::Notify("Task added successfully".into(), 1))
+					.unwrap();
+			},
+			Err(_) => {
+				sender
+					.output(ContentOutput::Notify("Error adding task".into(), 2))
+					.unwrap();
+			},
+		}
 	}
 
 	Ok(())
@@ -120,6 +117,7 @@ pub async fn update_task(
 			if model.show_task_details {
 				sender.input(ContentInput::HideFlap);
 			}
+			sender.input(ContentInput::Refresh);
 			sender
 				.output(ContentOutput::Notify("Task updated successfully".into(), 1))
 				.unwrap_or_default()
@@ -146,7 +144,7 @@ pub async fn select_task_list(
 	guard.clear();
 	match list {
 		SidebarList::All => {
-			model.parent_list = None;
+			model.parent_list = Some(SidebarList::All);
 			if let Ok(response) = local.get_all_tasks().await {
 				for task in response {
 					guard.push_back(TaskInit::new(
@@ -158,9 +156,13 @@ pub async fn select_task_list(
 			}
 		},
 		SidebarList::Today => {
-			model.parent_list = None;
+			model.parent_list = Some(SidebarList::Today);
 			if let Ok(response) = local.get_all_tasks().await {
-				for task in response.iter().filter(|task| task.today) {
+				for task in response.iter().filter(|task| {
+					task.today
+						|| task.due_date.is_some()
+							&& task.due_date.unwrap().date() == Utc::now().naive_utc().date()
+				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
 						local.get_list(task.parent.clone()).await.ok(),
@@ -170,7 +172,7 @@ pub async fn select_task_list(
 			}
 		},
 		SidebarList::Starred => {
-			model.parent_list = None;
+			model.parent_list = Some(SidebarList::Starred);
 			if let Ok(response) = local.get_all_tasks().await {
 				for task in response.iter().filter(|task| task.favorite) {
 					guard.push_back(TaskInit::new(
@@ -182,7 +184,7 @@ pub async fn select_task_list(
 			}
 		},
 		SidebarList::Next7Days => {
-			model.parent_list = None;
+			model.parent_list = Some(SidebarList::Next7Days);
 			if let Ok(response) = local.get_all_tasks().await {
 				for task in response.iter().filter(|task: &&Task| {
 					task.due_date.is_some()
@@ -197,15 +199,15 @@ pub async fn select_task_list(
 			}
 		},
 		SidebarList::Custom(list) => {
-			model.parent_list = Some(list.clone());
+			model.parent_list = Some(SidebarList::Custom(list.clone()));
 
 			guard.clear();
 
-			if let Ok(response) = local.get_tasks_from_list(list.id).await {
+			if let Ok(response) = local.get_tasks_from_list(list.id.clone()).await {
 				for task in response {
 					guard.push_back(TaskInit::new(
 						task,
-						model.parent_list.clone(),
+						Some(list.clone()),
 						model.compact,
 					));
 				}

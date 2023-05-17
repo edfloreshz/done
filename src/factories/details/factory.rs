@@ -158,6 +158,21 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
+								set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS),
+								set_title: "Today",
+								set_subtitle: "Add this task to Today.",
+								add_suffix = &gtk::Switch {
+									set_tooltip_text: Some("Add to Today"),
+									#[watch]
+									set_active: self.task.today == true,
+									set_valign: gtk::Align::Center,
+									connect_state_set[sender] => move |_, state| {
+										sender.input(TaskDetailsFactoryInput::SetToday(state));
+										gtk::Inhibit(false)
+									}
+								}
+							},
+							adw::ActionRow {
 								set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE),
 								set_title: "Completed",
 								set_subtitle: "Sets wether the task is completed",
@@ -605,6 +620,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					self.task.status = Status::NotStarted;
 				}
 			},
+			TaskDetailsFactoryInput::SetToday(today) => self.task.today = today,
 		}
 		if self.task != self.original_task {
 			self.dirty = true;

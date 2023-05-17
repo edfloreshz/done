@@ -159,6 +159,11 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
+			ContentInput::Refresh => {
+				if let Some(list) = &self.parent_list {
+					sender.input(ContentInput::SelectList(list.clone()))
+				}
+			},
 			ContentInput::AddTask(mut task) => {
 				if let Err(err) = add_task(self, sender, &mut task).await {
 					tracing::error!("{err}");
