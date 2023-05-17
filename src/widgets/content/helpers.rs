@@ -142,6 +142,10 @@ pub async fn select_task_list(
 	let local = LocalStorage::new();
 	let mut guard = model.task_factory.guard();
 	guard.clear();
+	model.icon = list.icon().map(|s| s.to_owned());
+	model.title = list.name();
+	model.description = list.description();
+	model.smart = list.smart();
 	match list {
 		SidebarList::All => {
 			model.parent_list = Some(SidebarList::All);

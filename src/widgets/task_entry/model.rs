@@ -1,9 +1,11 @@
-use done_local_storage::models::{List, Task};
+use done_local_storage::models::Task;
 use relm4::gtk;
+
+use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
 pub struct TaskEntryModel {
 	pub task: Task,
-	pub parent_list: Option<List>,
+	pub parent_list: Option<SidebarList>,
 	pub buffer: gtk::EntryBuffer,
 }

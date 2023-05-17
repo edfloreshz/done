@@ -1,6 +1,6 @@
 use crate::{fl, widgets::sidebar::model::SidebarList};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_local_storage::models::{List, Task};
+use done_local_storage::models::Task;
 use gtk::traits::{EditableExt, ListBoxRowExt};
 use relm4::{
 	adw, gtk,
@@ -18,13 +18,16 @@ impl Component for TaskEntryModel {
 	type CommandOutput = ();
 	type Input = TaskEntryInput;
 	type Output = TaskEntryOutput;
-	type Init = Option<List>;
+	type Init = Option<SidebarList>;
 
 	view! {
 		#[root]
 		adw::EntryRow {
 			#[watch]
-			set_visible: model.parent_list.is_some(),
+			set_visible: match model.parent_list.as_ref() {
+				Some(SidebarList::Custom(_)) => true,
+				_ => false,
+			},
 			set_hexpand: true,
 			add_css_class: "card",
 			set_title: fl!("new-task"),
@@ -89,21 +92,19 @@ impl Component for TaskEntryModel {
 			},
 			TaskEntryInput::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
-					self.task.parent = self.parent_list.as_ref().unwrap().id.clone();
-					sender
-						.output(TaskEntryOutput::AddTask(self.task.clone()))
-						.unwrap_or_default();
-					self.task = Task::new(
-						String::new(),
-						self.parent_list.as_ref().unwrap().id.clone(),
-					);
-					sender.input(TaskEntryInput::CleanTaskEntry);
+					if let SidebarList::Custom(list) = self.parent_list.as_ref().unwrap()
+					{
+						self.task.parent = list.id.clone();
+						sender
+							.output(TaskEntryOutput::AddTask(self.task.clone()))
+							.unwrap_or_default();
+						self.task = Task::new(String::new(), list.id.clone());
+						sender.input(TaskEntryInput::CleanTaskEntry);
+					}
 				}
 			},
 			TaskEntryInput::SetParentList(list) => {
-				if let Some(SidebarList::Custom(list)) = list {
-					self.parent_list = Some(list);
-				}
+				self.parent_list = list;
 			},
 		}
 	}

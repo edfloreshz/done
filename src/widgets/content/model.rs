@@ -12,6 +12,10 @@ pub struct ContentModel {
 	pub task_entry: Controller<TaskEntryModel>,
 	pub parent_list: Option<SidebarList>,
 	pub compact: bool,
+	pub icon: Option<String>,
+	pub title: String,
+	pub description: String,
+	pub smart: bool,
 	pub selected_task: Option<Task>,
 	pub show_task_details: bool,
 }
