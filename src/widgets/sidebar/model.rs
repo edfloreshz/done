@@ -65,4 +65,11 @@ impl SidebarList {
 			SidebarList::Custom(list) => list.icon.as_deref(),
 		}
 	}
+
+	pub fn smart(&self) -> bool {
+		match self {
+			SidebarList::Custom(_) => false,
+			_ => true,
+		}
+	}
 }

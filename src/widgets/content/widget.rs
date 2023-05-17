@@ -49,6 +49,42 @@ impl AsyncComponent for ContentModel {
 					set_width_request: 300,
 					set_margin_all: 10,
 					set_orientation: gtk::Orientation::Vertical,
+					gtk::Box {
+						set_orientation: gtk::Orientation::Horizontal,
+						gtk::Image {
+							#[watch]
+							set_visible: model.smart,
+							#[watch]
+							set_icon_name: model.icon.as_deref(),
+							set_margin_start: 10,
+						},
+						gtk::Label {
+							#[watch]
+							set_visible: !model.smart,
+							#[watch]
+							set_text: model.icon.as_deref().unwrap_or_default(),
+							set_margin_start: 10,
+						},
+						gtk::Label {
+							set_css_classes: &["title-3"],
+							set_halign: gtk::Align::Start,
+							set_margin_start: 10,
+							set_margin_end: 10,
+							#[watch]
+							set_text: model.title.as_str()
+						},
+					},
+					gtk::Label {
+						#[watch]
+						set_visible: !model.description.is_empty(),
+						set_css_classes: &["title-5"],
+						set_halign: gtk::Align::Start,
+						set_margin_bottom: 10,
+						set_margin_start: 10,
+						set_margin_end: 10,
+						#[watch]
+						set_text: model.description.as_str()
+					},
 					#[name(task_container)]
 					gtk::Stack {
 						set_transition_duration: 250,
@@ -58,6 +94,7 @@ impl AsyncComponent for ContentModel {
 							set_visible: !model.task_factory.is_empty(),
 							set_vexpand: true,
 							set_hexpand: true,
+
 							#[local_ref]
 							list_box -> gtk::ListBox {
 								set_show_separators: true,
@@ -141,6 +178,10 @@ impl AsyncComponent for ContentModel {
 			),
 			parent_list: None,
 			compact,
+			icon: None,
+			title: String::new(),
+			smart: false,
+			description: String::new(),
 			selected_task: None,
 			show_task_details: false,
 		};
