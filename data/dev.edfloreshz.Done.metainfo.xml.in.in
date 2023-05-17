@@ -43,6 +43,16 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.5" date="2023-05-17">
+    <description>
+        <p>Simple by default</p>
+        <ul>
+          <li>Striped down design.</li>
+          <li>More personalization options.</li>
+          <li>Removed services, local storage is now the default.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4" date="2023-03-22">
     <description>
         <p>New look and feel</p>

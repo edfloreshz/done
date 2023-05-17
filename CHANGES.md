@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2023-05-17
+- Striped down design.
+- More personalization options.
+- Removed services, local storage is now the default.
+
 ## [0.1.4] - 2023-03-22
 - Revamped design to make it look more professional.
 - Tags added to tasks.
