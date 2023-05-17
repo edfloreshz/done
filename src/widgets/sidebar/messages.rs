@@ -6,6 +6,7 @@ use super::model::SidebarList;
 pub enum SidebarComponentInput {
 	ToggleExtended(bool),
 	SelectList(SidebarList),
+	AddTaskListToSidebar(String),
 	DeleteTaskList(DynamicIndex, String),
 	Notify(String),
 	OpenPreferences,
@@ -14,7 +15,6 @@ pub enum SidebarComponentInput {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SidebarComponentOutput {
-	// Forward,
 	Notify(String, u32),
 	DisablePlugin,
 	SelectList(SidebarList),

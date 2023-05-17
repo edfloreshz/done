@@ -3,6 +3,7 @@ use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::fl;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::model::SidebarList;
+use done_local_storage::models::List;
 use done_local_storage::LocalStorage;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -14,7 +15,7 @@ use relm4::gtk::traits::{BoxExt, ButtonExt};
 use relm4::RelmWidgetExt;
 use relm4::{
 	gtk,
-	gtk::prelude::{ListBoxRowExt, OrientableExt, WidgetExt},
+	gtk::prelude::{OrientableExt, WidgetExt},
 };
 
 use super::messages::{SidebarComponentInput, SidebarComponentOutput};
@@ -28,6 +29,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 	view! {
 		sidebar = &gtk::Box {
+			set_hexpand: false,
 			set_orientation: gtk::Orientation::Vertical,
 			#[name(scroll_window)]
 			gtk::ScrolledWindow {
@@ -42,126 +44,6 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						if let Some(row) = listbox_row {
 							row.activate();
 						}
-					},
-					gtk::ListBoxRow {
-						set_has_tooltip: true,
-						set_tooltip_text: Some(fl!("all")),
-						gtk::Box {
-							gtk::Box {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: model.extended,
-								append = &gtk::Image {
-									set_icon_name: Some(SidebarList::All.icon()),
-									set_margin_all: 5,
-								},
-								append = &gtk::Label {
-									set_text: SidebarList::All.name().as_str(),
-									set_margin_all: 5,
-								},
-							},
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: !model.extended,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_margin_all: 5,
-									set_icon_name: Some(SidebarList::All.icon())
-								},
-							},
-						},
-						connect_activate => SidebarComponentInput::SelectList(SidebarList::All)
-					},
-					gtk::ListBoxRow {
-						set_has_tooltip: true,
-						set_tooltip_text: Some(fl!("today")),
-						gtk::Box {
-							gtk::Box {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: model.extended,
-								append = &gtk::Image {
-									set_icon_name: Some(SidebarList::Today.icon()),
-									set_margin_all: 5,
-								},
-								append = &gtk::Label {
-									set_text: SidebarList::Today.name().as_str(),
-									set_margin_all: 5,
-								},
-							},
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: !model.extended,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_margin_all: 5,
-									set_icon_name: Some(SidebarList::Today.icon())
-								},
-							},
-						},
-						connect_activate => SidebarComponentInput::SelectList(SidebarList::Today)
-					},
-					gtk::ListBoxRow {
-						set_has_tooltip: true,
-						set_tooltip_text: Some(fl!("starred")),
-						gtk::Box {
-							gtk::Box {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: model.extended,
-								append = &gtk::Image {
-									set_icon_name: Some(SidebarList::Starred.icon()),
-									set_margin_all: 5,
-								},
-								append = &gtk::Label {
-									set_text: SidebarList::Starred.name().as_str(),
-									set_margin_all: 5,
-								},
-							},
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: !model.extended,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_margin_all: 5,
-									set_icon_name: Some(SidebarList::Starred.icon())
-								},
-							}
-						},
-						connect_activate => SidebarComponentInput::SelectList(SidebarList::Starred)
-					},
-					gtk::ListBoxRow {
-						set_has_tooltip: true,
-						set_tooltip_text: Some(fl!("next-7-days")),
-						gtk::Box {
-							gtk::Box {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: model.extended,
-								append = &gtk::Image {
-									set_icon_name: Some(SidebarList::Next7Days.icon()),
-									set_margin_all: 5,
-								},
-								append = &gtk::Label {
-									set_text: SidebarList::Next7Days.name().as_str(),
-									set_margin_all: 5,
-								},
-							},
-							gtk::CenterBox {
-								set_css_classes: &["plugin"],
-								#[watch]
-								set_visible: !model.extended,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Image {
-									set_margin_all: 5,
-									set_icon_name: Some(SidebarList::Next7Days.icon())
-								},
-							}
-						},
-						connect_activate => SidebarComponentInput::SelectList(SidebarList::Next7Days)
 					},
 				}
 			},
@@ -183,14 +65,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					connect_clicked => SidebarComponentInput::OpenPreferences
 				},
 			},
-			gtk::CenterBox {
+			gtk::Box {
 				#[watch]
 				set_visible: model.extended,
 				set_css_classes: &["navigation-sidebar"],
 				set_has_tooltip: true,
 				set_tooltip_text: Some(fl!("preferences")),
-				#[wrap(Some)]
-				set_center_widget = &gtk::Button {
+				set_margin_start: 10,
+				set_margin_end: 10,
+				gtk::Button {
 					set_css_classes: &["flat"],
 					gtk::Box {
 						set_orientation: gtk::Orientation::Horizontal,
@@ -237,9 +120,16 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 
 		{
 			let mut guard = model.list_factory.guard();
+			for smart_list in SidebarList::list() {
+				guard.push_back(TaskListFactoryInit::new(smart_list, true));
+			}
+
 			if let Ok(lists) = local.get_lists().await {
 				for list in lists {
-					guard.push_front(TaskListFactoryInit::new(list));
+					guard.push_back(TaskListFactoryInit::new(
+						SidebarList::Custom(list),
+						false,
+					));
 				}
 			}
 		}
@@ -264,6 +154,21 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				let guard = self.list_factory.guard();
 				for index in 0..guard.len() {
 					guard.send(index, TaskListFactoryInput::ToggleExtended(extended))
+				}
+			},
+			SidebarComponentInput::AddTaskListToSidebar(name) => {
+				let local = LocalStorage::new();
+				match local.create_list(List::new(name.as_str())).await {
+					Ok(list) => {
+						let mut guard = self.list_factory.guard();
+						guard.push_back(TaskListFactoryInit::new(
+							SidebarList::Custom(list),
+							false,
+						));
+					},
+					Err(err) => sender
+						.output(SidebarComponentOutput::Notify(err.to_string(), 2))
+						.unwrap_or_default(),
 				}
 			},
 			SidebarComponentInput::DeleteTaskList(index, id) => {

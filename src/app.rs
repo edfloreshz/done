@@ -4,7 +4,6 @@ use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::content::model::ContentModel;
-use crate::widgets::list_entry::ListEntryComponent;
 use crate::widgets::preferences::messages::PreferencesComponentOutput;
 use crate::widgets::preferences::model::{
 	Preferences, PreferencesComponentModel,
@@ -14,6 +13,9 @@ use crate::widgets::sidebar::messages::{
 };
 use crate::widgets::sidebar::model::SidebarComponentModel;
 use crate::widgets::sidebar::model::SidebarList;
+
+use crate::widgets::task_list_entry::messages::TaskListEntryOutput;
+use crate::widgets::task_list_entry::model::TaskListEntryComponent;
 use crate::widgets::welcome::WelcomeComponent;
 use gtk::prelude::*;
 use libset::format::FileFormat;
@@ -35,7 +37,7 @@ pub struct App {
 	content: AsyncController<ContentModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
 	welcome: Controller<WelcomeComponent>,
-	list_entry: Controller<ListEntryComponent>,
+	list_entry: Controller<TaskListEntryComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
 	warning_revealed: bool,
@@ -48,7 +50,7 @@ impl App {
 		content: AsyncController<ContentModel>,
 		preferences: AsyncController<PreferencesComponentModel>,
 		welcome: Controller<WelcomeComponent>,
-		list_entry: Controller<ListEntryComponent>,
+		list_entry: Controller<TaskListEntryComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
 		extended: bool,
 	) -> Self {
@@ -71,24 +73,16 @@ pub enum Event {
 	Notify(String, u32),
 	SelectList(SidebarList),
 	AddTaskList,
+	AddTaskListToSidebar(String),
 	ToggleCompact(bool),
 	ToggleExtended(bool),
 	OpenPreferences,
 	DisablePlugin,
 	CloseWarning,
-	// Folded,
-	// Unfolded,
-	// Forward,
-	// Back,
 	Quit,
 }
 
 relm4::new_action_group!(pub(super) WindowActionGroup, "win");
-relm4::new_stateless_action!(
-	PreferencesAction,
-	WindowActionGroup,
-	"preferences"
-);
 relm4::new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
 relm4::new_stateless_action!(AboutAction, WindowActionGroup, "about");
 relm4::new_stateless_action!(QuitAction, WindowActionGroup, "quit");
@@ -103,7 +97,6 @@ impl AsyncComponent for App {
 	menu! {
 		primary_menu: {
 			section! {
-				preferences => PreferencesAction,
 				keyboard_shortcuts => ShortcutsAction,
 				about_done => AboutAction,
 				quit => QuitAction,
@@ -114,8 +107,7 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_width: 500,
-			set_default_height: 700,
+			set_default_size: (500, 500),
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
 				gtk::Inhibit(true)
@@ -177,11 +169,24 @@ impl AsyncComponent for App {
 						set_visible: !model.extended,
 						set_height_request: 46,
 						#[wrap(Some)]
-						set_center_widget = &gtk::MenuButton {
-							set_valign: gtk::Align::Center,
-							set_css_classes: &["flat"],
-							set_icon_name: icon_name::MENU,
-							set_menu_model: Some(&primary_menu),
+						set_center_widget = &gtk::Box {
+							set_margin_all: 5,
+							set_spacing: 5,
+							set_orientation: gtk::Orientation::Vertical,
+							gtk::MenuButton {
+								set_valign: gtk::Align::Center,
+								set_css_classes: &["flat"],
+								set_icon_name: icon_name::MENU,
+								set_menu_model: Some(&primary_menu),
+							},
+							gtk::Button {
+								set_has_tooltip: true,
+								set_tooltip_text: Some("Add new task list"),
+								set_icon_name: icon_name::PLUS,
+								set_css_classes: &["flat", "image-button"],
+								set_valign: gtk::Align::Center,
+								connect_clicked => Event::AddTaskList
+							}
 						},
 					},
 					gtk::Separator::default(),
@@ -287,7 +292,6 @@ impl AsyncComponent for App {
 			Err(_) => panic!("Failed to initialize services."),
 		};
 
-		let preferences: &str = fl!("preferences");
 		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
 		let about_done: &str = fl!("about-done");
 		let quit: &str = fl!("quit");
@@ -310,7 +314,6 @@ impl AsyncComponent for App {
 			.forward(sender.input_sender(), |message| match message {
 				SidebarComponentOutput::OpenPreferences => Event::OpenPreferences,
 				SidebarComponentOutput::DisablePlugin => Event::DisablePlugin,
-				// SidebarComponentOutput::Forward => Event::Forward,
 				SidebarComponentOutput::Notify(msg, timeout) => {
 					Event::Notify(msg, timeout)
 				},
@@ -325,8 +328,14 @@ impl AsyncComponent for App {
 		);
 
 		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
-		let list_entry_controller =
-			ListEntryComponent::builder().launch(()).detach();
+		let list_entry_controller = TaskListEntryComponent::builder()
+			.launch(None)
+			.forward(sender.input_sender(), |message| match message {
+				TaskListEntryOutput::AddTaskListToSidebar(name) => {
+					Event::AddTaskListToSidebar(name)
+				},
+				TaskListEntryOutput::RenameList(_) => todo!(),
+			});
 
 		let current_preferences =
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
@@ -348,13 +357,6 @@ impl AsyncComponent for App {
 		);
 
 		let widgets = view_output!();
-
-		let preferences_action = {
-			let preferences = model.preferences.widget().clone();
-			RelmAction::<PreferencesAction>::new_stateless(move |_| {
-				preferences.present();
-			})
-		};
 
 		let shortcuts_action = {
 			let shortcuts = widgets.shortcuts.clone();
@@ -382,7 +384,6 @@ impl AsyncComponent for App {
 			})
 		};
 
-		actions.add_action(&preferences_action);
 		actions.add_action(&shortcuts_action);
 		actions.add_action(&about_action);
 		actions.add_action(&quit_action);
@@ -408,6 +409,11 @@ impl AsyncComponent for App {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
 			},
+			Event::AddTaskListToSidebar(name) => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::AddTaskListToSidebar(name))
+				.unwrap_or_default(),
 			Event::OpenPreferences => {
 				let preferences = self.preferences.widget();
 				preferences.present();
@@ -424,23 +430,6 @@ impl AsyncComponent for App {
 			Event::Notify(msg, timeout) => {
 				widgets.overlay.add_toast(toast(msg, timeout))
 			},
-			// Event::Folded => {
-			// 	if self.page_title.is_some() {
-			// 		widgets.leaflet.set_visible_child(&widgets.content);
-			// 	} else {
-			// 		widgets.leaflet.set_visible_child(&widgets.sidebar);
-			// 	}
-			// 	widgets.go_back_button.set_visible(true);
-			// 	// widgets.sidebar_header.set_show_start_title_buttons(true);
-			// 	// widgets.sidebar_header.set_show_end_title_buttons(true);
-			// },
-			// Event::Unfolded => {
-			// 	widgets.go_back_button.set_visible(false);
-			// 	// widgets.sidebar_header.set_show_start_title_buttons(false);
-			// 	// widgets.sidebar_header.set_show_end_title_buttons(false);
-			// },
-			// Event::Forward => widgets.leaflet.set_visible_child(&widgets.content),
-			// Event::Back => widgets.leaflet.set_visible_child(&widgets.sidebar),
 			Event::SelectList(list) => {
 				self.page_title = Some(list.name());
 				self

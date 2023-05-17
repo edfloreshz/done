@@ -1,20 +1,19 @@
 use relm4::prelude::DynamicIndex;
 
-use super::model::TaskListFactoryInit;
+use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
 pub enum TaskListFactoryInput {
 	Select,
-	Rename,
-	OpenRightClickMenu,
-	Delete(DynamicIndex),
+	Delete,
+	RenameList(String),
 	ChangeIcon(String),
 	ToggleExtended(bool),
 }
 
 #[derive(Debug)]
 pub enum TaskListFactoryOutput {
-	Select(Box<TaskListFactoryInit>),
+	Select(SidebarList),
 	DeleteTaskList(DynamicIndex, String),
 	Notify(String),
 }

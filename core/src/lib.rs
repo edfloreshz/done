@@ -124,14 +124,14 @@ impl LocalStorage {
 		Ok(result)
 	}
 
-	pub async fn create_list(&self, list: List) -> Result<()> {
+	pub async fn create_list(&self, list: List) -> Result<List> {
 		let list: QueryableList = list.into();
 
 		diesel::insert_into(lists)
 			.values(&list)
 			.execute(&mut Database::establish_connection()?)?;
 
-		Ok(())
+		Ok(list.into())
 	}
 
 	pub async fn update_list(&self, list: List) -> Result<()> {

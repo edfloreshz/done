@@ -17,11 +17,11 @@ impl SimpleComponent for WelcomeComponent {
 	view! {
 		#[root]
 		gtk::Stack {
-			set_vexpand: true,
-			set_hexpand: true,
 			set_transition_duration: 250,
 			set_transition_type: gtk::StackTransitionType::Crossfade,
 			gtk::CenterBox {
+				set_vexpand: true,
+				set_hexpand: true,
 				set_orientation: gtk::Orientation::Vertical,
 				set_halign: gtk::Align::Center,
 				set_valign: gtk::Align::Center,

@@ -1,8 +1,9 @@
-use crate::factories::task_entry::messages::{TaskEntryInput, TaskEntryOutput};
-use crate::factories::task_entry::model::TaskEntryModel;
+use crate::fl;
 use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::preferences::model::Preferences;
+use crate::widgets::task_entry::messages::{TaskEntryInput, TaskEntryOutput};
+use crate::widgets::task_entry::model::TaskEntryModel;
 
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -37,7 +38,6 @@ impl AsyncComponent for ContentModel {
 			set_vexpand: true,
 			set_transition_duration: 250,
 			set_transition_type: gtk::StackTransitionType::Crossfade,
-			set_width_request: 400,
 			#[name(flap)]
 			adw::Flap {
 				set_modal: true,
@@ -54,6 +54,8 @@ impl AsyncComponent for ContentModel {
 						set_transition_duration: 250,
 						set_transition_type: gtk::StackTransitionType::Crossfade,
 						gtk::ScrolledWindow {
+							#[watch]
+							set_visible: !model.task_factory.is_empty(),
 							set_vexpand: true,
 							set_hexpand: true,
 							#[local_ref]
@@ -64,6 +66,32 @@ impl AsyncComponent for ContentModel {
 								set_margin_all: 5,
 							},
 						},
+						gtk::CenterBox {
+							#[watch]
+							set_visible: model.task_factory.is_empty(),
+							set_vexpand: true,
+							set_hexpand: true,
+							set_orientation: gtk::Orientation::Vertical,
+							set_halign: gtk::Align::Center,
+							set_valign: gtk::Align::Center,
+							#[wrap(Some)]
+							set_center_widget = &gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								set_margin_all: 24,
+								set_spacing: 24,
+								gtk::Picture {
+									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/paper-plane.png"),
+									set_margin_all: 70
+								},
+								gtk::Label {
+									set_css_classes: &["title-3", "accent"],
+									set_text: fl!("empty-sidebar")
+								},
+								gtk::Label {
+									set_text: fl!("tasks-here")
+								},
+							}
+						}
 					},
 					append: model.task_entry.widget()
 				},
@@ -72,7 +100,6 @@ impl AsyncComponent for ContentModel {
 				set_flap = flap_container -> gtk::Box {
 					set_width_request: 300,
 					set_css_classes: &["background"],
-
 				},
 				#[wrap(Some)]
 				set_separator = &gtk::Separator {

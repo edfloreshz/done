@@ -1,14 +1,22 @@
-use done_local_storage::models::List;
-use relm4::gtk;
+use relm4::{prelude::DynamicIndex, Controller};
 
-#[derive(Debug, Clone, PartialEq, derive_new::new)]
+use crate::widgets::{
+	delete::DeleteComponent, sidebar::model::SidebarList,
+	task_list_entry::model::TaskListEntryComponent,
+};
+
+#[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryModel {
-	pub list: List,
-	pub entry: gtk::EntryBuffer,
+	pub index: DynamicIndex,
+	pub list: SidebarList,
 	pub extended: bool,
+	pub smart: bool,
+	pub rename: Controller<TaskListEntryComponent>,
+	pub delete: Controller<DeleteComponent>,
 }
 
 #[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryInit {
-	pub list: List,
+	pub list: SidebarList,
+	pub smart: bool,
 }

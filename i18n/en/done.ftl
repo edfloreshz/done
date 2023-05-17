@@ -10,6 +10,7 @@ add-to-today = Add to Today
 set-time = Set time
 set-due-date = Set due date
 more-details = More details
+rename = Rename
 
 # New list dialog
 list-name = List name

@@ -1,6 +1,8 @@
 use done_local_storage::models::List;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4_icons::icon_name;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::{factories::task_list::model::TaskListFactoryModel, fl};
 
@@ -10,7 +12,7 @@ pub struct SidebarComponentModel {
 	pub extended: bool,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, EnumIter, PartialEq)]
 pub enum SidebarList {
 	All,
 	Today,
@@ -20,6 +22,12 @@ pub enum SidebarList {
 }
 
 impl SidebarList {
+	pub fn list() -> Vec<SidebarList> {
+		let mut list: Vec<SidebarList> = SidebarList::iter().collect();
+		list.pop();
+		list
+	}
+
 	pub fn name(&self) -> String {
 		let all: &String = fl!("all");
 		let today: &String = fl!("today");
@@ -34,7 +42,7 @@ impl SidebarList {
 		}
 	}
 
-	pub fn _description(&self) -> String {
+	pub fn description(&self) -> String {
 		let all_desc: &String = fl!("all-desc");
 		let today_desc: &String = fl!("today-desc");
 		let starred_desc: &String = fl!("starred-desc");
@@ -48,13 +56,13 @@ impl SidebarList {
 		}
 	}
 
-	pub fn icon(&self) -> &str {
+	pub fn icon(&self) -> Option<&str> {
 		match self {
-			SidebarList::All => icon_name::CLIPBOARD,
-			SidebarList::Today => icon_name::IMAGE_ADJUST_BRIGHTNESS,
-			SidebarList::Starred => icon_name::STAR_FILLED_ROUNDED,
-			SidebarList::Next7Days => icon_name::WORK_WEEK,
-			SidebarList::Custom(list) => list.icon.as_ref().unwrap().as_str(),
+			SidebarList::All => Some(icon_name::CLIPBOARD),
+			SidebarList::Today => Some(icon_name::IMAGE_ADJUST_BRIGHTNESS),
+			SidebarList::Starred => Some(icon_name::STAR_FILLED_ROUNDED),
+			SidebarList::Next7Days => Some(icon_name::WORK_WEEK),
+			SidebarList::Custom(list) => list.icon.as_deref(),
 		}
 	}
 }

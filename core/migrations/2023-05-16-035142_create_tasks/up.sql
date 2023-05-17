@@ -20,5 +20,5 @@ CREATE TABLE tasks (
 CREATE UNIQUE INDEX tasks_id_uindex ON tasks (id_task);
 CREATE TRIGGER remove_tasks_on_list_delete BEFORE DELETE ON lists BEGIN
 DELETE FROM tasks
-WHERE tasks.parent_list = old.id_list;
+WHERE tasks.parent = old.id_list;
 END;

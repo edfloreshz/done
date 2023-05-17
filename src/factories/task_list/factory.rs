@@ -1,18 +1,23 @@
 use done_local_storage::LocalStorage;
 use libset::format::FileFormat;
 use libset::project::Project;
+use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
-use relm4::gtk::gio::{Menu, MenuItem};
-use relm4::gtk::prelude::{EntryBufferExtManual, ListBoxRowExt, WidgetExt};
-use relm4::gtk::traits::{BoxExt, GestureSingleExt, PopoverExt};
+use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
+use relm4::gtk::traits::{BoxExt, GtkWindowExt};
 use relm4::loading_widgets::LoadingWidgets;
-use relm4::{AsyncFactorySender, RelmWidgetExt};
+use relm4::{
+	AsyncFactorySender, Component, ComponentController, RelmWidgetExt,
+};
 
 use crate::gtk;
+use crate::widgets::delete::{DeleteComponent, DeleteInit, DeleteOutput};
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::sidebar::model::SidebarList;
+use crate::widgets::task_list_entry::messages::TaskListEntryOutput;
+use crate::widgets::task_list_entry::model::TaskListEntryComponent;
 
 use super::{
 	messages::{TaskListFactoryInput, TaskListFactoryOutput},
@@ -45,53 +50,64 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	view! {
 		#[root]
 		gtk::ListBoxRow {
+			set_has_tooltip: true,
+			#[watch]
+			set_tooltip_text: Some(self.list.name().as_str()),
 			connect_activate => TaskListFactoryInput::Select,
 			#[name(container)]
 			gtk::Box {
-				set_has_tooltip: true,
-				set_tooltip_text: Some(self.list.name.as_str()),
-				set_valign: gtk::Align::Center,
-				gtk::Label {
-					#[watch]
-					set_label: self.list.icon.as_deref().unwrap_or_default(),
-					#[watch]
-					set_visible: !self.extended,
-					set_valign: gtk::Align::Center,
-					set_halign: gtk::Align::Center,
-					set_hexpand: true,
-				},
-				gtk::MenuButton {
-					#[watch]
-					set_label: self.list.icon.as_deref().unwrap_or_default(),
-					#[watch]
-					set_visible: self.extended,
-					set_css_classes: &["flat", "image-button"],
-					set_margin_all: 2,
-					set_valign: gtk::Align::Center,
-					#[wrap(Some)]
-					set_popover = &gtk::EmojiChooser {
-						set_has_tooltip: true,
-						set_tooltip_text: Some("Set list icon"),
-						connect_emoji_picked[sender] => move |_, emoji| {
-							sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+				set_css_classes: &["toolbar"],
+				gtk::Box {
+					set_css_classes: &["plugin"],
+					gtk::Image {
+						#[watch]
+						set_visible: self.smart,
+						#[watch]
+						set_icon_name: self.list.icon().as_deref(),
+						set_margin_all: 5,
+					},
+					gtk::Label {
+						#[watch]
+						set_visible: !self.smart && !self.extended,
+						#[watch]
+						set_text: self.list.icon().as_deref().unwrap_or_default(),
+						set_margin_all: 5,
+					},
+					gtk::MenuButton {
+						#[watch]
+						set_label: self.list.icon().unwrap_or_default(),
+						#[watch]
+						set_visible: !self.smart && self.extended,
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						#[wrap(Some)]
+						set_popover = &gtk::EmojiChooser {
+							set_has_tooltip: true,
+							set_tooltip_text: Some("Set list icon"),
+							connect_emoji_picked[sender] => move |_, emoji| {
+								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
+							}
 						}
+					},
+					append = &gtk::Label {
+						#[watch]
+						set_visible: self.extended,
+						#[watch]
+						set_hexpand: !self.smart,
+						#[watch]
+						set_text: self.list.name().as_str(),
+						set_margin_all: 5,
+					},
+					#[name(list_actions)]
+					gtk::MenuButton {
+						#[watch]
+						set_visible: !self.smart && self.extended,
+						set_icon_name: "view-more-symbolic",
+						set_css_classes: &["flat", "image-button"],
+						set_valign: gtk::Align::Center,
+						set_menu_model: Some(&primary_menu),
 					}
 				},
-				gtk::Label {
-					#[watch]
-					set_visible: self.extended,
-					set_hexpand: true,
-					#[watch]
-					set_text: &self.list.name
-				},
-				gtk::MenuButton {
-					#[watch]
-					set_visible: self.extended,
-					set_icon_name: "view-more-symbolic",
-					set_css_classes: &["flat", "image-button"],
-					set_valign: gtk::Align::Center,
-					set_menu_model: Some(&primary_menu),
-				}
 			},
 		}
 	}
@@ -104,8 +120,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 
 	async fn init_model(
 		init: Self::Init,
-		_index: &DynamicIndex,
-		_sender: AsyncFactorySender<Self>,
+		index: &DynamicIndex,
+		sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let preferences =
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
@@ -115,10 +131,28 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			} else {
 				Preferences::new().await
 			};
-		let init_text = init.list.name.clone();
+		let rename = TaskListEntryComponent::builder()
+			.launch(Some(init.list.name()))
+			.forward(sender.input_sender(), |message| match message {
+				TaskListEntryOutput::AddTaskListToSidebar(_) => todo!(),
+				TaskListEntryOutput::RenameList(name) => {
+					TaskListFactoryInput::RenameList(name)
+				},
+			});
+		let delete = DeleteComponent::builder()
+			.launch(DeleteInit {
+				warning: format!("You're about to delete this list"),
+				delete_warning: "If you do this, all of its tasks will be lost.".into(),
+			})
+			.forward(sender.input_sender(), |message| match message {
+				DeleteOutput::Delete => TaskListFactoryInput::Delete,
+			});
 		TaskListFactoryModel {
+			index: index.clone(),
+			rename,
+			delete,
 			list: init.list,
-			entry: gtk::EntryBuffer::new(Some(init_text)),
+			smart: init.smart,
 			extended: preferences.extended,
 		}
 	}
@@ -131,6 +165,31 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
+
+		let actions = RelmActionGroup::<TaskListActionGroup>::new();
+
+		let rename_action = {
+			let rename_widget = self.rename.widget().clone();
+			RelmAction::<RenameAction>::new_stateless(move |_| {
+				rename_widget.present()
+			})
+		};
+
+		let delete_action = {
+			let delete_widget = self.delete.widget().clone();
+			RelmAction::<DeleteAction>::new_stateless(move |_| {
+				delete_widget.present()
+			})
+		};
+
+		actions.add_action(&rename_action);
+		actions.add_action(&delete_action);
+
+		widgets.list_actions.insert_action_group(
+			TaskListActionGroup::NAME,
+			Some(&actions.into_action_group()),
+		);
+
 		widgets
 	}
 
@@ -144,65 +203,57 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::ToggleExtended(extended) => {
 				self.extended = extended
 			},
-			TaskListFactoryInput::Rename => {
-				let mut list = self.list.clone();
-				list.name = self.entry.text().to_string();
-				match local.update_list(list).await {
-					Ok(_) => {
-						self.list.name = self.entry.text().to_string();
-					},
-					Err(err) => {
-						sender.output(TaskListFactoryOutput::Notify(err.to_string()))
-					},
+			TaskListFactoryInput::RenameList(name) => {
+				if let SidebarList::Custom(list) = &self.list {
+					let mut renamed_list = list.clone();
+					renamed_list.name = name.clone();
+					match local.update_list(renamed_list.clone()).await {
+						Ok(_) => self.list = SidebarList::Custom(renamed_list),
+						Err(err) => {
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
-			TaskListFactoryInput::Delete(index) => {
-				let list_id = self.list.id.clone();
-				match local.delete_list(list_id.clone()).await {
-					Ok(_) => {
-						sender
-							.output(TaskListFactoryOutput::DeleteTaskList(index, list_id));
-					},
-					Err(err) => {
-						sender.output(TaskListFactoryOutput::Notify(err.to_string()))
-					},
+			TaskListFactoryInput::Delete => {
+				if let SidebarList::Custom(list) = &self.list {
+					let list_id = list.id.clone();
+					match local.delete_list(list_id.clone()).await {
+						Ok(_) => {
+							sender.output(TaskListFactoryOutput::DeleteTaskList(
+								self.index.clone(),
+								list_id,
+							));
+						},
+						Err(err) => {
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
 			TaskListFactoryInput::ChangeIcon(icon) => {
-				let mut list = self.list.clone();
-				list.icon = Some(icon.clone());
-				match local.update_list(list).await {
-					Ok(_) => {
-						self.list.icon = Some(icon);
-					},
-					Err(err) => {
-						sender.output(TaskListFactoryOutput::Notify(err.to_string()))
-					},
+				if let SidebarList::Custom(list) = &self.list {
+					let mut list = list.clone();
+					list.icon = Some(icon.clone());
+					match local.update_list(list.clone()).await {
+						Ok(_) => self.list = SidebarList::Custom(list),
+						Err(err) => {
+							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
+						},
+					}
 				}
 			},
 			TaskListFactoryInput::Select => {
-				sender.output(TaskListFactoryOutput::Select(Box::new(
-					TaskListFactoryInit::new(self.list.clone()),
-				)));
-			},
-			TaskListFactoryInput::OpenRightClickMenu => {
-
-				// let menu = Menu::new();
-				// menu.append(Some("Rename"), Some("app.rename"));
-				// menu.append(Some("Delete"), Some("app.delete"));
-				// let popover_menu = PopoverMenu::from_model(Some(&menu));
-				// widgets.container.
-				// popover_menu.set_wid(Some(&widgets.container));
-				// popover_menu.popup();
+				sender.output(TaskListFactoryOutput::Select(self.list.clone()));
 			},
 		}
 	}
 
 	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
-			TaskListFactoryOutput::Select(data) => Some(
-				SidebarComponentInput::SelectList(SidebarList::Custom(data.list)),
-			),
+			TaskListFactoryOutput::Select(list) => {
+				Some(SidebarComponentInput::SelectList(list))
+			},
 			TaskListFactoryOutput::DeleteTaskList(index, list_id) => {
 				Some(SidebarComponentInput::DeleteTaskList(index, list_id))
 			},
@@ -212,63 +263,3 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		}
 	}
 }
-
-// gtk::Box {
-// 	#[watch]
-// 	set_visible: !self.edit_mode,
-// 	gtk::Box {
-// 		set_orientation: gtk::Orientation::Vertical,
-// 		set_margin_all: 10,
-
-// 		add_controller = gtk::GestureClick {
-// 			connect_pressed[sender] => move |_, _, _, _| {
-// 				sender.input(TaskListFactoryInput::Select);
-// 			}
-// 		}
-// 	},
-// 	gtk::Box {
-// 		set_css_classes: &["linked"],
-// 		gtk::Button {
-// 			set_has_tooltip: true,
-// 			set_tooltip_text: Some("Edit task list name"),
-// 			set_icon_name: icon_name::PENCIL_AND_PAPER,
-// 			set_valign: gtk::Align::Center,
-// 			connect_clicked => TaskListFactoryInput::EditMode,
-// 		},
-// 		gtk::Button {
-// 			set_has_tooltip: true,
-// 			set_tooltip_text: Some("Remove task list"),
-// 			set_icon_name: icon_name::X_CIRCULAR,
-// 			set_valign: gtk::Align::Center,
-// 			connect_clicked[sender, index] => move |_| {
-// 				sender.input(TaskListFactoryInput::Delete(index.clone()));
-// 			}
-// 		},
-// 	}
-// },
-// gtk::Box {
-// 	#[watch]
-// 	set_visible: self.edit_mode,
-// 	set_margin_all: 10,
-// 	set_css_classes: &["linked"],
-// 	gtk::Entry {
-// 		set_hexpand: true,
-// 		set_buffer: &self.entry,
-// 	},
-// 	gtk::Button {
-// 		set_has_tooltip: true,
-// 		set_tooltip_text: Some("Rename list"),
-// 		set_icon_name: icon_name::CHECK_ROUND_OUTLINE_WHOLE,
-// 		set_valign: gtk::Align::Center,
-// 		connect_clicked => TaskListFactoryInput::Rename
-// 	},
-// 	gtk::Button {
-// 		set_has_tooltip: true,
-// 		set_tooltip_text: Some("Remove task list"),
-// 		set_icon_name: icon_name::X_CIRCULAR,
-// 		set_valign: gtk::Align::Center,
-// 		connect_clicked[sender, index] => move |_| {
-// 			sender.input(TaskListFactoryInput::Delete(index.clone()));
-// 		}
-// 	},
-// },

@@ -9,7 +9,7 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::factories::task_entry::model::TaskEntryModel;
+use crate::widgets::task_entry::model::TaskEntryModel;
 
 use super::messages::{TaskEntryInput, TaskEntryOutput};
 
@@ -24,7 +24,7 @@ impl Component for TaskEntryModel {
 		#[root]
 		adw::EntryRow {
 			#[watch]
-			set_visible: true,
+			set_visible: model.parent_list.is_some(),
 			set_hexpand: true,
 			add_css_class: "card",
 			set_title: fl!("new-task"),

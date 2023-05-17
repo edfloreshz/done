@@ -1,10 +1,9 @@
 use done_local_storage::models::{List, Task};
 use relm4::{factory::AsyncFactoryVecDeque, Controller};
 
+use crate::factories::details::model::TaskDetailsFactoryModel;
 use crate::factories::task::model::TaskModel;
-use crate::factories::{
-	details::model::TaskDetailsFactoryModel, task_entry::model::TaskEntryModel,
-};
+use crate::widgets::task_entry::model::TaskEntryModel;
 
 pub struct ContentModel {
 	pub task_factory: AsyncFactoryVecDeque<TaskModel>,

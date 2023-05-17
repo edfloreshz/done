@@ -2,13 +2,15 @@ use anyhow::{anyhow, Context, Result};
 use chrono::{NaiveDateTime, Utc};
 use done_local_storage::models::Task;
 use done_local_storage::LocalStorage;
-use relm4::{prelude::DynamicIndex, AsyncComponentSender, ComponentController};
+use relm4::ComponentController;
+use relm4::{prelude::DynamicIndex, AsyncComponentSender};
 
 use crate::factories::task::model::TaskInit;
-use crate::factories::{
-	details::model::TaskDetailsFactoryInit, task_entry::messages::TaskEntryInput,
-};
 use crate::widgets::sidebar::model::SidebarList;
+use crate::{
+	factories::details::model::TaskDetailsFactoryInit,
+	widgets::task_entry::messages::TaskEntryInput,
+};
 
 use super::{
 	messages::{ContentInput, ContentOutput},
@@ -148,8 +150,8 @@ pub async fn select_task_list(
 			if let Ok(response) = local.get_all_tasks().await {
 				for task in response {
 					guard.push_back(TaskInit::new(
-						task,
-						model.parent_list.clone(),
+						task.clone(),
+						local.get_list(task.parent).await.ok(),
 						model.compact,
 					));
 				}
@@ -161,7 +163,7 @@ pub async fn select_task_list(
 				for task in response.iter().filter(|task| task.today) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						model.parent_list.clone(),
+						local.get_list(task.parent.clone()).await.ok(),
 						model.compact,
 					));
 				}
@@ -173,7 +175,7 @@ pub async fn select_task_list(
 				for task in response.iter().filter(|task| task.favorite) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						model.parent_list.clone(),
+						local.get_list(task.parent.clone()).await.ok(),
 						model.compact,
 					));
 				}
@@ -188,7 +190,7 @@ pub async fn select_task_list(
 				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						model.parent_list.clone(),
+						local.get_list(task.parent.clone()).await.ok(),
 						model.compact,
 					));
 				}
@@ -196,11 +198,6 @@ pub async fn select_task_list(
 		},
 		SidebarList::Custom(list) => {
 			model.parent_list = Some(list.clone());
-			model
-				.task_entry
-				.sender()
-				.send(TaskEntryInput::SetParentList(model.parent_list.clone()))
-				.unwrap();
 
 			guard.clear();
 
@@ -215,6 +212,12 @@ pub async fn select_task_list(
 			}
 		},
 	}
+
+	model
+		.task_entry
+		.sender()
+		.send(TaskEntryInput::SetParentList(model.parent_list.clone()))
+		.unwrap();
 
 	Ok(())
 }
