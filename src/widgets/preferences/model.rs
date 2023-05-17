@@ -18,7 +18,7 @@ impl Preferences {
 		Self {
 			color_scheme: ColorScheme::Default,
 			compact: false,
-			extended: false,
+			extended: true,
 		}
 	}
 }
