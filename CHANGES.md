@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2023-05-17
+- Tasks pane now has a title and description.
+- Add to Today is now enabled.
+
 ## [0.1.5] - 2023-05-17
 - Striped down design.
 - More personalization options.

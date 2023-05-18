@@ -43,6 +43,15 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.6" date="2023-05-17">
+    <description>
+        <p>Overall improvements</p>
+        <ul>
+          <li>Tasks pane now has a title and description.</li>
+          <li>Add to Today is now enabled.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.5" date="2023-05-17">
     <description>
         <p>Simple by default</p>
