@@ -1,8 +1,8 @@
 use relm4::{prelude::DynamicIndex, Controller};
 
 use crate::widgets::{
-	delete::DeleteComponent, sidebar::model::SidebarList,
-	task_list_entry::model::TaskListEntryComponent,
+	delete::DeleteComponent, list_dialog::model::ListDialogComponent,
+	sidebar::model::SidebarList,
 };
 
 #[derive(Debug, derive_new::new)]
@@ -11,7 +11,7 @@ pub struct TaskListFactoryModel {
 	pub list: SidebarList,
 	pub extended: bool,
 	pub smart: bool,
-	pub rename: Controller<TaskListEntryComponent>,
+	pub rename: Controller<ListDialogComponent>,
 	pub delete: Controller<DeleteComponent>,
 }
 

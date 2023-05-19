@@ -7,8 +7,8 @@ use adw::{
 		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::{Datelike, Duration, Local, NaiveDateTime};
-use done_local_storage::models::{Priority, Status, Task};
+use chrono::{Datelike, Duration, Local, NaiveDateTime, Timelike, Utc};
+use done_local_storage::models::{Day, Priority, Status, Task};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
@@ -54,7 +54,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 					set_orientation: gtk::Orientation::Vertical,
 					set_margin_all: 20,
 						adw::PreferencesGroup {
-							set_title: "Details",
+							set_title: fl!("details"),
 							#[wrap(Some)]
 							set_header_suffix = &gtk::Box {
 								set_spacing: 5,
@@ -75,13 +75,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 							},
 							adw::EntryRow {
-								set_title: "Title",
+								set_title: fl!("title"),
 								set_text: self.task.title.as_str(),
 								set_show_apply_button: true,
 								set_enable_emoji_completion: true,
 								#[name(favorite)]
 								add_suffix = &gtk::ToggleButton {
-									set_tooltip_text: Some("Favorite task"),
+									set_tooltip_text: Some(fl!("favorite-task")),
 									add_css_class: "opaque",
 									add_css_class: "circular",
 									#[watch]
@@ -106,7 +106,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 							},
 							adw::EntryRow {
-								set_title: "Notes",
+								set_title: fl!("notes"),
 								set_show_apply_button: true,
 								set_enable_emoji_completion: true,
 								set_text: self.task.notes.as_deref().unwrap_or(""),
@@ -136,7 +136,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 							},
 							adw::EntryRow {
-								set_title: "Add tags...",
+								set_title: fl!("add-tags"),
 								set_show_apply_button: true,
 								connect_apply[sender] => move |entry| {
 									let text = entry.text().to_string();
@@ -159,12 +159,12 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							},
 							adw::ActionRow {
 								set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS),
-								set_title: "Today",
-								set_subtitle: "Add this task to Today.",
+								set_title: fl!("today"),
+								set_subtitle: fl!("today-desc"),
 								add_suffix = &gtk::Switch {
-									set_tooltip_text: Some("Add to Today"),
+									set_tooltip_text: Some(fl!("today-tooltip")),
 									#[watch]
-									set_active: self.task.today == true,
+									set_active: self.task.today,
 									set_valign: gtk::Align::Center,
 									connect_state_set[sender] => move |_, state| {
 										sender.input(TaskDetailsFactoryInput::SetToday(state));
@@ -174,10 +174,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							},
 							adw::ActionRow {
 								set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE),
-								set_title: "Completed",
-								set_subtitle: "Sets wether the task is completed",
+								set_title: fl!("completed"),
+								set_subtitle: fl!("completed-desc"),
 								add_suffix = &gtk::Switch {
-									set_tooltip_text: Some("Complete task"),
+									set_tooltip_text: Some(fl!("completed-tooltip")),
 									#[watch]
 									set_active: self.task.status == Status::Completed,
 									set_valign: gtk::Align::Center,
@@ -189,14 +189,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							},
 							adw::ActionRow {
 								set_icon_name: Some(icon_name::WARNING),
-								set_title: "Importance",
-								set_subtitle: "Set the importance for this task",
+								set_title: fl!("importance"),
+								set_subtitle: fl!("importance-desc"),
 								add_suffix = &gtk::Box {
 								set_css_classes: &["linked"],
 								#[name(low_importance)]
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_OUTLINE_THIN,
-									set_tooltip_text: Some("Low"),
+									set_tooltip_text: Some(fl!("low")),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_active: self.task.priority == Priority::Low,
@@ -208,7 +208,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_OUTLINE_THICK,
-									set_tooltip_text: Some("Medium"),
+									set_tooltip_text: Some(fl!("medium")),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
@@ -221,7 +221,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_FILLED,
-									set_tooltip_text: Some("High"),
+									set_tooltip_text: Some(fl!("high")),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
@@ -235,15 +235,200 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							}
 						},
 						adw::ExpanderRow {
+							set_icon_name: Some(icon_name::ALARM),
+							set_title: fl!("reminder"),
+							set_subtitle: fl!("reminder-desc"),
+							set_enable_expansion: true,
+							#[name(reminder_label)]
+							add_action = &gtk::Label {
+								set_css_classes: &["accent"],
+								#[watch]
+								set_label: self.selected_reminder_date.as_deref().unwrap_or(fl!("no-date-set")),
+								set_valign: gtk::Align::Center,
+							},
+							add_row = &gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								adw::ExpanderRow {
+									set_title: fl!("date"),
+									set_subtitle: fl!("set-date"),
+									add_row = &gtk::Box {
+										set_orientation: gtk::Orientation::Vertical,
+										#[name(reminder_calendar)]
+										gtk::Calendar {
+											set_margin_all: 10,
+											add_css_class: "card",
+											set_day: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).day() as i32,
+											set_month: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).month() as i32,
+											set_year: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).year() as i32,
+											connect_day_selected[sender] => move |calendar| {
+												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
+													if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
+														sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
+													}
+												}
+											}
+										},
+										gtk::Box {
+											set_margin_all: 10,
+											set_margin_bottom: 5,
+											set_margin_top: 5,
+											set_spacing: 10,
+											gtk::Button {
+												set_hexpand: true,
+												set_label: fl!("today"),
+												set_has_tooltip: true,
+												set_tooltip_text: Some(fl!("set-day-today")),
+												connect_clicked[sender] => move |_| {
+													sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today));
+												}
+											},
+											gtk::Button {
+												set_hexpand: true,
+												set_label: fl!("tomorrow"),
+												set_has_tooltip: true,
+												set_tooltip_text: Some(fl!("set-day-tomorrow")),
+												connect_clicked[sender] => move |_| {
+													sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow));
+												}
+											}
+										},
+										gtk::Button {
+											set_margin_all:10,
+											set_margin_top: 5,
+											set_label: fl!("none"),
+											set_has_tooltip: true,
+											set_tooltip_text: Some(fl!("unset")),
+											connect_clicked[sender] => move |_| {
+												sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None));
+											}
+										}
+									}
+								},
+								adw::ExpanderRow {
+									set_title: fl!("time"),
+									set_subtitle: fl!("set-time"),
+									add_row = &gtk::Box {
+										set_css_classes: &["toolbar"],
+										set_orientation: gtk::Orientation::Horizontal,
+										set_halign: gtk::Align::Center,
+										set_valign: gtk::Align::Center,
+										set_spacing: 6,
+										gtk::SpinButton {
+											set_adjustment: &gtk::Adjustment::new(if let Some(date) = self.task.reminder_date {
+												match date.time().hour().try_into() {
+													Ok(hour) => hour,
+													Err(_) => 0.0
+												}
+											} else {
+												0.0
+											}, 0.0, 23.0, 1.0, 1.0, 0.0),
+											set_orientation: gtk::Orientation::Vertical,
+											set_wrap: true,
+											set_numeric: true,
+											set_tooltip_text: Some(fl!("hour")),
+											connect_value_changed[sender] => move |spin| {
+												sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
+											},
+											connect_change_value[sender] => move |spin, _| {
+												sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
+											},
+										},
+										gtk::Label {
+											set_text: ":",
+										},
+										gtk::SpinButton {
+											set_adjustment: &gtk::Adjustment::new(if let Some(date) = self.task.reminder_date {
+												match date.time().minute().try_into() {
+													Ok(minute) => minute,
+													Err(_) => 0.0
+												}
+											} else {
+												0.0
+											}, 0.0, 59.0, 1.0, 1.0, 0.0),
+											set_orientation: gtk::Orientation::Vertical,
+											set_wrap: true,
+											set_numeric: true,
+											set_tooltip_text: Some(fl!("minute")),
+											connect_value_changed[sender] => move |spin| {
+												sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
+											},
+											connect_change_value[sender] => move |spin, _| {
+												sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
+											},
+										},
+									},
+								},
+								adw::ExpanderRow {
+									set_title: fl!("recurrence"),
+									set_subtitle: fl!("set-recurrence"),
+									add_row = &gtk::Box {
+										set_valign: gtk::Align::Center,
+										set_halign: gtk::Align::Center,
+										set_margin_all: 5,
+										set_css_classes: &["linked"],
+										gtk::ToggleButton {
+											set_label: fl!("mon"),
+											set_tooltip_text: Some(fl!("monday")),
+											#[watch]
+											set_active: self.task.recurrence.monday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Monday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("tue"),
+											set_tooltip_text: Some(fl!("tuesday")),
+											#[watch]
+											set_active: self.task.recurrence.tuesday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Tuesday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("wed"),
+											set_tooltip_text: Some(fl!("wednesday")),
+											#[watch]
+											set_active: self.task.recurrence.wednesday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Wednesday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("thu"),
+											set_tooltip_text: Some(fl!("thursday")),
+											#[watch]
+											set_active: self.task.recurrence.thursday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Thursday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("fri"),
+											set_tooltip_text: Some(fl!("friday")),
+											#[watch]
+											set_active: self.task.recurrence.friday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Friday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("sat"),
+											set_tooltip_text: Some(fl!("saturday")),
+											#[watch]
+											set_active: self.task.recurrence.saturday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Saturday)))
+										},
+										gtk::ToggleButton {
+											set_label: fl!("sun"),
+											set_tooltip_text: Some(fl!("sunday")),
+											#[watch]
+											set_active: self.task.recurrence.sunday,
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Sunday)))
+										},
+									},
+								}
+							}
+						},
+						adw::ExpanderRow {
 							set_icon_name: Some(icon_name::WORK_WEEK),
-							set_title: "Due date",
-							set_subtitle: "Set the due date for this task",
+							set_title: fl!("due-date"),
+							set_subtitle: fl!("set-due-date"),
 							set_enable_expansion: true,
 							#[name(due_date_label)]
 							add_action = &gtk::Label {
 								set_css_classes: &["accent"],
 								#[watch]
-								set_label: self.selected_due_date.as_deref().unwrap_or("No date set"),
+								set_label: self.selected_due_date.as_deref().unwrap_or(fl!("no-date-set")),
 								set_valign: gtk::Align::Center,
 							},
 							add_row = &gtk::Box {
@@ -252,6 +437,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								gtk::Calendar {
 									set_margin_all: 10,
 									add_css_class: "card",
+									set_day: self.task.due_date.unwrap_or(Utc::now().naive_local()).day() as i32,
+									set_month: self.task.due_date.unwrap_or(Utc::now().naive_local()).month() as i32,
+									set_year: self.task.due_date.unwrap_or(Utc::now().naive_local()).year() as i32,
 									connect_day_selected[sender] => move |calendar| {
 										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
 											if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {
@@ -267,18 +455,18 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_spacing: 10,
 									gtk::Button {
 										set_hexpand: true,
-										set_label: "Today",
+										set_label: fl!("today"),
 										set_has_tooltip: true,
-										set_tooltip_text: Some("Set date to today"),
+										set_tooltip_text: Some(fl!("set-day-today")),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
 										}
 									},
 									gtk::Button {
 										set_hexpand: true,
-										set_label: "Tomorrow",
+										set_label: fl!("tomorrow"),
 										set_has_tooltip: true,
-										set_tooltip_text: Some("Set date to tomorrow"),
+										set_tooltip_text: Some(fl!("set-day-tomorrow")),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
 										}
@@ -287,73 +475,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								gtk::Button {
 									set_margin_all:10,
 									set_margin_top: 5,
-									set_label: "None",
+									set_label: fl!("none"),
 									set_has_tooltip: true,
-									set_tooltip_text: Some("Unset date"),
+									set_tooltip_text: Some(fl!("unset")),
 									connect_clicked[sender] => move |_| {
 										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
-									}
-								}
-							}
-						},
-						adw::ExpanderRow {
-							set_icon_name: Some(icon_name::ALARM),
-							set_title: "Reminder",
-							set_subtitle: "Set a date to get a reminder",
-							set_enable_expansion: true,
-							#[name(reminder_label)]
-							add_action = &gtk::Label {
-								set_css_classes: &["accent"],
-								#[watch]
-								set_label: self.selected_reminder_date.as_deref().unwrap_or("No date set"),
-								set_valign: gtk::Align::Center,
-							},
-							add_row = &gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								#[name(reminder_calendar)]
-								gtk::Calendar {
-									set_margin_all: 10,
-									add_css_class: "card",
-									connect_day_selected[sender] => move |calendar| {
-										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-											if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
-												sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
-											}
-										}
-									}
-								},
-								gtk::Box {
-									set_margin_all: 10,
-									set_margin_bottom: 5,
-									set_margin_top: 5,
-									set_spacing: 10,
-									gtk::Button {
-										set_hexpand: true,
-										set_label: "Today",
-										set_has_tooltip: true,
-										set_tooltip_text: Some("Set date to today"),
-										connect_clicked[sender] => move |_| {
-											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today));
-										}
-									},
-									gtk::Button {
-										set_hexpand: true,
-										set_label: "Tomorrow",
-										set_has_tooltip: true,
-										set_tooltip_text: Some("Set date to tomorrow"),
-										connect_clicked[sender] => move |_| {
-											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow));
-										}
-									}
-								},
-								gtk::Button {
-									set_margin_all:10,
-									set_margin_top: 5,
-									set_label: "None",
-									set_has_tooltip: true,
-									set_tooltip_text: Some("Unset date"),
-									connect_clicked[sender] => move |_| {
-										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None));
 									}
 								}
 							}
@@ -361,13 +487,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						#[local_ref]
 						sub_tasks -> adw::PreferencesGroup {
 							set_margin_top: 10,
-							set_title: "Sub tasks",
+							set_title: fl!("sub-tasks"),
 							#[wrap(Some)]
 							set_header_suffix = &gtk::Button {
 								add_css_class: "flat",
 								set_icon_name: icon_name::PLUS,
 								set_has_tooltip: true,
-								set_tooltip_text: Some("Add sub-task"),
+								set_tooltip_text: Some(fl!("add-sub-task")),
 								connect_clicked[sender] => move |_| {
 									sender.input(TaskDetailsFactoryInput::CreateSubTask)
 								}
@@ -409,7 +535,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			selected_reminder_date: init
 				.task
 				.reminder_date
-				.map(|date| date.format("%m/%d/%Y").to_string()),
+				.map(|date| date.format("%m/%d/%Y %H:%M").to_string()),
 			sub_tasks: FactoryVecDeque::new(
 				adw::PreferencesGroup::default(),
 				sender.input_sender(),
@@ -510,7 +636,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						if let Some(date) = date {
 							self.task.reminder_date = Some(date);
 							self.selected_reminder_date =
-								Some(date.format("%m/%d/%Y").to_string());
+								Some(date.format("%m/%d/%Y %H:%M").to_string());
 							widgets.reminder_calendar.set_year(date.year());
 							widgets.reminder_calendar.set_month(date.month() as i32 - 1);
 							widgets.reminder_calendar.set_day(date.day() as i32);
@@ -546,7 +672,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			TaskDetailsFactoryInput::SetReminderDate(reminder_date) => {
 				if let Some(date) = reminder_date {
 					self.selected_reminder_date =
-						Some(date.format("%m/%d/%Y").to_string());
+						Some(date.format("%m/%d/%Y %H:%M").to_string());
 					self.task.reminder_date = Some(date);
 				} else {
 					self.task.reminder_date = None;
@@ -621,6 +747,45 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				}
 			},
 			TaskDetailsFactoryInput::SetToday(today) => self.task.today = today,
+			TaskDetailsFactoryInput::SetReminderHour(hour) => {
+				if let Some(date) = self.task.reminder_date {
+					if let Some(new_date) = date.with_hour(hour) {
+						self.selected_reminder_date =
+							Some(new_date.format("%m/%d/%Y %H:%M").to_string());
+						self.task.reminder_date = Some(new_date);
+					}
+				} else {
+					let now = Utc::now().naive_local().with_hour(hour).unwrap();
+					let now = now.with_minute(0).unwrap();
+					self.task.reminder_date = Some(now);
+					self.selected_reminder_date =
+						Some(now.format("%m/%d/%Y %H:%M").to_string());
+				}
+			},
+			TaskDetailsFactoryInput::SetReminderMinute(minute) => {
+				if let Some(date) = self.task.reminder_date {
+					if let Some(new_date) = date.with_minute(minute) {
+						self.selected_reminder_date =
+							Some(new_date.format("%m/%d/%Y %H:%M").to_string());
+						self.task.reminder_date = Some(new_date);
+					}
+				} else {
+					let now = Utc::now().naive_local().with_hour(0).unwrap();
+					let now = now.with_minute(minute).unwrap();
+					self.task.reminder_date = Some(now);
+					self.selected_reminder_date =
+						Some(now.format("%m/%d/%Y %H:%M").to_string());
+				}
+			},
+			TaskDetailsFactoryInput::SetDayInRecurrence((active, day)) => match day {
+				Day::Monday => self.task.recurrence.monday = active,
+				Day::Tuesday => self.task.recurrence.tuesday = active,
+				Day::Wednesday => self.task.recurrence.wednesday = active,
+				Day::Thursday => self.task.recurrence.thursday = active,
+				Day::Friday => self.task.recurrence.friday = active,
+				Day::Saturday => self.task.recurrence.saturday = active,
+				Day::Sunday => self.task.recurrence.sunday = active,
+			},
 		}
 		if self.task != self.original_task {
 			self.dirty = true;

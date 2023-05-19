@@ -4,7 +4,7 @@ use relm4::gtk;
 use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
-pub struct TaskEntryModel {
+pub struct TaskInputModel {
 	pub task: Task,
 	pub parent_list: Option<SidebarList>,
 	pub buffer: gtk::EntryBuffer,

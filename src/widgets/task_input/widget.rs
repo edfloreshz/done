@@ -9,25 +9,22 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::widgets::task_entry::model::TaskEntryModel;
+use crate::widgets::task_input::model::TaskInputModel;
 
-use super::messages::{TaskEntryInput, TaskEntryOutput};
+use super::messages::{TaskInputInput, TaskInputOutput};
 
 #[relm4::component(pub)]
-impl Component for TaskEntryModel {
+impl Component for TaskInputModel {
 	type CommandOutput = ();
-	type Input = TaskEntryInput;
-	type Output = TaskEntryOutput;
+	type Input = TaskInputInput;
+	type Output = TaskInputOutput;
 	type Init = Option<SidebarList>;
 
 	view! {
 		#[root]
 		adw::EntryRow {
 			#[watch]
-			set_visible: match model.parent_list.as_ref() {
-				Some(SidebarList::Custom(_)) => true,
-				_ => false,
-			},
+			set_visible: matches!(model.parent_list.as_ref(), Some(SidebarList::Custom(_))),
 			set_hexpand: true,
 			add_css_class: "card",
 			set_title: fl!("new-task"),
@@ -42,18 +39,18 @@ impl Component for TaskEntryModel {
 				set_icon_name: icon_name::PENCIL_AND_PAPER,
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender] => move |_| {
-					sender.input(TaskEntryInput::EnterCreationMode);
+					sender.input(TaskInputInput::EnterCreationMode);
 				}
 			},
 			connect_apply[sender] => move |_| {
-				sender.input(TaskEntryInput::AddTask);
+				sender.input(TaskInputInput::AddTask);
 			},
 			connect_activate[sender] => move |_| {
-				sender.input(TaskEntryInput::AddTask);
+				sender.input(TaskInputInput::AddTask);
 			},
 			connect_changed[sender] => move |entry| {
 				let text = entry.text().to_string();
-				sender.input(TaskEntryInput::Rename(text));
+				sender.input(TaskInputInput::Rename(text));
 			},
 		}
 	}
@@ -63,7 +60,7 @@ impl Component for TaskEntryModel {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let model = TaskEntryModel {
+		let model = TaskInputModel {
 			task: Task::new(String::new(), String::new()),
 			parent_list: init,
 			buffer: gtk::EntryBuffer::new(None::<String>),
@@ -80,30 +77,30 @@ impl Component for TaskEntryModel {
 		root: &Self::Root,
 	) {
 		match message {
-			TaskEntryInput::CleanTaskEntry => {
+			TaskInputInput::CleanTaskEntry => {
 				self.task = Task::new(String::new(), String::new());
 				root.set_text("");
 			},
-			TaskEntryInput::EnterCreationMode => sender
-				.output(TaskEntryOutput::EnterCreationMode(self.task.clone()))
+			TaskInputInput::EnterCreationMode => sender
+				.output(TaskInputOutput::EnterCreationMode(self.task.clone()))
 				.unwrap(),
-			TaskEntryInput::Rename(title) => {
+			TaskInputInput::Rename(title) => {
 				self.task.title = title;
 			},
-			TaskEntryInput::AddTask => {
+			TaskInputInput::AddTask => {
 				if !self.task.title.is_empty() && self.parent_list.is_some() {
 					if let SidebarList::Custom(list) = self.parent_list.as_ref().unwrap()
 					{
 						self.task.parent = list.id.clone();
 						sender
-							.output(TaskEntryOutput::AddTask(self.task.clone()))
+							.output(TaskInputOutput::AddTask(self.task.clone()))
 							.unwrap_or_default();
 						self.task = Task::new(String::new(), list.id.clone());
-						sender.input(TaskEntryInput::CleanTaskEntry);
+						sender.input(TaskInputInput::CleanTaskEntry);
 					}
 				}
 			},
-			TaskEntryInput::SetParentList(list) => {
+			TaskInputInput::SetParentList(list) => {
 				self.parent_list = list;
 			},
 		}

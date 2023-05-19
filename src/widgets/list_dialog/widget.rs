@@ -13,17 +13,15 @@ use relm4_icons::icon_name;
 
 use crate::{
 	fl,
-	widgets::task_list_entry::model::{
-		TaskListEntryComponent, TaskListEntryMode,
-	},
+	widgets::list_dialog::model::{ListDialogComponent, ListDialogMode},
 };
 
-use super::messages::{TaskListEntryInput, TaskListEntryOutput};
+use super::messages::{ListDialogInput, ListDialogOutput};
 
 #[relm4::component(pub)]
-impl Component for TaskListEntryComponent {
-	type Input = TaskListEntryInput;
-	type Output = TaskListEntryOutput;
+impl Component for ListDialogComponent {
+	type Input = ListDialogInput;
+	type Output = ListDialogOutput;
 	type Init = Option<String>;
 	type CommandOutput = ();
 
@@ -50,15 +48,15 @@ impl Component for TaskListEntryComponent {
 					gtk::Image {
 							set_icon_size: gtk::IconSize::Large,
 							set_icon_name: Some(match model.mode {
-								TaskListEntryMode::New => icon_name::PLUS,
-								TaskListEntryMode::Edit => icon_name::PENCIL_AND_PAPER
+								ListDialogMode::New => icon_name::PLUS,
+								ListDialogMode::Edit => icon_name::PENCIL_AND_PAPER
 							}),
 					},
 					gtk::Label {
 						set_css_classes: &["title-4"],
 						set_label: match model.mode {
-							TaskListEntryMode::New => "You're about to add a list.",
-							TaskListEntryMode::Edit => "You're about to rename this list."
+							ListDialogMode::New => "You're about to add a list.",
+							ListDialogMode::Edit => "You're about to rename this list."
 						},
 					},
 					gtk::Label {
@@ -68,12 +66,12 @@ impl Component for TaskListEntryComponent {
 					gtk::Entry {
 						set_placeholder_text: Some(fl!("list-name")),
 						set_buffer: &model.name,
-						connect_activate => TaskListEntryInput::HandleEntry,
+						connect_activate => ListDialogInput::HandleEntry,
 					},
 					gtk::Button {
 						set_css_classes: &["suggested-action"],
 						set_label: model.label.as_str(),
-						connect_clicked => TaskListEntryInput::HandleEntry,
+						connect_clicked => ListDialogInput::HandleEntry,
 					},
 				}
 			}
@@ -86,15 +84,15 @@ impl Component for TaskListEntryComponent {
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let model = if let Some(name) = init {
-			TaskListEntryComponent {
+			ListDialogComponent {
 				name: gtk::EntryBuffer::new(Some(name)),
-				mode: TaskListEntryMode::Edit,
+				mode: ListDialogMode::Edit,
 				label: fl!("rename").clone(),
 			}
 		} else {
-			TaskListEntryComponent {
+			ListDialogComponent {
 				name: gtk::EntryBuffer::new(Some("")),
-				mode: TaskListEntryMode::New,
+				mode: ListDialogMode::New,
 				label: fl!("add-list").clone(),
 			}
 		};
@@ -110,20 +108,18 @@ impl Component for TaskListEntryComponent {
 		root: &Self::Root,
 	) {
 		match message {
-			TaskListEntryInput::HandleEntry => {
+			ListDialogInput::HandleEntry => {
 				let name = self.name.text();
 
 				match self.mode {
-					TaskListEntryMode::New => {
+					ListDialogMode::New => {
 						sender
-							.output(TaskListEntryOutput::AddTaskListToSidebar(
-								name.to_string(),
-							))
+							.output(ListDialogOutput::AddTaskListToSidebar(name.to_string()))
 							.unwrap_or_default();
 					},
-					TaskListEntryMode::Edit => {
+					ListDialogMode::Edit => {
 						sender
-							.output(TaskListEntryOutput::RenameList(name.to_string()))
+							.output(ListDialogOutput::RenameList(name.to_string()))
 							.unwrap_or_default();
 					},
 				}

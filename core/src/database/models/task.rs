@@ -25,7 +25,7 @@ pub struct QueryableTask {
 	pub deletion_date: Option<NaiveDateTime>,
 	pub due_date: Option<NaiveDateTime>,
 	pub reminder_date: Option<NaiveDateTime>,
-	pub recurrence: Option<String>,
+	pub recurrence: String,
 	pub created_date_time: NaiveDateTime,
 	pub last_modified_date_time: NaiveDateTime,
 }
@@ -48,7 +48,7 @@ impl QueryableTask {
 			deletion_date: None,
 			due_date: None,
 			reminder_date: None,
-			recurrence: None,
+			recurrence: String::new(),
 			created_date_time: Utc::now().naive_utc(),
 			last_modified_date_time: Utc::now().naive_utc(),
 		}
@@ -72,7 +72,7 @@ impl From<Task> for QueryableTask {
 			deletion_date: value.deletion_date,
 			due_date: value.due_date,
 			reminder_date: value.reminder_date,
-			recurrence: value.recurrence,
+			recurrence: value.recurrence.to_string(),
 			created_date_time: value.created_date_time,
 			last_modified_date_time: value.last_modified_date_time,
 		}

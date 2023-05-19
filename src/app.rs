@@ -14,8 +14,8 @@ use crate::widgets::sidebar::messages::{
 use crate::widgets::sidebar::model::SidebarComponentModel;
 use crate::widgets::sidebar::model::SidebarList;
 
-use crate::widgets::task_list_entry::messages::TaskListEntryOutput;
-use crate::widgets::task_list_entry::model::TaskListEntryComponent;
+use crate::widgets::list_dialog::messages::ListDialogOutput;
+use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::welcome::WelcomeComponent;
 use gtk::prelude::*;
 use libset::format::FileFormat;
@@ -37,7 +37,7 @@ pub struct App {
 	content: AsyncController<ContentModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
 	welcome: Controller<WelcomeComponent>,
-	list_entry: Controller<TaskListEntryComponent>,
+	list_entry: Controller<ListDialogComponent>,
 	about_dialog: Option<Controller<AboutDialog>>,
 	page_title: Option<String>,
 	warning_revealed: bool,
@@ -50,7 +50,7 @@ impl App {
 		content: AsyncController<ContentModel>,
 		preferences: AsyncController<PreferencesComponentModel>,
 		welcome: Controller<WelcomeComponent>,
-		list_entry: Controller<TaskListEntryComponent>,
+		list_entry: Controller<ListDialogComponent>,
 		about_dialog: Option<Controller<AboutDialog>>,
 		extended: bool,
 	) -> Self {
@@ -327,13 +327,13 @@ impl AsyncComponent for App {
 		);
 
 		let welcome_controller = WelcomeComponent::builder().launch(()).detach();
-		let list_entry_controller = TaskListEntryComponent::builder()
+		let list_entry_controller = ListDialogComponent::builder()
 			.launch(None)
 			.forward(sender.input_sender(), |message| match message {
-				TaskListEntryOutput::AddTaskListToSidebar(name) => {
+				ListDialogOutput::AddTaskListToSidebar(name) => {
 					Event::AddTaskListToSidebar(name)
 				},
-				TaskListEntryOutput::RenameList(_) => todo!(),
+				ListDialogOutput::RenameList(_) => todo!(),
 			});
 
 		let current_preferences =

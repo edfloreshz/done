@@ -67,9 +67,6 @@ impl SidebarList {
 	}
 
 	pub fn smart(&self) -> bool {
-		match self {
-			SidebarList::Custom(_) => false,
-			_ => true,
-		}
+		!matches!(self, SidebarList::Custom(_))
 	}
 }

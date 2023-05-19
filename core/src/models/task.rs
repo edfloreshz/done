@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::database::task::QueryableTask;
+use crate::models::Recurrence;
 
 use super::{Priority, Status};
 
@@ -22,7 +23,7 @@ pub struct Task {
 	pub deletion_date: Option<NaiveDateTime>,
 	pub due_date: Option<NaiveDateTime>,
 	pub reminder_date: Option<NaiveDateTime>,
-	pub recurrence: Option<String>,
+	pub recurrence: Recurrence,
 	pub created_date_time: NaiveDateTime,
 	pub last_modified_date_time: NaiveDateTime,
 }
@@ -45,7 +46,7 @@ impl Task {
 			deletion_date: None,
 			due_date: None,
 			reminder_date: None,
-			recurrence: None,
+			recurrence: Default::default(),
 			created_date_time: now.naive_utc(),
 			last_modified_date_time: now.naive_utc(),
 		}
@@ -69,7 +70,7 @@ impl From<QueryableTask> for Task {
 			deletion_date: value.deletion_date.map(|date| date.into()),
 			due_date: value.due_date.map(|date| date.into()),
 			reminder_date: value.reminder_date.map(|date| date.into()),
-			recurrence: value.recurrence,
+			recurrence: Recurrence::from_string(value.recurrence),
 			created_date_time: value.created_date_time,
 			last_modified_date_time: value.last_modified_date_time,
 		}

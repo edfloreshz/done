@@ -9,3 +9,6 @@ pub use priority::*;
 
 mod status;
 pub use status::*;
+
+mod recurrence;
+pub use recurrence::*;

@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use done_local_storage::models::Task;
+use done_local_storage::models::{Day, Task};
 use relm4::prelude::DynamicIndex;
 
 use super::model::{DateDay, DateTpe};
@@ -20,6 +20,9 @@ pub enum TaskDetailsFactoryInput {
 	RemoveSubTask(DynamicIndex),
 	SetDueDate(Option<NaiveDateTime>),
 	SetReminderDate(Option<NaiveDateTime>),
+	SetReminderHour(u32),
+	SetReminderMinute(u32),
+	SetDayInRecurrence((bool, Day)),
 	CancelWarning,
 	SetDate(DateTpe, DateDay),
 }
