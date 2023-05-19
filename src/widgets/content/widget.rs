@@ -117,15 +117,22 @@ impl AsyncComponent for ContentModel {
 								set_margin_all: 24,
 								set_spacing: 24,
 								gtk::Picture {
-									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/paper-plane.png"),
+									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/empty.png"),
 									set_margin_all: 70
 								},
 								gtk::Label {
 									set_css_classes: &["title-3", "accent"],
-									set_text: fl!("empty-sidebar")
+									set_wrap: true,
+									set_wrap_mode: gtk::pango::WrapMode::Word,
+									set_justify: gtk::Justification::Center,
+									set_text: fl!("list-empty")
 								},
 								gtk::Label {
-									set_text: fl!("tasks-here")
+									set_css_classes: &["body"],
+									set_text: fl!("instructions"),
+									set_wrap: true,
+									set_wrap_mode: gtk::pango::WrapMode::Word,
+									set_justify: gtk::Justification::Center,
 								},
 							}
 						}

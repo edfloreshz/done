@@ -11,13 +11,13 @@ use relm4::{
 	AsyncFactorySender, Component, ComponentController, RelmWidgetExt,
 };
 
-use crate::gtk;
 use crate::widgets::delete::{DeleteComponent, DeleteInit, DeleteOutput};
 use crate::widgets::list_dialog::messages::ListDialogOutput;
 use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::sidebar::model::SidebarList;
+use crate::{fl, gtk};
 
 use super::{
 	messages::{TaskListFactoryInput, TaskListFactoryOutput},
@@ -50,9 +50,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	view! {
 		#[root]
 		gtk::ListBoxRow {
-			set_has_tooltip: true,
 			#[watch]
-			set_tooltip_text: Some(self.list.name().as_str()),
+			set_tooltip: self.list.name().as_str(),
 			connect_activate => TaskListFactoryInput::Select,
 			#[name(container)]
 			gtk::Box {
@@ -82,8 +81,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_valign: gtk::Align::Center,
 						#[wrap(Some)]
 						set_popover = &gtk::EmojiChooser {
-							set_has_tooltip: true,
-							set_tooltip_text: Some("Set list icon"),
+							set_tooltip: fl!("set-list-icon"),
 							connect_emoji_picked[sender] => move |_, emoji| {
 								sender.input(TaskListFactoryInput::ChangeIcon(emoji.to_string()));
 							}
@@ -166,7 +164,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	) -> Self::Widgets {
 		let widgets = view_output!();
 
-		let actions = RelmActionGroup::<TaskListActionGroup>::new();
+		let mut actions = RelmActionGroup::<TaskListActionGroup>::new();
 
 		let rename_action = {
 			let rename_widget = self.rename.widget().clone();
@@ -182,8 +180,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			})
 		};
 
-		actions.add_action(&rename_action);
-		actions.add_action(&delete_action);
+		actions.add_action(rename_action);
+		actions.add_action(delete_action);
 
 		widgets.list_actions.insert_action_group(
 			TaskListActionGroup::NAME,
@@ -249,7 +247,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		}
 	}
 
-	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
+	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
 			TaskListFactoryOutput::Select(list) => {
 				Some(SidebarComponentInput::SelectList(list))

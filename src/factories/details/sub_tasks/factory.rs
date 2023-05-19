@@ -2,6 +2,7 @@ use adw::traits::{EntryRowExt, PreferencesRowExt};
 use done_local_storage::models::Status;
 use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::EditableExt;
+use relm4::RelmWidgetExt;
 use relm4::{
 	adw,
 	factory::FactoryView,
@@ -12,6 +13,7 @@ use relm4::{
 use relm4_icons::icon_name;
 
 use crate::factories::details::messages::TaskDetailsFactoryInput;
+use crate::fl;
 
 use super::{
 	messages::{SubTaskInput, SubTaskOutput},
@@ -45,8 +47,7 @@ impl FactoryComponent for SubTaskModel {
 				set_valign: gtk::Align::Center,
 				set_icon_name: icon_name::X_CIRCULAR,
 				set_css_classes: &["destructive-action", "circular"],
-				set_has_tooltip: true,
-				set_tooltip_text: Some("Remove sub-task"),
+				set_tooltip: fl!("remove-sub-task"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(SubTaskInput::Remove(index.clone()));
 				}
@@ -104,7 +105,7 @@ impl FactoryComponent for SubTaskModel {
 		}
 	}
 
-	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
+	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			SubTaskOutput::Update(index, sub_task) => {
 				TaskDetailsFactoryInput::UpdateSubTask(index, sub_task)

@@ -3,11 +3,11 @@ use relm4::{
 	factory::FactoryView,
 	gtk,
 	prelude::{DynamicIndex, FactoryComponent},
-	FactorySender,
+	FactorySender, RelmWidgetExt,
 };
 use relm4_icons::icon_name;
 
-use crate::factories::details::messages::TaskDetailsFactoryInput;
+use crate::{factories::details::messages::TaskDetailsFactoryInput, fl};
 
 pub struct TagModel {
 	pub title: String,
@@ -51,8 +51,7 @@ impl FactoryComponent for TagModel {
 			gtk::Button {
 				set_icon_name: icon_name::SMALL_X,
 				set_valign: gtk::Align::Center,
-				set_has_tooltip: true,
-				set_tooltip_text: Some("Remove tag"),
+				set_tooltip: fl!("remove-tag"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TagInput::RemoveTag(index.clone()))
 				}
@@ -88,7 +87,7 @@ impl FactoryComponent for TagModel {
 		}
 	}
 
-	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
+	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			TagOutput::RemoveTag(index) => TaskDetailsFactoryInput::RemoveTag(index),
 		};

@@ -33,7 +33,7 @@ impl Component for TaskInputModel {
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,
 			add_suffix = &gtk::Button {
-				set_tooltip_text: Some(fl!("more-details")),
+				set_tooltip: fl!("more-details"),
 				add_css_class: "suggested-action",
 				add_css_class: "circular",
 				set_icon_name: icon_name::PENCIL_AND_PAPER,
