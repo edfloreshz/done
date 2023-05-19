@@ -107,7 +107,7 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_app()) {
-			set_default_size: (650, 700),
+			set_default_size: (700, 700),
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
 				gtk::Inhibit(true)
@@ -143,8 +143,7 @@ impl AsyncComponent for App {
 						set_show_end_title_buttons: false,
 						set_show_start_title_buttons: false,
 						pack_start = &gtk::MenuButton {
-							set_has_tooltip: true,
-							set_tooltip_text: Some("Menu"),
+							set_tooltip: fl!("menu"),
 							set_valign: gtk::Align::Center,
 							set_css_classes: &["flat"],
 							set_icon_name: icon_name::MENU,
@@ -156,8 +155,7 @@ impl AsyncComponent for App {
 							set_text: fl!("done"),
 						},
 						pack_end = &gtk::Button {
-							set_has_tooltip: true,
-							set_tooltip_text: Some("Add new task list"),
+							set_tooltip: fl!("add-new-task-list"),
 							set_icon_name: icon_name::PLUS,
 							set_css_classes: &["flat", "image-button"],
 							set_valign: gtk::Align::Center,
@@ -180,8 +178,7 @@ impl AsyncComponent for App {
 								set_menu_model: Some(&primary_menu),
 							},
 							gtk::Button {
-								set_has_tooltip: true,
-								set_tooltip_text: Some("Add new task list"),
+								set_tooltip: fl!("add-new-task-list"),
 								set_icon_name: icon_name::PLUS,
 								set_css_classes: &["flat", "image-button"],
 								set_valign: gtk::Align::Center,
@@ -205,14 +202,13 @@ impl AsyncComponent for App {
 						#[watch]
 						set_title_widget: Some(&gtk::Label::new(model.page_title.as_deref())),
 						pack_start: go_back_button = &gtk::Button {
-							set_has_tooltip: true,
-							set_tooltip_text: Some("Back"),
+							set_tooltip: fl!("back"),
 							set_icon_name: icon_name::LEFT,
 							set_visible: false,
 						},
 						pack_start = &gtk::Button {
-							set_has_tooltip: true,
-							set_tooltip_text: Some("Search"),
+							set_visible: false,
+							set_tooltip: fl!("search"),
 							set_icon_name: icon_name::LOUPE,
 						},
 					},
@@ -257,7 +253,7 @@ impl AsyncComponent for App {
 		view! {
 				#[local_ref]
 				root {
-					set_title: Some("Done"),
+					set_title: Some(fl!("done")),
 
 					#[name(loading)]
 					gtk::CenterBox {
@@ -295,7 +291,7 @@ impl AsyncComponent for App {
 		let about_done: &str = fl!("about-done");
 		let quit: &str = fl!("quit");
 
-		let actions = RelmActionGroup::<WindowActionGroup>::new();
+		let mut actions = RelmActionGroup::<WindowActionGroup>::new();
 
 		let preferences_controller = PreferencesComponentModel::builder()
 			.launch(())
@@ -383,9 +379,9 @@ impl AsyncComponent for App {
 			})
 		};
 
-		actions.add_action(&shortcuts_action);
-		actions.add_action(&about_action);
-		actions.add_action(&quit_action);
+		actions.add_action(shortcuts_action);
+		actions.add_action(about_action);
+		actions.add_action(quit_action);
 
 		widgets.main_window.insert_action_group(
 			WindowActionGroup::NAME,

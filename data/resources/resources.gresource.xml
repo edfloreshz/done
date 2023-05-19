@@ -8,6 +8,7 @@
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/actions">
     <file alias="leaf.png">../icons/actions/leaf.png</file>
     <file alias="paper-plane.png">../icons/actions/paper-plane.png</file>
+    <file alias="empty.png">../icons/actions/empty.png</file>
     <file alias="document-edit-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/document-edit-symbolic.svg</file>
   </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">

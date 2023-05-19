@@ -16,10 +16,12 @@ rename = Rename
 list-name = List name
 
 # Welcome
-select-list = Select a list from the sidebar
-tasks-here = Tasks will appear here
+welcome-title = To-do lists reimagined
+welcome-subtitle = The ultimate task management solution for seamless organization and efficiency
+welcome-body = Done is a user-friendly app that allows you to effortlessly consolidate your existing tasks into a single application for optimal productivity and organization
 
 # Main menu
+menu = Menu
 preferences = Preferences
 keyboard-shortcuts = Keyboard shortcuts
 about-done = About Done
@@ -34,10 +36,11 @@ starred = Starred
 starred-desc = Starred tasks
 next-7-days = Next 7 Days
 next-7-days-desc = Tasks due the next 7 days
+add-new-task-list = Add new task list
 
-# Empty sidebar
-empty-sidebar = Looking quite empty in here...
-open-preferences = Open preferences to enable or install a task service.
+# Empty task list
+list-empty = Something's missing...
+instructions = Select a list from the sidebar to start adding tasks.
 
 # Preferences
 preferences = Preferences
@@ -57,44 +60,32 @@ remove = Remove
 update = Update
 save = Save
 cancel = Cancel
+back = Back
+search = Search
 
 # Details
 details = Details
-
-# Title
 title = Title
-
-# Favorite
 favorite-task = Favorite task
-
-# Notes
 notes = Notes
-
-# Tags
 add-tags = Add tags...
-
-# Today 
+remove-tag = Remove tag
+remove-task = Remove task
+set-list-icon = Set list icon
+edit-task-details = Edit task details
 today = Today
 today-desc = Add this task to Today
 today-tooltip = Add to Today
-
-# Completed
 completed = Completed
 completed-desc = Sets the completion status
 completed-tooltip = Complete task
-
-# Importance 
 importance = Importance
 importance-desc = Set the importance for this task
 low = Low
 medium = Medium
 high = High
-
-# Reminders
 reminder = Reminder
 reminder-desc = Set a date to get a reminder
-
-# Time
 time = Time
 set-time = Set the time to be reminded at
 date = Date
@@ -108,17 +99,12 @@ tomorrow = Tomorrow
 set-day-tomorrow = Set date to tomorrow
 none = None
 unset = Unset date
-
-# Date
 due-date = Due date
 set-due-date = Set the due date for this task
 no-date-set = No date set
-
-# Sub tasks
 sub-tasks = Sub tasks
 add-sub-task = Add sub-task
-
-# Days
+remove-sub-task = Remove sub-task
 monday = Monday
 tuesday = Tuesday
 wednesday = Wednesday
@@ -126,7 +112,6 @@ thursday = Thursday
 friday = Friday
 saturday = Saturday
 sunday = Sunday
-
 mon = Mon
 tue = Tue
 wed = Wed

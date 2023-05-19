@@ -51,8 +51,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				#[watch]
 				set_visible: !model.extended,
 				set_css_classes: &["navigation-sidebar"],
-				set_has_tooltip: true,
-				set_tooltip_text: Some(fl!("preferences")),
+				set_tooltip: fl!("preferences"),
 				#[wrap(Some)]
 				set_center_widget = &gtk::Button {
 					set_css_classes: &["flat"],
@@ -69,8 +68,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				#[watch]
 				set_visible: model.extended,
 				set_css_classes: &["navigation-sidebar"],
-				set_has_tooltip: true,
-				set_tooltip_text: Some(fl!("preferences")),
+				set_tooltip: fl!("preferences"),
 				set_margin_start: 10,
 				set_margin_end: 10,
 				gtk::Button {

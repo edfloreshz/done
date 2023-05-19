@@ -7,7 +7,7 @@ relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 
 pub(crate) fn init(app: &adw::Application) {
 	app.set_resource_base_path(Some("/dev/edfloreshz/Done/"));
-	let actions = RelmActionGroup::<AppActionGroup>::new();
+	let mut actions = RelmActionGroup::<AppActionGroup>::new();
 
 	let quit_action = {
 		let app = app.clone();
@@ -16,7 +16,7 @@ pub(crate) fn init(app: &adw::Application) {
 		})
 	};
 
-	actions.add_action(&quit_action);
+	actions.add_action(quit_action);
 
 	app.set_accelerators_for_action::<QuitAction>(&["<Control>q"]);
 

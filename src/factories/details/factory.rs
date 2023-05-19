@@ -60,18 +60,14 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_spacing: 5,
 								gtk::Button {
 									set_icon_name: icon_name::LEFT,
-									set_tooltip_text: Some(fl!("cancel")),
-									connect_clicked[sender] => move |_| {
-										sender.input(TaskDetailsFactoryInput::CancelWarning)
-									}
+									set_tooltip: fl!("cancel"),
+									connect_clicked => TaskDetailsFactoryInput::CancelWarning
 								},
 								gtk::Button {
 									set_icon_name: icon_name::FLOPPY,
-									set_tooltip_text: Some(fl!("save")),
+									set_tooltip: fl!("save"),
 									set_css_classes: &["suggested-action"],
-									connect_clicked[sender] => move |_| {
-										sender.input(TaskDetailsFactoryInput::SaveTask)
-									}
+									connect_clicked => TaskDetailsFactoryInput::SaveTask
 								},
 							},
 							adw::EntryRow {
@@ -81,7 +77,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_enable_emoji_completion: true,
 								#[name(favorite)]
 								add_suffix = &gtk::ToggleButton {
-									set_tooltip_text: Some(fl!("favorite-task")),
+									set_tooltip: fl!("favorite-task"),
 									add_css_class: "opaque",
 									add_css_class: "circular",
 									#[watch]
@@ -162,7 +158,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_title: fl!("today"),
 								set_subtitle: fl!("today-desc"),
 								add_suffix = &gtk::Switch {
-									set_tooltip_text: Some(fl!("today-tooltip")),
+									set_tooltip: fl!("today-tooltip"),
 									#[watch]
 									set_active: self.task.today,
 									set_valign: gtk::Align::Center,
@@ -177,7 +173,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_title: fl!("completed"),
 								set_subtitle: fl!("completed-desc"),
 								add_suffix = &gtk::Switch {
-									set_tooltip_text: Some(fl!("completed-tooltip")),
+									set_tooltip: fl!("completed-tooltip"),
 									#[watch]
 									set_active: self.task.status == Status::Completed,
 									set_valign: gtk::Align::Center,
@@ -196,7 +192,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								#[name(low_importance)]
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_OUTLINE_THIN,
-									set_tooltip_text: Some(fl!("low")),
+									set_tooltip: fl!("low"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_active: self.task.priority == Priority::Low,
@@ -208,7 +204,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_OUTLINE_THICK,
-									set_tooltip_text: Some(fl!("medium")),
+									set_tooltip: fl!("medium"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
@@ -221,7 +217,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								},
 								gtk::ToggleButton {
 									set_icon_name: icon_name::FLAG_FILLED,
-									set_tooltip_text: Some(fl!("high")),
+									set_tooltip: fl!("high"),
 									set_css_classes: &["flat", "image-button"],
 									set_valign: gtk::Align::Center,
 									set_group: Some(&low_importance),
@@ -276,31 +272,22 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 											gtk::Button {
 												set_hexpand: true,
 												set_label: fl!("today"),
-												set_has_tooltip: true,
-												set_tooltip_text: Some(fl!("set-day-today")),
-												connect_clicked[sender] => move |_| {
-													sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today));
-												}
+												set_tooltip: fl!("set-day-today"),
+												connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today)
 											},
 											gtk::Button {
 												set_hexpand: true,
 												set_label: fl!("tomorrow"),
-												set_has_tooltip: true,
-												set_tooltip_text: Some(fl!("set-day-tomorrow")),
-												connect_clicked[sender] => move |_| {
-													sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow));
-												}
+												set_tooltip: fl!("set-day-tomorrow"),
+												connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow)
 											}
 										},
 										gtk::Button {
 											set_margin_all:10,
 											set_margin_top: 5,
 											set_label: fl!("none"),
-											set_has_tooltip: true,
-											set_tooltip_text: Some(fl!("unset")),
-											connect_clicked[sender] => move |_| {
-												sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None));
-											}
+											set_tooltip: fl!("unset"),
+											connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None)
 										}
 									}
 								},
@@ -314,18 +301,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 										set_valign: gtk::Align::Center,
 										set_spacing: 6,
 										gtk::SpinButton {
-											set_adjustment: &gtk::Adjustment::new(if let Some(date) = self.task.reminder_date {
-												match date.time().hour().try_into() {
-													Ok(hour) => hour,
-													Err(_) => 0.0
-												}
-											} else {
-												0.0
-											}, 0.0, 23.0, 1.0, 1.0, 0.0),
+											set_adjustment: &gtk::Adjustment::new(
+												self.task.reminder_date.unwrap_or_default().time().hour().try_into().unwrap_or(0.0), 0.0, 23.0, 1.0, 1.0, 0.0
+											),
 											set_orientation: gtk::Orientation::Vertical,
 											set_wrap: true,
 											set_numeric: true,
-											set_tooltip_text: Some(fl!("hour")),
+											set_tooltip: fl!("hour"),
 											connect_value_changed[sender] => move |spin| {
 												sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
 											},
@@ -337,18 +319,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 											set_text: ":",
 										},
 										gtk::SpinButton {
-											set_adjustment: &gtk::Adjustment::new(if let Some(date) = self.task.reminder_date {
-												match date.time().minute().try_into() {
-													Ok(minute) => minute,
-													Err(_) => 0.0
-												}
-											} else {
-												0.0
-											}, 0.0, 59.0, 1.0, 1.0, 0.0),
+											set_adjustment: &gtk::Adjustment::new(
+												self.task.reminder_date.unwrap_or_default().time().minute().try_into().unwrap_or(0.0), 0.0, 59.0, 1.0, 1.0, 0.0
+											),
 											set_orientation: gtk::Orientation::Vertical,
 											set_wrap: true,
 											set_numeric: true,
-											set_tooltip_text: Some(fl!("minute")),
+											set_tooltip: fl!("minute"),
 											connect_value_changed[sender] => move |spin| {
 												sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
 											},
@@ -368,49 +345,49 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 										set_css_classes: &["linked"],
 										gtk::ToggleButton {
 											set_label: fl!("mon"),
-											set_tooltip_text: Some(fl!("monday")),
+											set_tooltip: fl!("monday"),
 											#[watch]
 											set_active: self.task.recurrence.monday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Monday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("tue"),
-											set_tooltip_text: Some(fl!("tuesday")),
+											set_tooltip: fl!("tuesday"),
 											#[watch]
 											set_active: self.task.recurrence.tuesday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Tuesday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("wed"),
-											set_tooltip_text: Some(fl!("wednesday")),
+											set_tooltip: fl!("wednesday"),
 											#[watch]
 											set_active: self.task.recurrence.wednesday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Wednesday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("thu"),
-											set_tooltip_text: Some(fl!("thursday")),
+											set_tooltip: fl!("thursday"),
 											#[watch]
 											set_active: self.task.recurrence.thursday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Thursday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("fri"),
-											set_tooltip_text: Some(fl!("friday")),
+											set_tooltip: fl!("friday"),
 											#[watch]
 											set_active: self.task.recurrence.friday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Friday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("sat"),
-											set_tooltip_text: Some(fl!("saturday")),
+											set_tooltip: fl!("saturday"),
 											#[watch]
 											set_active: self.task.recurrence.saturday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Saturday)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("sun"),
-											set_tooltip_text: Some(fl!("sunday")),
+											set_tooltip: fl!("sunday"),
 											#[watch]
 											set_active: self.task.recurrence.sunday,
 											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Sunday)))
@@ -456,8 +433,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: fl!("today"),
-										set_has_tooltip: true,
-										set_tooltip_text: Some(fl!("set-day-today")),
+										set_tooltip: fl!("set-day-today"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
 										}
@@ -465,8 +441,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									gtk::Button {
 										set_hexpand: true,
 										set_label: fl!("tomorrow"),
-										set_has_tooltip: true,
-										set_tooltip_text: Some(fl!("set-day-tomorrow")),
+										set_tooltip: fl!("set-day-tomorrow"),
 										connect_clicked[sender] => move |_| {
 											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
 										}
@@ -476,8 +451,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_margin_all:10,
 									set_margin_top: 5,
 									set_label: fl!("none"),
-									set_has_tooltip: true,
-									set_tooltip_text: Some(fl!("unset")),
+									set_tooltip: fl!("unset"),
 									connect_clicked[sender] => move |_| {
 										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
 									}
@@ -492,11 +466,8 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							set_header_suffix = &gtk::Button {
 								add_css_class: "flat",
 								set_icon_name: icon_name::PLUS,
-								set_has_tooltip: true,
-								set_tooltip_text: Some(fl!("add-sub-task")),
-								connect_clicked[sender] => move |_| {
-									sender.input(TaskDetailsFactoryInput::CreateSubTask)
-								}
+								set_tooltip: fl!("add-sub-task"),
+								connect_clicked => TaskDetailsFactoryInput::CreateSubTask
 							}
 						}
 					},
@@ -793,7 +764,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		self.update_view(widgets, sender);
 	}
 
-	fn output_to_parent_input(output: Self::Output) -> Option<Self::ParentInput> {
+	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			TaskDetailsFactoryOutput::CleanTaskEntry => ContentInput::CleanTaskEntry,
 			TaskDetailsFactoryOutput::SaveTask(_, task, is_update) => {
