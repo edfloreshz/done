@@ -1,14 +1,14 @@
 use relm4::gtk;
 
 #[derive(Debug, Clone)]
-pub struct TaskListEntryComponent {
+pub struct ListDialogComponent {
 	pub name: gtk::EntryBuffer,
-	pub mode: TaskListEntryMode,
+	pub mode: ListDialogMode,
 	pub label: String,
 }
 
 #[derive(Debug, Clone)]
-pub enum TaskListEntryMode {
+pub enum ListDialogMode {
 	New,
 	Edit,
 }

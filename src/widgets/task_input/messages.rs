@@ -3,7 +3,7 @@ use done_local_storage::models::Task;
 use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
-pub enum TaskEntryInput {
+pub enum TaskInputInput {
 	SetParentList(Option<SidebarList>),
 	AddTask,
 	Rename(String),
@@ -12,7 +12,7 @@ pub enum TaskEntryInput {
 }
 
 #[derive(Debug)]
-pub enum TaskEntryOutput {
+pub enum TaskInputOutput {
 	AddTask(Task),
 	EnterCreationMode(Task),
 }

@@ -1,10 +1,10 @@
 #[derive(Debug)]
-pub enum TaskListEntryInput {
+pub enum ListDialogInput {
 	HandleEntry,
 }
 
 #[derive(Debug)]
-pub enum TaskListEntryOutput {
+pub enum ListDialogOutput {
 	AddTaskListToSidebar(String),
 	RenameList(String),
 }

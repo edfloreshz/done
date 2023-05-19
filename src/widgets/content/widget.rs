@@ -2,8 +2,8 @@ use crate::fl;
 use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::preferences::model::Preferences;
-use crate::widgets::task_entry::messages::{TaskEntryInput, TaskEntryOutput};
-use crate::widgets::task_entry::model::TaskEntryModel;
+use crate::widgets::task_input::messages::{TaskInputInput, TaskInputOutput};
+use crate::widgets::task_input::model::TaskInputModel;
 
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -167,13 +167,13 @@ impl AsyncComponent for ContentModel {
 				gtk::Box::default(),
 				sender.input_sender(),
 			),
-			task_entry: TaskEntryModel::builder().launch(None).forward(
+			task_entry: TaskInputModel::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
-					TaskEntryOutput::EnterCreationMode(task) => {
+					TaskInputOutput::EnterCreationMode(task) => {
 						ContentInput::RevealTaskDetails(None, task)
 					},
-					TaskEntryOutput::AddTask(task) => ContentInput::AddTask(task),
+					TaskInputOutput::AddTask(task) => ContentInput::AddTask(task),
 				},
 			),
 			parent_list: None,
@@ -240,7 +240,7 @@ impl AsyncComponent for ContentModel {
 			ContentInput::CleanTaskEntry => self
 				.task_entry
 				.sender()
-				.send(TaskEntryInput::CleanTaskEntry)
+				.send(TaskInputInput::CleanTaskEntry)
 				.unwrap(),
 			ContentInput::HideFlap => hide_flap(self, sender),
 		}

@@ -9,7 +9,7 @@ use crate::factories::task::model::TaskInit;
 use crate::widgets::sidebar::model::SidebarList;
 use crate::{
 	factories::details::model::TaskDetailsFactoryInit,
-	widgets::task_entry::messages::TaskEntryInput,
+	widgets::task_input::messages::TaskInputInput,
 };
 
 use super::{
@@ -207,14 +207,17 @@ pub async fn select_task_list(
 
 			guard.clear();
 
-			if let Ok(response) = local.get_tasks_from_list(list.id.clone()).await {
-				for task in response {
-					guard.push_back(TaskInit::new(
-						task,
-						Some(list.clone()),
-						model.compact,
-					));
-				}
+			match local.get_tasks_from_list(list.id.clone()).await {
+				Ok(response) => {
+					for task in response {
+						guard.push_back(TaskInit::new(
+							task,
+							Some(list.clone()),
+							model.compact,
+						));
+					}
+				},
+				Err(err) => tracing::error!("{err}"),
 			}
 		},
 	}
@@ -222,7 +225,7 @@ pub async fn select_task_list(
 	model
 		.task_entry
 		.sender()
-		.send(TaskEntryInput::SetParentList(model.parent_list.clone()))
+		.send(TaskInputInput::SetParentList(model.parent_list.clone()))
 		.unwrap();
 
 	Ok(())

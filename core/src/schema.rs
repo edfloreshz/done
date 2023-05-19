@@ -25,7 +25,7 @@ diesel::table! {
 				deletion_date -> Nullable<Timestamp>,
 				due_date -> Nullable<Timestamp>,
 				reminder_date -> Nullable<Timestamp>,
-				recurrence -> Nullable<Text>,
+				recurrence -> Text,
 				created_date_time -> Timestamp,
 				last_modified_date_time -> Timestamp,
 		}

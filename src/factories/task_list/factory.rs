@@ -13,11 +13,11 @@ use relm4::{
 
 use crate::gtk;
 use crate::widgets::delete::{DeleteComponent, DeleteInit, DeleteOutput};
+use crate::widgets::list_dialog::messages::ListDialogOutput;
+use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::sidebar::model::SidebarList;
-use crate::widgets::task_list_entry::messages::TaskListEntryOutput;
-use crate::widgets::task_list_entry::model::TaskListEntryComponent;
 
 use super::{
 	messages::{TaskListFactoryInput, TaskListFactoryOutput},
@@ -63,14 +63,14 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						#[watch]
 						set_visible: self.smart,
 						#[watch]
-						set_icon_name: self.list.icon().as_deref(),
+						set_icon_name: self.list.icon(),
 						set_margin_all: 5,
 					},
 					gtk::Label {
 						#[watch]
 						set_visible: !self.smart && !self.extended,
 						#[watch]
-						set_text: self.list.icon().as_deref().unwrap_or_default(),
+						set_text: self.list.icon().unwrap_or_default(),
 						set_margin_all: 5,
 					},
 					gtk::MenuButton {
@@ -131,11 +131,11 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			} else {
 				Preferences::new().await
 			};
-		let rename = TaskListEntryComponent::builder()
+		let rename = ListDialogComponent::builder()
 			.launch(Some(init.list.name()))
 			.forward(sender.input_sender(), |message| match message {
-				TaskListEntryOutput::AddTaskListToSidebar(_) => todo!(),
-				TaskListEntryOutput::RenameList(name) => {
+				ListDialogOutput::AddTaskListToSidebar(_) => todo!(),
+				ListDialogOutput::RenameList(name) => {
 					TaskListFactoryInput::RenameList(name)
 				},
 			});

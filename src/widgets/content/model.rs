@@ -4,12 +4,12 @@ use relm4::{factory::AsyncFactoryVecDeque, Controller};
 use crate::factories::details::model::TaskDetailsFactoryModel;
 use crate::factories::task::model::TaskModel;
 use crate::widgets::sidebar::model::SidebarList;
-use crate::widgets::task_entry::model::TaskEntryModel;
+use crate::widgets::task_input::model::TaskInputModel;
 
 pub struct ContentModel {
 	pub task_factory: AsyncFactoryVecDeque<TaskModel>,
 	pub task_details_factory: AsyncFactoryVecDeque<TaskDetailsFactoryModel>,
-	pub task_entry: Controller<TaskEntryModel>,
+	pub task_entry: Controller<TaskInputModel>,
 	pub parent_list: Option<SidebarList>,
 	pub compact: bool,
 	pub icon: Option<String>,
