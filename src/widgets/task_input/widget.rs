@@ -28,7 +28,7 @@ impl Component for TaskInputModel {
 			set_hexpand: true,
 			add_css_class: "card",
 			set_title: fl!("new-task"),
-			set_margin_all: 12,
+			set_margin_all: 5,
 			set_height_request: 42,
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,

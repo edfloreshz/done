@@ -97,9 +97,8 @@ impl AsyncComponent for ContentModel {
 
 							#[local_ref]
 							list_box -> gtk::ListBox {
-								set_show_separators: true,
 								set_css_classes: &["boxed-list"],
-								set_valign: gtk::Align::Start,
+								set_valign: gtk::Align::Fill,
 								set_margin_all: 5,
 							},
 						},
