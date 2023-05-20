@@ -11,7 +11,7 @@ use relm4::component::{AsyncComponent, AsyncComponentParts};
 use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 
-use super::helpers::{set_color_scheme, set_compact, set_extended};
+use super::helpers::{set_color_scheme, set_extended};
 use super::messages::{PreferencesComponentInput, PreferencesComponentOutput};
 use super::model::{ColorScheme, Preferences, PreferencesComponentModel};
 
@@ -61,22 +61,6 @@ impl AsyncComponent for PreferencesComponentModel {
 											_ => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Default)).unwrap(),
 										}
 									},
-								},
-								adw::ActionRow {
-									set_title: fl!("compact"),
-									set_subtitle: fl!("compact-description"),
-									set_icon_name: Some("list-large-symbolic"),
-									add_suffix = &gtk::Box {
-										set_halign: gtk::Align::Center,
-										set_valign: gtk::Align::Center,
-										append = &gtk::Switch {
-											set_active: model.preferences.compact,
-											connect_state_set[sender] => move |_, state| {
-												sender.input(PreferencesComponentInput::ToggleCompact(state));
-												gtk::Inhibit::default()
-											}
-										}
-									}
 								},
 								adw::ActionRow {
 									set_title: fl!("extended-sidebar"),
@@ -136,13 +120,8 @@ impl AsyncComponent for PreferencesComponentModel {
 					tracing::error!("{err}")
 				}
 			},
-			PreferencesComponentInput::ToggleCompact(compact) => {
-				if let Err(err) = set_compact(self, &sender, compact) {
-					tracing::error!("{err}")
-				}
-			},
-			PreferencesComponentInput::ToggleExtended(compact) => {
-				if let Err(err) = set_extended(self, &sender, compact) {
+			PreferencesComponentInput::ToggleExtended(mode) => {
+				if let Err(err) = set_extended(self, &sender, mode) {
 					tracing::error!("{err}")
 				}
 			},

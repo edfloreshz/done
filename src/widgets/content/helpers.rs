@@ -55,11 +55,10 @@ pub async fn add_task(
 		let local = LocalStorage::new();
 		match local.create_task(task.clone()).await {
 			Ok(_) => {
-				model.task_factory.guard().push_back(TaskInit::new(
-					task.clone(),
-					Some(parent.clone()),
-					model.compact,
-				));
+				model
+					.task_factory
+					.guard()
+					.push_back(TaskInit::new(task.clone(), parent.clone()));
 				model.show_task_details = false;
 				sender.input(ContentInput::HideFlap);
 				sender
@@ -155,8 +154,7 @@ pub async fn select_task_list(
 				for task in response {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent).await.ok(),
-						model.compact,
+						local.get_list(task.parent).await.unwrap(),
 					));
 				}
 			}
@@ -171,8 +169,7 @@ pub async fn select_task_list(
 				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.ok(),
-						model.compact,
+						local.get_list(task.parent.clone()).await.unwrap(),
 					));
 				}
 			}
@@ -183,8 +180,7 @@ pub async fn select_task_list(
 				for task in response.iter().filter(|task| task.favorite) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.ok(),
-						model.compact,
+						local.get_list(task.parent.clone()).await.unwrap(),
 					));
 				}
 			}
@@ -198,8 +194,7 @@ pub async fn select_task_list(
 				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.ok(),
-						model.compact,
+						local.get_list(task.parent.clone()).await.unwrap(),
 					));
 				}
 			}
@@ -213,8 +208,7 @@ pub async fn select_task_list(
 				{
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.ok(),
-						model.compact,
+						local.get_list(task.parent.clone()).await.unwrap(),
 					));
 				}
 			}
@@ -231,11 +225,7 @@ pub async fn select_task_list(
 						.filter(|task| task.status != Status::Completed)
 						.map(|task| task.to_owned())
 					{
-						guard.push_back(TaskInit::new(
-							task,
-							Some(list.clone()),
-							model.compact,
-						));
+						guard.push_back(TaskInit::new(task, list.clone()));
 					}
 				},
 				Err(err) => tracing::error!("{err}"),

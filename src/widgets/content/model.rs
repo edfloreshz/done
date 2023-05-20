@@ -11,7 +11,6 @@ pub struct ContentModel {
 	pub task_details_factory: AsyncFactoryVecDeque<TaskDetailsFactoryModel>,
 	pub task_entry: Controller<TaskInputModel>,
 	pub parent_list: Option<SidebarList>,
-	pub compact: bool,
 	pub icon: Option<String>,
 	pub title: String,
 	pub description: String,

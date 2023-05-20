@@ -74,7 +74,6 @@ pub enum Event {
 	SelectList(SidebarList),
 	AddTaskList,
 	AddTaskListToSidebar(String),
-	ToggleCompact(bool),
 	ToggleExtended(bool),
 	OpenPreferences,
 	DisablePlugin,
@@ -296,9 +295,6 @@ impl AsyncComponent for App {
 		let preferences_controller = PreferencesComponentModel::builder()
 			.launch(())
 			.forward(sender.input_sender(), |message| match message {
-				PreferencesComponentOutput::ToggleCompact(compact) => {
-					Event::ToggleCompact(compact)
-				},
 				PreferencesComponentOutput::ToggleExtended(extended) => {
 					Event::ToggleExtended(extended)
 				},
@@ -433,12 +429,6 @@ impl AsyncComponent for App {
 					.send(ContentInput::SelectList(list))
 					.unwrap_or_default();
 			},
-			Event::ToggleCompact(compact) => self
-				.content
-				.sender()
-				.send(ContentInput::ToggleCompact(compact))
-				.unwrap(),
-
 			Event::ToggleExtended(extended) => {
 				self.extended = extended;
 				self

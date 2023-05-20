@@ -50,8 +50,6 @@ all-done-instructions = Use the entry at the bottom to add more tasks
 # Preferences
 preferences = Preferences
 appearance = Appearance
-compact = Compact tasks
-compact-description = Toggle this to make tasks smaller
 extended-sidebar = Extended sidebar
 extended-sidebar-description = Extend the sidebar to include icons and labels.
 color-scheme = Color scheme

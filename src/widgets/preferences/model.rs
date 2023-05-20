@@ -9,7 +9,6 @@ pub struct PreferencesComponentModel {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Preferences {
 	pub color_scheme: ColorScheme,
-	pub compact: bool,
 	pub extended: bool,
 }
 
@@ -17,7 +16,6 @@ impl Preferences {
 	pub async fn new() -> Self {
 		Self {
 			color_scheme: ColorScheme::Default,
-			compact: false,
 			extended: true,
 		}
 	}
