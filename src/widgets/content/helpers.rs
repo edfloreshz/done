@@ -1,11 +1,12 @@
 use anyhow::{Context, Result};
 use chrono::{NaiveDateTime, Utc};
-use done_local_storage::models::Task;
+use done_local_storage::models::{Status, Task};
 use done_local_storage::LocalStorage;
 use relm4::ComponentController;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender};
 
 use crate::factories::task::model::TaskInit;
+use crate::fl;
 use crate::widgets::sidebar::model::SidebarList;
 use crate::{
 	factories::details::model::TaskDetailsFactoryInit,
@@ -146,6 +147,7 @@ pub async fn select_task_list(
 	model.title = list.name();
 	model.description = list.description();
 	model.smart = list.smart();
+
 	match list {
 		SidebarList::All => {
 			model.parent_list = Some(SidebarList::All);
@@ -202,6 +204,21 @@ pub async fn select_task_list(
 				}
 			}
 		},
+		SidebarList::Done => {
+			model.parent_list = Some(SidebarList::Done);
+			if let Ok(response) = local.get_all_tasks().await {
+				for task in response
+					.iter()
+					.filter(|task: &&Task| task.status == Status::Completed)
+				{
+					guard.push_back(TaskInit::new(
+						task.clone(),
+						local.get_list(task.parent.clone()).await.ok(),
+						model.compact,
+					));
+				}
+			}
+		},
 		SidebarList::Custom(list) => {
 			model.parent_list = Some(SidebarList::Custom(list.clone()));
 
@@ -209,7 +226,11 @@ pub async fn select_task_list(
 
 			match local.get_tasks_from_list(list.id.clone()).await {
 				Ok(response) => {
-					for task in response {
+					for task in response
+						.iter()
+						.filter(|task| task.status != Status::Completed)
+						.map(|task| task.to_owned())
+					{
 						guard.push_back(TaskInit::new(
 							task,
 							Some(list.clone()),
@@ -221,6 +242,27 @@ pub async fn select_task_list(
 			}
 		},
 	}
+
+	model.page_icon = if matches!(model.parent_list, Some(SidebarList::Custom(_)))
+	{
+		"/dev/edfloreshz/Done/icons/scalable/actions/checked.png".into()
+	} else {
+		"/dev/edfloreshz/Done/icons/scalable/actions/empty.png".into()
+	};
+
+	model.page_title =
+		if matches!(model.parent_list, Some(SidebarList::Custom(_))) {
+			fl!("all-done").clone()
+		} else {
+			fl!("list-empty").clone()
+		};
+
+	model.page_subtitle =
+		if matches!(model.parent_list, Some(SidebarList::Custom(_))) {
+			fl!("all-done-instructions").clone()
+		} else {
+			fl!("instructions").clone()
+		};
 
 	model
 		.task_entry
