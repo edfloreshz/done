@@ -10,7 +10,6 @@ pub enum ContentInput {
 	UpdateTask(Task),
 	SelectList(SidebarList),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
-	ToggleCompact(bool),
 	DisablePlugin,
 	CleanTaskEntry,
 	HideFlap,
@@ -27,7 +26,6 @@ pub enum TaskInput {
 	SetCompleted(bool),
 	Favorite(DynamicIndex),
 	ModifyTitle(String),
-	ToggleCompact(bool),
 	RevealTaskDetails(Option<DynamicIndex>),
 }
 

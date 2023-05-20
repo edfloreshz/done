@@ -29,21 +29,6 @@ pub fn set_color_scheme(
 	update_preferences(&model.preferences)
 }
 
-pub fn set_compact(
-	model: &mut PreferencesComponentModel,
-	sender: &AsyncComponentSender<PreferencesComponentModel>,
-	compact: bool,
-) -> Result<()> {
-	model.preferences.compact = compact;
-	update_preferences(&model.preferences)?;
-	sender
-		.output(PreferencesComponentOutput::ToggleCompact(
-			model.preferences.compact,
-		))
-		.unwrap();
-	Ok(())
-}
-
 pub fn set_extended(
 	model: &mut PreferencesComponentModel,
 	sender: &AsyncComponentSender<PreferencesComponentModel>,

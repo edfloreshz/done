@@ -1,11 +1,6 @@
-use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
-use crate::widgets::preferences::model::Preferences;
 use crate::widgets::task_input::messages::{TaskInputInput, TaskInputOutput};
 use crate::widgets::task_input::model::TaskInputModel;
-
-use libset::format::FileFormat;
-use libset::project::Project;
 
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
@@ -95,7 +90,7 @@ impl AsyncComponent for ContentModel {
 							set_hexpand: true,
 
 							#[local_ref]
-							list_box -> gtk::ListBox {
+							list_box -> adw::PreferencesGroup {
 								set_css_classes: &["boxed-list"],
 								set_valign: gtk::Align::Fill,
 								set_margin_all: 5,
@@ -160,15 +155,9 @@ impl AsyncComponent for ContentModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		let compact = Project::open("dev", "edfloreshz", "done")
-			.unwrap()
-			.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-			.unwrap()
-			.compact;
-
 		let model = ContentModel {
 			task_factory: AsyncFactoryVecDeque::new(
-				gtk::ListBox::default(),
+				adw::PreferencesGroup::default(),
 				sender.input_sender(),
 			),
 			task_details_factory: AsyncFactoryVecDeque::new(
@@ -185,7 +174,6 @@ impl AsyncComponent for ContentModel {
 				},
 			),
 			parent_list: None,
-			compact,
 			icon: None,
 			title: String::new(),
 			description: String::new(),
@@ -238,14 +226,6 @@ impl AsyncComponent for ContentModel {
 			},
 			ContentInput::RevealTaskDetails(index, task) => {
 				reveal_task_details(self, index, task)
-			},
-			ContentInput::ToggleCompact(compact) => {
-				let size = self.task_factory.len();
-				for index in 0..size {
-					self
-						.task_factory
-						.send(index, TaskInput::ToggleCompact(compact));
-				}
 			},
 			ContentInput::DisablePlugin => self.parent_list = None,
 			ContentInput::CleanTaskEntry => self

@@ -19,7 +19,7 @@ use crate::widgets::content::messages::{TaskInput, TaskOutput};
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskModel {
 	type ParentInput = ContentInput;
-	type ParentWidget = gtk::ListBox;
+	type ParentWidget = adw::PreferencesGroup;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;
@@ -28,20 +28,10 @@ impl AsyncFactoryComponent for TaskModel {
 
 	view! {
 		root = adw::EntryRow {
-			set_title: if let Some(list) = self.parent_list.as_ref() {
-				list.name.as_str()
-			} else {
-				""
-			},
+			set_title: &self.parent_list.name,
 			set_text: self.task.title.as_str(),
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,
-			#[watch]
-			set_margin_all: if self.compact {
-				0
-			} else {
-				2
-			},
 			#[name(check_button)]
 			add_prefix = &gtk::CheckButton {
 				set_tooltip: fl!("completed-tooltip"),
@@ -104,7 +94,6 @@ impl AsyncFactoryComponent for TaskModel {
 		Self {
 			task: init.task,
 			parent_list: init.parent_list,
-			compact: init.compact,
 		}
 	}
 
@@ -156,7 +145,6 @@ impl AsyncFactoryComponent for TaskModel {
 						.unwrap_or_default();
 				}
 			},
-			TaskInput::ToggleCompact(compact) => self.compact = compact,
 		}
 	}
 
