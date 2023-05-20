@@ -37,10 +37,15 @@ starred-desc = Starred tasks
 next-7-days = Next 7 Days
 next-7-days-desc = Tasks due the next 7 days
 add-new-task-list = Add new task list
+completed-list = Completed
+completed-list-desc = Tasks that have been completed
 
 # Empty task list
-list-empty = Something's missing...
-instructions = Select a list from the sidebar to start adding tasks.
+list-empty = This is a smart list
+instructions = Modify some tasks to make them appear here
+
+all-done = All done
+all-done-instructions = Use the entry at the bottom to add more tasks
 
 # Preferences
 preferences = Preferences

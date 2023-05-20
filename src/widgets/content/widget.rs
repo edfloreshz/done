@@ -1,4 +1,3 @@
-use crate::fl;
 use crate::widgets::content::messages::TaskInput;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::preferences::model::Preferences;
@@ -116,7 +115,8 @@ impl AsyncComponent for ContentModel {
 								set_margin_all: 24,
 								set_spacing: 24,
 								gtk::Picture {
-									set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/empty.png"),
+									#[watch]
+									set_resource: Some(&model.page_icon),
 									set_margin_all: 70
 								},
 								gtk::Label {
@@ -124,11 +124,13 @@ impl AsyncComponent for ContentModel {
 									set_wrap: true,
 									set_wrap_mode: gtk::pango::WrapMode::Word,
 									set_justify: gtk::Justification::Center,
-									set_text: fl!("list-empty")
+									#[watch]
+									set_text: &model.page_title,
 								},
 								gtk::Label {
 									set_css_classes: &["body"],
-									set_text: fl!("instructions"),
+									#[watch]
+									set_text: &model.page_subtitle,
 									set_wrap: true,
 									set_wrap_mode: gtk::pango::WrapMode::Word,
 									set_justify: gtk::Justification::Center,
@@ -186,10 +188,13 @@ impl AsyncComponent for ContentModel {
 			compact,
 			icon: None,
 			title: String::new(),
-			smart: false,
 			description: String::new(),
+			smart: false,
 			selected_task: None,
 			show_task_details: false,
+			page_icon: "/dev/edfloreshz/Done/icons/scalable/actions/empty.png".into(),
+			page_title: "list-empty".into(),
+			page_subtitle: "instructions".into(),
 		};
 		let list_box = model.task_factory.widget();
 		let flap_container = model.task_details_factory.widget();

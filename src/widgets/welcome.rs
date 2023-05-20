@@ -27,10 +27,6 @@ impl SimpleComponent for WelcomeComponent {
 				set_valign: gtk::Align::Center,
 				set_margin_all: 50,
 				set_spacing: 20,
-				gtk::Picture {
-					set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
-					set_content_fit: gtk::ContentFit::ScaleDown,
-				},
 				gtk::Label {
 					set_css_classes: &["title-1"],
 					set_wrap: true,
@@ -44,6 +40,10 @@ impl SimpleComponent for WelcomeComponent {
 					set_wrap_mode: gtk::pango::WrapMode::Word,
 					set_justify: gtk::Justification::Center,
 					set_text: fl!("welcome-subtitle")
+				},
+				gtk::Picture {
+					set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
+					set_content_fit: gtk::ContentFit::ScaleDown,
 				},
 				gtk::Label {
 					set_css_classes: &["body"],
