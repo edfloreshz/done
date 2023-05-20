@@ -18,7 +18,7 @@ pub(crate) async fn init() -> Result<()> {
 	if !project.integrity::<Preferences>("preferences", FileFormat::JSON) {
 		project
 			.get_file("preferences", FileFormat::JSON)?
-			.set_content(Preferences::new().await)?
+			.set_content(Preferences::new())?
 			.write()?;
 	}
 	Ok(())

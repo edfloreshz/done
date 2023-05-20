@@ -101,9 +101,9 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
 				project
 					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or(Preferences::new().await)
+					.unwrap_or(Preferences::new())
 			} else {
-				Preferences::new().await
+				Preferences::new()
 			};
 		let list_factory =
 			AsyncFactoryVecDeque::new(gtk::ListBox::new(), sender.input_sender());
@@ -123,7 +123,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				guard.push_back(TaskListFactoryInit::new(smart_list, true));
 			}
 
-			if let Ok(lists) = local.get_lists().await {
+			if let Ok(lists) = local.get_lists() {
 				for list in lists {
 					guard.push_back(TaskListFactoryInit::new(
 						SidebarList::Custom(list),
@@ -157,7 +157,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::AddTaskListToSidebar(name) => {
 				let local = LocalStorage::new();
-				match local.create_list(List::new(name.as_str())).await {
+				match local.create_list(List::new(name.as_str())) {
 					Ok(list) => {
 						let mut guard = self.list_factory.guard();
 						guard.push_back(TaskListFactoryInit::new(
@@ -172,7 +172,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::DeleteTaskList(index, id) => {
 				let local = LocalStorage::new();
-				match local.delete_list(id).await {
+				match local.delete_list(id) {
 					Ok(_) => {
 						let mut guard = self.list_factory.guard();
 						guard.remove(index.current_index());

@@ -13,7 +13,7 @@ pub struct Preferences {
 }
 
 impl Preferences {
-	pub async fn new() -> Self {
+	pub fn new() -> Self {
 		Self {
 			color_scheme: ColorScheme::Default,
 			extended: true,

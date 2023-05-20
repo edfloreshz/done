@@ -10,6 +10,11 @@ documentation = "https://docs.rs/done"
 repository = "https://github.com/edfloreshz/done/"
 readme = "README.md"
 
+[workspace]
+members = [
+    "service",
+]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

@@ -124,9 +124,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
 				project
 					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or(Preferences::new().await)
+					.unwrap_or(Preferences::new())
 			} else {
-				Preferences::new().await
+				Preferences::new()
 			};
 		let rename = ListDialogComponent::builder()
 			.launch(Some(init.list.name()))
@@ -204,7 +204,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut renamed_list = list.clone();
 					renamed_list.name = name.clone();
-					match local.update_list(renamed_list.clone()).await {
+					match local.update_list(renamed_list.clone()) {
 						Ok(_) => self.list = SidebarList::Custom(renamed_list),
 						Err(err) => {
 							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
@@ -215,7 +215,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
 					let list_id = list.id.clone();
-					match local.delete_list(list_id.clone()).await {
+					match local.delete_list(list_id.clone()) {
 						Ok(_) => {
 							sender.output(TaskListFactoryOutput::DeleteTaskList(
 								self.index.clone(),
@@ -232,7 +232,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut list = list.clone();
 					list.icon = Some(icon.clone());
-					match local.update_list(list.clone()).await {
+					match local.update_list(list.clone()) {
 						Ok(_) => self.list = SidebarList::Custom(list),
 						Err(err) => {
 							sender.output(TaskListFactoryOutput::Notify(err.to_string()))

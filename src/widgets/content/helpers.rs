@@ -53,7 +53,7 @@ pub async fn add_task(
 	if let Some(SidebarList::Custom(parent)) = &model.parent_list {
 		task.parent = parent.id.clone();
 		let local = LocalStorage::new();
-		match local.create_task(task.clone()).await {
+		match local.create_task(task.clone()) {
 			Ok(_) => {
 				model
 					.task_factory
@@ -86,7 +86,7 @@ pub async fn remove_task(
 		.get(index.current_index())
 		.context("The task you're trying to remove does not currently exist")?;
 	let local = LocalStorage::new();
-	match local.delete_task(task.clone().task.id).await {
+	match local.delete_task(task.clone().task.id) {
 		Ok(_) => {
 			guard.remove(index.current_index());
 			sender
@@ -112,7 +112,7 @@ pub async fn update_task(
 	task: Task,
 ) -> Result<()> {
 	let local = LocalStorage::new();
-	match local.update_task(task).await {
+	match local.update_task(task) {
 		Ok(_) => {
 			if model.show_task_details {
 				sender.input(ContentInput::HideFlap);
@@ -150,18 +150,18 @@ pub async fn select_task_list(
 	match &list {
 		SidebarList::All => {
 			model.parent_list = Some(SidebarList::All);
-			if let Ok(response) = local.get_all_tasks().await {
+			if let Ok(response) = local.get_all_tasks() {
 				for task in response {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent).await.unwrap(),
+						local.get_list(task.parent).unwrap(),
 					));
 				}
 			}
 		},
 		SidebarList::Today => {
 			model.parent_list = Some(SidebarList::Today);
-			if let Ok(response) = local.get_all_tasks().await {
+			if let Ok(response) = local.get_all_tasks() {
 				for task in response.iter().filter(|task| {
 					task.today
 						|| task.due_date.is_some()
@@ -169,46 +169,46 @@ pub async fn select_task_list(
 				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.unwrap(),
+						local.get_list(task.parent.clone()).unwrap(),
 					));
 				}
 			}
 		},
 		SidebarList::Starred => {
 			model.parent_list = Some(SidebarList::Starred);
-			if let Ok(response) = local.get_all_tasks().await {
+			if let Ok(response) = local.get_all_tasks() {
 				for task in response.iter().filter(|task| task.favorite) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.unwrap(),
+						local.get_list(task.parent.clone()).unwrap(),
 					));
 				}
 			}
 		},
 		SidebarList::Next7Days => {
 			model.parent_list = Some(SidebarList::Next7Days);
-			if let Ok(response) = local.get_all_tasks().await {
+			if let Ok(response) = local.get_all_tasks() {
 				for task in response.iter().filter(|task: &&Task| {
 					task.due_date.is_some()
 						&& is_within_next_7_days(task.due_date.unwrap())
 				}) {
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.unwrap(),
+						local.get_list(task.parent.clone()).unwrap(),
 					));
 				}
 			}
 		},
 		SidebarList::Done => {
 			model.parent_list = Some(SidebarList::Done);
-			if let Ok(response) = local.get_all_tasks().await {
+			if let Ok(response) = local.get_all_tasks() {
 				for task in response
 					.iter()
 					.filter(|task: &&Task| task.status == Status::Completed)
 				{
 					guard.push_back(TaskInit::new(
 						task.clone(),
-						local.get_list(task.parent.clone()).await.unwrap(),
+						local.get_list(task.parent.clone()).unwrap(),
 					));
 				}
 			}
@@ -218,7 +218,7 @@ pub async fn select_task_list(
 
 			guard.clear();
 
-			match local.get_tasks_from_list(list.id.clone()).await {
+			match local.get_tasks_from_list(list.id.clone()) {
 				Ok(response) => {
 					for task in response
 						.iter()

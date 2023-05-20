@@ -335,9 +335,9 @@ impl AsyncComponent for App {
 			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
 				project
 					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or(Preferences::new().await)
+					.unwrap_or(Preferences::new())
 			} else {
-				Preferences::new().await
+				Preferences::new()
 			};
 
 		let mut model = App::new(
