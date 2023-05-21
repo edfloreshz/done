@@ -111,7 +111,7 @@ impl AsyncComponent for ContentModel {
 								set_spacing: 24,
 								gtk::Picture {
 									#[watch]
-									set_resource: Some(&model.page_icon),
+									set_resource: Some(model.page_icon),
 									set_margin_all: 70
 								},
 								gtk::Label {
