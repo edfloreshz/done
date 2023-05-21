@@ -7,8 +7,10 @@ use adw::{
 		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::{Datelike, Duration, Local, NaiveDateTime, Timelike, Utc};
-use done_local_storage::models::{Day, Priority, Status, Task};
+use chrono::{
+	Datelike, Duration, Local, NaiveDateTime, Timelike, Utc, Weekday,
+};
+use done_local_storage::models::{Priority, Status, Task};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,
@@ -348,49 +350,49 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 											set_tooltip: fl!("monday"),
 											#[watch]
 											set_active: self.task.recurrence.monday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Monday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Mon)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("tue"),
 											set_tooltip: fl!("tuesday"),
 											#[watch]
 											set_active: self.task.recurrence.tuesday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Tuesday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Tue)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("wed"),
 											set_tooltip: fl!("wednesday"),
 											#[watch]
 											set_active: self.task.recurrence.wednesday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Wednesday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Wed)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("thu"),
 											set_tooltip: fl!("thursday"),
 											#[watch]
 											set_active: self.task.recurrence.thursday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Thursday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Thu)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("fri"),
 											set_tooltip: fl!("friday"),
 											#[watch]
 											set_active: self.task.recurrence.friday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Friday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Fri)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("sat"),
 											set_tooltip: fl!("saturday"),
 											#[watch]
 											set_active: self.task.recurrence.saturday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Saturday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Sat)))
 										},
 										gtk::ToggleButton {
 											set_label: fl!("sun"),
 											set_tooltip: fl!("sunday"),
 											#[watch]
 											set_active: self.task.recurrence.sunday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Sunday)))
+											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Weekday::Sun)))
 										},
 									},
 								}
@@ -749,13 +751,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				}
 			},
 			TaskDetailsFactoryInput::SetDayInRecurrence((active, day)) => match day {
-				Day::Monday => self.task.recurrence.monday = active,
-				Day::Tuesday => self.task.recurrence.tuesday = active,
-				Day::Wednesday => self.task.recurrence.wednesday = active,
-				Day::Thursday => self.task.recurrence.thursday = active,
-				Day::Friday => self.task.recurrence.friday = active,
-				Day::Saturday => self.task.recurrence.saturday = active,
-				Day::Sunday => self.task.recurrence.sunday = active,
+				Weekday::Mon => self.task.recurrence.monday = active,
+				Weekday::Tue => self.task.recurrence.tuesday = active,
+				Weekday::Wed => self.task.recurrence.wednesday = active,
+				Weekday::Thu => self.task.recurrence.thursday = active,
+				Weekday::Fri => self.task.recurrence.friday = active,
+				Weekday::Sat => self.task.recurrence.saturday = active,
+				Weekday::Sun => self.task.recurrence.sunday = active,
 			},
 		}
 		if self.task != self.original_task {
