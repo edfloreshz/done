@@ -55,6 +55,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				#[wrap(Some)]
 				set_center_widget = &gtk::Button {
 					set_css_classes: &["flat"],
+					set_width_request: 42,
 					gtk::CenterBox {
 						#[wrap(Some)]
 						set_center_widget = &gtk::Image {
@@ -69,8 +70,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				set_visible: model.extended,
 				set_css_classes: &["navigation-sidebar"],
 				set_tooltip: fl!("preferences"),
-				set_margin_start: 10,
-				set_margin_end: 10,
+				set_margin_start: 5,
+				set_margin_end: 5,
 				gtk::Button {
 					set_css_classes: &["flat"],
 					gtk::Box {

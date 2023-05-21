@@ -165,18 +165,21 @@ impl AsyncComponent for App {
 						#[watch]
 						set_visible: !model.extended,
 						set_height_request: 46,
+						set_margin_top: 8,
+						set_margin_bottom: 8,
 						#[wrap(Some)]
 						set_center_widget = &gtk::Box {
-							set_margin_all: 5,
 							set_spacing: 5,
 							set_orientation: gtk::Orientation::Vertical,
 							gtk::MenuButton {
+								set_width_request: 42,
 								set_valign: gtk::Align::Center,
 								set_css_classes: &["flat"],
 								set_icon_name: icon_name::MENU,
 								set_menu_model: Some(&primary_menu),
 							},
 							gtk::Button {
+								set_width_request: 42,
 								set_tooltip: fl!("add-new-task-list"),
 								set_icon_name: icon_name::PLUS,
 								set_css_classes: &["flat", "image-button"],

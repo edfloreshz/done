@@ -38,6 +38,7 @@ impl AsyncComponent for PreferencesComponentModel {
 					append = &adw::Clamp {
 						#[wrap(Some)]
 						set_child = &adw::PreferencesPage {
+							set_vexpand: true,
 							add = &adw::PreferencesGroup {
 								set_title: fl!("appearance"),
 								adw::ComboRow {
