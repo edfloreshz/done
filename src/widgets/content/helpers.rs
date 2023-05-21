@@ -147,7 +147,7 @@ pub async fn select_task_list(
 	model.description = list.description();
 	model.smart = list.smart();
 
-	match list {
+	match &list {
 		SidebarList::All => {
 			model.parent_list = Some(SidebarList::All);
 			if let Ok(response) = local.get_all_tasks().await {
@@ -233,26 +233,23 @@ pub async fn select_task_list(
 		},
 	}
 
-	model.page_icon = if matches!(model.parent_list, Some(SidebarList::Custom(_)))
-	{
-		"/dev/edfloreshz/Done/icons/scalable/actions/checked.png".into()
+	model.page_icon = if list.smart() {
+		"/dev/edfloreshz/Done/icons/scalable/actions/empty.png"
 	} else {
-		"/dev/edfloreshz/Done/icons/scalable/actions/empty.png".into()
+		"/dev/edfloreshz/Done/icons/scalable/actions/checked.png"
 	};
 
-	model.page_title =
-		if matches!(model.parent_list, Some(SidebarList::Custom(_))) {
-			fl!("all-done").clone()
-		} else {
-			fl!("list-empty").clone()
-		};
+	model.page_title = if list.smart() {
+		fl!("list-empty").clone()
+	} else {
+		fl!("all-done").clone()
+	};
 
-	model.page_subtitle =
-		if matches!(model.parent_list, Some(SidebarList::Custom(_))) {
-			fl!("all-done-instructions").clone()
-		} else {
-			fl!("instructions").clone()
-		};
+	model.page_subtitle = if list.smart() {
+		fl!("instructions").clone()
+	} else {
+		fl!("all-done-instructions").clone()
+	};
 
 	model
 		.task_entry

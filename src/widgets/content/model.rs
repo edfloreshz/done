@@ -17,7 +17,7 @@ pub struct ContentModel {
 	pub smart: bool,
 	pub selected_task: Option<Task>,
 	pub show_task_details: bool,
-	pub page_icon: String,
+	pub page_icon: &'static str,
 	pub page_title: String,
 	pub page_subtitle: String,
 }
