@@ -63,14 +63,13 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_visible: self.smart,
 						#[watch]
 						set_icon_name: self.list.icon(),
-						set_margin_all: 5,
+						set_margin_all: if self.extended { 5 } else { 0 },
 					},
 					gtk::Label {
 						#[watch]
 						set_visible: !self.smart && !self.extended,
 						#[watch]
 						set_text: self.list.icon().unwrap_or_default(),
-						set_margin_all: 5,
 					},
 					gtk::MenuButton {
 						#[watch]
