@@ -43,6 +43,17 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.7" date="2023-05-21">
+      <description>
+        <p>Reminders!</p>
+        <ul>
+          <li>Tasks can now set reminders by date, time and recurrence.</li>
+          <li>Tasks pane now extends to the bottom and aligns with the task entry.</li>
+          <li>New smart list to store completed tasks.</li>
+          <li>Tasks now disappear when they are completed and are moved to Completed.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.6" date="2023-05-17">
     <description>
         <p>Overall improvements</p>

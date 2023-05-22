@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2023-05-17
+- Tasks can now set reminders by date, time and recurrence.
+- Tasks pane now extends to the bottom and aligns with the task entry.
+- New smart list to store completed tasks.
+- Tasks now disappear when completed and are moved to Completed.
+
 ## [0.1.6] - 2023-05-17
 - Tasks pane now has a title and description.
 - Add to Today is now enabled.
