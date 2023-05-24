@@ -19,7 +19,7 @@ use crate::widgets::content::messages::{TaskInput, TaskOutput};
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskModel {
 	type ParentInput = ContentInput;
-	type ParentWidget = adw::PreferencesGroup;
+	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = TaskInput;
 	type Output = TaskOutput;

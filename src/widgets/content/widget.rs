@@ -89,11 +89,13 @@ impl AsyncComponent for ContentModel {
 							set_vexpand: true,
 							set_hexpand: true,
 
-							#[local_ref]
-							list_box -> adw::PreferencesGroup {
-								set_css_classes: &["boxed-list"],
-								set_valign: gtk::Align::Fill,
+							adw::PreferencesGroup {
 								set_margin_all: 5,
+								#[local_ref]
+								list_box -> gtk::ListBox {
+									set_css_classes: &["boxed-list"],
+									set_vexpand: true
+								}
 							},
 						},
 						gtk::CenterBox {
@@ -157,7 +159,7 @@ impl AsyncComponent for ContentModel {
 	) -> AsyncComponentParts<Self> {
 		let model = ContentModel {
 			task_factory: AsyncFactoryVecDeque::new(
-				adw::PreferencesGroup::default(),
+				gtk::ListBox::default(),
 				sender.input_sender(),
 			),
 			task_details_factory: AsyncFactoryVecDeque::new(
