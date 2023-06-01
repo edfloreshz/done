@@ -376,13 +376,17 @@ name = "done_local_storage"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "diesel",
  "diesel_migrations",
  "libset",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
  "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

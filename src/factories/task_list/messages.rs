@@ -1,3 +1,4 @@
+use done_local_storage::services::Service;
 use relm4::prelude::DynamicIndex;
 
 use crate::widgets::sidebar::model::SidebarList;
@@ -14,6 +15,6 @@ pub enum TaskListFactoryInput {
 #[derive(Debug)]
 pub enum TaskListFactoryOutput {
 	Select(SidebarList),
-	DeleteTaskList(DynamicIndex, String),
+	DeleteTaskList(DynamicIndex, String, Service),
 	Notify(String),
 }

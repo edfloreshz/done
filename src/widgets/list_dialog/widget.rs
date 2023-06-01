@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use done_local_storage::services::Service;
 use gtk::prelude::{
 	BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
@@ -68,6 +71,11 @@ impl Component for ListDialogComponent {
 						set_buffer: &model.name,
 						connect_activate => ListDialogInput::HandleEntry,
 					},
+					gtk::DropDown::from_strings(&["Local", "Microsoft"]) {
+						connect_activate[sender] => move |dw| {
+							sender.input(ListDialogInput::UpdateService(dw.selected()))
+						}
+					},
 					gtk::Button {
 						set_css_classes: &["suggested-action"],
 						set_label: model.label.as_str(),
@@ -85,12 +93,14 @@ impl Component for ListDialogComponent {
 	) -> ComponentParts<Self> {
 		let model = if let Some(name) = init {
 			ListDialogComponent {
+				selected_service: None,
 				name: gtk::EntryBuffer::new(Some(name)),
 				mode: ListDialogMode::Edit,
 				label: fl!("rename").clone(),
 			}
 		} else {
 			ListDialogComponent {
+				selected_service: None,
 				name: gtk::EntryBuffer::new(Some("")),
 				mode: ListDialogMode::New,
 				label: fl!("add-list").clone(),
@@ -108,19 +118,31 @@ impl Component for ListDialogComponent {
 		root: &Self::Root,
 	) {
 		match message {
+			ListDialogInput::UpdateService(index) => {
+				if let Some(item) = ["Local", "Microsoft"].get(index as usize) {
+					self.selected_service = Service::from_str(item).ok();
+				}
+			},
 			ListDialogInput::HandleEntry => {
 				let name = self.name.text();
 
 				match self.mode {
 					ListDialogMode::New => {
-						sender
-							.output(ListDialogOutput::AddTaskListToSidebar(name.to_string()))
-							.unwrap_or_default();
+						if let Some(service) = self.selected_service {
+							sender
+								.output(ListDialogOutput::AddTaskListToSidebar(
+									name.to_string(),
+									service,
+								))
+								.unwrap_or_default();
+						}
 					},
 					ListDialogMode::Edit => {
-						sender
-							.output(ListDialogOutput::RenameList(name.to_string()))
-							.unwrap_or_default();
+						if let Some(service) = self.selected_service {
+							sender
+								.output(ListDialogOutput::RenameList(name.to_string(), service))
+								.unwrap_or_default();
+						}
 					},
 				}
 				root.close();

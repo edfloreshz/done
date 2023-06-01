@@ -2,7 +2,7 @@ use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::schema::lists;
+use crate::{schema::lists, services::Service};
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct List {
@@ -10,13 +10,15 @@ pub struct List {
 	pub name: String,
 	pub description: String,
 	pub icon: Option<String>,
+	pub service: Service,
 }
 
 impl List {
-	pub fn new(name: &str) -> Self {
+	pub fn new(name: &str, service: Service) -> Self {
 		Self {
 			id: Uuid::new_v4().to_string(),
 			name: name.to_string(),
+			service,
 			description: String::new(),
 			icon: Some("✍️".to_string()),
 		}
@@ -52,6 +54,7 @@ impl From<QueryableList> for List {
 		List {
 			id: value.id_list,
 			name: value.name,
+			service: Service::Local,
 			icon: value.icon_name,
 			description: value.description,
 		}

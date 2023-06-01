@@ -1,4 +1,4 @@
-use done_local_storage::models::Task;
+use done_local_storage::{models::Task, services::Service};
 use relm4::prelude::DynamicIndex;
 
 use crate::widgets::sidebar::model::SidebarList;
@@ -8,7 +8,7 @@ pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Task),
-	SelectList(SidebarList),
+	SelectList(SidebarList, Option<Service>),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 	DisablePlugin,
 	CleanTaskEntry,

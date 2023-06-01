@@ -2,6 +2,7 @@ use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::task_input::messages::{TaskInputInput, TaskInputOutput};
 use crate::widgets::task_input::model::TaskInputModel;
 
+use done_local_storage::services::Service;
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
@@ -24,7 +25,7 @@ impl AsyncComponent for ContentModel {
 	type CommandOutput = ();
 	type Input = ContentInput;
 	type Output = ContentOutput;
-	type Init = ();
+	type Init = Option<Service>;
 
 	view! {
 		#[root]
@@ -173,6 +174,7 @@ impl AsyncComponent for ContentModel {
 					TaskInputOutput::AddTask(task) => ContentInput::AddTask(task),
 				},
 			),
+			service: None,
 			parent_list: None,
 			icon: None,
 			title: String::new(),
@@ -201,26 +203,32 @@ impl AsyncComponent for ContentModel {
 		match message {
 			ContentInput::Refresh => {
 				if let Some(list) = &self.parent_list {
-					sender.input(ContentInput::SelectList(list.clone()))
+					sender.input(ContentInput::SelectList(list.clone(), self.service))
 				}
 			},
 			ContentInput::AddTask(mut task) => {
-				if let Err(err) = add_task(self, sender, &mut task).await {
-					tracing::error!("{err}");
+				if let Some(service) = self.service {
+					if let Err(err) = add_task(self, sender, &mut task, service).await {
+						tracing::error!("{err}");
+					}
 				}
 			},
 			ContentInput::RemoveTask(index) => {
-				if let Err(err) = remove_task(self, sender, index).await {
-					tracing::error!("{err}");
+				if let Some(service) = self.service {
+					if let Err(err) = remove_task(self, sender, index, service).await {
+						tracing::error!("{err}");
+					}
 				}
 			},
 			ContentInput::UpdateTask(task) => {
-				if let Err(err) = update_task(self, sender, task).await {
-					tracing::error!("{err}");
+				if let Some(service) = self.service {
+					if let Err(err) = update_task(self, sender, task, service).await {
+						tracing::error!("{err}");
+					}
 				}
 			},
-			ContentInput::SelectList(list) => {
-				if let Err(err) = select_task_list(self, list).await {
+			ContentInput::SelectList(list, service) => {
+				if let Err(err) = select_task_list(self, list, service).await {
 					tracing::error!("{err}");
 				}
 			},
@@ -233,7 +241,7 @@ impl AsyncComponent for ContentModel {
 				.sender()
 				.send(TaskInputInput::CleanTaskEntry)
 				.unwrap(),
-			ContentInput::HideFlap => hide_flap(self, sender),
+			ContentInput::HideFlap => hide_flap(self, sender, self.service),
 		}
 	}
 }

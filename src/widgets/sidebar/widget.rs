@@ -4,7 +4,7 @@ use crate::fl;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::model::SidebarList;
 use done_local_storage::models::List;
-use done_local_storage::LocalStorage;
+use done_local_storage::services::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::component::{
@@ -112,23 +112,27 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			extended: preferences.extended,
 		};
 
-		let local = LocalStorage::new();
+		let services = Service::list();
 
 		let list_box = model.list_factory.widget();
+
 		let widgets = view_output!();
 
 		{
 			let mut guard = model.list_factory.guard();
 			for smart_list in SidebarList::list() {
-				guard.push_back(TaskListFactoryInit::new(smart_list, true));
+				guard.push_back(TaskListFactoryInit::new(None, smart_list, true));
 			}
 
-			if let Ok(lists) = local.get_lists().await {
-				for list in lists {
-					guard.push_back(TaskListFactoryInit::new(
-						SidebarList::Custom(list),
-						false,
-					));
+			for service in services {
+				if let Ok(lists) = service.get_service().read_lists().await {
+					for list in lists {
+						guard.push_back(TaskListFactoryInit::new(
+							Some(service),
+							SidebarList::Custom(list),
+							false,
+						));
+					}
 				}
 			}
 		}
@@ -145,9 +149,20 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			SidebarComponentInput::OpenPreferences => sender
 				.output(SidebarComponentOutput::OpenPreferences)
 				.unwrap_or_default(),
-			SidebarComponentInput::SelectList(list) => sender
-				.output(SidebarComponentOutput::SelectList(list))
-				.unwrap_or_default(),
+			SidebarComponentInput::SelectList(sidebar_list) => {
+				if let SidebarList::Custom(list) = &sidebar_list {
+					sender
+						.output(SidebarComponentOutput::SelectList(
+							sidebar_list.clone(),
+							Some(list.service),
+						))
+						.unwrap_or_default();
+				} else {
+					sender
+						.output(SidebarComponentOutput::SelectList(sidebar_list, None))
+						.unwrap_or_default();
+				}
+			},
 			SidebarComponentInput::ToggleExtended(extended) => {
 				self.extended = extended;
 				let guard = self.list_factory.guard();
@@ -155,12 +170,16 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					guard.send(index, TaskListFactoryInput::ToggleExtended(extended))
 				}
 			},
-			SidebarComponentInput::AddTaskListToSidebar(name) => {
-				let local = LocalStorage::new();
-				match local.create_list(List::new(name.as_str())).await {
+			SidebarComponentInput::AddTaskListToSidebar(name, service) => {
+				let provider = service.get_service();
+				match provider
+					.create_list(List::new(name.as_str(), service))
+					.await
+				{
 					Ok(list) => {
 						let mut guard = self.list_factory.guard();
 						guard.push_back(TaskListFactoryInit::new(
+							Some(service),
 							SidebarList::Custom(list),
 							false,
 						));
@@ -170,9 +189,9 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 						.unwrap_or_default(),
 				}
 			},
-			SidebarComponentInput::DeleteTaskList(index, id) => {
-				let local = LocalStorage::new();
-				match local.delete_list(id).await {
+			SidebarComponentInput::DeleteTaskList(index, id, service) => {
+				let service = service.get_service();
+				match service.delete_list(id).await {
 					Ok(_) => {
 						let mut guard = self.list_factory.guard();
 						guard.remove(index.current_index());

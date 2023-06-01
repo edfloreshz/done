@@ -1,3 +1,4 @@
+use done_local_storage::services::Service;
 use relm4::prelude::DynamicIndex;
 
 use super::model::SidebarList;
@@ -6,8 +7,8 @@ use super::model::SidebarList;
 pub enum SidebarComponentInput {
 	ToggleExtended(bool),
 	SelectList(SidebarList),
-	AddTaskListToSidebar(String),
-	DeleteTaskList(DynamicIndex, String),
+	AddTaskListToSidebar(String, Service),
+	DeleteTaskList(DynamicIndex, String, Service),
 	Notify(String),
 	OpenPreferences,
 }
@@ -17,6 +18,6 @@ pub enum SidebarComponentInput {
 pub enum SidebarComponentOutput {
 	Notify(String, u32),
 	DisablePlugin,
-	SelectList(SidebarList),
+	SelectList(SidebarList, Option<Service>),
 	OpenPreferences,
 }

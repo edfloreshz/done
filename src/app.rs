@@ -17,6 +17,7 @@ use crate::widgets::sidebar::model::SidebarList;
 use crate::widgets::list_dialog::messages::ListDialogOutput;
 use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::welcome::WelcomeComponent;
+use done_local_storage::services::Service;
 use gtk::prelude::*;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -71,9 +72,9 @@ impl App {
 #[derive(Debug)]
 pub enum Event {
 	Notify(String, u32),
-	SelectList(SidebarList),
+	SelectList(SidebarList, Option<Service>),
 	AddTaskList,
-	AddTaskListToSidebar(String),
+	AddTaskListToSidebar(String, Service),
 	ToggleExtended(bool),
 	OpenPreferences,
 	DisablePlugin,
@@ -311,10 +312,12 @@ impl AsyncComponent for App {
 				SidebarComponentOutput::Notify(msg, timeout) => {
 					Event::Notify(msg, timeout)
 				},
-				SidebarComponentOutput::SelectList(list) => Event::SelectList(list),
+				SidebarComponentOutput::SelectList(list, service) => {
+					Event::SelectList(list, service)
+				},
 			});
 
-		let content_controller = ContentModel::builder().launch(()).forward(
+		let content_controller = ContentModel::builder().launch(None).forward(
 			sender.input_sender(),
 			|message| match message {
 				ContentOutput::Notify(msg, timeout) => Event::Notify(msg, timeout),
@@ -325,10 +328,10 @@ impl AsyncComponent for App {
 		let list_entry_controller = ListDialogComponent::builder()
 			.launch(None)
 			.forward(sender.input_sender(), |message| match message {
-				ListDialogOutput::AddTaskListToSidebar(name) => {
-					Event::AddTaskListToSidebar(name)
+				ListDialogOutput::AddTaskListToSidebar(name, service) => {
+					Event::AddTaskListToSidebar(name, service)
 				},
-				ListDialogOutput::RenameList(_) => todo!(),
+				ListDialogOutput::RenameList(_name, _service) => todo!(),
 			});
 
 		let current_preferences =
@@ -403,10 +406,10 @@ impl AsyncComponent for App {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
 			},
-			Event::AddTaskListToSidebar(name) => self
+			Event::AddTaskListToSidebar(name, service) => self
 				.sidebar
 				.sender()
-				.send(SidebarComponentInput::AddTaskListToSidebar(name))
+				.send(SidebarComponentInput::AddTaskListToSidebar(name, service))
 				.unwrap_or_default(),
 			Event::OpenPreferences => {
 				let preferences = self.preferences.widget();
@@ -424,12 +427,12 @@ impl AsyncComponent for App {
 			Event::Notify(msg, timeout) => {
 				widgets.overlay.add_toast(toast(msg, timeout))
 			},
-			Event::SelectList(list) => {
+			Event::SelectList(list, service) => {
 				self.page_title = Some(list.name());
 				self
 					.content
 					.sender()
-					.send(ContentInput::SelectList(list))
+					.send(ContentInput::SelectList(list, service))
 					.unwrap_or_default();
 			},
 			Event::ToggleExtended(extended) => {

@@ -1,4 +1,5 @@
 use done_local_storage::models::Task;
+use done_local_storage::services::Service;
 use relm4::{factory::AsyncFactoryVecDeque, Controller};
 
 use crate::factories::details::model::TaskDetailsFactoryModel;
@@ -10,6 +11,7 @@ pub struct ContentModel {
 	pub task_factory: AsyncFactoryVecDeque<TaskModel>,
 	pub task_details_factory: AsyncFactoryVecDeque<TaskDetailsFactoryModel>,
 	pub task_entry: Controller<TaskInputModel>,
+	pub service: Option<Service>,
 	pub parent_list: Option<SidebarList>,
 	pub icon: Option<String>,
 	pub title: String,

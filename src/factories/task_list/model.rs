@@ -1,3 +1,4 @@
+use done_local_storage::services::Service;
 use relm4::{prelude::DynamicIndex, Controller};
 
 use crate::widgets::{
@@ -7,6 +8,7 @@ use crate::widgets::{
 
 #[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryModel {
+	pub service: Option<Service>,
 	pub index: DynamicIndex,
 	pub list: SidebarList,
 	pub extended: bool,
@@ -17,6 +19,7 @@ pub struct TaskListFactoryModel {
 
 #[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryInit {
+	pub service: Option<Service>,
 	pub list: SidebarList,
 	pub smart: bool,
 }

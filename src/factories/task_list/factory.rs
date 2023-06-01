@@ -1,4 +1,3 @@
-use done_local_storage::LocalStorage;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
@@ -131,8 +130,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		let rename = ListDialogComponent::builder()
 			.launch(Some(init.list.name()))
 			.forward(sender.input_sender(), |message| match message {
-				ListDialogOutput::AddTaskListToSidebar(_) => todo!(),
-				ListDialogOutput::RenameList(name) => {
+				ListDialogOutput::AddTaskListToSidebar(list, service) => todo!(),
+				ListDialogOutput::RenameList(name, service) => {
 					TaskListFactoryInput::RenameList(name)
 				},
 			});
@@ -145,6 +144,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				DeleteOutput::Delete => TaskListFactoryInput::Delete,
 			});
 		TaskListFactoryModel {
+			service: init.service,
 			index: index.clone(),
 			rename,
 			delete,
@@ -195,7 +195,6 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		message: Self::Input,
 		sender: AsyncFactorySender<Self>,
 	) {
-		let local = LocalStorage::new();
 		match message {
 			TaskListFactoryInput::ToggleExtended(extended) => {
 				self.extended = extended
@@ -204,7 +203,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut renamed_list = list.clone();
 					renamed_list.name = name.clone();
-					match local.update_list(renamed_list.clone()).await {
+					let service = self.service.unwrap().get_service();
+					match service.update_list(renamed_list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(renamed_list),
 						Err(err) => {
 							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
@@ -215,11 +215,13 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
 					let list_id = list.id.clone();
-					match local.delete_list(list_id.clone()).await {
+					let service = self.service.unwrap().get_service();
+					match service.delete_list(list_id.clone()).await {
 						Ok(_) => {
 							sender.output(TaskListFactoryOutput::DeleteTaskList(
 								self.index.clone(),
 								list_id,
+								self.service.unwrap(),
 							));
 						},
 						Err(err) => {
@@ -232,7 +234,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut list = list.clone();
 					list.icon = Some(icon.clone());
-					match local.update_list(list.clone()).await {
+					let service = self.service.unwrap().get_service();
+					match service.update_list(list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(list),
 						Err(err) => {
 							sender.output(TaskListFactoryOutput::Notify(err.to_string()))
@@ -251,9 +254,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryOutput::Select(list) => {
 				Some(SidebarComponentInput::SelectList(list))
 			},
-			TaskListFactoryOutput::DeleteTaskList(index, list_id) => {
-				Some(SidebarComponentInput::DeleteTaskList(index, list_id))
-			},
+			TaskListFactoryOutput::DeleteTaskList(index, list_id, service) => Some(
+				SidebarComponentInput::DeleteTaskList(index, list_id, service),
+			),
 			TaskListFactoryOutput::Notify(msg) => {
 				Some(SidebarComponentInput::Notify(msg))
 			},
