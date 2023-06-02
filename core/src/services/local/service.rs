@@ -50,7 +50,7 @@ impl TaskService for LocalStorage {
 	}
 
 	async fn read_tasks_from_list(
-		&self,
+		&mut self,
 		parent_list: String,
 	) -> Result<Vec<Task>> {
 		let response: Vec<Task> = tasks

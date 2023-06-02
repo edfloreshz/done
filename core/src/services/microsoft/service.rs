@@ -1,24 +1,101 @@
+use std::collections::HashMap;
+
+use crate::models::list::List;
+use crate::models::task::Task;
 use crate::service::Service;
 use crate::task_service::TaskService;
 use anyhow::Result;
 use async_trait::async_trait;
+use cascade::cascade;
+use serde::{Deserialize, Serialize};
 
-use crate::models::list::List;
-use crate::models::task::Task;
+use super::models::{collection::Collection, token::Token};
 
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Microsoft {
-	token: String,
+	token: Token,
 }
 
+#[allow(unused)]
 impl Microsoft {
-	pub(crate) fn new() -> Self {
-		Self {
-			token: String::new(),
+	pub fn new() -> Self {
+		Self::default()
+	}
+
+	async fn login(&self) -> anyhow::Result<()> {
+		let url = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
+            client_id=af13f4ae-b607-4a07-9ddc-6c5c5d59979f
+            &response_type=code
+            &redirect_uri=do://msft/
+            &response_mode=query
+            &scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
+            &state=1234";
+		open::that(url)?;
+		Ok(())
+	}
+
+	fn store_token(&mut self, token: Token) -> Result<()> {
+		self.token = token;
+		Ok(())
+	}
+
+	async fn logout(&self) -> anyhow::Result<()> {
+		Ok(())
+	}
+
+	async fn token(&mut self, code: String) -> Result<()> {
+		let client = reqwest::Client::new();
+		let params = cascade! {
+			HashMap::new();
+			..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
+			..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
+			..insert("redirect_uri", "do://msft/");
+			..insert("grant_type", "authorization_code");
+			..insert("code", code.as_str());
+		};
+		let response = client
+			.post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")
+			.form(&params)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				let response = response.text().await?;
+				let token: Token = serde_json::from_str(response.as_str())?;
+				self.store_token(token)
+			},
+			Err(error) => Err(error.into()),
+		}
+	}
+
+	async fn refresh_token(&mut self) -> anyhow::Result<()> {
+		let client = reqwest::Client::new();
+		let params = cascade! {
+				HashMap::new();
+				..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
+				..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
+				..insert("redirect_uri", "do://msft/");
+				..insert("grant_type", "refresh_token");
+				..insert("refresh_token", &self.token.refresh_token);
+		};
+		let response = client
+			.post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")
+			.form(&params)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				let response = response.text().await?;
+				let token: Token = serde_json::from_str(response.as_str())?;
+				self.store_token(token)
+			},
+			Err(error) => Err(error.into()),
 		}
 	}
 }
 
 #[async_trait]
+#[allow(unused)]
 impl TaskService for Microsoft {
 	fn available(&self) -> Result<()> {
 		Ok(())
@@ -37,10 +114,27 @@ impl TaskService for Microsoft {
 	}
 
 	async fn read_tasks_from_list(
-		&self,
+		&mut self,
 		parent_list: String,
 	) -> Result<Vec<Task>> {
-		Ok(vec![])
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let response = client
+			.get(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{parent_list}/tasks",
+			))
+			.bearer_auth(&self.token.access_token)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				let response = response.text().await?;
+				let collection: Collection<Task> =
+					serde_json::from_str(response.as_str())?;
+				Ok(collection.value)
+			},
+			Err(error) => Err(error.into()),
+		}
 	}
 
 	async fn read_task(&self, id: String) -> Result<Task> {

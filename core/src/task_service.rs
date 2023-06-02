@@ -19,7 +19,7 @@ pub trait TaskService {
 
 	/// Read all the tasks from a list.
 	async fn read_tasks_from_list(
-		&self,
+		&mut self,
 		parent_list: String,
 	) -> Result<Vec<Task>>;
 
