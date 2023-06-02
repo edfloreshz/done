@@ -1,5 +1,4 @@
-mod models;
-pub use models::*;
+pub mod models;
 
 use anyhow::{anyhow, Context, Result};
 use diesel::{Connection, SqliteConnection};

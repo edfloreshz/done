@@ -8,7 +8,9 @@ use adw::{
 	},
 };
 use chrono::{Datelike, Duration, Local, NaiveDateTime, Timelike, Utc};
-use done_local_storage::models::{Day, Priority, Status, Task};
+use done_local_storage::models::{
+	priority::Priority, recurrence::Day, status::Status, task::Task,
+};
 use gtk::traits::{
 	BoxExt, ButtonExt, GtkWindowExt, ListBoxRowExt, OrientableExt,
 	ToggleButtonExt, WidgetExt,

@@ -3,8 +3,8 @@ use crate::factories::task_list::model::TaskListFactoryInit;
 use crate::fl;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::model::SidebarList;
-use done_local_storage::models::List;
-use done_local_storage::services::Service;
+use done_local_storage::models::list::List;
+use done_local_storage::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::component::{

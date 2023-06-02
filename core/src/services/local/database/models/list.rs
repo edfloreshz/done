@@ -2,28 +2,27 @@ use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::schema::lists;
-
-#[derive(Clone, PartialEq)]
-pub struct List {
-	pub id: String,
-	pub name: String,
-	pub icon: Option<String>,
-}
+use crate::{models::list::List, schema::lists, service::Service};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
 #[diesel(table_name = lists)]
 pub struct QueryableList {
 	pub id_list: String,
 	pub name: String,
+	pub description: String,
 	pub icon_name: Option<String>,
 }
 
 impl QueryableList {
-	pub fn new(display_name: &str, icon_name: Option<String>) -> Self {
+	pub fn new(
+		display_name: &str,
+		description: &str,
+		icon_name: Option<String>,
+	) -> Self {
 		Self {
 			id_list: Uuid::new_v4().to_string(),
 			name: display_name.to_string(),
+			description: description.to_string(),
 			icon_name,
 		}
 	}
@@ -34,17 +33,20 @@ impl From<QueryableList> for List {
 		List {
 			id: value.id_list,
 			name: value.name,
+			service: Service::Local,
 			icon: value.icon_name,
+			description: value.description,
 		}
 	}
 }
 
 impl From<List> for QueryableList {
-	fn from(task: List) -> Self {
+	fn from(list: List) -> Self {
 		Self {
-			id_list: task.id,
-			name: task.name,
-			icon_name: task.icon,
+			id_list: list.id,
+			name: list.name,
+			description: list.description,
+			icon_name: list.icon,
 		}
 	}
 }

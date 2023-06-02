@@ -1,6 +1,6 @@
 use crate::{fl, widgets::sidebar::model::SidebarList};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_local_storage::models::Task;
+use done_local_storage::models::task::Task;
 use gtk::traits::{EditableExt, ListBoxRowExt};
 use relm4::{
 	adw, gtk,

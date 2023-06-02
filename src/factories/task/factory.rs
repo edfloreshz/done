@@ -1,7 +1,7 @@
 use crate::factories::task::model::{TaskInit, TaskModel};
 use crate::fl;
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_local_storage::models::Status;
+use done_local_storage::models::status::Status;
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{

@@ -1,4 +1,4 @@
-use done_local_storage::services::Service;
+use done_local_storage::service::Service;
 use relm4::prelude::DynamicIndex;
 
 use super::model::SidebarList;

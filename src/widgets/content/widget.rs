@@ -2,7 +2,7 @@ use crate::widgets::content::messages::{ContentInput, ContentOutput};
 use crate::widgets::task_input::messages::{TaskInputInput, TaskInputOutput};
 use crate::widgets::task_input::model::TaskInputModel;
 
-use done_local_storage::services::Service;
+use done_local_storage::service::Service;
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };

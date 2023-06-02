@@ -1,4 +1,4 @@
-use done_local_storage::models::{List, Task};
+use done_local_storage::models::{list::List, task::Task};
 
 #[derive(Debug, Clone)]
 pub struct TaskModel {

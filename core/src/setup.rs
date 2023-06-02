@@ -1,7 +1,7 @@
 use anyhow::Result;
 use libset::{format::FileFormat, new_file, project::Project};
 
-use crate::database::{Database, DATABASE_NAME};
+use crate::services::local::database::{Database, DATABASE_NAME};
 
 pub fn init() -> Result<()> {
 	Project::new("dev", "edfloreshz", "done")

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use chrono::{NaiveDateTime, Utc};
-use done_local_storage::models::{Status, Task};
-use done_local_storage::services::Service;
+use done_local_storage::models::{status::Status, task::Task};
+use done_local_storage::service::Service;
 use relm4::ComponentController;
 use relm4::{prelude::DynamicIndex, AsyncComponentSender};
 

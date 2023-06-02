@@ -1,7 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::models::{List, Task};
+use crate::models::{list::List, task::Task};
 
 #[async_trait]
 pub trait TaskService {

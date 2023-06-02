@@ -2,10 +2,7 @@ use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::database::task::QueryableTask;
-use crate::models::Recurrence;
-
-use super::{Priority, Status};
+use super::{priority::Priority, recurrence::Recurrence, status::Status};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Task {
@@ -49,30 +46,6 @@ impl Task {
 			recurrence: Default::default(),
 			created_date_time: now.naive_utc(),
 			last_modified_date_time: now.naive_utc(),
-		}
-	}
-}
-
-impl From<QueryableTask> for Task {
-	fn from(value: QueryableTask) -> Self {
-		Task {
-			id: value.id_task,
-			parent: value.parent,
-			title: value.title,
-			favorite: value.favorite,
-			today: value.today,
-			notes: value.notes,
-			status: value.status.into(),
-			priority: value.priority.into(),
-			sub_tasks: serde_json::from_str(&value.sub_tasks).unwrap(),
-			tags: serde_json::from_str(&value.tags).unwrap(),
-			completion_date: value.completion_date.map(|date| date.into()),
-			deletion_date: value.deletion_date.map(|date| date.into()),
-			due_date: value.due_date.map(|date| date.into()),
-			reminder_date: value.reminder_date.map(|date| date.into()),
-			recurrence: Recurrence::from_string(value.recurrence),
-			created_date_time: value.created_date_time,
-			last_modified_date_time: value.last_modified_date_time,
 		}
 	}
 }

@@ -17,7 +17,7 @@ use crate::widgets::sidebar::model::SidebarList;
 use crate::widgets::list_dialog::messages::ListDialogOutput;
 use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::welcome::WelcomeComponent;
-use done_local_storage::services::Service;
+use done_local_storage::service::Service;
 use gtk::prelude::*;
 use libset::format::FileFormat;
 use libset::project::Project;

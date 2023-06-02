@@ -1,12 +1,10 @@
-use crate::{
-	models::{List, Task},
-	task_service::TaskService,
-};
+use crate::service::Service;
+use crate::task_service::TaskService;
 use anyhow::Result;
-
 use async_trait::async_trait;
 
-use super::Service;
+use crate::models::list::List;
+use crate::models::task::Task;
 
 pub struct Microsoft {
 	token: String,

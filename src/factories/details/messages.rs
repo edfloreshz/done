@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use done_local_storage::models::{Day, Task};
+use done_local_storage::models::{recurrence::Day, task::Task};
 use relm4::prelude::DynamicIndex;
 
 use super::model::{DateDay, DateTpe};

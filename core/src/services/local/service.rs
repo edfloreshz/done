@@ -3,13 +3,17 @@ use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
-	database::{task::QueryableTask, Database},
-	models::{List, QueryableList, Task},
+	models::{list::List, task::Task},
 	schema::lists::dsl::lists,
 	schema::lists::*,
 	schema::tasks::dsl::tasks,
 	schema::tasks::*,
 	task_service::TaskService,
+};
+
+use super::database::{
+	models::{list::QueryableList, task::QueryableTask},
+	Database,
 };
 
 #[derive(Debug, Clone, Copy)]

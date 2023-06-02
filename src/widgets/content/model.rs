@@ -1,5 +1,5 @@
-use done_local_storage::models::Task;
-use done_local_storage::services::Service;
+use done_local_storage::models::task::Task;
+use done_local_storage::service::Service;
 use relm4::{factory::AsyncFactoryVecDeque, Controller};
 
 use crate::factories::details::model::TaskDetailsFactoryModel;

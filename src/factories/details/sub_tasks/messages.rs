@@ -1,4 +1,4 @@
-use done_local_storage::models::Task;
+use done_local_storage::models::task::Task;
 use relm4::prelude::DynamicIndex;
 
 #[derive(Debug)]

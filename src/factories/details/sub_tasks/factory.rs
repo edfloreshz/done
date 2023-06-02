@@ -1,5 +1,5 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use done_local_storage::models::Status;
+use done_local_storage::models::status::Status;
 use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::EditableExt;
 use relm4::RelmWidgetExt;

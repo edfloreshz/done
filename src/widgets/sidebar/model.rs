@@ -1,4 +1,4 @@
-use done_local_storage::models::List;
+use done_local_storage::models::list::List;
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4_icons::icon_name;
 use strum::IntoEnumIterator;

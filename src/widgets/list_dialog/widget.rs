@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use done_local_storage::services::Service;
+use done_local_storage::service::Service;
 use gtk::prelude::{
 	BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
