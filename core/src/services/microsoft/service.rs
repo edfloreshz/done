@@ -10,7 +10,7 @@ use cascade::cascade;
 use msft_todo_types::{collection::Collection, token::Token};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Microsoft {
 	token: Token,
 }

@@ -1,10 +1,14 @@
-use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter, EnumString};
-
 use crate::{
 	services::{local::service::LocalStorage, microsoft::service::Microsoft},
 	task_service::TaskService,
 };
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter, EnumString};
+
+use std::sync::OnceLock;
+
+static LOCAL: OnceLock<LocalStorage> = OnceLock::new();
+static MICROSOFT: OnceLock<Microsoft> = OnceLock::new();
 
 #[derive(
 	Debug,
@@ -31,8 +35,12 @@ impl Service {
 	/// struct, register your service here.
 	pub fn get_service(&self) -> Box<dyn TaskService> {
 		match self {
-			Service::Local => Box::new(LocalStorage::new()),
-			Service::Microsoft => Box::new(Microsoft::new()),
+			Service::Local => {
+				Box::new(LOCAL.get_or_init(|| LocalStorage::new()).clone())
+			},
+			Service::Microsoft => {
+				Box::new(MICROSOFT.get_or_init(|| Microsoft::new()).clone())
+			},
 		}
 	}
 
