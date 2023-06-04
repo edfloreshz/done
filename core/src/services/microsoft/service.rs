@@ -7,9 +7,8 @@ use crate::task_service::TaskService;
 use anyhow::Result;
 use async_trait::async_trait;
 use cascade::cascade;
+use msft_todo_types::{collection::Collection, token::Token};
 use serde::{Deserialize, Serialize};
-
-use super::models::{collection::Collection, token::Token};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Microsoft {

@@ -152,7 +152,7 @@ pub async fn select_task_list(
 	model.smart = list.smart();
 
 	if let Some(service) = service {
-		let service = service.get_service();
+		let mut service = service.get_service();
 		match &list {
 			SidebarList::All => {
 				model.parent_list = Some(SidebarList::All);
