@@ -22,6 +22,7 @@ reqwest = "0.11.18"
 cascade = "1.0.1"
 open = "4.1.0"
 msft-todo-types = { git = "https://github.com/done-devs/msft-todo-types" }
+keytar = "0.1.6"
 
 [dependencies.libset]
 git = "https://github.com/edfloreshz/libset"

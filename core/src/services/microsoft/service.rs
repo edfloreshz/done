@@ -48,7 +48,7 @@ impl Microsoft {
 			HashMap::new();
 			..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
 			..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
-			..insert("redirect_uri", "do://msft/");
+			..insert("redirect_uri", "done://msft/");
 			..insert("grant_type", "authorization_code");
 			..insert("code", code.as_str());
 		};
