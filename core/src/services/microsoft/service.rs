@@ -6,7 +6,9 @@ use crate::task_service::TaskService;
 use anyhow::Result;
 use async_trait::async_trait;
 use cascade::cascade;
-use msft_todo_types::{collection::Collection, token::Token};
+use msft_todo_types::{
+	collection::Collection, list::ToDoTaskList, token::Token,
+};
 use serde::{Deserialize, Serialize};
 use url::form_urlencoded::Parse;
 
@@ -203,9 +205,9 @@ impl TaskService for Microsoft {
 		match response.error_for_status() {
 			Ok(response) => {
 				let lists = response.text().await?;
-				let lists: Collection<msft_todo_types::list::List> =
+				let lists: Collection<ToDoTaskList> =
 					serde_json::from_str(lists.as_str())?;
-				Ok(lists.value)
+				Ok(lists.value.iter().map(|t| t.clone().into()).collect())
 			},
 			Err(err) => Err(err.into()),
 		}

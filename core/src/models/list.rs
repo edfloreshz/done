@@ -1,3 +1,4 @@
+use msft_todo_types::list::ToDoTaskList;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,6 +21,18 @@ impl List {
 			service,
 			description: String::new(),
 			icon: Some("✍️".to_string()),
+		}
+	}
+}
+
+impl From<ToDoTaskList> for List {
+	fn from(task: ToDoTaskList) -> Self {
+		Self {
+			id: task.id,
+			name: task.display_name,
+			description: String::new(),
+			icon: Some("✍️".to_string()),
+			service: Service::Microsoft,
 		}
 	}
 }
