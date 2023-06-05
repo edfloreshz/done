@@ -1,5 +1,6 @@
 use crate::fl;
 use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
+use done_local_storage::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::prelude::{
@@ -8,8 +9,10 @@ use relm4::adw::prelude::{
 };
 use relm4::adw::traits::ComboRowExt;
 use relm4::component::{AsyncComponent, AsyncComponentParts};
+use relm4::gtk::traits::ButtonExt;
 use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
+use relm4_icons::icon_name;
 
 use super::helpers::{set_color_scheme, set_extended};
 use super::messages::{PreferencesComponentInput, PreferencesComponentOutput};
@@ -78,6 +81,22 @@ impl AsyncComponent for PreferencesComponentModel {
 											}
 										}
 									}
+								},
+							},
+							add = &adw::PreferencesGroup {
+								set_title: fl!("services"),
+								adw::ActionRow {
+									set_title: "Microsoft To Do",
+									set_subtitle: fl!("msft-todo-description"),
+									set_icon_name: Some(icon_name::CHECKMARK),
+									add_suffix = &gtk::Box {
+										set_halign: gtk::Align::Center,
+										set_valign: gtk::Align::Center,
+										gtk::Button {
+											set_label: "Login",
+											connect_clicked => PreferencesComponentInput::MicrosoftLogin
+										}
+									}
 								}
 							}
 						}
@@ -125,6 +144,12 @@ impl AsyncComponent for PreferencesComponentModel {
 				if let Err(err) = set_extended(self, &sender, mode) {
 					tracing::error!("{err}")
 				}
+			},
+			PreferencesComponentInput::MicrosoftLogin => {
+				match Service::Microsoft.get_service().login() {
+					Ok(_) => println!("Login successfull"),
+					Err(err) => eprintln!("{err}"),
+				};
 			},
 		}
 		self.update_view(widgets, sender);

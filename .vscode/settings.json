@@ -8,4 +8,5 @@
         ".flatpak/**": true,
         "_build/**": true
     },
+    "rust-analyzer.showUnlinkedFileNotification": false,
 }

@@ -66,6 +66,10 @@ cancel = Cancel
 back = Back
 search = Search
 
+# Services
+msft-todo = Microsoft To Do
+msft-todo-description = To Do gives you focus, from work to play
+
 # Details
 details = Details
 title = Title

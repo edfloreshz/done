@@ -6,6 +6,9 @@ use crate::models::{list::List, task::Task};
 #[async_trait]
 pub trait TaskService {
 	/// Checks to see if the service is available.
+	fn login(&self) -> Result<()>;
+
+	/// Checks to see if the service is available.
 	fn available(&self) -> Result<()>;
 
 	/// Enables the service in the app.

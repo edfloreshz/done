@@ -10,6 +10,11 @@ use cascade::cascade;
 use msft_todo_types::{collection::Collection, token::Token};
 use serde::{Deserialize, Serialize};
 
+const CLIENT_ID: &str = "d90593cb-c2b1-4c87-b4f9-da24e1c03203";
+const AUTHORITY: &str = "https://login.microsoftonline.com/common";
+const REDIRECT_URI: &str = "done://auth";
+const API_PERMISSIONS: &str = "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared";
+
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Microsoft {
 	token: Token,
@@ -19,18 +24,6 @@ pub struct Microsoft {
 impl Microsoft {
 	pub fn new() -> Self {
 		Self::default()
-	}
-
-	async fn login(&self) -> anyhow::Result<()> {
-		let url = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
-            client_id=af13f4ae-b607-4a07-9ddc-6c5c5d59979f
-            &response_type=code
-            &redirect_uri=do://msft/
-            &response_mode=query
-            &scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
-            &state=1234";
-		open::that(url)?;
-		Ok(())
 	}
 
 	fn store_token(&mut self, token: Token) -> Result<()> {
@@ -46,9 +39,9 @@ impl Microsoft {
 		let client = reqwest::Client::new();
 		let params = cascade! {
 			HashMap::new();
-			..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
-			..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
-			..insert("redirect_uri", "done://msft/");
+			..insert("client_id", CLIENT_ID);
+			..insert("scope", API_PERMISSIONS);
+			..insert("redirect_uri", REDIRECT_URI);
 			..insert("grant_type", "authorization_code");
 			..insert("code", code.as_str());
 		};
@@ -71,9 +64,9 @@ impl Microsoft {
 		let client = reqwest::Client::new();
 		let params = cascade! {
 				HashMap::new();
-				..insert("client_id", "af13f4ae-b607-4a07-9ddc-6c5c5d59979f");
-				..insert("scope", "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared");
-				..insert("redirect_uri", "do://msft/");
+				..insert("client_id", CLIENT_ID);
+				..insert("scope", API_PERMISSIONS);
+				..insert("redirect_uri", REDIRECT_URI);
 				..insert("grant_type", "refresh_token");
 				..insert("refresh_token", &self.token.refresh_token);
 		};
@@ -96,6 +89,18 @@ impl Microsoft {
 #[async_trait]
 #[allow(unused)]
 impl TaskService for Microsoft {
+	fn login(&self) -> anyhow::Result<()> {
+		let url = format!("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
+		client_id={CLIENT_ID}
+		&response_type=code
+		&redirect_uri={REDIRECT_URI}
+		&response_mode=query
+		&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
+		&state=1234");
+		open::that(url)?;
+		Ok(())
+	}
+
 	fn available(&self) -> Result<()> {
 		Ok(())
 	}

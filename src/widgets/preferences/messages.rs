@@ -4,6 +4,7 @@ use super::model::ColorScheme;
 pub enum PreferencesComponentInput {
 	SetColorScheme(ColorScheme),
 	ToggleExtended(bool),
+	MicrosoftLogin,
 }
 
 #[derive(Debug)]

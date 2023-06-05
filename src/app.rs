@@ -1,5 +1,5 @@
 use crate::application::info::PROFILE;
-use crate::application::setup::{self, main_app};
+use crate::application::setup::{self};
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
@@ -55,7 +55,7 @@ impl App {
 		about_dialog: Option<Controller<AboutDialog>>,
 		extended: bool,
 	) -> Self {
-		Self {
+		let app = Self {
 			sidebar,
 			content,
 			preferences,
@@ -65,7 +65,8 @@ impl App {
 			page_title: None,
 			warning_revealed: true,
 			extended,
-		}
+		};
+		app
 	}
 }
 
@@ -106,20 +107,20 @@ impl AsyncComponent for App {
 
 	view! {
 		#[root]
-		main_window = adw::ApplicationWindow::new(&main_app()) {
+		main_window = adw::ApplicationWindow {
 			set_default_size: (700, 700),
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
 				gtk::Inhibit(true)
 			},
 
-			#[wrap(Some)]
-			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
-					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
-			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
-				set_transient_for: Some(&main_window),
-				set_application: Some(&crate::setup::main_app()),
-			},
+			// #[wrap(Some)]
+			// set_help_overlay: shortcuts = &gtk::Builder::from_resource(
+			// 		"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
+			// ).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
+			// 	set_transient_for: Some(&main_window),
+			// 	set_application: Some(&crate::setup::main_app()),
+			// },
 
 			add_css_class?: if PROFILE == "Devel" {
 				Some("devel")
@@ -355,12 +356,12 @@ impl AsyncComponent for App {
 
 		let widgets = view_output!();
 
-		let shortcuts_action = {
-			let shortcuts = widgets.shortcuts.clone();
-			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
-				shortcuts.present();
-			})
-		};
+		// let shortcuts_action = {
+		// 	let shortcuts = widgets.shortcuts.clone();
+		// 	RelmAction::<ShortcutsAction>::new_stateless(move |_| {
+		// 		shortcuts.present();
+		// 	})
+		// };
 
 		let about_dialog = ComponentBuilder::default()
 			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
@@ -381,7 +382,7 @@ impl AsyncComponent for App {
 			})
 		};
 
-		actions.add_action(shortcuts_action);
+		// actions.add_action(shortcuts_action);
 		actions.add_action(about_action);
 		actions.add_action(quit_action);
 
@@ -401,7 +402,7 @@ impl AsyncComponent for App {
 		_root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => main_app().quit(),
+			Event::Quit => (),
 			Event::AddTaskList => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();

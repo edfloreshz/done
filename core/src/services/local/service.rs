@@ -27,6 +27,10 @@ impl LocalStorage {
 
 #[async_trait]
 impl TaskService for LocalStorage {
+	fn login(&self) -> anyhow::Result<()> {
+		Ok(())
+	}
+
 	fn available(&self) -> Result<()> {
 		todo!()
 	}
