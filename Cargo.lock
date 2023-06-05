@@ -474,7 +474,6 @@ dependencies = [
  "diesel_migrations",
  "keytar",
  "libset",
- "msal_browser",
  "msft-todo-types",
  "open",
  "reqwest",
@@ -484,6 +483,7 @@ dependencies = [
  "strum_macros",
  "tracing",
  "tracing-subscriber",
+ "url",
  "uuid",
 ]
 
@@ -1700,18 +1700,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "msal_browser"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "186c6ceb0ac9a6be1cd0f0f1f89457abc17ceecbbc70c142559a33330b193b1f"
-dependencies = [
- "js-sys",
- "paste",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "msft-todo-types"
 version = "0.1.0"
 source = "git+https://github.com/done-devs/msft-todo-types#cd2a80af987cfa66fbb6cac0a6ca8a78b8632a08"
@@ -1931,12 +1919,6 @@ dependencies = [
  "smallvec",
  "windows-sys 0.45.0",
 ]
-
-[[package]]
-name = "paste"
-version = "1.0.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 
 [[package]]
 name = "pathdiff"

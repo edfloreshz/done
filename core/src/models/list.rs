@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::service::Service;
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct List {
 	pub id: String,
 	pub name: String,

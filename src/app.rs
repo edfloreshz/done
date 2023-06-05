@@ -114,13 +114,13 @@ impl AsyncComponent for App {
 				gtk::Inhibit(true)
 			},
 
-			// #[wrap(Some)]
-			// set_help_overlay: shortcuts = &gtk::Builder::from_resource(
-			// 		"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
-			// ).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
-			// 	set_transient_for: Some(&main_window),
-			// 	set_application: Some(&crate::setup::main_app()),
-			// },
+			#[wrap(Some)]
+			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
+					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
+			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
+				set_transient_for: Some(&main_window),
+				set_application: Some(&root.application().unwrap()),
+			},
 
 			add_css_class?: if PROFILE == "Devel" {
 				Some("devel")
@@ -356,12 +356,12 @@ impl AsyncComponent for App {
 
 		let widgets = view_output!();
 
-		// let shortcuts_action = {
-		// 	let shortcuts = widgets.shortcuts.clone();
-		// 	RelmAction::<ShortcutsAction>::new_stateless(move |_| {
-		// 		shortcuts.present();
-		// 	})
-		// };
+		let shortcuts_action = {
+			let shortcuts = widgets.shortcuts.clone();
+			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
+				shortcuts.present();
+			})
+		};
 
 		let about_dialog = ComponentBuilder::default()
 			.launch(widgets.main_window.upcast_ref::<gtk::Window>().clone())
@@ -382,7 +382,7 @@ impl AsyncComponent for App {
 			})
 		};
 
-		// actions.add_action(shortcuts_action);
+		actions.add_action(shortcuts_action);
 		actions.add_action(about_action);
 		actions.add_action(quit_action);
 
@@ -399,10 +399,10 @@ impl AsyncComponent for App {
 		widgets: &mut Self::Widgets,
 		message: Self::Input,
 		sender: AsyncComponentSender<Self>,
-		_root: &Self::Root,
+		root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => (),
+			Event::Quit => root.application().unwrap().quit(),
 			Event::AddTaskList => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();

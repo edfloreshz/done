@@ -125,14 +125,17 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			}
 
 			for service in services {
-				if let Ok(lists) = service.get_service().read_lists().await {
-					for list in lists {
-						guard.push_back(TaskListFactoryInit::new(
-							Some(service),
-							SidebarList::Custom(list),
-							false,
-						));
-					}
+				match service.get_service().read_lists().await {
+					Ok(lists) => {
+						for list in lists {
+							guard.push_back(TaskListFactoryInit::new(
+								Some(service),
+								SidebarList::Custom(list),
+								false,
+							));
+						}
+					},
+					Err(err) => tracing::error!("{err}"),
 				}
 			}
 		}

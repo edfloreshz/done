@@ -1,10 +1,14 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use url::form_urlencoded::Parse;
 
 use crate::models::{list::List, task::Task};
 
 #[async_trait]
-pub trait TaskService {
+pub trait TaskService: Sync + Send {
+	/// Sets the initial config for this service.
+	async fn handle_uri_params(&mut self, config: Parse<'_>) -> Result<()>;
+
 	/// Checks to see if the service is available.
 	fn login(&self) -> Result<()>;
 
@@ -39,7 +43,7 @@ pub trait TaskService {
 	async fn delete_task(&self, id: String) -> Result<()>;
 
 	/// Read all the lists from a service.
-	async fn read_lists(&self) -> Result<Vec<List>>;
+	async fn read_lists(&mut self) -> Result<Vec<List>>;
 
 	/// Read a single list from a service.
 	async fn read_list(&self, id: String) -> Result<List>;

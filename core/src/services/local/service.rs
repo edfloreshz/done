@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use url::form_urlencoded::Parse;
 
 use crate::{
 	models::{list::List, task::Task},
@@ -27,12 +28,16 @@ impl LocalStorage {
 
 #[async_trait]
 impl TaskService for LocalStorage {
+	async fn handle_uri_params(&mut self, params: Parse<'_>) -> Result<()> {
+		Ok(())
+	}
+
 	fn login(&self) -> anyhow::Result<()> {
 		Ok(())
 	}
 
 	fn available(&self) -> Result<()> {
-		todo!()
+		todo!();
 	}
 
 	async fn enable(&self) -> Result<()> {
@@ -123,7 +128,7 @@ impl TaskService for LocalStorage {
 		Ok(())
 	}
 
-	async fn read_lists(&self) -> Result<Vec<List>> {
+	async fn read_lists(&mut self) -> Result<Vec<List>> {
 		let results =
 			lists.load::<QueryableList>(&mut Database::establish_connection()?)?;
 

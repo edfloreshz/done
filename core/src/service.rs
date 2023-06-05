@@ -2,6 +2,7 @@ use crate::{
 	services::{local::service::LocalStorage, microsoft::service::Microsoft},
 	task_service::TaskService,
 };
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
 
@@ -22,6 +23,8 @@ static MICROSOFT: OnceLock<Microsoft> = OnceLock::new();
 	Eq,
 	PartialOrd,
 	Ord,
+	Serialize,
+	Deserialize,
 )]
 pub enum Service {
 	#[default]

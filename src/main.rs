@@ -1,10 +1,6 @@
 use anyhow::Result;
 use application::{info::APP_ID, setup};
-use relm4::{
-	adw,
-	gtk::{self, prelude::ApplicationExtManual},
-	RelmApp,
-};
+use relm4::{adw, gtk, RelmApp};
 
 use app::App;
 
@@ -19,8 +15,7 @@ fn main() -> Result<()> {
 		.flags(gtk::gio::ApplicationFlags::HANDLES_OPEN)
 		.build();
 	let main_app = setup::init(application)?;
-	main_app.run();
-	// let app = RelmApp::from_app(main_app);
-	// app.run_async::<App>(());
+	let app = RelmApp::from_app(main_app);
+	app.run_async::<App>(());
 	Ok(())
 }
