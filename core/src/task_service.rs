@@ -13,7 +13,7 @@ pub trait TaskService: Sync + Send {
 	fn login(&self) -> Result<()>;
 
 	/// Checks to see if the service is available.
-	fn available(&self) -> Result<()>;
+	fn available(&self) -> bool;
 
 	/// Enables the service in the app.
 	async fn enable(&self) -> Result<()>;

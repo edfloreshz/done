@@ -28,7 +28,7 @@ impl LocalStorage {
 
 #[async_trait]
 impl TaskService for LocalStorage {
-	async fn handle_uri_params(&mut self, params: Parse<'_>) -> Result<()> {
+	async fn handle_uri_params(&mut self, _params: Parse<'_>) -> Result<()> {
 		Ok(())
 	}
 
@@ -36,8 +36,8 @@ impl TaskService for LocalStorage {
 		Ok(())
 	}
 
-	fn available(&self) -> Result<()> {
-		todo!();
+	fn available(&self) -> bool {
+		true
 	}
 
 	async fn enable(&self) -> Result<()> {

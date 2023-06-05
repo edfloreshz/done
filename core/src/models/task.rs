@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime, Utc};
+use msft_todo_types::{checklist_item::ChecklistItem, task::ToDoTask};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -46,6 +47,51 @@ impl Task {
 			recurrence: Default::default(),
 			created_date_time: now.naive_utc(),
 			last_modified_date_time: now.naive_utc(),
+		}
+	}
+}
+
+impl From<ToDoTask> for Task {
+	fn from(task: ToDoTask) -> Self {
+		Self {
+			id: task.id,
+			parent: String::new(),
+			title: task.title,
+			favorite: false,
+			today: task.reminder_date_time.is_some()
+				&& task.reminder_date_time.unwrap() == Utc::now().naive_local(),
+			status: task.status.into(),
+			priority: task.importance.into(),
+			sub_tasks: task
+				.checklist_items
+				.iter()
+				.map(|item| item.clone().into())
+				.collect(),
+			tags: vec![],
+			notes: Some(task.body.content),
+			completion_date: task.completed_date_time,
+			deletion_date: None,
+			due_date: task.due_date_time,
+			reminder_date: task.reminder_date_time,
+			recurrence: task.recurrence.into(),
+			created_date_time: task.created_date_time,
+			last_modified_date_time: task.last_modified_date_time,
+		}
+	}
+}
+
+impl From<ChecklistItem> for Task {
+	fn from(value: ChecklistItem) -> Self {
+		Self {
+			id: value.id,
+			title: value.display_name,
+			status: if value.is_checked {
+				Status::Completed
+			} else {
+				Status::NotStarted
+			},
+			created_date_time: value.created_date_time,
+			..Default::default()
 		}
 	}
 }

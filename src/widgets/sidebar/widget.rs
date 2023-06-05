@@ -124,12 +124,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				guard.push_back(TaskListFactoryInit::new(None, smart_list, true));
 			}
 
-			for service in services {
+			for service in services
+				.iter()
+				.filter(|service| service.get_service().available())
+			{
 				match service.get_service().read_lists().await {
 					Ok(lists) => {
 						for list in lists {
 							guard.push_back(TaskListFactoryInit::new(
-								Some(service),
+								Some(service.clone()),
 								SidebarList::Custom(list),
 								false,
 							));

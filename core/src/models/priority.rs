@@ -59,3 +59,13 @@ impl Priority {
 		}
 	}
 }
+
+impl From<msft_todo_types::importance::Importance> for Priority {
+	fn from(value: msft_todo_types::importance::Importance) -> Self {
+		match value {
+			msft_todo_types::importance::Importance::Low => Self::Low,
+			msft_todo_types::importance::Importance::Normal => Self::Normal,
+			msft_todo_types::importance::Importance::High => Self::High,
+		}
+	}
+}

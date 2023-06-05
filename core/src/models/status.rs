@@ -54,3 +54,15 @@ impl Status {
 		}
 	}
 }
+
+impl From<msft_todo_types::status::Status> for Status {
+	fn from(value: msft_todo_types::status::Status) -> Self {
+		match value {
+			msft_todo_types::status::Status::NotStarted => Self::NotStarted,
+			msft_todo_types::status::Status::Started => Self::NotStarted,
+			msft_todo_types::status::Status::Completed => Self::Completed,
+			msft_todo_types::status::Status::WaitingOnOthers => Self::NotStarted,
+			msft_todo_types::status::Status::Deferred => Self::NotStarted,
+		}
+	}
+}

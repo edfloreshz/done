@@ -7,7 +7,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use cascade::cascade;
 use msft_todo_types::{
-	collection::Collection, list::ToDoTaskList, token::Token,
+	collection::Collection, list::ToDoTaskList, task::ToDoTask, token::Token,
 };
 use serde::{Deserialize, Serialize};
 use url::form_urlencoded::Parse;
@@ -29,15 +29,21 @@ impl Microsoft {
 		let mut model = Self::default();
 		if let Ok(access_token) = keytar::get_password(APP_ID, "msft_access_token")
 		{
-			model.token.access_token = access_token.password;
+			if (access_token.success) {
+				model.token.access_token = access_token.password;
+			}
 		}
 		if let Ok(expires_in) = keytar::get_password(APP_ID, "msft_expires_in") {
-			model.token.expires_in = expires_in.password.parse().unwrap();
+			if (expires_in.success) {
+				model.token.expires_in = expires_in.password.parse().unwrap();
+			}
 		}
 		if let Ok(refresh_token) =
 			keytar::get_password(APP_ID, "msft_refresh_token")
 		{
-			model.token.refresh_token = refresh_token.password;
+			if (refresh_token.success) {
+				model.token.refresh_token = refresh_token.password;
+			}
 		}
 		model
 	}
@@ -138,8 +144,8 @@ impl TaskService for Microsoft {
 		Ok(())
 	}
 
-	fn available(&self) -> Result<()> {
-		Ok(())
+	fn available(&self) -> bool {
+		keytar::get_password(APP_ID, "msft_access_token").is_ok()
 	}
 
 	async fn enable(&self) -> Result<()> {
@@ -170,9 +176,15 @@ impl TaskService for Microsoft {
 		match response.error_for_status() {
 			Ok(response) => {
 				let response = response.text().await?;
-				let collection: Collection<Task> =
+				let collection: Collection<ToDoTask> =
 					serde_json::from_str(response.as_str())?;
-				Ok(collection.value)
+				Ok(
+					collection
+						.value
+						.iter()
+						.map(|task| task.clone().into())
+						.collect(),
+				)
 			},
 			Err(error) => Err(error.into()),
 		}

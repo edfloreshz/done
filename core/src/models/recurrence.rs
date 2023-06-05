@@ -1,3 +1,4 @@
+use msft_todo_types::recurrence::DayOfWeek;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
@@ -75,5 +76,19 @@ impl ToString for Recurrence {
 			rec.push(Day::Sunday.to_string())
 		}
 		rec.join(", ")
+	}
+}
+
+impl From<msft_todo_types::recurrence::Recurrence> for Recurrence {
+	fn from(value: msft_todo_types::recurrence::Recurrence) -> Self {
+		Self {
+			monday: value.pattern.days_of_week.contains(&DayOfWeek::Monday),
+			tuesday: value.pattern.days_of_week.contains(&DayOfWeek::Tuesday),
+			wednesday: value.pattern.days_of_week.contains(&DayOfWeek::Wednesday),
+			thursday: value.pattern.days_of_week.contains(&DayOfWeek::Thursday),
+			friday: value.pattern.days_of_week.contains(&DayOfWeek::Friday),
+			saturday: value.pattern.days_of_week.contains(&DayOfWeek::Saturday),
+			sunday: value.pattern.days_of_week.contains(&DayOfWeek::Sunday),
+		}
 	}
 }
