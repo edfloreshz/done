@@ -7,7 +7,7 @@ use crate::widgets::sidebar::model::SidebarList;
 pub enum TaskListFactoryInput {
 	Select,
 	Delete,
-	RenameList(String),
+	RenameList(String, Service),
 	ChangeIcon(String),
 	ToggleExtended(bool),
 }

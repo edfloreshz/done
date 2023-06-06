@@ -11,7 +11,7 @@ pub(crate) fn init() -> Result<()> {
 	let provider = gtk::CssProvider::new();
 	provider.load_from_resource("/dev/edfloreshz/Done/ui/style.css");
 	if let Some(display) = gdk::Display::default() {
-		gtk::StyleContext::add_provider_for_display(
+		gtk::style_context_add_provider_for_display(
 			&display,
 			&provider,
 			gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,

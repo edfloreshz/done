@@ -10,7 +10,8 @@ documentation = "https://docs.rs/done"
 repository = "https://github.com/edfloreshz/done/"
 readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["core"]
 
 [dependencies]
 i18n-embed-fl = "0.6.4"

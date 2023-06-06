@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::OnceLock};
+use std::str::FromStr;
 
 use crate::application::{actions, gettext, localization, resources, settings};
 use anyhow::{Ok, Result};

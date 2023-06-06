@@ -130,9 +130,11 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		let rename = ListDialogComponent::builder()
 			.launch(Some(init.list.name()))
 			.forward(sender.input_sender(), |message| match message {
-				ListDialogOutput::AddTaskListToSidebar(list, service) => todo!(),
+				ListDialogOutput::AddTaskListToSidebar(_, _) => {
+					TaskListFactoryInput::Select
+				},
 				ListDialogOutput::RenameList(name, service) => {
-					TaskListFactoryInput::RenameList(name)
+					TaskListFactoryInput::RenameList(name, service)
 				},
 			});
 		let delete = DeleteComponent::builder()
@@ -199,11 +201,11 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::ToggleExtended(extended) => {
 				self.extended = extended
 			},
-			TaskListFactoryInput::RenameList(name) => {
+			TaskListFactoryInput::RenameList(name, service) => {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut renamed_list = list.clone();
 					renamed_list.name = name.clone();
-					let service = self.service.unwrap().get_service();
+					let service = service.get_service();
 					match service.update_list(renamed_list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(renamed_list),
 						Err(err) => {
