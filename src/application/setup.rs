@@ -1,19 +1,31 @@
 use std::str::FromStr;
 
-use crate::application::{actions, gettext, localization, resources, settings};
+use crate::application::{
+	actions, gettext, info::APP_ID, localization, resources, settings,
+};
 use anyhow::{Ok, Result};
 use done_local_storage::service::Service;
+use once_cell::sync::Lazy;
 use relm4::{
 	adw,
 	gtk::{
-		self,
+		self, gio,
 		prelude::{ApplicationExtManual, FileExt},
 	},
 };
 
 use super::appearance;
 
-pub fn init(app: adw::Application) -> Result<adw::Application> {
+thread_local! {
+	static APP: Lazy<adw::Application> = Lazy::new(|| { adw::Application::new(Some(APP_ID), gio::ApplicationFlags::HANDLES_OPEN)});
+}
+
+pub fn main_app() -> adw::Application {
+	APP.with(|app| (*app).clone())
+}
+
+pub fn init() -> Result<adw::Application> {
+	let app = main_app();
 	app.connect_open(|_, files, _| {
 		let bytes = files[0].uri();
 		let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();

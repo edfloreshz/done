@@ -1,5 +1,5 @@
 use crate::application::info::PROFILE;
-use crate::application::setup::{self};
+use crate::application::setup::{self, main_app};
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
@@ -119,7 +119,7 @@ impl AsyncComponent for App {
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
 				set_transient_for: Some(&main_window),
-				set_application: Some(&root.application().unwrap()),
+				set_application: Some(&main_app()),
 			},
 
 			add_css_class?: if PROFILE == "Devel" {
@@ -399,10 +399,10 @@ impl AsyncComponent for App {
 		widgets: &mut Self::Widgets,
 		message: Self::Input,
 		sender: AsyncComponentSender<Self>,
-		root: &Self::Root,
+		_root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => root.application().unwrap().quit(),
+			Event::Quit => main_app().quit(),
 			Event::AddTaskList => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();

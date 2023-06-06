@@ -138,14 +138,14 @@ impl TaskService for Microsoft {
 		&response_type=code
 		&redirect_uri={REDIRECT_URI}
 		&response_mode=query
-		&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20
-		&state=1234");
+		&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20");
 		open::that(url)?;
 		Ok(())
 	}
 
 	fn available(&self) -> bool {
-		keytar::get_password(APP_ID, "msft_access_token").is_ok()
+		let password = keytar::get_password(APP_ID, "msft_access_token");
+		password.is_ok() && password.unwrap().success
 	}
 
 	async fn enable(&self) -> Result<()> {
