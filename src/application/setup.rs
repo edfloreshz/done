@@ -1,25 +1,15 @@
-use std::str::FromStr;
-
+use super::appearance;
 use crate::application::{actions, gettext, localization, resources, settings};
 use anyhow::Result;
 use done_local_storage::service::Service;
-use relm4::{
-	adw,
-	gtk::{
-		self,
-		gio::ApplicationFlags,
-		prelude::{ApplicationExtManual, FileExt},
-	},
-};
+use relm4::gtk::gio::ApplicationFlags;
+use relm4::gtk::prelude::{ApplicationExt, ApplicationExtManual, FileExt};
+use relm4::{gtk, main_adw_application};
+use std::str::FromStr;
 
-use super::{appearance, info::APP_ID};
-
-pub fn init() -> Result<adw::Application> {
-	let app = adw::Application::builder()
-		.application_id(APP_ID)
-		.flags(ApplicationFlags::HANDLES_OPEN)
-		.build();
-
+pub fn init() -> Result<()> {
+	let app = main_adw_application();
+	app.set_flags(ApplicationFlags::HANDLES_OPEN);
 	gtk::init()?;
 	gettext::init();
 	localization::init();
@@ -29,9 +19,18 @@ pub fn init() -> Result<adw::Application> {
 		.init();
 	resources::init()?;
 	relm4_icons::initialize_icons();
+	actions::init();
+	connect_signals();
+
+	Ok(())
+}
+
+pub fn connect_signals() {
+	let app = main_adw_application();
+
+	app.set_flags(ApplicationFlags::HANDLES_OPEN);
 
 	app.connect_open(|_, files, _| {
-		println!("Yay!");
 		let bytes = files[0].uri();
 		let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
 		relm4::tokio::spawn(async move {
@@ -46,10 +45,6 @@ pub fn init() -> Result<adw::Application> {
 			}
 		});
 	});
-
-	actions::init(&app);
-
-	Ok(app)
 }
 
 pub async fn init_services() -> Result<()> {

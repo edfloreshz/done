@@ -1,5 +1,5 @@
 use anyhow::Result;
-use application::setup;
+use application::{info::APP_ID, setup};
 use relm4::{gtk, RelmApp};
 
 use app::App;
@@ -10,8 +10,8 @@ mod factories;
 mod widgets;
 
 fn main() -> Result<()> {
-	let app = setup::init()?;
-	let app = RelmApp::from_app(app);
+	let app = RelmApp::new(APP_ID);
+	setup::init()?;
 	app.run_async::<App>(());
 	Ok(())
 }
