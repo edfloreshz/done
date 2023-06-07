@@ -1,12 +1,6 @@
 use anyhow::Result;
 use application::{info::APP_ID, setup};
-use done_local_storage::service::Service;
-use relm4::{
-	adw,
-	gtk::prelude::{ApplicationExtManual, FileExt},
-	RelmApp,
-};
-use std::str::FromStr;
+use relm4::{adw, gtk::prelude::ApplicationExtManual, RelmApp};
 
 use app::App;
 
@@ -21,11 +15,13 @@ fn main() -> Result<()> {
 		.flags(adw::gio::ApplicationFlags::HANDLES_OPEN)
 		.build();
 	setup::init(&app)?;
-	let app = RelmApp::from_app(app).on_activate(|app| {
-		app.connect_open(|_, files, _| {
-			println!("Testing...");
-		});
-	});
-	app.run_async::<App>(());
+	setup::connect_signals(&app);
+	app.run();
+	// let app = RelmApp::from_app(app).on_activate(|app| {
+	// 	app.connect_open(|_, files, _| {
+	// 		println!("Testing...");
+	// 	});
+	// });
+	// app.run_async::<App>(());
 	Ok(())
 }
