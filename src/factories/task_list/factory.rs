@@ -7,16 +7,16 @@ use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::{BoxExt, GtkWindowExt};
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
-	AsyncFactorySender, Component, ComponentController, RelmWidgetExt,
+	gtk, AsyncFactorySender, Component, ComponentController, RelmWidgetExt,
 };
 
+use crate::fl;
 use crate::widgets::delete::{DeleteComponent, DeleteInit, DeleteOutput};
 use crate::widgets::list_dialog::messages::ListDialogOutput;
 use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::sidebar::model::SidebarList;
-use crate::{fl, gtk};
 
 use super::{
 	messages::{TaskListFactoryInput, TaskListFactoryOutput},

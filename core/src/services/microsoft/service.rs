@@ -29,19 +29,19 @@ impl Microsoft {
 		let mut model = Self::default();
 		if let Ok(access_token) = keytar::get_password(APP_ID, "msft_access_token")
 		{
-			if (access_token.success) {
+			if (!access_token.password.is_empty()) {
 				model.token.access_token = access_token.password;
 			}
 		}
 		if let Ok(expires_in) = keytar::get_password(APP_ID, "msft_expires_in") {
-			if (expires_in.success) {
+			if (!expires_in.password.is_empty()) {
 				model.token.expires_in = expires_in.password.parse().unwrap();
 			}
 		}
 		if let Ok(refresh_token) =
 			keytar::get_password(APP_ID, "msft_refresh_token")
 		{
-			if (refresh_token.success) {
+			if (!refresh_token.password.is_empty()) {
 				model.token.refresh_token = refresh_token.password;
 			}
 		}
@@ -144,7 +144,7 @@ impl TaskService for Microsoft {
 
 	fn available(&self) -> bool {
 		let password = keytar::get_password(APP_ID, "msft_access_token");
-		password.is_ok() && password.unwrap().success
+		password.is_ok() && !password.unwrap().password.is_empty()
 	}
 
 	async fn enable(&self) -> Result<()> {

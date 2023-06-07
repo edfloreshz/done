@@ -1,15 +1,13 @@
 use super::appearance;
+use crate::app::Event;
 use crate::application::{actions, gettext, localization, resources, settings};
 use anyhow::Result;
 use done_local_storage::service::Service;
-use relm4::gtk::gio::ApplicationFlags;
-use relm4::gtk::prelude::{ApplicationExt, ApplicationExtManual, FileExt};
-use relm4::{gtk, main_adw_application};
+use relm4::gtk::prelude::{ApplicationExtManual, FileExt};
+use relm4::{adw, gtk, RelmApp};
 use std::str::FromStr;
 
-pub fn init() -> Result<()> {
-	let app = main_adw_application();
-	app.set_flags(ApplicationFlags::HANDLES_OPEN);
+pub fn init(app: &adw::Application) -> Result<()> {
 	gtk::init()?;
 	gettext::init();
 	localization::init();
@@ -19,32 +17,29 @@ pub fn init() -> Result<()> {
 		.init();
 	resources::init()?;
 	relm4_icons::initialize_icons();
-	actions::init();
-	connect_signals();
+	actions::init(app);
 
 	Ok(())
 }
 
-pub fn connect_signals() {
-	let app = main_adw_application();
-
-	app.set_flags(ApplicationFlags::HANDLES_OPEN);
-
-	app.connect_open(|_, files, _| {
-		let bytes = files[0].uri();
-		let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
-		relm4::tokio::spawn(async move {
-			let pairs = uri.query_pairs();
-			let response = Service::Microsoft
-				.get_service()
-				.handle_uri_params(pairs)
-				.await;
-			match response {
-				Ok(_) => tracing::info!("Token stored"),
-				Err(err) => tracing::error!("An error ocurred: {}", err),
-			}
+pub fn connect_signals(app: RelmApp<Event>) -> RelmApp<Event> {
+	app.on_activate(|app| {
+		app.connect_open(|_, files, _| {
+			let bytes = files[0].uri();
+			let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
+			relm4::tokio::spawn(async move {
+				let pairs = uri.query_pairs();
+				let response = Service::Microsoft
+					.get_service()
+					.handle_uri_params(pairs)
+					.await;
+				match response {
+					Ok(_) => tracing::info!("Token stored"),
+					Err(err) => tracing::error!("An error ocurred: {}", err),
+				}
+			});
 		});
-	});
+	})
 }
 
 pub async fn init_services() -> Result<()> {
