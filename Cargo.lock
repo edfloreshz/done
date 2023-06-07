@@ -352,7 +352,7 @@ dependencies = [
  "chrono",
  "diesel_derives",
  "libsqlite3-sys",
- "time 0.3.21",
+ "time 0.3.22",
 ]
 
 [[package]]
@@ -476,6 +476,7 @@ dependencies = [
  "libset",
  "msft-todo-types",
  "open",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
@@ -1342,9 +1343,9 @@ dependencies = [
 
 [[package]]
 name = "iana-time-zone"
-version = "0.1.56"
+version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0722cd7114b7de04316e7ea5456a0bbb20e4adb46fd27a3697adb812cff0f37c"
+checksum = "2fad5b825842d2b38bd206f3e81d6957625fd7f0a361e345c30e01a0ae2dd613"
 dependencies = [
  "android_system_properties",
  "core-foundation-sys",
@@ -2082,7 +2083,7 @@ checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
 [[package]]
 name = "relm4"
 version = "0.6.0"
-source = "git+https://github.com/Relm4/Relm4?branch=on-activate#3e6d968e98691813b0c1e94754788faf64dd56a1"
+source = "git+https://github.com/Relm4/Relm4?branch=main#fb2b83cfa45167d9d6592f63b53e16b99204f595"
 dependencies = [
  "async-trait",
  "flume",
@@ -2109,7 +2110,7 @@ dependencies = [
 [[package]]
 name = "relm4-macros"
 version = "0.6.0"
-source = "git+https://github.com/Relm4/Relm4?branch=on-activate#3e6d968e98691813b0c1e94754788faf64dd56a1"
+source = "git+https://github.com/Relm4/Relm4?branch=main#fb2b83cfa45167d9d6592f63b53e16b99204f595"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2571,9 +2572,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.21"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f3403384eaacbca9923fa06940178ac13e4edb725486d70e8e15881d0c836cc"
+checksum = "ea9e1b3cf1243ae005d9e74085d4d542f3125458f3a81af210d901dcd7411efd"
 dependencies = [
  "itoa",
  "serde",

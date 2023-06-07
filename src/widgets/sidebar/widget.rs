@@ -38,7 +38,7 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				#[local_ref]
 				list_box -> gtk::ListBox {
 					#[watch]
-					set_width_request: if model.extended { 200 } else { 50 },
+					set_width_request: if model.extended { 250 } else { 50 },
 					set_css_classes: &["navigation-sidebar"],
 					connect_row_selected => move |_, listbox_row| {
 						if let Some(row) = listbox_row {

@@ -24,6 +24,7 @@ open = "4.1.0"
 msft-todo-types = { git = "https://github.com/done-devs/msft-todo-types" }
 keytar = "0.1.6"
 url = "2.3.1"
+regex = "1.8.4"
 
 [dependencies.libset]
 git = "https://github.com/edfloreshz/libset"

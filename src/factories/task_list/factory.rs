@@ -91,6 +91,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						#[watch]
 						set_hexpand: !self.smart,
 						#[watch]
+						set_halign: gtk::Align::Start,
+						set_wrap: true,
+						set_natural_wrap_mode: gtk::NaturalWrapMode::Word,
 						set_text: self.list.name().as_str(),
 						set_margin_all: 5,
 					},
