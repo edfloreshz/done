@@ -67,7 +67,7 @@ features = ["serde"]
 [dependencies.relm4]
 git = "https://github.com/Relm4/Relm4"
 branch = "on-activate"
-features = ["macros", "libadwaita", "gnome_43"]
+features = ["macros", "libadwaita", "gnome_44"]
 
 [dependencies.serde]
 version = "1.0.126"
