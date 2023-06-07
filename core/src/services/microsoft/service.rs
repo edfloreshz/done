@@ -78,9 +78,9 @@ impl Microsoft {
 			HashMap::new();
 			..insert("client_id", CLIENT_ID);
 			..insert("scope", API_PERMISSIONS);
+			..insert("code", self.code.as_str());
 			..insert("redirect_uri", REDIRECT_URI);
 			..insert("grant_type", "authorization_code");
-			..insert("code", self.code.as_str());
 		};
 		let response = client
 			.post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")
@@ -103,9 +103,8 @@ impl Microsoft {
 				HashMap::new();
 				..insert("client_id", CLIENT_ID);
 				..insert("scope", API_PERMISSIONS);
-				..insert("redirect_uri", REDIRECT_URI);
-				..insert("grant_type", "refresh_token");
 				..insert("refresh_token", &self.token.refresh_token);
+				..insert("grant_type", "refresh_token");
 		};
 		let response = client
 			.post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")

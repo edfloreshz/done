@@ -1,5 +1,5 @@
 use crate::application::info::PROFILE;
-use crate::application::setup::{self, main_app};
+use crate::application::setup;
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
@@ -30,7 +30,7 @@ use relm4::{
 	component::{AsyncComponent, AsyncComponentController},
 	gtk, Component, ComponentBuilder, ComponentController, Controller,
 };
-use relm4::{view, AsyncComponentSender, RelmWidgetExt};
+use relm4::{main_adw_application, view, AsyncComponentSender, RelmWidgetExt};
 use relm4_icons::icon_name;
 
 pub struct App {
@@ -119,7 +119,7 @@ impl AsyncComponent for App {
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
 				set_transient_for: Some(&main_window),
-				set_application: Some(&main_app()),
+				set_application: Some(&main_adw_application()),
 			},
 
 			add_css_class?: if PROFILE == "Devel" {
@@ -402,7 +402,7 @@ impl AsyncComponent for App {
 		_root: &Self::Root,
 	) {
 		match message {
-			Event::Quit => main_app().quit(),
+			Event::Quit => main_adw_application().quit(),
 			Event::AddTaskList => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();

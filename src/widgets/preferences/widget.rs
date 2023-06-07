@@ -148,7 +148,7 @@ impl AsyncComponent for PreferencesComponentModel {
 			PreferencesComponentInput::MicrosoftLogin => {
 				let service = Service::Microsoft.get_service();
 				match service.login() {
-					Ok(_) => println!("Token stored"),
+					Ok(_) => println!("Login started"),
 					Err(err) => eprintln!("{err}"),
 				};
 			},
