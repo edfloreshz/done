@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -70,13 +70,13 @@ impl From<Task> for QueryableTask {
 			priority: value.priority.into(),
 			sub_tasks: serde_json::to_string(&value.sub_tasks).unwrap(),
 			tags: serde_json::to_string(&value.tags).unwrap(),
-			completion_date: value.completion_date,
-			deletion_date: value.deletion_date,
-			due_date: value.due_date,
-			reminder_date: value.reminder_date,
+			completion_date: value.completion_date.map(|dt| dt.naive_local()),
+			deletion_date: value.deletion_date.map(|dt| dt.naive_local()),
+			due_date: value.due_date.map(|dt| dt.naive_local()),
+			reminder_date: value.reminder_date.map(|dt| dt.naive_local()),
 			recurrence: value.recurrence.to_string(),
-			created_date_time: value.created_date_time,
-			last_modified_date_time: value.last_modified_date_time,
+			created_date_time: value.created_date_time.naive_local(),
+			last_modified_date_time: value.last_modified_date_time.naive_local(),
 		}
 	}
 }
@@ -94,13 +94,27 @@ impl From<QueryableTask> for Task {
 			priority: value.priority.into(),
 			sub_tasks: serde_json::from_str(&value.sub_tasks).unwrap(),
 			tags: serde_json::from_str(&value.tags).unwrap(),
-			completion_date: value.completion_date.map(|date| date.into()),
-			deletion_date: value.deletion_date.map(|date| date.into()),
-			due_date: value.due_date.map(|date| date.into()),
-			reminder_date: value.reminder_date.map(|date| date.into()),
+			completion_date: value
+				.completion_date
+				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
+			deletion_date: value
+				.deletion_date
+				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
+			due_date: value
+				.due_date
+				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
+			reminder_date: value
+				.reminder_date
+				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
 			recurrence: Recurrence::from_string(value.recurrence),
-			created_date_time: value.created_date_time,
-			last_modified_date_time: value.last_modified_date_time,
+			created_date_time: DateTime::<Utc>::from_local(
+				value.created_date_time,
+				Utc,
+			),
+			last_modified_date_time: DateTime::<Utc>::from_local(
+				value.last_modified_date_time,
+				Utc,
+			),
 		}
 	}
 }

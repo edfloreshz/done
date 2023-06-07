@@ -108,7 +108,6 @@ impl AsyncComponent for App {
 	view! {
 		#[root]
 		main_window = adw::ApplicationWindow {
-			set_default_size: (700, 700),
 			connect_close_request[sender] => move |_| {
 				sender.input(Event::Quit);
 				gtk::Inhibit(true)

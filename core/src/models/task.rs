@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use msft_todo_types::{checklist_item::ChecklistItem, task::ToDoTask};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -17,13 +17,13 @@ pub struct Task {
 	pub sub_tasks: Vec<Task>,
 	pub tags: Vec<String>,
 	pub notes: Option<String>,
-	pub completion_date: Option<NaiveDateTime>,
-	pub deletion_date: Option<NaiveDateTime>,
-	pub due_date: Option<NaiveDateTime>,
-	pub reminder_date: Option<NaiveDateTime>,
+	pub completion_date: Option<DateTime<Utc>>,
+	pub deletion_date: Option<DateTime<Utc>>,
+	pub due_date: Option<DateTime<Utc>>,
+	pub reminder_date: Option<DateTime<Utc>>,
 	pub recurrence: Recurrence,
-	pub created_date_time: NaiveDateTime,
-	pub last_modified_date_time: NaiveDateTime,
+	pub created_date_time: DateTime<Utc>,
+	pub last_modified_date_time: DateTime<Utc>,
 }
 
 impl Task {
@@ -45,8 +45,8 @@ impl Task {
 			due_date: None,
 			reminder_date: None,
 			recurrence: Default::default(),
-			created_date_time: now.naive_utc(),
-			last_modified_date_time: now.naive_utc(),
+			created_date_time: now,
+			last_modified_date_time: now,
 		}
 	}
 }
@@ -59,7 +59,7 @@ impl From<ToDoTask> for Task {
 			title: task.title,
 			favorite: false,
 			today: task.reminder_date_time.is_some()
-				&& task.reminder_date_time.unwrap() == Utc::now().naive_local(),
+				&& task.reminder_date_time.unwrap() == Utc::now(),
 			status: task.status.into(),
 			priority: task.importance.into(),
 			sub_tasks: task
@@ -90,7 +90,10 @@ impl From<ChecklistItem> for Task {
 			} else {
 				Status::NotStarted
 			},
-			created_date_time: value.created_date_time,
+			created_date_time: DateTime::<Utc>::from_utc(
+				value.created_date_time,
+				Utc,
+			),
 			..Default::default()
 		}
 	}

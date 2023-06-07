@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use adw::{
 	prelude::MessageDialogExtManual,
 	traits::{
@@ -7,7 +5,7 @@ use adw::{
 		PreferencesGroupExt, PreferencesRowExt,
 	},
 };
-use chrono::{Datelike, Duration, Local, NaiveDateTime, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, Timelike, Utc};
 use done_local_storage::models::{
 	priority::Priority, recurrence::Day, status::Status, task::Task,
 };
@@ -26,6 +24,7 @@ use relm4::{
 	AsyncFactorySender, RelmWidgetExt,
 };
 use relm4_icons::icon_name;
+use std::str::FromStr;
 
 use crate::{fl, widgets::content::messages::ContentInput};
 
@@ -255,12 +254,12 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 										gtk::Calendar {
 											set_margin_all: 10,
 											add_css_class: "card",
-											set_day: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).day() as i32,
-											set_month: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).month() as i32,
-											set_year: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).year() as i32,
+											set_day: self.task.reminder_date.unwrap_or(Utc::now()).day() as i32,
+											set_month: self.task.reminder_date.unwrap_or(Utc::now()).month() as i32 - 1,
+											set_year: self.task.reminder_date.unwrap_or(Utc::now()).year() as i32,
 											connect_day_selected[sender] => move |calendar| {
-												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-													if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
+												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
+													if let Ok(date) = DateTime::<Utc>::from_str(date.to_string().as_str()) {
 														sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
 													}
 												}
@@ -416,12 +415,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								gtk::Calendar {
 									set_margin_all: 10,
 									add_css_class: "card",
-									set_day: self.task.due_date.unwrap_or(Utc::now().naive_local()).day() as i32,
-									set_month: self.task.due_date.unwrap_or(Utc::now().naive_local()).month() as i32,
-									set_year: self.task.due_date.unwrap_or(Utc::now().naive_local()).year() as i32,
+									set_day: self.task.due_date.unwrap_or(Utc::now()).day() as i32,
+									set_month: self.task.due_date.unwrap_or(Utc::now()).month() as i32 - 1,
+									set_year: self.task.due_date.unwrap_or(Utc::now()).year() as i32,
 									connect_day_selected[sender] => move |calendar| {
-										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
-											if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {
+										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
+											println!("{date}");
+											if let Ok(date) = DateTime::<Utc>::from_str(date.as_str()) {
 													sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
 											}
 										}
@@ -593,12 +593,10 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			},
 			TaskDetailsFactoryInput::SetDate(calendar, date) => {
 				let date = match date {
-					DateDay::Today => Some(Local::now().naive_local()),
+					DateDay::Today => Some(Utc::now()),
 					DateDay::Tomorrow => {
-						let date = Local::now()
-							.checked_add_signed(Duration::days(1))
-							.unwrap()
-							.naive_local();
+						let date =
+							Utc::now().checked_add_signed(Duration::days(1)).unwrap();
 						Some(date)
 					},
 					DateDay::None => None,
@@ -728,7 +726,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						self.task.reminder_date = Some(new_date);
 					}
 				} else {
-					let now = Utc::now().naive_local().with_hour(hour).unwrap();
+					let now = Utc::now().with_hour(hour).unwrap();
 					let now = now.with_minute(0).unwrap();
 					self.task.reminder_date = Some(now);
 					self.selected_reminder_date =
@@ -743,7 +741,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						self.task.reminder_date = Some(new_date);
 					}
 				} else {
-					let now = Utc::now().naive_local().with_hour(0).unwrap();
+					let now = Utc::now().with_hour(0).unwrap();
 					let now = now.with_minute(minute).unwrap();
 					self.task.reminder_date = Some(now);
 					self.selected_reminder_date =

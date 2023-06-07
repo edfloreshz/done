@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use done_local_storage::models::{status::Status, task::Task};
 use done_local_storage::service::Service;
 use relm4::ComponentController;
@@ -67,7 +67,8 @@ pub async fn add_task(
 					.output(ContentOutput::Notify("Task added successfully".into(), 1))
 					.unwrap();
 			},
-			Err(_) => {
+			Err(err) => {
+				tracing::error!("An error ocurred: {}", err);
 				sender
 					.output(ContentOutput::Notify("Error adding task".into(), 2))
 					.unwrap();
@@ -150,6 +151,7 @@ pub async fn select_task_list(
 	model.title = list.name();
 	model.description = list.description();
 	model.smart = list.smart();
+	model.service = service;
 
 	if let Some(service) = service {
 		let mut service = service.get_service();
@@ -171,8 +173,8 @@ pub async fn select_task_list(
 					for task in response.iter().filter(|task| {
 						task.today
 							|| task.due_date.is_some()
-								&& task.due_date.unwrap().date()
-									== Utc::now().naive_utc().date()
+								&& task.due_date.unwrap().date_naive()
+									== Utc::now().date_naive()
 					}) {
 						guard.push_back(TaskInit::new(
 							task.clone(),
@@ -223,8 +225,6 @@ pub async fn select_task_list(
 			SidebarList::Custom(list) => {
 				model.parent_list = Some(SidebarList::Custom(list.clone()));
 
-				guard.clear();
-
 				match service.read_tasks_from_list(list.id.clone()).await {
 					Ok(response) => {
 						for task in response
@@ -268,8 +268,8 @@ pub async fn select_task_list(
 	Ok(())
 }
 
-fn is_within_next_7_days(date: NaiveDateTime) -> bool {
-	let now = Utc::now().naive_utc();
+fn is_within_next_7_days(date: DateTime<Utc>) -> bool {
+	let now = Utc::now();
 	let next_7_days = now + chrono::Duration::days(7);
 	date >= now && date <= next_7_days
 }
