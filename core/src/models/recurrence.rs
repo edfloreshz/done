@@ -1,6 +1,6 @@
 use msft_todo_types::recurrence::DayOfWeek;
+use msft_todo_types::recurrence::TaskRecurrence;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug)]
 pub enum Day {
 	Monday,
@@ -79,8 +79,8 @@ impl ToString for Recurrence {
 	}
 }
 
-impl From<msft_todo_types::recurrence::Recurrence> for Recurrence {
-	fn from(value: msft_todo_types::recurrence::Recurrence) -> Self {
+impl From<TaskRecurrence> for Recurrence {
+	fn from(value: TaskRecurrence) -> Self {
 		Self {
 			monday: value.pattern.days_of_week.contains(&DayOfWeek::Monday),
 			tuesday: value.pattern.days_of_week.contains(&DayOfWeek::Tuesday),

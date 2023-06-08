@@ -50,7 +50,7 @@ impl From<List> for ToDoTaskList {
 			display_name,
 			is_owner: true,
 			is_shared: false,
-			wellknown_list_name: String::new(),
+			wellknown_list_name: None,
 		}
 	}
 }

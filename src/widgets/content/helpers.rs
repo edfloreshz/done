@@ -127,7 +127,11 @@ pub async fn update_task(
 				.output(ContentOutput::Notify("Task updated successfully".into(), 1))
 				.unwrap_or_default()
 		},
-		Err(_) => {
+		Err(err) => {
+			tracing::error!(
+				"An error ocurred while updating this task: {}",
+				err.to_string()
+			);
 			sender
 				.output(ContentOutput::Notify(
 					"An error ocurred while updating this task.".into(),

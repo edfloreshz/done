@@ -1,6 +1,8 @@
+use std::str::FromStr;
+
 use chrono::{DateTime, Utc};
 use msft_todo_types::{
-	body::{Body, BodyType},
+	body::{BodyType, ItemBody},
 	checklist_item::ChecklistItem,
 	task::ToDoTask,
 };
@@ -63,53 +65,65 @@ impl From<ToDoTask> for Task {
 			title: task.title,
 			favorite: false,
 			today: task.reminder_date_time.is_some()
-				&& task.reminder_date_time.unwrap() == Utc::now(),
+				&& Into::<DateTime<Utc>>::into(
+					task.reminder_date_time.clone().unwrap(),
+				) == Utc::now(),
 			status: task.status.into(),
 			priority: task.importance.into(),
 			sub_tasks: task
 				.checklist_items
+				.unwrap_or(vec![])
 				.iter()
 				.map(|item| item.clone().into())
 				.collect(),
 			tags: vec![],
 			notes: Some(task.body.content),
-			completion_date: task.completed_date_time,
+			completion_date: task.completed_date_time.map(|date| date.into()),
 			deletion_date: None,
-			due_date: task.due_date_time,
-			reminder_date: task.reminder_date_time,
-			recurrence: task.recurrence.into(),
-			created_date_time: task.created_date_time,
-			last_modified_date_time: task.last_modified_date_time,
+			due_date: task.due_date_time.map(|date| date.into()),
+			reminder_date: task.reminder_date_time.map(|date| date.into()),
+			recurrence: task.recurrence.unwrap_or_default().into(),
+			created_date_time: DateTime::<Utc>::from_str(&task.created_date_time)
+				.unwrap(),
+			last_modified_date_time: DateTime::<Utc>::from_str(
+				&task.last_modified_date_time,
+			)
+			.unwrap(),
 		}
 	}
 }
 
 impl From<Task> for ToDoTask {
 	fn from(task: Task) -> Self {
+		let checklist_items: Vec<ChecklistItem> =
+			task.sub_tasks.iter().map(|t| t.to_owned().into()).collect();
 		Self {
 			id: task.id,
-			body: Body {
+			body: ItemBody {
 				content: task.notes.unwrap_or_default(),
 				content_type: BodyType::Text,
 			},
 			categories: vec![],
-			completed_date_time: task.completion_date,
-			due_date_time: task.due_date,
+			completed_date_time: task.completion_date.map(|date| date.into()),
+			due_date_time: task.due_date.map(|date| date.into()),
 			importance: task.priority.into(),
 			is_reminder_on: task.reminder_date.is_some(),
 			recurrence: Default::default(),
 			title: task.title,
 			status: task.status.into(),
 			has_attachments: false,
-			checklist_items: task
-				.sub_tasks
-				.iter()
-				.map(|t| t.to_owned().into())
-				.collect(),
+			checklist_items: Some(checklist_items),
 			body_last_modified_date_time: None,
-			created_date_time: task.created_date_time,
-			last_modified_date_time: task.last_modified_date_time,
-			reminder_date_time: task.reminder_date,
+			created_date_time: task
+				.created_date_time
+				.format("%Y-%m-%dT%H:%M:%S%.f")
+				.to_string(),
+			last_modified_date_time: task
+				.last_modified_date_time
+				.format("%Y-%m-%dT%H:%M:%S%.f")
+				.to_string(),
+			reminder_date_time: task.reminder_date.map(|date| date.into()),
+			start_date_time: None,
 		}
 	}
 }
@@ -124,7 +138,10 @@ impl From<ChecklistItem> for Task {
 			} else {
 				Status::NotStarted
 			},
-			created_date_time: value.created_date_time,
+			created_date_time: DateTime::<Utc>::from_str(
+				&value.created_date_time.unwrap_or_default(),
+			)
+			.unwrap(),
 			..Default::default()
 		}
 	}
@@ -134,7 +151,8 @@ impl From<Task> for ChecklistItem {
 	fn from(task: Task) -> Self {
 		Self {
 			display_name: task.title,
-			created_date_time: task.created_date_time,
+			created_date_time: None,
+			checked_date_time: None,
 			is_checked: matches!(task.status, Status::Completed),
 			id: task.id,
 		}

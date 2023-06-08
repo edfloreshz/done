@@ -1637,7 +1637,7 @@ dependencies = [
 [[package]]
 name = "msft-todo-types"
 version = "0.1.0"
-source = "git+https://github.com/done-devs/msft-todo-types#4545df1bcbf4fc0dd7646b6f7e1ad2e1588f0047"
+source = "git+https://github.com/done-devs/msft-todo-types#21c51cba3b6a51c886fbfe99dc0f9a1cc0c2f545"
 dependencies = [
  "chrono",
  "serde",

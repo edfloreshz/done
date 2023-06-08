@@ -1,4 +1,4 @@
-use msft_todo_types::importance::Importance;
+use msft_todo_types::importance::TaskImportance;
 use serde::{Deserialize, Serialize};
 
 #[derive(
@@ -61,17 +61,17 @@ impl Priority {
 	}
 }
 
-impl From<Importance> for Priority {
-	fn from(value: Importance) -> Self {
+impl From<TaskImportance> for Priority {
+	fn from(value: TaskImportance) -> Self {
 		match value {
-			msft_todo_types::importance::Importance::Low => Self::Low,
-			msft_todo_types::importance::Importance::Normal => Self::Normal,
-			msft_todo_types::importance::Importance::High => Self::High,
+			TaskImportance::Low => Self::Low,
+			TaskImportance::Normal => Self::Normal,
+			TaskImportance::High => Self::High,
 		}
 	}
 }
 
-impl From<Priority> for Importance {
+impl From<Priority> for TaskImportance {
 	fn from(value: Priority) -> Self {
 		match value {
 			Priority::Low => Self::Low,
