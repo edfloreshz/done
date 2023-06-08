@@ -11,11 +11,11 @@ use msft_todo_types::{
 };
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use url::form_urlencoded::Parse;
+use url::Url;
 
 const APP_ID: &str = "dev.edfloreshz.Done";
-const CLIENT_ID: &str = "d90593cb-c2b1-4c87-b4f9-da24e1c03203";
-const REDIRECT_URI: &str = "done://auth";
+const CLIENT_ID: &str = "75d8509b-cf9b-4245-9550-1e5f1d7c66e4";
+const REDIRECT_URI: &str = "done://msft";
 const API_PERMISSIONS: &str = "offline_access user.read tasks.read tasks.read.shared tasks.readwrite tasks.readwrite.shared";
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
@@ -129,10 +129,14 @@ impl Microsoft {
 #[async_trait]
 #[allow(unused)]
 impl TaskService for Microsoft {
-	async fn handle_uri_params(&mut self, mut params: Parse<'_>) -> Result<()> {
-		let code = params.next().unwrap().1.to_string();
-		self.code = code;
-		self.token().await
+	async fn handle_uri_params(&mut self, uri: Url) -> Result<()> {
+		let mut pairs = uri.query_pairs();
+		if uri.as_str().contains("msft") {
+			let code = pairs.next().unwrap().1.to_string();
+			self.code = code;
+			self.token().await;
+		}
+		Ok(())
 	}
 
 	fn login(&self) -> anyhow::Result<()> {

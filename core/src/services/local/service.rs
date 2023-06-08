@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use url::form_urlencoded::Parse;
+use url::Url;
 
 use crate::{
 	models::{list::List, task::Task},
@@ -28,7 +28,7 @@ impl LocalStorage {
 
 #[async_trait]
 impl TaskService for LocalStorage {
-	async fn handle_uri_params(&mut self, _params: Parse<'_>) -> Result<()> {
+	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}
 

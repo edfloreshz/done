@@ -31,10 +31,9 @@ pub fn connect_signals() {
 		let bytes = files[0].uri();
 		let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
 		relm4::tokio::spawn(async move {
-			let pairs = uri.query_pairs();
 			let response = Service::Microsoft
 				.get_service()
-				.handle_uri_params(pairs)
+				.handle_uri_params(uri)
 				.await;
 			match response {
 				Ok(_) => tracing::info!("Token stored"),

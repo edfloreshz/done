@@ -1,13 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use url::form_urlencoded::Parse;
+use url::Url;
 
 use crate::models::{list::List, task::Task};
 
 #[async_trait]
 pub trait TaskService: Sync + Send {
 	/// Sets the initial config for this service.
-	async fn handle_uri_params(&mut self, config: Parse<'_>) -> Result<()>;
+	async fn handle_uri_params(&mut self, uri: Url) -> Result<()>;
 
 	/// Checks to see if the service is available.
 	fn login(&self) -> Result<()>;

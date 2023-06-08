@@ -100,7 +100,6 @@ impl AsyncFactoryComponent for ServiceModel {
 
 			if matches!(service, Service::Smart) {
 				for smart_list in SidebarList::list() {
-					tracing::warn!("Need to implement smart list {smart_list:?}");
 					guard.push_back(TaskListFactoryInit::new(None, smart_list, true));
 				}
 			} else {

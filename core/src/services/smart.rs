@@ -4,7 +4,7 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use url::form_urlencoded::Parse;
+use url::Url;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Smart;
@@ -18,7 +18,7 @@ impl Smart {
 #[async_trait]
 #[allow(unused)]
 impl TaskService for Smart {
-	async fn handle_uri_params(&mut self, mut params: Parse<'_>) -> Result<()> {
+	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}
 
