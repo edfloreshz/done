@@ -54,7 +54,7 @@ pub async fn add_task(
 ) -> Result<()> {
 	if let Some(SidebarList::Custom(parent)) = &model.parent_list {
 		task.parent = parent.id.clone();
-		let service = service.get_service();
+		let mut service = service.get_service();
 		match service.create_task(task.clone()).await {
 			Ok(_) => {
 				model
@@ -89,7 +89,7 @@ pub async fn remove_task(
 	let task = guard
 		.get(index.current_index())
 		.context("The task you're trying to remove does not currently exist")?;
-	let service = service.get_service();
+	let mut service = service.get_service();
 	match service.delete_task(task.clone().task.id).await {
 		Ok(_) => {
 			guard.remove(index.current_index());
@@ -116,7 +116,7 @@ pub async fn update_task(
 	task: Task,
 	service: Service,
 ) -> Result<()> {
-	let service = service.get_service();
+	let mut service = service.get_service();
 	match service.update_task(task).await {
 		Ok(_) => {
 			if model.show_task_details {

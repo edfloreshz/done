@@ -40,15 +40,7 @@ impl TaskService for LocalStorage {
 		true
 	}
 
-	async fn enable(&self) -> Result<()> {
-		todo!()
-	}
-
-	async fn disable(&self) -> Result<()> {
-		todo!()
-	}
-
-	async fn read_tasks(&self) -> Result<Vec<Task>> {
+	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		let task_list: Vec<Task> = tasks
 			.load::<QueryableTask>(&mut Database::establish_connection()?)?
 			.iter()
@@ -72,16 +64,20 @@ impl TaskService for LocalStorage {
 		Ok(response)
 	}
 
-	async fn read_task(&self, id: String) -> Result<Task> {
+	async fn read_task(
+		&mut self,
+		_task_list_id: String,
+		task_id: String,
+	) -> Result<Task> {
 		let task: QueryableTask = tasks
-			.find(id)
+			.find(task_id)
 			.first(&mut Database::establish_connection()?)
 			.context("Failed to fetch list of tasks.")?;
 
 		Ok(task.into())
 	}
 
-	async fn create_task(&self, task: Task) -> Result<()> {
+	async fn create_task(&mut self, task: Task) -> Result<()> {
 		let queryable_task: QueryableTask = task.into();
 
 		diesel::insert_into(tasks)
@@ -91,7 +87,7 @@ impl TaskService for LocalStorage {
 		Ok(())
 	}
 
-	async fn update_task(&self, task: Task) -> Result<Task> {
+	async fn update_task(&mut self, task: Task) -> Result<Task> {
 		let original_task = task.clone();
 		let queryable_task: QueryableTask = task.into();
 
@@ -121,7 +117,7 @@ impl TaskService for LocalStorage {
 		Ok(original_task)
 	}
 
-	async fn delete_task(&self, id: String) -> Result<()> {
+	async fn delete_task(&mut self, id: String) -> Result<()> {
 		diesel::delete(tasks.filter(id_task.eq(id)))
 			.execute(&mut Database::establish_connection()?)?;
 
@@ -136,14 +132,14 @@ impl TaskService for LocalStorage {
 		Ok(results)
 	}
 
-	async fn read_list(&self, id: String) -> Result<List> {
+	async fn read_list(&mut self, id: String) -> Result<List> {
 		let result: QueryableList = lists
 			.find(id)
 			.first(&mut Database::establish_connection()?)?;
 		Ok(result.into())
 	}
 
-	async fn create_list(&self, list: List) -> Result<List> {
+	async fn create_list(&mut self, list: List) -> Result<List> {
 		let list: QueryableList = list.into();
 
 		diesel::insert_into(lists)
@@ -153,7 +149,7 @@ impl TaskService for LocalStorage {
 		Ok(list.into())
 	}
 
-	async fn update_list(&self, list: List) -> Result<()> {
+	async fn update_list(&mut self, list: List) -> Result<()> {
 		let list: QueryableList = list.into();
 
 		diesel::update(lists.filter(id_list.eq(list.id_list.clone())))
@@ -164,7 +160,7 @@ impl TaskService for LocalStorage {
 		Ok(())
 	}
 
-	async fn delete_list(&self, id: String) -> Result<()> {
+	async fn delete_list(&mut self, id: String) -> Result<()> {
 		diesel::delete(lists.filter(id_list.eq(id)))
 			.execute(&mut Database::establish_connection()?)?;
 		Ok(())

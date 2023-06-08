@@ -1,3 +1,4 @@
+use msft_todo_types::status::Status as ToDoStatus;
 use serde::{Deserialize, Serialize};
 
 #[derive(
@@ -55,14 +56,23 @@ impl Status {
 	}
 }
 
-impl From<msft_todo_types::status::Status> for Status {
-	fn from(value: msft_todo_types::status::Status) -> Self {
+impl From<ToDoStatus> for Status {
+	fn from(value: ToDoStatus) -> Self {
 		match value {
-			msft_todo_types::status::Status::NotStarted => Self::NotStarted,
-			msft_todo_types::status::Status::Started => Self::NotStarted,
-			msft_todo_types::status::Status::Completed => Self::Completed,
-			msft_todo_types::status::Status::WaitingOnOthers => Self::NotStarted,
-			msft_todo_types::status::Status::Deferred => Self::NotStarted,
+			ToDoStatus::NotStarted => Self::NotStarted,
+			ToDoStatus::Started => Self::NotStarted,
+			ToDoStatus::Completed => Self::Completed,
+			ToDoStatus::WaitingOnOthers => Self::NotStarted,
+			ToDoStatus::Deferred => Self::NotStarted,
+		}
+	}
+}
+
+impl From<Status> for ToDoStatus {
+	fn from(value: Status) -> Self {
+		match value {
+			Status::NotStarted => ToDoStatus::NotStarted,
+			Status::Completed => ToDoStatus::Completed,
 		}
 	}
 }

@@ -15,14 +15,8 @@ pub trait TaskService: Sync + Send {
 	/// Checks to see if the service is available.
 	fn available(&self) -> bool;
 
-	/// Enables the service in the app.
-	async fn enable(&self) -> Result<()>;
-
-	/// Disables the service in the app.
-	async fn disable(&self) -> Result<()>;
-
 	/// Read all the tasks from a service, regardless of parent list.
-	async fn read_tasks(&self) -> Result<Vec<Task>>;
+	async fn read_tasks(&mut self) -> Result<Vec<Task>>;
 
 	/// Read all the tasks from a list.
 	async fn read_tasks_from_list(
@@ -31,29 +25,33 @@ pub trait TaskService: Sync + Send {
 	) -> Result<Vec<Task>>;
 
 	/// Reads a single task by its id.
-	async fn read_task(&self, id: String) -> Result<Task>;
+	async fn read_task(
+		&mut self,
+		task_list_id: String,
+		task_id: String,
+	) -> Result<Task>;
 
 	/// Creates a single task.
-	async fn create_task(&self, task: Task) -> Result<()>;
+	async fn create_task(&mut self, task: Task) -> Result<()>;
 
 	/// Updates a single task.
-	async fn update_task(&self, task: Task) -> Result<Task>;
+	async fn update_task(&mut self, task: Task) -> Result<Task>;
 
 	/// Deltes a single task.
-	async fn delete_task(&self, id: String) -> Result<()>;
+	async fn delete_task(&mut self, id: String) -> Result<()>;
 
 	/// Read all the lists from a service.
 	async fn read_lists(&mut self) -> Result<Vec<List>>;
 
 	/// Read a single list from a service.
-	async fn read_list(&self, id: String) -> Result<List>;
+	async fn read_list(&mut self, id: String) -> Result<List>;
 
 	/// Creates a single task list.
-	async fn create_list(&self, list: List) -> Result<List>;
+	async fn create_list(&mut self, list: List) -> Result<List>;
 
 	/// Updates a single task list.
-	async fn update_list(&self, list: List) -> Result<()>;
+	async fn update_list(&mut self, list: List) -> Result<()>;
 
 	/// Deletes a single task list.
-	async fn delete_list(&self, id: String) -> Result<()>;
+	async fn delete_list(&mut self, id: String) -> Result<()>;
 }

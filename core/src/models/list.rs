@@ -40,6 +40,21 @@ impl From<ToDoTaskList> for List {
 	}
 }
 
+impl From<List> for ToDoTaskList {
+	fn from(list: List) -> Self {
+		let mut display_name = list.icon.unwrap_or_default();
+		display_name.push(' ');
+		display_name.push_str(&list.name);
+		Self {
+			id: list.id,
+			display_name,
+			is_owner: true,
+			is_shared: false,
+			wellknown_list_name: String::new(),
+		}
+	}
+}
+
 fn extract_emoji(string: &str) -> Option<String> {
 	let re = Regex::new(r"\p{Emoji}").unwrap();
 	let match_result = re.find(string);

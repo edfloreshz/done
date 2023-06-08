@@ -208,7 +208,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut renamed_list = list.clone();
 					renamed_list.name = name.clone();
-					let service = service.get_service();
+					let mut service = service.get_service();
 					match service.update_list(renamed_list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(renamed_list),
 						Err(err) => {
@@ -220,7 +220,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
 					let list_id = list.id.clone();
-					let service = self.service.unwrap().get_service();
+					let mut service = self.service.unwrap().get_service();
 					match service.delete_list(list_id.clone()).await {
 						Ok(_) => {
 							sender.output(TaskListFactoryOutput::DeleteTaskList(
@@ -239,7 +239,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut list = list.clone();
 					list.icon = Some(icon.clone());
-					let service = self.service.unwrap().get_service();
+					let mut service = self.service.unwrap().get_service();
 					match service.update_list(list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(list),
 						Err(err) => {

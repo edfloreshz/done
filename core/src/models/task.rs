@@ -1,5 +1,9 @@
 use chrono::{DateTime, Utc};
-use msft_todo_types::{checklist_item::ChecklistItem, task::ToDoTask};
+use msft_todo_types::{
+	body::{Body, BodyType},
+	checklist_item::ChecklistItem,
+	task::ToDoTask,
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -80,6 +84,36 @@ impl From<ToDoTask> for Task {
 	}
 }
 
+impl From<Task> for ToDoTask {
+	fn from(task: Task) -> Self {
+		Self {
+			id: task.id,
+			body: Body {
+				content: task.notes.unwrap_or_default(),
+				content_type: BodyType::Text,
+			},
+			categories: vec![],
+			completed_date_time: task.completion_date,
+			due_date_time: task.due_date,
+			importance: task.priority.into(),
+			is_reminder_on: task.reminder_date.is_some(),
+			recurrence: Default::default(),
+			title: task.title,
+			status: task.status.into(),
+			has_attachments: false,
+			checklist_items: task
+				.sub_tasks
+				.iter()
+				.map(|t| t.to_owned().into())
+				.collect(),
+			body_last_modified_date_time: None,
+			created_date_time: task.created_date_time,
+			last_modified_date_time: task.last_modified_date_time,
+			reminder_date_time: task.reminder_date,
+		}
+	}
+}
+
 impl From<ChecklistItem> for Task {
 	fn from(value: ChecklistItem) -> Self {
 		Self {
@@ -90,11 +124,19 @@ impl From<ChecklistItem> for Task {
 			} else {
 				Status::NotStarted
 			},
-			created_date_time: DateTime::<Utc>::from_utc(
-				value.created_date_time,
-				Utc,
-			),
+			created_date_time: value.created_date_time,
 			..Default::default()
+		}
+	}
+}
+
+impl From<Task> for ChecklistItem {
+	fn from(task: Task) -> Self {
+		Self {
+			display_name: task.title,
+			created_date_time: task.created_date_time,
+			is_checked: matches!(task.status, Status::Completed),
+			id: task.id,
 		}
 	}
 }

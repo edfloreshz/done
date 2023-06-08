@@ -156,7 +156,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				}
 			},
 			ServiceInput::AddTaskListToSidebar(name, service) => {
-				let provider = service.get_service();
+				let mut provider = service.get_service();
 				match provider
 					.create_list(List::new(name.as_str(), service))
 					.await
@@ -173,7 +173,7 @@ impl AsyncFactoryComponent for ServiceModel {
 				}
 			},
 			ServiceInput::DeleteTaskList(index, id, service) => {
-				let service = service.get_service();
+				let mut service = service.get_service();
 				match service.delete_list(id).await {
 					Ok(_) => {
 						let mut guard = self.list_factory.guard();

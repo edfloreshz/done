@@ -30,15 +30,7 @@ impl TaskService for Smart {
 		true
 	}
 
-	async fn enable(&self) -> Result<()> {
-		Ok(())
-	}
-
-	async fn disable(&self) -> Result<()> {
-		Ok(())
-	}
-
-	async fn read_tasks(&self) -> Result<Vec<Task>> {
+	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		Ok(vec![])
 	}
 
@@ -49,19 +41,23 @@ impl TaskService for Smart {
 		Ok(vec![])
 	}
 
-	async fn read_task(&self, id: String) -> Result<Task> {
+	async fn read_task(
+		&mut self,
+		task_list_id: String,
+		task_id: String,
+	) -> Result<Task> {
 		Ok(Task::default())
 	}
 
-	async fn create_task(&self, task: Task) -> Result<()> {
+	async fn create_task(&mut self, task: Task) -> Result<()> {
 		Ok(())
 	}
 
-	async fn update_task(&self, task: Task) -> Result<Task> {
+	async fn update_task(&mut self, task: Task) -> Result<Task> {
 		Ok(Task::default())
 	}
 
-	async fn delete_task(&self, id: String) -> Result<()> {
+	async fn delete_task(&mut self, id: String) -> Result<()> {
 		Ok(())
 	}
 
@@ -69,19 +65,19 @@ impl TaskService for Smart {
 		Ok(vec![])
 	}
 
-	async fn read_list(&self, id: String) -> Result<List> {
+	async fn read_list(&mut self, id: String) -> Result<List> {
 		Ok(List::default())
 	}
 
-	async fn create_list(&self, list: List) -> Result<List> {
+	async fn create_list(&mut self, list: List) -> Result<List> {
 		Ok(List::default())
 	}
 
-	async fn update_list(&self, list: List) -> Result<()> {
+	async fn update_list(&mut self, list: List) -> Result<()> {
 		Ok(())
 	}
 
-	async fn delete_list(&self, id: String) -> Result<()> {
+	async fn delete_list(&mut self, id: String) -> Result<()> {
 		Ok(())
 	}
 }

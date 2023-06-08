@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use crate::models::list::List;
 use crate::models::task::Task;
 use crate::task_service::TaskService;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use async_trait::async_trait;
 use cascade::cascade;
 use msft_todo_types::{
 	collection::Collection, list::ToDoTaskList, task::ToDoTask, token::Token,
 };
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use url::form_urlencoded::Parse;
 
@@ -68,7 +69,10 @@ impl Microsoft {
 		Ok(())
 	}
 
-	async fn logout(&self) -> anyhow::Result<()> {
+	fn logout(&self) -> anyhow::Result<()> {
+		keytar::delete_password("dev.edfloreshz.Done", "msft_expires_in")?;
+		keytar::delete_password("dev.edfloreshz.Done", "msft_access_token")?;
+		keytar::delete_password("dev.edfloreshz.Done", "msft_refresh_token")?;
 		Ok(())
 	}
 
@@ -147,15 +151,7 @@ impl TaskService for Microsoft {
 		password.is_ok() && !password.unwrap().password.is_empty()
 	}
 
-	async fn enable(&self) -> Result<()> {
-		Ok(())
-	}
-
-	async fn disable(&self) -> Result<()> {
-		Ok(())
-	}
-
-	async fn read_tasks(&self) -> Result<Vec<Task>> {
+	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		Ok(vec![])
 	}
 
@@ -181,7 +177,11 @@ impl TaskService for Microsoft {
 					collection
 						.value
 						.iter()
-						.map(|task| task.clone().into())
+						.map(|task| {
+							let mut task: Task = task.clone().into();
+							task.parent = parent_list.clone();
+							task
+						})
 						.collect(),
 				)
 			},
@@ -189,19 +189,86 @@ impl TaskService for Microsoft {
 		}
 	}
 
-	async fn read_task(&self, id: String) -> Result<Task> {
-		Ok(Task::default())
+	async fn read_task(
+		&mut self,
+		task_list_id: String,
+		task_id: String,
+	) -> Result<Task> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let response = client
+			.get(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/{}",
+				task_list_id, task_id
+			))
+			.bearer_auth(&self.token.access_token)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				let response = response.text().await?;
+				let task: ToDoTask = serde_json::from_str(response.as_str())?;
+				let mut task: Task = task.clone().into();
+				task.parent = task_list_id;
+				Ok(task)
+			},
+			Err(error) => Err(error.into()),
+		}
 	}
 
-	async fn create_task(&self, task: Task) -> Result<()> {
-		Ok(())
+	async fn create_task(&mut self, task: Task) -> Result<()> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let todo_task: ToDoTask = task.clone().into();
+		let data = serde_json::to_string(&todo_task).unwrap();
+		let request = client
+			.post(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks",
+				task.parent
+			))
+			.header("Content-Type", "application/json")
+			.bearer_auth(&self.token.access_token)
+			.body(data);
+		let response = request.send().await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				if response.status() == StatusCode::CREATED {
+					Ok(())
+				} else {
+					bail!("An error ocurred while creating the task.")
+				}
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 
-	async fn update_task(&self, task: Task) -> Result<Task> {
-		Ok(Task::default())
+	async fn update_task(&mut self, task: Task) -> Result<Task> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let data = serde_json::to_string(&task).unwrap();
+		let response = client
+			.patch(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/{}",
+				task.parent, task.id
+			))
+			.header("Content-Type", "application/json")
+			.bearer_auth(&self.token.access_token)
+			.body(data)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				if response.status() == StatusCode::OK {
+					Ok(task)
+				} else {
+					bail!("An error ocurred while updating the list.")
+				}
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 
-	async fn delete_task(&self, id: String) -> Result<()> {
+	async fn delete_task(&mut self, id: String) -> Result<()> {
 		Ok(())
 	}
 
@@ -224,19 +291,97 @@ impl TaskService for Microsoft {
 		}
 	}
 
-	async fn read_list(&self, id: String) -> Result<List> {
-		Ok(List::default())
+	async fn read_list(&mut self, id: String) -> Result<List> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let response = client
+			.get(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{id}"
+			))
+			.bearer_auth(&self.token.access_token)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				let response = response.text().await?;
+				let list: ToDoTaskList = serde_json::from_str(response.as_str())?;
+				Ok(list.into())
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 
-	async fn create_list(&self, list: List) -> Result<List> {
-		Ok(List::default())
+	async fn create_list(&mut self, list: List) -> Result<List> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let list: ToDoTaskList = list.into();
+		let data = serde_json::to_string(&list).unwrap();
+		let response = client
+			.post("https://graph.microsoft.com/v1.0/me/todo/lists")
+			.header("Content-Type", "application/json")
+			.bearer_auth(&self.token.access_token)
+			.body(data)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				if response.status() == StatusCode::CREATED {
+					Ok(list.into())
+				} else {
+					bail!("An error ocurred while creating the list.")
+				}
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 
-	async fn update_list(&self, list: List) -> Result<()> {
-		Ok(())
+	async fn update_list(&mut self, list: List) -> Result<()> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let list: ToDoTaskList = list.into();
+		let data = serde_json::to_string(&list).unwrap();
+		let response = client
+			.patch(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{}",
+				list.id
+			))
+			.header("Content-Type", "application/json")
+			.bearer_auth(&self.token.access_token)
+			.body(data)
+			.send()
+			.await?;
+
+		match response.error_for_status() {
+			Ok(response) => {
+				if response.status() == StatusCode::OK {
+					Ok(())
+				} else {
+					bail!("An error ocurred while updating the list.")
+				}
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 
-	async fn delete_list(&self, id: String) -> Result<()> {
-		Ok(())
+	async fn delete_list(&mut self, id: String) -> Result<()> {
+		self.refresh_token().await?;
+		let client = reqwest::Client::new();
+		let response = client
+			.delete(format!(
+				"https://graph.microsoft.com/v1.0/me/todo/lists/{id}",
+			))
+			.bearer_auth(&self.token.access_token)
+			.send()
+			.await?;
+		match response.error_for_status() {
+			Ok(response) => {
+				if response.status() == StatusCode::NO_CONTENT {
+					Ok(())
+				} else {
+					bail!("An error ocurred while deleting the list.")
+				}
+			},
+			Err(err) => Err(err.into()),
+		}
 	}
 }
