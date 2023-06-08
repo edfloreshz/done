@@ -182,7 +182,7 @@ impl AsyncComponent for ContentModel {
 			smart: false,
 			selected_task: None,
 			show_task_details: false,
-			page_icon: "/dev/edfloreshz/Done/icons/scalable/actions/empty.png".into(),
+			page_icon: "/dev/edfloreshz/Done/icons/scalable/actions/empty.png",
 			page_title: "list-empty".into(),
 			page_subtitle: "instructions".into(),
 		};

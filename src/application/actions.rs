@@ -1,6 +1,5 @@
 use relm4::{
 	actions::{AccelsPlus, RelmAction, RelmActionGroup},
-	adw,
 	gtk::prelude::ApplicationExt,
 	main_adw_application,
 };

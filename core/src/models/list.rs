@@ -42,12 +42,8 @@ impl From<ToDoTaskList> for List {
 
 fn extract_emoji(string: &str) -> Option<String> {
 	let re = Regex::new(r"\p{Emoji}").unwrap();
-	let match_result = re.find(&string);
-
-	match match_result {
-		Some(matched) => Some(matched.as_str().to_string()),
-		None => None,
-	}
+	let match_result = re.find(string);
+	match_result.map(|matched| matched.as_str().to_string())
 }
 
 fn remove_emoji(string: &str) -> String {

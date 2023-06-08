@@ -23,6 +23,7 @@ strum_macros = "0.24.3"
 glib = "0.16.2"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
+reqwest = "0.11.18"
 
 [dependencies.relm4-icons]
 version = "0.6.0-beta.1"

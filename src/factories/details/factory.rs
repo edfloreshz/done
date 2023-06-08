@@ -155,9 +155,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
-								set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS),
 								set_title: fl!("today"),
 								set_subtitle: fl!("today-desc"),
+								add_prefix = &gtk::Image {
+									set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
+								},
 								add_suffix = &gtk::Switch {
 									set_tooltip: fl!("today-tooltip"),
 									#[watch]
@@ -170,9 +172,11 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
-								set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE),
 								set_title: fl!("completed"),
 								set_subtitle: fl!("completed-desc"),
+								add_prefix = &gtk::Image {
+									set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE)
+								},
 								add_suffix = &gtk::Switch {
 									set_tooltip: fl!("completed-tooltip"),
 									#[watch]
@@ -185,57 +189,61 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								}
 							},
 							adw::ActionRow {
-								set_icon_name: Some(icon_name::WARNING),
 								set_title: fl!("importance"),
 								set_subtitle: fl!("importance-desc"),
+								add_prefix = &gtk::Image {
+									set_icon_name: Some(icon_name::WARNING)
+								},
 								add_suffix = &gtk::Box {
-								set_css_classes: &["linked"],
-								#[name(low_importance)]
-								gtk::ToggleButton {
-									set_icon_name: icon_name::FLAG_OUTLINE_THIN,
-									set_tooltip: fl!("low"),
-									set_css_classes: &["flat", "image-button"],
-									set_valign: gtk::Align::Center,
-									set_active: self.task.priority == Priority::Low,
-									connect_toggled[sender] => move |toggle| {
-										if toggle.is_active() {
-											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
+									set_css_classes: &["linked"],
+									#[name(low_importance)]
+									gtk::ToggleButton {
+										set_icon_name: icon_name::FLAG_OUTLINE_THIN,
+										set_tooltip: fl!("low"),
+										set_css_classes: &["flat", "image-button"],
+										set_valign: gtk::Align::Center,
+										set_active: self.task.priority == Priority::Low,
+										connect_toggled[sender] => move |toggle| {
+											if toggle.is_active() {
+												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
+											}
 										}
-									}
-								},
-								gtk::ToggleButton {
-									set_icon_name: icon_name::FLAG_OUTLINE_THICK,
-									set_tooltip: fl!("medium"),
-									set_css_classes: &["flat", "image-button"],
-									set_valign: gtk::Align::Center,
-									set_group: Some(&low_importance),
-									set_active: self.task.priority == Priority::Normal,
-									connect_toggled[sender] => move |toggle| {
-										if toggle.is_active() {
-											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
+									},
+									gtk::ToggleButton {
+										set_icon_name: icon_name::FLAG_OUTLINE_THICK,
+										set_tooltip: fl!("medium"),
+										set_css_classes: &["flat", "image-button"],
+										set_valign: gtk::Align::Center,
+										set_group: Some(&low_importance),
+										set_active: self.task.priority == Priority::Normal,
+										connect_toggled[sender] => move |toggle| {
+											if toggle.is_active() {
+												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
+											}
 										}
-									}
-								},
-								gtk::ToggleButton {
-									set_icon_name: icon_name::FLAG_FILLED,
-									set_tooltip: fl!("high"),
-									set_css_classes: &["flat", "image-button"],
-									set_valign: gtk::Align::Center,
-									set_group: Some(&low_importance),
-									set_active: self.task.priority == Priority::High,
-									connect_toggled[sender] => move |toggle| {
-										if toggle.is_active() {
-											sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
+									},
+									gtk::ToggleButton {
+										set_icon_name: icon_name::FLAG_FILLED,
+										set_tooltip: fl!("high"),
+										set_css_classes: &["flat", "image-button"],
+										set_valign: gtk::Align::Center,
+										set_group: Some(&low_importance),
+										set_active: self.task.priority == Priority::High,
+										connect_toggled[sender] => move |toggle| {
+											if toggle.is_active() {
+												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
+											}
 										}
 									}
 								}
-							}
-						},
+							},
 						adw::ExpanderRow {
-							set_icon_name: Some(icon_name::ALARM),
 							set_title: fl!("reminder"),
 							set_subtitle: fl!("reminder-desc"),
 							set_enable_expansion: true,
+							add_prefix = &gtk::Image {
+								set_icon_name: Some(icon_name::ALARM)
+							},
 							#[name(reminder_label)]
 							add_action = &gtk::Label {
 								set_css_classes: &["accent"],
@@ -256,7 +264,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 											add_css_class: "card",
 											set_day: self.task.reminder_date.unwrap_or(Utc::now()).day() as i32,
 											set_month: self.task.reminder_date.unwrap_or(Utc::now()).month() as i32 - 1,
-											set_year: self.task.reminder_date.unwrap_or(Utc::now()).year() as i32,
+											set_year: self.task.reminder_date.unwrap_or(Utc::now()).year(),
 											connect_day_selected[sender] => move |calendar| {
 												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
 													if let Ok(date) = DateTime::<Utc>::from_str(date.to_string().as_str()) {
@@ -398,7 +406,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							}
 						},
 						adw::ExpanderRow {
-							set_icon_name: Some(icon_name::WORK_WEEK),
+							add_prefix = &gtk::Image {
+								set_icon_name: Some(icon_name::WORK_WEEK)
+							},
 							set_title: fl!("due-date"),
 							set_subtitle: fl!("set-due-date"),
 							set_enable_expansion: true,
@@ -417,7 +427,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									add_css_class: "card",
 									set_day: self.task.due_date.unwrap_or(Utc::now()).day() as i32,
 									set_month: self.task.due_date.unwrap_or(Utc::now()).month() as i32 - 1,
-									set_year: self.task.due_date.unwrap_or(Utc::now()).year() as i32,
+									set_year: self.task.due_date.unwrap_or(Utc::now()).year(),
 									connect_day_selected[sender] => move |calendar| {
 										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
 											println!("{date}");

@@ -55,7 +55,7 @@ impl App {
 		about_dialog: Option<Controller<AboutDialog>>,
 		extended: bool,
 	) -> Self {
-		let app = Self {
+		Self {
 			sidebar,
 			content,
 			preferences,
@@ -65,8 +65,7 @@ impl App {
 			page_title: None,
 			warning_revealed: true,
 			extended,
-		};
-		app
+		}
 	}
 }
 
@@ -231,21 +230,13 @@ impl AsyncComponent for App {
 							},
 						}
 					},
-					gtk::InfoBar {
-						set_message_type: gtk::MessageType::Warning,
+					adw::Banner {
 						set_visible: PROFILE == "Devel",
 						#[watch]
 						set_revealed: model.warning_revealed,
-						set_show_close_button: true,
-						connect_response[sender] => move |_, _| {
-							sender.input_sender().send(Event::CloseWarning).unwrap()
-						},
-						gtk::Label {
-							set_wrap: true,
-							set_natural_wrap_mode: gtk::NaturalWrapMode::None,
-							add_css_class: "warning",
-							set_text: fl!("alpha-warning")
-						}
+						set_title: fl!("alpha-warning"),
+						connect_button_clicked => Event::CloseWarning,
+						set_button_label: Some(fl!("close"))
 					},
 				},
 			}

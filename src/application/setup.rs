@@ -3,11 +3,8 @@ use crate::application::{actions, gettext, localization, resources, settings};
 use anyhow::Result;
 use done_local_storage::service::Service;
 use relm4::gtk::gio::ApplicationFlags;
-use relm4::gtk::prelude::{
-	ApplicationExt, ApplicationExtManual, ButtonExt, FileExt, GtkWindowExt,
-	WidgetExt,
-};
-use relm4::{adw, gtk, main_adw_application, view};
+use relm4::gtk::prelude::{ApplicationExt, ApplicationExtManual, FileExt};
+use relm4::{gtk, main_adw_application};
 use std::str::FromStr;
 
 pub fn init() -> Result<()> {

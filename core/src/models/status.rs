@@ -29,9 +29,9 @@ impl From<i32> for Status {
 	}
 }
 
-impl Into<i32> for Status {
-	fn into(self) -> i32 {
-		match self {
+impl From<Status> for i32 {
+	fn from(value: Status) -> Self {
+		match value {
 			Status::NotStarted => 0,
 			Status::Completed => 1,
 		}

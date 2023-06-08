@@ -49,13 +49,13 @@ impl TaskService for LocalStorage {
 	}
 
 	async fn read_tasks(&self) -> Result<Vec<Task>> {
-		let task: Vec<Task> = tasks
+		let task_list: Vec<Task> = tasks
 			.load::<QueryableTask>(&mut Database::establish_connection()?)?
 			.iter()
 			.map(|t| t.clone().into())
 			.collect();
 
-		Ok(task.into())
+		Ok(task_list)
 	}
 
 	async fn read_tasks_from_list(
@@ -82,7 +82,7 @@ impl TaskService for LocalStorage {
 	}
 
 	async fn create_task(&self, task: Task) -> Result<()> {
-		let queryable_task: QueryableTask = task.clone().into();
+		let queryable_task: QueryableTask = task.into();
 
 		diesel::insert_into(tasks)
 			.values(&queryable_task)

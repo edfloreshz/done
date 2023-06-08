@@ -47,7 +47,9 @@ impl AsyncComponent for PreferencesComponentModel {
 								adw::ComboRow {
 									set_title: fl!("color-scheme"),
 									set_subtitle: fl!("color-scheme-description"),
-									set_icon_name: Some("dark-mode-symbolic"),
+									add_prefix = &gtk::Image {
+										set_icon_name: Some("dark-mode-symbolic")
+									},
 									set_model: Some(&gtk::StringList::new(&[
 										fl!("color-scheme-light"),
 										fl!("color-scheme-dark"),
@@ -69,7 +71,9 @@ impl AsyncComponent for PreferencesComponentModel {
 								adw::ActionRow {
 									set_title: fl!("extended-sidebar"),
 									set_subtitle: fl!("extended-sidebar-description"),
-									set_icon_name: Some("dock-left-symbolic"),
+									add_prefix = &gtk::Image {
+										set_icon_name: Some("dock-left-symbolic")
+									},
 									add_suffix = &gtk::Box {
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,
@@ -88,7 +92,9 @@ impl AsyncComponent for PreferencesComponentModel {
 								adw::ActionRow {
 									set_title: "Microsoft To Do",
 									set_subtitle: fl!("msft-todo-description"),
-									set_icon_name: Some(icon_name::CHECKMARK),
+									add_prefix = &gtk::Image {
+										set_icon_name: Some(icon_name::CHECKMARK)
+									},
 									add_suffix = &gtk::Box {
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,

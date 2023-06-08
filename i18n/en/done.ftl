@@ -26,6 +26,7 @@ preferences = Preferences
 keyboard-shortcuts = Keyboard shortcuts
 about-done = About Done
 quit = Quit
+close = Close
 
 # Sidebar
 all = All

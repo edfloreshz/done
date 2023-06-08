@@ -1,9 +1,7 @@
-use crate::factories::task_list::messages::TaskListFactoryInput;
-use crate::factories::task_list::model::TaskListFactoryInit;
+use crate::factories::service::ServiceInput;
 use crate::fl;
 use crate::widgets::preferences::model::Preferences;
 use crate::widgets::sidebar::model::SidebarList;
-use done_local_storage::models::list::List;
 use done_local_storage::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -12,6 +10,7 @@ use relm4::component::{
 };
 use relm4::factory::AsyncFactoryVecDeque;
 use relm4::gtk::traits::{BoxExt, ButtonExt};
+use relm4::loading_widgets::LoadingWidgets;
 use relm4::RelmWidgetExt;
 use relm4::{
 	gtk,
@@ -36,15 +35,8 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 				set_policy: (gtk::PolicyType::Never, gtk::PolicyType::Automatic),
 				set_vexpand: true,
 				#[local_ref]
-				list_box -> gtk::ListBox {
-					#[watch]
-					set_width_request: if model.extended { 250 } else { 50 },
-					set_css_classes: &["navigation-sidebar"],
-					connect_row_selected => move |_, listbox_row| {
-						if let Some(row) = listbox_row {
-							row.activate();
-						}
-					},
+				services_list -> gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
 				}
 			},
 			gtk::CenterBox {
@@ -92,6 +84,21 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		}
 	}
 
+	fn init_loading_widgets(
+		root: &mut Self::Root,
+	) -> Option<relm4::loading_widgets::LoadingWidgets> {
+		relm4::view! {
+			#[local_ref]
+			root {
+				#[name(spinner)]
+				gtk::Spinner {
+					start: ()
+				}
+			}
+		}
+		Some(LoadingWidgets::new(root, spinner))
+	}
+
 	async fn init(
 		_init: Self::Init,
 		root: Self::Root,
@@ -105,41 +112,26 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			} else {
 				Preferences::new().await
 			};
-		let list_factory =
-			AsyncFactoryVecDeque::new(gtk::ListBox::new(), sender.input_sender());
+		let service_factory =
+			AsyncFactoryVecDeque::new(gtk::Box::default(), sender.input_sender());
 		let mut model = SidebarComponentModel {
-			list_factory,
+			service_factory,
 			extended: preferences.extended,
 		};
 
-		let services = Service::list();
+		let services_list = model.service_factory.widget();
 
-		let list_box = model.list_factory.widget();
+		let services = Service::list();
 
 		let widgets = view_output!();
 
 		{
-			let mut guard = model.list_factory.guard();
-			for smart_list in SidebarList::list() {
-				guard.push_back(TaskListFactoryInit::new(None, smart_list, true));
-			}
-
+			let mut guard = model.service_factory.guard();
 			for service in services
 				.iter()
 				.filter(|service| service.get_service().available())
 			{
-				match service.get_service().read_lists().await {
-					Ok(lists) => {
-						for list in lists {
-							guard.push_back(TaskListFactoryInit::new(
-								Some(service.clone()),
-								SidebarList::Custom(list),
-								false,
-							));
-						}
-					},
-					Err(err) => tracing::error!("{err}"),
-				}
+				guard.push_back((*service, model.extended));
 			}
 		}
 
@@ -171,43 +163,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 			},
 			SidebarComponentInput::ToggleExtended(extended) => {
 				self.extended = extended;
-				let guard = self.list_factory.guard();
+				let guard = self.service_factory.guard();
 				for index in 0..guard.len() {
-					guard.send(index, TaskListFactoryInput::ToggleExtended(extended))
+					guard.send(index, ServiceInput::ToggleExtended(extended))
 				}
 			},
 			SidebarComponentInput::AddTaskListToSidebar(name, service) => {
-				let provider = service.get_service();
-				match provider
-					.create_list(List::new(name.as_str(), service))
-					.await
-				{
-					Ok(list) => {
-						let mut guard = self.list_factory.guard();
-						guard.push_back(TaskListFactoryInit::new(
-							Some(service),
-							SidebarList::Custom(list),
-							false,
-						));
-					},
-					Err(err) => sender
-						.output(SidebarComponentOutput::Notify(err.to_string(), 2))
-						.unwrap_or_default(),
-				}
-			},
-			SidebarComponentInput::DeleteTaskList(index, id, service) => {
-				let service = service.get_service();
-				match service.delete_list(id).await {
-					Ok(_) => {
-						let mut guard = self.list_factory.guard();
-						guard.remove(index.current_index());
-					},
-					Err(err) => {
-						sender
-							.output(SidebarComponentOutput::Notify(err.to_string(), 2))
-							.unwrap_or_default();
-					},
-				}
+				self
+					.service_factory
+					.send(0, ServiceInput::AddTaskListToSidebar(name, service));
 			},
 			SidebarComponentInput::Notify(msg) => sender
 				.output(SidebarComponentOutput::Notify(msg, 1))

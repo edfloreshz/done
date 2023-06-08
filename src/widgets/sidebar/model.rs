@@ -4,11 +4,11 @@ use relm4_icons::icon_name;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::{factories::task_list::model::TaskListFactoryModel, fl};
+use crate::{factories::service::ServiceModel, fl};
 
 #[derive(Debug)]
 pub struct SidebarComponentModel {
-	pub list_factory: AsyncFactoryVecDeque<TaskListFactoryModel>,
+	pub service_factory: AsyncFactoryVecDeque<ServiceModel>,
 	pub extended: bool,
 }
 

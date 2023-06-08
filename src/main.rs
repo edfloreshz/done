@@ -1,6 +1,6 @@
 use anyhow::Result;
 use application::{info::APP_ID, setup};
-use relm4::{adw, gtk::prelude::ApplicationExtManual, RelmApp};
+use relm4::RelmApp;
 
 use app::App;
 

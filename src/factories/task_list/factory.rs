@@ -10,12 +10,12 @@ use relm4::{
 	gtk, AsyncFactorySender, Component, ComponentController, RelmWidgetExt,
 };
 
+use crate::factories::service::ServiceInput;
 use crate::fl;
 use crate::widgets::delete::{DeleteComponent, DeleteInit, DeleteOutput};
 use crate::widgets::list_dialog::messages::ListDialogOutput;
 use crate::widgets::list_dialog::model::ListDialogComponent;
 use crate::widgets::preferences::model::Preferences;
-use crate::widgets::sidebar::messages::SidebarComponentInput;
 use crate::widgets::sidebar::model::SidebarList;
 
 use super::{
@@ -29,7 +29,7 @@ relm4::new_stateless_action!(DeleteAction, TaskListActionGroup, "delete");
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskListFactoryModel {
-	type ParentInput = SidebarComponentInput;
+	type ParentInput = ServiceInput;
 	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = TaskListFactoryInput;
@@ -142,7 +142,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			});
 		let delete = DeleteComponent::builder()
 			.launch(DeleteInit {
-				warning: format!("You're about to delete this list"),
+				warning: "You're about to delete this list".into(),
 				delete_warning: "If you do this, all of its tasks will be lost.".into(),
 			})
 			.forward(sender.input_sender(), |message| match message {
@@ -257,14 +257,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		match output {
 			TaskListFactoryOutput::Select(list) => {
-				Some(SidebarComponentInput::SelectList(list))
+				Some(ServiceInput::SelectList(list))
 			},
-			TaskListFactoryOutput::DeleteTaskList(index, list_id, service) => Some(
-				SidebarComponentInput::DeleteTaskList(index, list_id, service),
-			),
-			TaskListFactoryOutput::Notify(msg) => {
-				Some(SidebarComponentInput::Notify(msg))
+			TaskListFactoryOutput::DeleteTaskList(index, list_id, service) => {
+				Some(ServiceInput::DeleteTaskList(index, list_id, service))
 			},
+			TaskListFactoryOutput::Notify(msg) => Some(ServiceInput::Notify(msg)),
 		}
 	}
 }
