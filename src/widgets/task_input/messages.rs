@@ -4,7 +4,7 @@ use crate::widgets::sidebar::model::SidebarList;
 
 #[derive(Debug)]
 pub enum TaskInputInput {
-	SetParentList(Option<SidebarList>),
+	SetParentList(SidebarList),
 	AddTask,
 	Rename(String),
 	EnterCreationMode,

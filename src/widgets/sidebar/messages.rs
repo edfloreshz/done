@@ -16,6 +16,6 @@ pub enum SidebarComponentInput {
 pub enum SidebarComponentOutput {
 	Notify(String, u32),
 	DisablePlugin,
-	SelectList(SidebarList, Option<Service>),
+	SelectList(SidebarList, Service),
 	OpenPreferences,
 }

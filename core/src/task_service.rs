@@ -38,7 +38,11 @@ pub trait TaskService: Sync + Send {
 	async fn update_task(&mut self, task: Task) -> Result<Task>;
 
 	/// Deltes a single task.
-	async fn delete_task(&mut self, id: String) -> Result<()>;
+	async fn delete_task(
+		&mut self,
+		list_id: String,
+		task_id: String,
+	) -> Result<()>;
 
 	/// Read all the lists from a service.
 	async fn read_lists(&mut self) -> Result<Vec<List>>;

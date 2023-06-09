@@ -18,13 +18,13 @@ impl Component for TaskInputModel {
 	type CommandOutput = ();
 	type Input = TaskInputInput;
 	type Output = TaskInputOutput;
-	type Init = Option<SidebarList>;
+	type Init = SidebarList;
 
 	view! {
 		#[root]
 		adw::EntryRow {
 			#[watch]
-			set_visible: matches!(model.parent_list.as_ref(), Some(SidebarList::Custom(_))),
+			set_visible: matches!(model.parent_list, SidebarList::Custom(_)),
 			set_hexpand: true,
 			add_css_class: "card",
 			set_title: fl!("new-task"),
@@ -88,9 +88,8 @@ impl Component for TaskInputModel {
 				self.task.title = title;
 			},
 			TaskInputInput::AddTask => {
-				if !self.task.title.is_empty() && self.parent_list.is_some() {
-					if let SidebarList::Custom(list) = self.parent_list.as_ref().unwrap()
-					{
+				if !self.task.title.is_empty() {
+					if let SidebarList::Custom(list) = &self.parent_list {
 						self.task.parent = list.id.clone();
 						sender
 							.output(TaskInputOutput::AddTask(self.task.clone()))

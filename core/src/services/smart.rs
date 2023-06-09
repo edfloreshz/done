@@ -57,7 +57,11 @@ impl TaskService for Smart {
 		Ok(Task::default())
 	}
 
-	async fn delete_task(&mut self, id: String) -> Result<()> {
+	async fn delete_task(
+		&mut self,
+		list_id: String,
+		task_id: String,
+	) -> Result<()> {
 		Ok(())
 	}
 

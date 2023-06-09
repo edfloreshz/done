@@ -100,16 +100,15 @@ impl AsyncFactoryComponent for ServiceModel {
 
 			if matches!(service, Service::Smart) {
 				for smart_list in SidebarList::list() {
-					guard.push_back(TaskListFactoryInit::new(None, smart_list, true));
+					guard.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
 				}
 			} else {
 				match service.get_service().read_lists().await {
 					Ok(lists) => {
 						for list in lists {
 							guard.push_back(TaskListFactoryInit::new(
-								Some(service),
+								service,
 								SidebarList::Custom(list),
-								false,
 							));
 						}
 					},
@@ -163,9 +162,8 @@ impl AsyncFactoryComponent for ServiceModel {
 					Ok(list) => {
 						let mut guard = self.list_factory.guard();
 						guard.push_back(TaskListFactoryInit::new(
-							Some(service),
+							service,
 							SidebarList::Custom(list),
-							false,
 						));
 					},
 					Err(err) => sender.output(ServiceOutput::Notify(err.to_string())),

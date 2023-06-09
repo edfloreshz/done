@@ -22,6 +22,12 @@ pub enum SidebarList {
 	Custom(List),
 }
 
+impl Default for SidebarList {
+	fn default() -> Self {
+		Self::Custom(List::default())
+	}
+}
+
 impl SidebarList {
 	pub fn list() -> Vec<SidebarList> {
 		let mut list: Vec<SidebarList> = SidebarList::iter().collect();

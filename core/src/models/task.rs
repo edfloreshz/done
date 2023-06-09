@@ -113,14 +113,13 @@ impl From<Task> for ToDoTask {
 			status: task.status.into(),
 			has_attachments: false,
 			checklist_items: Some(checklist_items),
-			body_last_modified_date_time: None,
 			created_date_time: task
 				.created_date_time
-				.format("%Y-%m-%dT%H:%M:%S%.f")
+				.format("%Y-%m-%dT%H:%M:%S%.fZ")
 				.to_string(),
 			last_modified_date_time: task
 				.last_modified_date_time
-				.format("%Y-%m-%dT%H:%M:%S%.f")
+				.format("%Y-%m-%dT%H:%M:%S%.fZ")
 				.to_string(),
 			reminder_date_time: task.reminder_date.map(|date| date.into()),
 			start_date_time: None,

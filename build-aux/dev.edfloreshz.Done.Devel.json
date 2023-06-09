@@ -1,10 +1,10 @@
 {
     "id": "dev.edfloreshz.Done.Devel",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "43",
+    "runtime-version": "44",
     "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
-        "org.freedesktop.Sdk.Extension.rust-stable"
+        "org.freedesktop.Sdk.Extension.rust-nightly"
     ],
     "command": "done",
     "finish-args": [
@@ -15,7 +15,7 @@
         "--device=dri"
     ],
     "build-options": {
-        "append-path": "/usr/lib/sdk/rust-stable/bin",
+        "append-path": "/usr/lib/sdk/rust-nightly/bin",
         "build-args": [
             "--share=network"
         ],

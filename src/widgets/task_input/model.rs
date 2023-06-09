@@ -6,6 +6,6 @@ use crate::widgets::sidebar::model::SidebarList;
 #[derive(Debug)]
 pub struct TaskInputModel {
 	pub task: Task,
-	pub parent_list: Option<SidebarList>,
+	pub parent_list: SidebarList,
 	pub buffer: gtk::EntryBuffer,
 }

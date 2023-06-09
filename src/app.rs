@@ -3,7 +3,7 @@ use crate::application::setup;
 use crate::fl;
 use crate::widgets::about_dialog::AboutDialog;
 use crate::widgets::content::messages::{ContentInput, ContentOutput};
-use crate::widgets::content::model::ContentModel;
+use crate::widgets::content::widget::ContentModel;
 use crate::widgets::preferences::messages::PreferencesComponentOutput;
 use crate::widgets::preferences::model::{
 	Preferences, PreferencesComponentModel,
@@ -72,7 +72,7 @@ impl App {
 #[derive(Debug)]
 pub enum Event {
 	Notify(String, u32),
-	SelectList(SidebarList, Option<Service>),
+	SelectList(SidebarList, Service),
 	AddTaskList,
 	AddTaskListToSidebar(String, Service),
 	ToggleExtended(bool),

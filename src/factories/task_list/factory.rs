@@ -1,3 +1,4 @@
+use done_local_storage::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
@@ -154,7 +155,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			rename,
 			delete,
 			list: init.list,
-			smart: init.smart,
+			smart: init.service == Service::Smart,
 			extended: preferences.extended,
 		}
 	}
@@ -220,13 +221,13 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
 					let list_id = list.id.clone();
-					let mut service = self.service.unwrap().get_service();
+					let mut service = self.service.get_service();
 					match service.delete_list(list_id.clone()).await {
 						Ok(_) => {
 							sender.output(TaskListFactoryOutput::DeleteTaskList(
 								self.index.clone(),
 								list_id,
-								self.service.unwrap(),
+								self.service,
 							));
 						},
 						Err(err) => {
@@ -239,7 +240,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut list = list.clone();
 					list.icon = Some(icon.clone());
-					let mut service = self.service.unwrap().get_service();
+					let mut service = self.service.get_service();
 					match service.update_list(list.clone()).await {
 						Ok(_) => self.list = SidebarList::Custom(list),
 						Err(err) => {

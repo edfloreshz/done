@@ -117,8 +117,12 @@ impl TaskService for LocalStorage {
 		Ok(original_task)
 	}
 
-	async fn delete_task(&mut self, id: String) -> Result<()> {
-		diesel::delete(tasks.filter(id_task.eq(id)))
+	async fn delete_task(
+		&mut self,
+		_list_id: String,
+		task_id: String,
+	) -> Result<()> {
+		diesel::delete(tasks.filter(id_task.eq(task_id)))
 			.execute(&mut Database::establish_connection()?)?;
 
 		Ok(())

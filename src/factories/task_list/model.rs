@@ -8,7 +8,7 @@ use crate::widgets::{
 
 #[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryModel {
-	pub service: Option<Service>,
+	pub service: Service,
 	pub index: DynamicIndex,
 	pub list: SidebarList,
 	pub extended: bool,
@@ -19,7 +19,6 @@ pub struct TaskListFactoryModel {
 
 #[derive(Debug, derive_new::new)]
 pub struct TaskListFactoryInit {
-	pub service: Option<Service>,
+	pub service: Service,
 	pub list: SidebarList,
-	pub smart: bool,
 }

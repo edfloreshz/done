@@ -1,7 +1,6 @@
 use crate::factories::service::ServiceInput;
 use crate::fl;
 use crate::widgets::preferences::model::Preferences;
-use crate::widgets::sidebar::model::SidebarList;
 use done_local_storage::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -18,7 +17,7 @@ use relm4::{
 };
 
 use super::messages::{SidebarComponentInput, SidebarComponentOutput};
-use super::model::SidebarComponentModel;
+use super::model::{SidebarComponentModel, SidebarList};
 
 #[relm4::component(pub async)]
 impl SimpleAsyncComponent for SidebarComponentModel {
@@ -152,12 +151,15 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 					sender
 						.output(SidebarComponentOutput::SelectList(
 							sidebar_list.clone(),
-							Some(list.service),
+							list.service,
 						))
 						.unwrap_or_default();
 				} else {
 					sender
-						.output(SidebarComponentOutput::SelectList(sidebar_list, None))
+						.output(SidebarComponentOutput::SelectList(
+							sidebar_list,
+							Service::Smart,
+						))
 						.unwrap_or_default();
 				}
 			},

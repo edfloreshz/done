@@ -323,8 +323,31 @@ pub mod service {
 			}
 		}
 
-		async fn delete_task(&mut self, id: String) -> Result<()> {
-			Ok(())
+		async fn delete_task(
+			&mut self,
+			list_id: String,
+			task_id: String,
+		) -> Result<()> {
+			self.refresh_token().await?;
+			let client = reqwest::Client::new();
+			let response = client
+				.delete(format!(
+					"https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/{}",
+					list_id, task_id
+				))
+				.bearer_auth(&self.token.access_token)
+				.send()
+				.await?;
+			match response.error_for_status() {
+				Ok(response) => {
+					if response.status() == StatusCode::NO_CONTENT {
+						Ok(())
+					} else {
+						bail!("An error ocurred while deleting the task.")
+					}
+				},
+				Err(err) => Err(err.into()),
+			}
 		}
 
 		async fn read_lists(&mut self) -> Result<Vec<List>> {
