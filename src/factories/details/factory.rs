@@ -255,7 +255,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 											add_css_class: "card",
 											set_day: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).day() as i32,
 											set_month: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).month() as i32,
-											set_year: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).year() as i32,
+											set_year: self.task.reminder_date.unwrap_or(Utc::now().naive_local()).year(),
 											connect_day_selected[sender] => move |calendar| {
 												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
 													if let Ok(date) = NaiveDateTime::from_str(date.to_string().as_str()) {
@@ -416,7 +416,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									add_css_class: "card",
 									set_day: self.task.due_date.unwrap_or(Utc::now().naive_local()).day() as i32,
 									set_month: self.task.due_date.unwrap_or(Utc::now().naive_local()).month() as i32,
-									set_year: self.task.due_date.unwrap_or(Utc::now().naive_local()).year() as i32,
+									set_year: self.task.due_date.unwrap_or(Utc::now().naive_local()).year(),
 									connect_day_selected[sender] => move |calendar| {
 										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%S") {
 											if let Ok(date) = NaiveDateTime::from_str(date.as_str()) {

@@ -138,7 +138,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			});
 		let delete = DeleteComponent::builder()
 			.launch(DeleteInit {
-				warning: format!("You're about to delete this list"),
+				warning: "You're about to delete this list".to_string(),
 				delete_warning: "If you do this, all of its tasks will be lost.".into(),
 			})
 			.forward(sender.input_sender(), |message| match message {
