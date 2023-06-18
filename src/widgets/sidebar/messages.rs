@@ -9,6 +9,7 @@ pub enum SidebarComponentInput {
 	AddTaskListToSidebar(String, Service),
 	Notify(String),
 	OpenPreferences,
+	ReloadSidebar,
 }
 
 #[allow(dead_code)]

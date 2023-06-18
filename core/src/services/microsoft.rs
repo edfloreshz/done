@@ -178,11 +178,11 @@ pub mod service {
 
 		fn login(&self) -> anyhow::Result<()> {
 			let url = format!("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?
-		client_id={CLIENT_ID}
-		&response_type=code
-		&redirect_uri={REDIRECT_URI}
-		&response_mode=query
-		&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20");
+				client_id={CLIENT_ID}
+				&response_type=code
+				&redirect_uri={REDIRECT_URI}
+				&response_mode=query
+				&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20");
 			open::that(url)?;
 			Ok(())
 		}

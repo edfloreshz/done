@@ -10,10 +10,6 @@ use strum_macros::{EnumIter, EnumString};
 
 use std::sync::OnceLock;
 
-static SMART: OnceLock<Smart> = OnceLock::new();
-static LOCAL: OnceLock<LocalStorage> = OnceLock::new();
-static MICROSOFT: OnceLock<Microsoft> = OnceLock::new();
-
 #[derive(
 	Debug,
 	Default,
@@ -51,11 +47,9 @@ impl Service {
 	/// struct, register your service here.
 	pub fn get_service(&self) -> Box<dyn TaskService> {
 		match self {
-			Service::Smart => Box::new(*SMART.get_or_init(Smart::new)),
-			Service::Local => Box::new(*LOCAL.get_or_init(LocalStorage::new)),
-			Service::Microsoft => {
-				Box::new(MICROSOFT.get_or_init(Microsoft::new).clone())
-			},
+			Service::Smart => Box::new(Smart::new()),
+			Service::Local => Box::new(LocalStorage::new()),
+			Service::Microsoft => Box::new(Microsoft::new()),
 		}
 	}
 

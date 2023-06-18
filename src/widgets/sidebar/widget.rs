@@ -143,6 +143,18 @@ impl SimpleAsyncComponent for SidebarComponentModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
+			SidebarComponentInput::ReloadSidebar => {
+				let services = Service::list();
+				let mut guard = self.service_factory.guard();
+				guard.clear();
+
+				for service in services
+					.iter()
+					.filter(|service| service.get_service().available())
+				{
+					guard.push_back((*service, self.extended));
+				}
+			},
 			SidebarComponentInput::OpenPreferences => sender
 				.output(SidebarComponentOutput::OpenPreferences)
 				.unwrap_or_default(),

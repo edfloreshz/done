@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::application::info::PROFILE;
 use crate::application::setup;
 use crate::fl;
@@ -23,6 +25,7 @@ use libset::format::FileFormat;
 use libset::project::Project;
 use relm4::adw::Toast;
 use relm4::component::{AsyncComponentParts, AsyncController};
+use relm4::gtk::gio::ApplicationFlags;
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
@@ -77,6 +80,7 @@ pub enum Event {
 	AddTaskListToSidebar(String, Service),
 	ToggleExtended(bool),
 	OpenPreferences,
+	ReloadSidebar,
 	DisablePlugin,
 	CloseWarning,
 	Quit,
@@ -282,6 +286,28 @@ impl AsyncComponent for App {
 			Err(_) => panic!("Failed to initialize services."),
 		};
 
+		let app = main_adw_application();
+		app.set_flags(ApplicationFlags::HANDLES_OPEN);
+		let sender2 = sender.clone();
+		app.connect_open(move |_, files, _| {
+			let bytes = files[0].uri();
+			let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
+			let sender3 = sender2.clone();
+			relm4::tokio::spawn(async move {
+				let response = Service::Microsoft
+					.get_service()
+					.handle_uri_params(uri)
+					.await;
+				match response {
+					Ok(_) => {
+						sender3.input(Event::ReloadSidebar);
+						tracing::info!("Token stored");
+					},
+					Err(err) => tracing::error!("An error ocurred: {}", err),
+				}
+			});
+		});
+
 		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
 		let about_done: &str = fl!("about-done");
 		let quit: &str = fl!("quit");
@@ -398,6 +424,11 @@ impl AsyncComponent for App {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
 			},
+			Event::ReloadSidebar => self
+				.sidebar
+				.sender()
+				.send(SidebarComponentInput::ReloadSidebar)
+				.unwrap_or_default(),
 			Event::AddTaskListToSidebar(name, service) => self
 				.sidebar
 				.sender()
