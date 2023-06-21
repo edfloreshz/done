@@ -8,8 +8,6 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, EnumString};
 
-use std::sync::OnceLock;
-
 #[derive(
 	Debug,
 	Default,
@@ -29,6 +27,16 @@ pub enum Service {
 	#[default]
 	Local,
 	Microsoft,
+}
+
+impl Service {
+	pub fn icon(&self) -> &str {
+		match self {
+			Service::Smart => "dialog-information-symbolic",
+			Service::Local => "document-save-symbolic",
+			Service::Microsoft => "tools-symbolic",
+		}
+	}
 }
 
 impl ToString for Service {

@@ -58,7 +58,7 @@ features = [
     "dock-left",
 ]
 
-[dependencies.done_local_storage]
+[dependencies.core_done]
 path = "core"
 
 [dependencies.chrono]
