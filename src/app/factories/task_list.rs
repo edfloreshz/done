@@ -5,11 +5,16 @@ use relm4::factory::{DynamicIndex, FactoryView};
 use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::{BoxExt, GtkWindowExt};
 use relm4::{
-	gtk, AsyncFactorySender, RelmWidgetExt, Controller, Component, ComponentController,
+	gtk, AsyncFactorySender, Component, ComponentController, Controller,
+	RelmWidgetExt,
 };
 
-use crate::app::components::delete::{DeleteComponent, DeleteInit, DeleteOutput};
-use crate::app::components::list_dialog::{ListDialogComponent, ListDialogOutput};
+use crate::app::components::delete::{
+	DeleteComponent, DeleteInit, DeleteOutput,
+};
+use crate::app::components::list_dialog::{
+	ListDialogComponent, ListDialogOutput,
+};
 use crate::app::components::task_list_sidebar::TaskListSidebarInput;
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
@@ -29,7 +34,6 @@ pub struct TaskListFactoryInit {
 	pub list: SidebarList,
 }
 
-
 #[derive(Debug)]
 pub enum TaskListFactoryInput {
 	Select,
@@ -43,7 +47,6 @@ pub enum TaskListFactoryOutput {
 	Select(SidebarList),
 	DeleteTaskList(DynamicIndex, String),
 }
-
 
 relm4::new_action_group!(pub(super) TaskListActionGroup, "win");
 relm4::new_stateless_action!(RenameAction, TaskListActionGroup, "rename");
@@ -205,7 +208,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 		match message {
 			TaskListFactoryInput::Select => {
 				sender.output(TaskListFactoryOutput::Select(self.list.clone()));
-			}
+			},
 			TaskListFactoryInput::RenameList(name) => {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut renamed_list = list.clone();
@@ -218,7 +221,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						},
 					}
 				}
-			}
+			},
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
 					let list_id = list.id.clone();
@@ -235,7 +238,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						},
 					}
 				}
-			}
+			},
 			TaskListFactoryInput::ChangeIcon(icon) => {
 				if let SidebarList::Custom(list) = &self.list {
 					let mut list = list.clone();
@@ -248,7 +251,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						},
 					}
 				}
-			}
+			},
 		}
 	}
 

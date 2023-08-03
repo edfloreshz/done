@@ -9,4 +9,5 @@
         "_build/**": true
     },
     "rust-analyzer.showUnlinkedFileNotification": false,
+    "mesonbuild.configureOnOpen": false,
 }

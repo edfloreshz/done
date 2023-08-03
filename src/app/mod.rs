@@ -1,43 +1,66 @@
-pub mod models;
-pub mod factories;
 pub mod components;
+pub mod factories;
+pub mod models;
 use std::str::FromStr;
 
 use core_done::service::Service;
 use relm4::{
 	adw,
-	component::{AsyncComponent, AsyncComponentParts, AsyncController, AsyncComponentController},
+	component::{
+		AsyncComponent, AsyncComponentController, AsyncComponentParts,
+		AsyncController,
+	},
 	gtk::{
 		self,
-		traits::{GtkWindowExt, OrientableExt, WidgetExt, ApplicationWindowExt, BoxExt},
-        prelude::{ApplicationExt, ApplicationExtManual, FileExt}
+		prelude::{ApplicationExt, ApplicationExtManual, FileExt, Cast},
+		traits::{
+			ApplicationWindowExt, BoxExt, GtkWindowExt, OrientableExt, WidgetExt,
+		},
 	},
 	loading_widgets::LoadingWidgets,
-	view, AsyncComponentSender,
-	RelmWidgetExt, main_adw_application,
+	main_adw_application, view, AsyncComponentSender, RelmWidgetExt, new_action_group, new_stateless_action, actions::{RelmActionGroup, RelmAction, ActionGroupName}, Controller, ComponentBuilder, ComponentController,
 };
 
-use crate::{fl, app::{components::{services_sidebar::ServicesSidebarOutput, task_list_sidebar::TaskListSidebarOutput}, config::{info::PROFILE, setup}}};
+use crate::{
+	app::{
+		components::{
+			services_sidebar::ServicesSidebarOutput,
+			task_list_sidebar::TaskListSidebarOutput,
+		},
+		config::{info::PROFILE, setup},
+	},
+	fl,
+};
 
-use self::{components::{
-	services_sidebar::{ServicesSidebarModel, ServicesSidebarInput},
-	task_list_sidebar::{TaskListSidebarModel, TaskListSidebarInput}, content::{ContentModel, ContentInput},
-}, models::sidebar_list::SidebarList};
+use self::{
+	components::{
+		content::{ContentInput, ContentModel},
+		services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
+		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel}, about_dialog::AboutDialog,
+	},
+	models::sidebar_list::SidebarList,
+};
 
 pub mod config;
+
+new_action_group!(pub(super) WindowActionGroup, "win");
+new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
+new_stateless_action!(AboutAction, WindowActionGroup, "about");
+new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
 pub struct Done {
 	services_sidebar_controller: AsyncController<ServicesSidebarModel>,
 	task_list_sidebar_controller: AsyncController<TaskListSidebarModel>,
 	content_controller: AsyncController<ContentModel>,
+	about_dialog: Controller<AboutDialog>,
 }
 
 #[derive(Debug)]
 pub enum AppInput {
-    ServiceSelected(Service),
-    ListSelected(SidebarList, Service),
-    ReloadSidebar,
-    Quit
+	ServiceSelected(Service),
+	ListSelected(SidebarList, Service),
+	ReloadSidebar,
+	Quit,
 }
 
 #[relm4::component(pub async)]
@@ -50,12 +73,12 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-            connect_close_request[sender] => move |_| {
+						connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
 				gtk::Inhibit(true)
 			},
 
-            #[wrap(Some)]
+						#[wrap(Some)]
 			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
@@ -69,14 +92,14 @@ impl AsyncComponent for Done {
 				None
 			},
 
-            gtk::Box {
+						gtk::Box {
 				set_orientation: gtk::Orientation::Horizontal,
 				append: model.services_sidebar_controller.widget(),
-                gtk::Separator::default(),
-                append: model.task_list_sidebar_controller.widget(),
+								gtk::Separator::default(),
+								append: model.task_list_sidebar_controller.widget(),
 				gtk::Separator::default(),
-                append: model.content_controller.widget(),
-            }
+								append: model.content_controller.widget(),
+						}
 		}
 	}
 
@@ -113,12 +136,12 @@ impl AsyncComponent for Done {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-        match setup::init_services().await {
+		match setup::init_services().await {
 			Ok(_) => (),
 			Err(_) => panic!("Failed to initialize services."),
 		};
 
-        let app = main_adw_application();
+		let app = main_adw_application();
 		let captured_sender = sender.clone();
 		app.connect_open(move |_, files, _| {
 			let bytes = files[0].uri();
@@ -139,49 +162,92 @@ impl AsyncComponent for Done {
 			});
 		});
 
+		let about_dialog = ComponentBuilder::default()
+			.launch(root.upcast_ref::<gtk::Window>().clone())
+			.detach();
+
 		let model = Done {
 			services_sidebar_controller: ServicesSidebarModel::builder()
-            .launch(())
-            .forward(sender.input_sender(), |message| match message {
-                ServicesSidebarOutput::ServiceSelected(service) => AppInput::ServiceSelected(service),
-            }),
+				.launch(())
+				.forward(sender.input_sender(), |message| match message {
+					ServicesSidebarOutput::ServiceSelected(service) => {
+						AppInput::ServiceSelected(service)
+					},
+				}),
 			task_list_sidebar_controller: TaskListSidebarModel::builder()
-                .launch(Service::default())
-                .forward(sender.input_sender(), |message| match message {
-                    TaskListSidebarOutput::SelectList(list, service) => AppInput::ListSelected(list, service),
-                }),
+				.launch(Service::default())
+				.forward(sender.input_sender(), |message| match message {
+					TaskListSidebarOutput::SelectList(list, service) => {
+						AppInput::ListSelected(list, service)
+					},
+				}),
 			content_controller: ContentModel::builder().launch(None).detach(),
+			about_dialog
 		};
 
 		let widgets = view_output!();
+
+
+        let mut actions = RelmActionGroup::<WindowActionGroup>::new();
+
+		let shortcuts_action = {
+			let shortcuts = widgets.shortcuts.clone();
+			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
+				shortcuts.present();
+			})
+		};
+
+		let about_action = {
+			let sender = model.about_dialog.sender().clone();
+			RelmAction::<AboutAction>::new_stateless(move |_| {
+				sender.send(()).unwrap_or_default();
+			})
+		};
+
+		let quit_action = {
+			let sender = sender.clone();
+			RelmAction::<QuitAction>::new_stateless(move |_| {
+				sender.input_sender().send(Self::Input::Quit).unwrap_or_default();
+			})
+		};
+
+		actions.add_action(shortcuts_action);
+		actions.add_action(about_action);
+		actions.add_action(quit_action);
+
+		root.insert_action_group(
+			WindowActionGroup::NAME,
+			Some(&actions.into_action_group()),
+		);
+
 		AsyncComponentParts { model, widgets }
 	}
-    
-    async fn update(
-        &mut self,
+
+	async fn update(
+		&mut self,
 		message: Self::Input,
 		_sender: AsyncComponentSender<Self>,
 		_root: &Self::Root,
-    ) {
-        match message {
-            AppInput::Quit => main_adw_application().quit(),
-            AppInput::ListSelected(list, service) => {
-                self
-                    .content_controller
-                    .sender()
-                    .send(ContentInput::SelectList(list, service))
-                    .unwrap_or_default();
-            }
-            AppInput::ReloadSidebar => self
+	) {
+		match message {
+			AppInput::Quit => main_adw_application().quit(),
+			AppInput::ListSelected(list, service) => {
+				self
+					.content_controller
+					.sender()
+					.send(ContentInput::SelectList(list, service))
+					.unwrap_or_default();
+			},
+			AppInput::ReloadSidebar => self
 				.services_sidebar_controller
 				.sender()
 				.send(ServicesSidebarInput::ReloadSidebar)
 				.unwrap_or_default(),
-            AppInput::ServiceSelected(service) => self
-                .task_list_sidebar_controller
-                .sender()
-                .send(TaskListSidebarInput::ServiceSelected(service))
-                .unwrap_or_default(),
-        }
-    }
+			AppInput::ServiceSelected(service) => self
+				.task_list_sidebar_controller
+				.sender()
+				.send(TaskListSidebarInput::ServiceSelected(service))
+				.unwrap_or_default(),
+		}
+	}
 }

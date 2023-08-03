@@ -7,7 +7,7 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::{fl, app::factories::details::factory::TaskDetailsFactoryInput};
+use crate::{app::factories::details::factory::TaskDetailsFactoryInput, fl};
 
 pub struct TagModel {
 	pub title: String,

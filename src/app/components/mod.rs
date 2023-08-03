@@ -1,8 +1,9 @@
-pub mod task_input;
+pub mod content;
+pub mod delete;
+pub mod list_dialog;
 pub mod preferences;
 pub mod services_sidebar;
+pub mod task_input;
 pub mod task_list_sidebar;
-pub mod list_dialog;
-pub mod delete;
-pub mod content;
 pub mod welcome;
+pub mod about_dialog;

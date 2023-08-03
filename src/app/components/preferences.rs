@@ -2,6 +2,7 @@ use crate::app::config::appearance::ColorScheme;
 use crate::app::config::preferences::Preferences;
 use crate::fl;
 use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
+use anyhow::Result;
 use core_done::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
@@ -15,7 +16,6 @@ use relm4::gtk::traits::ButtonExt;
 use relm4::AsyncComponentSender;
 use relm4::{adw, gtk};
 use relm4_icons::icon_name;
-use anyhow::Result;
 
 #[derive(Debug)]
 pub struct PreferencesComponentModel {
@@ -33,7 +33,6 @@ pub enum PreferencesComponentInput {
 pub enum PreferencesComponentOutput {
 	ToggleExtended(bool),
 }
-
 
 #[relm4::component(pub async)]
 impl AsyncComponent for PreferencesComponentModel {
@@ -159,38 +158,38 @@ impl AsyncComponent for PreferencesComponentModel {
 	) {
 		match message {
 			PreferencesComponentInput::SetColorScheme(color_scheme) => {
-                match color_scheme {
-                    ColorScheme::Dark => {
-                        adw::StyleManager::default()
-                            .set_color_scheme(adw::ColorScheme::ForceDark);
-                        self.preferences.color_scheme = ColorScheme::Dark;
-                    },
-                    ColorScheme::Light => {
-                        adw::StyleManager::default()
-                            .set_color_scheme(adw::ColorScheme::ForceLight);
-                        self.preferences.color_scheme = ColorScheme::Light;
-                    },
-                    ColorScheme::Default => {
-                        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
-                        self.preferences.color_scheme = ColorScheme::Default;
-                    },
-                }
-                
+				match color_scheme {
+					ColorScheme::Dark => {
+						adw::StyleManager::default()
+							.set_color_scheme(adw::ColorScheme::ForceDark);
+						self.preferences.color_scheme = ColorScheme::Dark;
+					},
+					ColorScheme::Light => {
+						adw::StyleManager::default()
+							.set_color_scheme(adw::ColorScheme::ForceLight);
+						self.preferences.color_scheme = ColorScheme::Light;
+					},
+					ColorScheme::Default => {
+						adw::StyleManager::default()
+							.set_color_scheme(adw::ColorScheme::Default);
+						self.preferences.color_scheme = ColorScheme::Default;
+					},
+				}
+
 				if let Err(err) = update_preferences(&self.preferences) {
 					tracing::error!("{err}")
 				}
 			},
 			PreferencesComponentInput::ToggleExtended(extended) => {
-                self.preferences.extended = extended;
-                if let Err(err) = update_preferences(&self.preferences) {
+				self.preferences.extended = extended;
+				if let Err(err) = update_preferences(&self.preferences) {
 					tracing::error!("{err}")
 				}
-                sender
-                    .output(PreferencesComponentOutput::ToggleExtended(
-                        self.preferences.extended,
-                    ))
-                    .unwrap();
-				
+				sender
+					.output(PreferencesComponentOutput::ToggleExtended(
+						self.preferences.extended,
+					))
+					.unwrap();
 			},
 			PreferencesComponentInput::MicrosoftLogin => {
 				let service = Service::Microsoft.get_service();

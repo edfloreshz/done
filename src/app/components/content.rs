@@ -1,15 +1,17 @@
 use crate::app::components::task_input::TaskInputOutput;
 use crate::app::config::info::PROFILE;
-use crate::app::factories::details::factory::{TaskDetailsFactoryModel, TaskDetailsFactoryInit};
-use crate::app::factories::task::{TaskModel, TaskInit};
+use crate::app::factories::details::factory::{
+	TaskDetailsFactoryInit, TaskDetailsFactoryModel,
+};
+use crate::app::factories::task::{TaskInit, TaskModel};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
-use chrono::{Utc, DateTime};
+use anyhow::Result;
+use chrono::{DateTime, Utc};
 use core_done::models::status::Status;
 use core_done::models::task::Task;
 use core_done::service::Service;
-use anyhow::Result;
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
@@ -23,7 +25,7 @@ use relm4::{
 use relm4::{Component, ComponentController, Controller, RelmWidgetExt};
 use relm4_icons::icon_name;
 
-use super::task_input::{TaskInputModel, TaskInputInput};
+use super::task_input::{TaskInputInput, TaskInputModel};
 use super::welcome::WelcomeComponent;
 
 pub struct ContentModel {
@@ -35,7 +37,7 @@ pub struct ContentModel {
 	service: Service,
 	parent_list: Option<SidebarList>,
 	selected_task: Option<Task>,
-	warning_revealed: bool
+	warning_revealed: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -63,8 +65,7 @@ pub enum ContentInput {
 }
 
 #[derive(Debug)]
-pub enum ContentOutput {
-}
+pub enum ContentOutput {}
 
 #[derive(Debug)]
 pub enum TaskInput {
@@ -80,7 +81,6 @@ pub enum TaskOutput {
 	UpdateTask(Option<DynamicIndex>, Task),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 }
-
 
 #[relm4::component(pub async)]
 impl AsyncComponent for ContentModel {
@@ -278,7 +278,7 @@ impl AsyncComponent for ContentModel {
 														set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
 														set_vexpand: true,
 														set_hexpand: true,
-				
+
 														#[local_ref]
 														list_box -> adw::PreferencesGroup {
 															set_css_classes: &["boxed-list"],
@@ -351,7 +351,7 @@ impl AsyncComponent for ContentModel {
 			service: Service::Smart,
 			parent_list: None,
 			selected_task: None,
-			warning_revealed: true
+			warning_revealed: true,
 		};
 		let list_box = model.task_factory.widget();
 		let flap_container = model.task_details_factory.widget();
@@ -375,7 +375,8 @@ impl AsyncComponent for ContentModel {
 				self.service,
 			)),
 			ContentInput::AddTask(mut task) => {
-				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap() {
+				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
+				{
 					task.parent = parent.id.clone();
 					let mut service = self.service.get_service();
 					match service.create_task(task.clone()).await {
@@ -567,7 +568,9 @@ pub async fn select_task_list(
 	model
 		.task_entry
 		.sender()
-		.send(TaskInputInput::SetParentList(model.parent_list.as_ref().unwrap().clone()))
+		.send(TaskInputInput::SetParentList(
+			model.parent_list.as_ref().unwrap().clone(),
+		))
 		.unwrap();
 
 	Ok(())

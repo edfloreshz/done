@@ -26,13 +26,12 @@ use relm4::{
 use relm4_icons::icon_name;
 use std::str::FromStr;
 
-use crate::{fl, app::components::content::ContentInput};
+use crate::{app::components::content::ContentInput, fl};
 
+use super::tags::factory::TagInit;
 use super::{
-	sub_tasks::model::{SubTaskInit, SubTaskModel}, tags::factory::TagModel,
-};
-use super::{
-	tags::factory::TagInit,
+	sub_tasks::model::{SubTaskInit, SubTaskModel},
+	tags::factory::TagModel,
 };
 
 pub struct TaskDetailsFactoryModel {

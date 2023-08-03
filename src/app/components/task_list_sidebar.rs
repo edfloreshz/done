@@ -1,8 +1,26 @@
-use core_done::{service::Service, models::list::List};
-use relm4::{gtk::{self, traits::{OrientableExt, WidgetExt, ButtonExt, GtkWindowExt}}, adw, component::{SimpleAsyncComponent, AsyncComponentParts}, AsyncComponentSender, factory::AsyncFactoryVecDeque, prelude::DynamicIndex, RelmWidgetExt, Controller, Component, ComponentController};
+use core_done::{models::list::List, service::Service};
+use relm4::{
+	adw,
+	component::{AsyncComponentParts, SimpleAsyncComponent},
+	factory::AsyncFactoryVecDeque,
+	gtk::{
+		self,
+		traits::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
+	},
+	prelude::DynamicIndex,
+	AsyncComponentSender, Component, ComponentController, Controller,
+	RelmWidgetExt,
+};
 use relm4_icons::icon_name;
 
-use crate::{app::{models::sidebar_list::SidebarList, factories::task_list::{TaskListFactoryModel, TaskListFactoryInit}, components::list_dialog::ListDialogOutput}, fl};
+use crate::{
+	app::{
+		components::list_dialog::ListDialogOutput,
+		factories::task_list::{TaskListFactoryInit, TaskListFactoryModel},
+		models::sidebar_list::SidebarList,
+	},
+	fl,
+};
 
 use super::list_dialog::ListDialogComponent;
 
@@ -20,7 +38,7 @@ pub enum TaskListSidebarInput {
 	AddTaskListToSidebar(String),
 	ServiceSelected(Service),
 	SelectList(SidebarList),
-	DeleteTaskList(DynamicIndex, String)
+	DeleteTaskList(DynamicIndex, String),
 }
 
 #[derive(Debug)]
@@ -31,7 +49,7 @@ pub enum TaskListSidebarOutput {
 #[derive(Debug, PartialEq, Eq)]
 enum TaskListSidebarStatus {
 	Loading,
-	Loaded
+	Loaded,
 }
 
 #[relm4::component(pub async)]
@@ -85,19 +103,20 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 	) -> AsyncComponentParts<Self> {
 		let model = TaskListSidebarModel {
 			service: init,
-			status: TaskListSidebarStatus::Loaded, 
+			status: TaskListSidebarStatus::Loaded,
 			task_list_factory: AsyncFactoryVecDeque::new(
 				gtk::ListBox::default(),
 				sender.input_sender(),
 			),
-			list_entry: ListDialogComponent::builder()
-			.launch(None)
-			.forward(sender.input_sender(), |message| match message {
-				ListDialogOutput::AddTaskListToSidebar(name) => {
-					TaskListSidebarInput::AddTaskListToSidebar(name)
+			list_entry: ListDialogComponent::builder().launch(None).forward(
+				sender.input_sender(),
+				|message| match message {
+					ListDialogOutput::AddTaskListToSidebar(name) => {
+						TaskListSidebarInput::AddTaskListToSidebar(name)
+					},
+					ListDialogOutput::RenameList(_) => todo!(),
 				},
-				ListDialogOutput::RenameList(_) => todo!(),
-			})
+			),
 		};
 		sender.input(TaskListSidebarInput::ServiceSelected(model.service));
 		let task_list_widget = model.task_list_factory.widget();
@@ -105,19 +124,23 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
+	async fn update(
+		&mut self,
+		message: Self::Input,
+		sender: AsyncComponentSender<Self>,
+	) {
 		match message {
 			TaskListSidebarInput::AddTaskListToSidebar(name) => {
 				let mut guard = self.task_list_factory.guard();
 				guard.push_back(TaskListFactoryInit {
 					service: self.service,
-					list: SidebarList::Custom(List::new(&name, self.service))
+					list: SidebarList::Custom(List::new(&name, self.service)),
 				});
-			}
+			},
 			TaskListSidebarInput::OpenNewTaskListDialog => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
-			}
+			},
 			TaskListSidebarInput::ServiceSelected(service) => {
 				self.service = service;
 				self.status = TaskListSidebarStatus::Loading;
@@ -128,7 +151,8 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				guard.clear();
 				if matches!(self.service, Service::Smart) {
 					for smart_list in SidebarList::list() {
-						guard.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
+						guard
+							.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
 					}
 				} else {
 					match self.service.get_service().read_lists().await {
@@ -144,10 +168,13 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					}
 				}
 				self.status = TaskListSidebarStatus::Loaded;
-			}
-			TaskListSidebarInput::SelectList(list) => {
-				sender.output(TaskListSidebarOutput::SelectList(list, self.service.clone())).unwrap()
 			},
+			TaskListSidebarInput::SelectList(list) => sender
+				.output(TaskListSidebarOutput::SelectList(
+					list,
+					self.service.clone(),
+				))
+				.unwrap(),
 			TaskListSidebarInput::DeleteTaskList(index, list_id) => {
 				self.task_list_factory.guard().remove(index.current_index());
 				tracing::info!("Deleted task list with id: {}", list_id);

@@ -1,4 +1,4 @@
-use crate::{fl, app::models::sidebar_list::SidebarList};
+use crate::{app::models::sidebar_list::SidebarList, fl};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use core_done::models::task::Task;
 use gtk::traits::{EditableExt, ListBoxRowExt};

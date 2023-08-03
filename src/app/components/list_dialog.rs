@@ -1,4 +1,3 @@
-
 use gtk::prelude::{
 	BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, WidgetExt,
 };
@@ -12,10 +11,7 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::{
-	fl,
-};
-
+use crate::fl;
 
 #[derive(Debug)]
 pub struct ListDialogComponent {
@@ -137,10 +133,8 @@ impl Component for ListDialogComponent {
 				match self.mode {
 					ListDialogMode::New => {
 						sender
-						.output(ListDialogOutput::AddTaskListToSidebar(
-							name.to_string(),
-						))
-						.unwrap_or_default();
+							.output(ListDialogOutput::AddTaskListToSidebar(name.to_string()))
+							.unwrap_or_default();
 					},
 					ListDialogMode::Edit => {
 						sender
