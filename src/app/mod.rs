@@ -3,22 +3,25 @@ pub mod factories;
 pub mod models;
 use std::str::FromStr;
 
+use adw::glib::Propagation;
 use core_done::service::Service;
 use relm4::{
+	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
+	adw::prelude::{AdwApplicationWindowExt, NavigationPageExt},
 	component::{
 		AsyncComponent, AsyncComponentController, AsyncComponentParts,
 		AsyncController,
 	},
 	gtk::{
 		self,
-		prelude::{ApplicationExt, ApplicationExtManual, FileExt, Cast},
-		traits::{
-			ApplicationWindowExt, BoxExt, GtkWindowExt, OrientableExt, WidgetExt,
-		},
+		prelude::{ApplicationExt, ApplicationExtManual, Cast, FileExt},
+		traits::{ApplicationWindowExt, GtkWindowExt, OrientableExt, WidgetExt},
 	},
 	loading_widgets::LoadingWidgets,
-	main_adw_application, view, AsyncComponentSender, RelmWidgetExt, new_action_group, new_stateless_action, actions::{RelmActionGroup, RelmAction, ActionGroupName}, Controller, ComponentBuilder, ComponentController,
+	main_adw_application, new_action_group, new_stateless_action, view,
+	AsyncComponentSender, ComponentBuilder, ComponentController, Controller,
+	RelmWidgetExt,
 };
 
 use crate::{
@@ -34,9 +37,10 @@ use crate::{
 
 use self::{
 	components::{
+		about_dialog::AboutDialog,
 		content::{ContentInput, ContentModel},
 		services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
-		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel}, about_dialog::AboutDialog,
+		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel},
 	},
 	models::sidebar_list::SidebarList,
 };
@@ -73,12 +77,13 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-						connect_close_request[sender] => move |_| {
+			set_size_request: (320, 200),
+			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
-				gtk::Inhibit(true)
+				Propagation::Stop
 			},
 
-						#[wrap(Some)]
+			#[wrap(Some)]
 			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
 					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
 			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
@@ -92,14 +97,41 @@ impl AsyncComponent for Done {
 				None
 			},
 
-						gtk::Box {
-				set_orientation: gtk::Orientation::Horizontal,
-				append: model.services_sidebar_controller.widget(),
-								gtk::Separator::default(),
-								append: model.task_list_sidebar_controller.widget(),
-				gtk::Separator::default(),
-								append: model.content_controller.widget(),
+			add_breakpoint: first_breakpoint.clone(),
+			add_breakpoint: second_breakpoint.clone(),
+
+			#[name(outter_view)]
+			adw::NavigationSplitView {
+				set_min_sidebar_width: 470.0,
+				set_sidebar_width_fraction: 0.47,
+				#[wrap(Some)]
+				set_sidebar = &adw::NavigationPage {
+					#[name(inner_view)]
+					#[wrap(Some)]
+					set_child = &adw::NavigationSplitView {
+						set_max_sidebar_width: 260.0,
+						set_sidebar_width_fraction: 0.38,
+						#[wrap(Some)]
+						set_sidebar = &adw::NavigationPage {
+							set_title: "Services",
+							set_tag: Some("services-page"),
+							set_child: Some(model.services_sidebar_controller.widget()),
+						},
+						#[wrap(Some)]
+						set_content = &adw::NavigationPage {
+							set_title: "Lists",
+							set_tag: Some("lists-page"),
+							set_child: Some(model.task_list_sidebar_controller.widget()),
 						}
+					},
+				},
+				#[wrap(Some)]
+				set_content = &adw::NavigationPage {
+					set_title: "Tasks",
+					set_tag: Some("content-page"),
+					set_child: Some(model.content_controller.widget()),
+				}
+			},
 		}
 	}
 
@@ -182,13 +214,53 @@ impl AsyncComponent for Done {
 					},
 				}),
 			content_controller: ContentModel::builder().launch(None).detach(),
-			about_dialog
+			about_dialog,
 		};
+
+		let first_breakpoint =
+			adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+				adw::BreakpointConditionLengthType::MaxWidth,
+				800.0,
+				adw::LengthUnit::Sp,
+			));
+
+		let second_breakpoint =
+			adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+				adw::BreakpointConditionLengthType::MaxWidth,
+				500.0,
+				adw::LengthUnit::Sp,
+			));
 
 		let widgets = view_output!();
 
+		first_breakpoint.add_setter(
+			&widgets.outter_view,
+			"collapsed",
+			&true.into(),
+		);
+		first_breakpoint.add_setter(
+			&widgets.outter_view,
+			"sidebar-width-fraction",
+			&0.33.into(),
+		);
 
-        let mut actions = RelmActionGroup::<WindowActionGroup>::new();
+		second_breakpoint.add_setter(
+			&widgets.outter_view,
+			"collapsed",
+			&true.into(),
+		);
+		second_breakpoint.add_setter(
+			&widgets.outter_view,
+			"sidebar-width-fraction",
+			&0.33.into(),
+		);
+		second_breakpoint.add_setter(
+			&widgets.inner_view,
+			"collapsed",
+			&true.into(),
+		);
+
+		let mut actions = RelmActionGroup::<WindowActionGroup>::new();
 
 		let shortcuts_action = {
 			let shortcuts = widgets.shortcuts.clone();
@@ -207,7 +279,10 @@ impl AsyncComponent for Done {
 		let quit_action = {
 			let sender = sender.clone();
 			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender.input_sender().send(Self::Input::Quit).unwrap_or_default();
+				sender
+					.input_sender()
+					.send(Self::Input::Quit)
+					.unwrap_or_default();
 			})
 		};
 

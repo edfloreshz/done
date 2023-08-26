@@ -1,3 +1,4 @@
+use adw::prelude::{ActionableExt, ActionableExtManual};
 use core_done::{models::list::List, service::Service};
 use relm4::{
 	adw,
@@ -60,12 +61,11 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 
 	view! {
 		#[root]
-		gtk::Box {
-			set_orientation: gtk::Orientation::Vertical,
-			set_width_request: 350,
-			adw::HeaderBar {
+		adw::ToolbarView {
+			add_top_bar = &adw::HeaderBar {
 				set_css_classes: &["flat"],
-				set_show_end_title_buttons: false,
+				set_show_start_title_buttons: false,
+				set_show_back_button: true,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
 				pack_end = &gtk::Button {
 					set_tooltip: fl!("add-new-task-list"),
@@ -75,25 +75,35 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					connect_clicked => TaskListSidebarInput::OpenNewTaskListDialog
 				},
 			},
-			gtk::CenterBox {
-				set_vexpand: true,
-				#[watch]
-				set_visible: model.status == TaskListSidebarStatus::Loading,
-				#[wrap(Some)]
-				set_center_widget = &gtk::Spinner {
-					start: ()
+			#[wrap(Some)]
+			set_content = &gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
+				gtk::CenterBox {
+					set_vexpand: true,
+					#[watch]
+					set_visible: model.status == TaskListSidebarStatus::Loading,
+					#[wrap(Some)]
+					set_center_widget = &gtk::Spinner {
+						start: ()
+					}
+				},
+				gtk::ScrolledWindow {
+					set_vexpand: true,
+					#[watch]
+					set_visible: model.status == TaskListSidebarStatus::Loaded,
+					#[local_ref]
+					task_list_widget -> gtk::ListBox {
+						set_css_classes: &["navigation-sidebar"],
+					},
 				}
 			},
-			gtk::ScrolledWindow {
-				set_vexpand: true,
-				#[watch]
-				set_visible: model.status == TaskListSidebarStatus::Loaded,
-				#[local_ref]
-				task_list_widget -> gtk::ListBox {
-					set_css_classes: &["navigation-sidebar"],
-				},
-			}
-		}
+			add_bottom_bar = &adw::HeaderBar {
+				set_show_title: false,
+				set_show_start_title_buttons: false,
+				set_show_end_title_buttons: false,
+				set_show_back_button: false,
+			},
+		},
 	}
 
 	async fn init(
@@ -172,7 +182,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			TaskListSidebarInput::SelectList(list) => sender
 				.output(TaskListSidebarOutput::SelectList(
 					list,
-					self.service.clone(),
+					self.service
 				))
 				.unwrap(),
 			TaskListSidebarInput::DeleteTaskList(index, list_id) => {

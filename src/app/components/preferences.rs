@@ -25,14 +25,11 @@ pub struct PreferencesComponentModel {
 #[derive(Debug)]
 pub enum PreferencesComponentInput {
 	SetColorScheme(ColorScheme),
-	ToggleExtended(bool),
 	MicrosoftLogin,
 }
 
 #[derive(Debug)]
-pub enum PreferencesComponentOutput {
-	ToggleExtended(bool),
-}
+pub enum PreferencesComponentOutput {}
 
 #[relm4::component(pub async)]
 impl AsyncComponent for PreferencesComponentModel {
@@ -83,24 +80,6 @@ impl AsyncComponent for PreferencesComponentModel {
 											_ => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Default)).unwrap(),
 										}
 									},
-								},
-								adw::ActionRow {
-									set_title: fl!("extended-sidebar"),
-									set_subtitle: fl!("extended-sidebar-description"),
-									add_prefix = &gtk::Image {
-										set_icon_name: Some("dock-left-symbolic")
-									},
-									add_suffix = &gtk::Box {
-										set_halign: gtk::Align::Center,
-										set_valign: gtk::Align::Center,
-										append = &gtk::Switch {
-											set_active: model.preferences.extended,
-											connect_state_set[sender] => move |_, state| {
-												sender.input(PreferencesComponentInput::ToggleExtended(state));
-												gtk::Inhibit::default()
-											}
-										}
-									}
 								},
 							},
 							add = &adw::PreferencesGroup {
@@ -179,17 +158,6 @@ impl AsyncComponent for PreferencesComponentModel {
 				if let Err(err) = update_preferences(&self.preferences) {
 					tracing::error!("{err}")
 				}
-			},
-			PreferencesComponentInput::ToggleExtended(extended) => {
-				self.preferences.extended = extended;
-				if let Err(err) = update_preferences(&self.preferences) {
-					tracing::error!("{err}")
-				}
-				sender
-					.output(PreferencesComponentOutput::ToggleExtended(
-						self.preferences.extended,
-					))
-					.unwrap();
 			},
 			PreferencesComponentInput::MicrosoftLogin => {
 				let service = Service::Microsoft.get_service();

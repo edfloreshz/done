@@ -1,4 +1,5 @@
 use adw::{
+	glib::Propagation,
 	prelude::MessageDialogExtManual,
 	traits::{
 		ActionRowExt, EntryRowExt, ExpanderRowExt, MessageDialogExt,
@@ -206,7 +207,6 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_visible: !self.task.tags.is_empty(),
 								#[local_ref]
 								add_prefix = tags -> gtk::FlowBox {
-									set_width_request: 300,
 									set_selection_mode: gtk::SelectionMode::None,
 									set_orientation: gtk::Orientation::Horizontal,
 									set_hexpand: true
@@ -225,7 +225,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_valign: gtk::Align::Center,
 									connect_state_set[sender] => move |_, state| {
 										sender.input(TaskDetailsFactoryInput::SetToday(state));
-										gtk::Inhibit(false)
+										Propagation::Proceed
 									}
 								}
 							},
@@ -242,7 +242,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 									set_valign: gtk::Align::Center,
 									connect_state_set[sender] => move |_, state| {
 										sender.input(TaskDetailsFactoryInput::SetStatus(state));
-										gtk::Inhibit(false)
+										Propagation::Proceed
 									}
 								}
 							},

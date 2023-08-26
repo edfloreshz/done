@@ -1,7 +1,10 @@
 use gtk::prelude::GtkWindowExt;
 use relm4::{adw, gtk, ComponentParts, ComponentSender, SimpleComponent};
 
-use crate::{fl, app::config::info::{APP_ID, VERSION}};
+use crate::{
+	app::config::info::{APP_ID, VERSION},
+	fl,
+};
 
 pub struct AboutDialog {}
 

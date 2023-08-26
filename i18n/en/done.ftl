@@ -1,7 +1,7 @@
 done = Done
 
 # Warning
-alpha-warning = You are running an early stage development version. Be aware it is a work in progress and far from complete yet.
+alpha-warning = You are running an early stage development version.
 
 # New task dialog
 new-task = New task...

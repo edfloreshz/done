@@ -1,3 +1,4 @@
+pub mod about_dialog;
 pub mod content;
 pub mod delete;
 pub mod list_dialog;
@@ -6,4 +7,3 @@ pub mod services_sidebar;
 pub mod task_input;
 pub mod task_list_sidebar;
 pub mod welcome;
-pub mod about_dialog;

@@ -1,5 +1,4 @@
 use core_done::service::Service;
-use libset::{format::FileFormat, project::Project};
 use relm4::{
 	adw,
 	component::{
@@ -9,8 +8,8 @@ use relm4::{
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
-		prelude::{ButtonExt, OrientableExt},
-		traits::{BoxExt, GtkWindowExt, WidgetExt},
+		prelude::{ActionableExt, ActionableExtManual, ButtonExt, OrientableExt},
+		traits::{GtkWindowExt, WidgetExt},
 	},
 	AsyncComponentSender, RelmWidgetExt,
 };
@@ -18,8 +17,8 @@ use relm4_icons::icon_name;
 
 use crate::{
 	app::{
-		components::preferences::PreferencesComponentOutput,
-		config::preferences::Preferences, factories::service::ServiceFactoryModel, ShortcutsAction, AboutAction, QuitAction,
+		factories::service::ServiceFactoryModel, AboutAction, QuitAction,
+		ShortcutsAction,
 	},
 	fl,
 };
@@ -29,13 +28,11 @@ use super::preferences::PreferencesComponentModel;
 pub struct ServicesSidebarModel {
 	services_factory: AsyncFactoryVecDeque<ServiceFactoryModel>,
 	preferences: AsyncController<PreferencesComponentModel>,
-	extended: bool,
 }
 
 #[derive(Debug)]
 pub enum ServicesSidebarInput {
 	ServiceSelected(Service),
-	ToggleExtended(bool),
 	ReloadSidebar,
 	OpenPreferences,
 }
@@ -64,84 +61,51 @@ impl AsyncComponent for ServicesSidebarModel {
 
 	view! {
 		#[root]
+		adw::ToolbarView {
+			#[name = "services_sidebar_header"]
+			add_top_bar = &adw::HeaderBar {
+				set_css_classes: &["flat"],
+				set_show_start_title_buttons: false,
+				pack_start = &gtk::Button {
+					set_css_classes: &["flat"],
+					gtk::CenterBox {
+						#[wrap(Some)]
+						set_center_widget = &gtk::Image {
+							set_icon_name: Some("controls")
+						},
+					},
+					connect_clicked => ServicesSidebarInput::OpenPreferences
+				},
+				pack_end = &gtk::MenuButton {
+					set_tooltip: fl!("menu"),
+					set_valign: gtk::Align::Center,
+					set_css_classes: &["flat"],
+					set_icon_name: icon_name::MENU,
+					set_menu_model: Some(&primary_menu),
+				},
+				#[wrap(Some)]
+				set_title_widget = &gtk::Label {
+					set_hexpand: true,
+					set_text: fl!("done"),
+				},
+			},
+			#[wrap(Some)]
+			set_content = &gtk::ScrolledWindow {
 				gtk::Box {
-						set_css_classes: &["view"],
-						set_orientation: gtk::Orientation::Vertical,
-						#[watch]
-						set_width_request: if model.extended { 200 } else { 50 },
-						#[name = "services_sidebar_header"]
-						adw::HeaderBar {
-								#[watch]
-								set_visible: model.extended,
-								set_css_classes: &["flat"],
-								set_show_end_title_buttons: false,
-								set_show_start_title_buttons: false,
-								pack_start = &gtk::MenuButton {
-										set_tooltip: fl!("menu"),
-										set_valign: gtk::Align::Center,
-										set_css_classes: &["flat"],
-										set_icon_name: icon_name::MENU,
-										set_menu_model: Some(&primary_menu),
-								},
-								#[wrap(Some)]
-								set_title_widget = &gtk::Label {
-										set_hexpand: true,
-										set_text: fl!("done"),
-								},
+					set_orientation: gtk::Orientation::Vertical,
+					set_vexpand: true,
+					#[local_ref]
+					services_list -> gtk::ListBox {
+						set_css_classes: &["navigation-sidebar"],
+						connect_row_selected => move |_, listbox_row| {
+							if let Some(row) = listbox_row {
+								row.activate();
+							}
 						},
-						gtk::CenterBox {
-								#[watch]
-								set_visible: !model.extended,
-								set_height_request: 46,
-								set_margin_top: 8,
-								set_margin_bottom: 8,
-								#[wrap(Some)]
-								set_center_widget = &gtk::Box {
-										set_spacing: 5,
-										set_orientation: gtk::Orientation::Vertical,
-										gtk::MenuButton {
-												set_width_request: 42,
-												set_valign: gtk::Align::Center,
-												set_css_classes: &["flat"],
-												set_icon_name: icon_name::MENU,
-												set_menu_model: Some(&primary_menu),
-										},
-								},
-						},
-						gtk::ScrolledWindow {
-								gtk::Box {
-										set_orientation: gtk::Orientation::Vertical,
-										set_vexpand: true,
-										#[local_ref]
-										services_list -> gtk::ListBox {
-												set_css_classes: &["navigation-sidebar"],
-												connect_row_selected => move |_, listbox_row| {
-														if let Some(row) = listbox_row {
-																row.activate();
-														}
-												},
-										},
-										gtk::CenterBox {
-												set_vexpand: true,
-												set_valign: gtk::Align::End,
-												set_css_classes: &["navigation-sidebar"],
-												set_has_tooltip: true,
-												set_tooltip_text: Some("Preferences"),
-												#[wrap(Some)]
-												set_center_widget = &gtk::Button {
-														set_css_classes: &["flat"],
-														gtk::CenterBox {
-																#[wrap(Some)]
-																set_center_widget = &gtk::Image {
-																		set_icon_name: Some("controls")
-																},
-														},
-														connect_clicked => ServicesSidebarInput::OpenPreferences
-												},
-										}
-								}
-						}
+					},
 				}
+			},
+		},
 	}
 
 	async fn init(
@@ -164,26 +128,9 @@ impl AsyncComponent for ServicesSidebarModel {
 			}
 		}
 
-		let current_preferences =
-			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
-				project
-					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or(Preferences::new().await)
-			} else {
-				Preferences::new().await
-			};
-
 		let model = ServicesSidebarModel {
 			services_factory,
-			preferences: PreferencesComponentModel::builder().launch(()).forward(
-				sender.input_sender(),
-				|message| match message {
-					PreferencesComponentOutput::ToggleExtended(extended) => {
-						ServicesSidebarInput::ToggleExtended(extended)
-					},
-				},
-			),
-			extended: current_preferences.extended,
+			preferences: PreferencesComponentModel::builder().launch(()).detach(),
 		};
 
 		let services_list = model.services_factory.widget();
@@ -200,9 +147,6 @@ impl AsyncComponent for ServicesSidebarModel {
 	) {
 		match message {
 			ServicesSidebarInput::ReloadSidebar => {},
-			ServicesSidebarInput::ToggleExtended(extended) => {
-				self.extended = extended;
-			},
 			ServicesSidebarInput::ServiceSelected(service) => {
 				sender
 					.output(ServicesSidebarOutput::ServiceSelected(service))

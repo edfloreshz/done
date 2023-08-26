@@ -1,10 +1,11 @@
 use core_done::service::Service;
 use relm4::{
+	adw::prelude::{ActionableExt, ActionableExtManual},
 	factory::{AsyncFactoryComponent, FactoryView},
 	gtk::{self, prelude::ListBoxRowExt, traits::WidgetExt},
 	loading_widgets::LoadingWidgets,
 	prelude::DynamicIndex,
-	AsyncFactorySender,
+	AsyncFactorySender, RelmWidgetExt,
 };
 
 use crate::app::components::services_sidebar::ServicesSidebarInput;
@@ -33,30 +34,34 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 	type CommandOutput = ();
 
 	view! {
-			#[root]
-	gtk::ListBoxRow {
-		set_has_tooltip: true,
-		set_tooltip_text: Some(&self.service.to_string()),
-		gtk::CenterBox {
-			set_css_classes: &["plugin"],
-			#[wrap(Some)]
-			set_center_widget = &gtk::Image {
-				set_icon_name: Some(self.service.icon())
-			}
-		},
-		connect_activate => ServiceFactoryInput::Selected
-	}
+		#[root]
+		gtk::ListBoxRow {
+			set_tooltip: &self.service.to_string(),
+			gtk::Box {
+				set_css_classes: &["plugin"],
+				gtk::Image {
+					set_icon_name: Some(self.service.icon()),
+					set_margin_end: 10,
+				},
+				gtk::Label {
+					set_text: &self.service.to_string()
+				}
+			},
+			set_action_name: Some("navigation.push"),
+			set_action_target: Some("lists-page"),
+			connect_activate => ServiceFactoryInput::Selected
+		}
 	}
 
 	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
 		relm4::view! {
-				#[local_ref]
-				root {
-						#[name(spinner)]
-						gtk::Spinner {
-								start: ()
-						}
+			#[local_ref]
+			root {
+				#[name(spinner)]
+				gtk::Spinner {
+					start: ()
 				}
+			}
 		}
 		Some(LoadingWidgets::new(root, spinner))
 	}
@@ -88,7 +93,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 		match message {
 			ServiceFactoryInput::Selected => {
 				sender
-					.output(ServiceFactoryOutput::ServiceSelected(self.service.clone()));
+					.output(ServiceFactoryOutput::ServiceSelected(self.service));
 				tracing::info!("Service selected: {}", self.service.to_string());
 			},
 		}
