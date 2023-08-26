@@ -1,5 +1,6 @@
 use crate::app::components::content::{ContentInput, TaskInput, TaskOutput};
 use crate::fl;
+use adw::prelude::{ActionableExtManual, ActionableExt};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use core_done::models::list::List;
 use core_done::models::status::Status;
@@ -71,6 +72,8 @@ impl AsyncFactoryComponent for TaskModel {
 				set_icon_name: icon_name::INFO,
 				set_valign: gtk::Align::Center,
 				set_tooltip: fl!("edit-task-details"),
+				set_action_name: Some("navigation.push"),
+				set_action_target: Some("task-details-page"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::RevealTaskDetails(Some(index.clone())))
 				}

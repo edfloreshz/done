@@ -8,7 +8,7 @@ use relm4::{
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
-		prelude::{ActionableExt, ActionableExtManual, ButtonExt, OrientableExt},
+		prelude::{ButtonExt, OrientableExt},
 		traits::{GtkWindowExt, WidgetExt},
 	},
 	AsyncComponentSender, RelmWidgetExt,

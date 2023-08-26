@@ -72,6 +72,8 @@ impl AsyncFactoryComponent for TaskModel {
 				set_icon_name: icon_name::INFO,
 				set_valign: gtk::Align::Center,
 				set_tooltip: fl!("edit-task-details"),
+				set_action_name: Some("navigation.push"),
+				set_action_target: Some("task-details-page"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(TaskInput::RevealTaskDetails(Some(index.clone())))
 				}

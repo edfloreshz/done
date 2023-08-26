@@ -1,6 +1,6 @@
 use adw::{
 	glib::Propagation,
-	prelude::MessageDialogExtManual,
+	prelude::{MessageDialogExtManual, ActionableExt},
 	traits::{
 		ActionRowExt, EntryRowExt, ExpanderRowExt, MessageDialogExt,
 		PreferencesGroupExt, PreferencesRowExt,
@@ -121,11 +121,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								gtk::Button {
 									set_icon_name: icon_name::LEFT,
 									set_tooltip: fl!("cancel"),
+									set_action_name: Some("navigation.pop"),
 									connect_clicked => TaskDetailsFactoryInput::CancelWarning
 								},
 								gtk::Button {
 									set_icon_name: icon_name::FLOPPY,
 									set_tooltip: fl!("save"),
+									set_action_name: Some("navigation.pop"),
 									set_css_classes: &["suggested-action"],
 									connect_clicked => TaskDetailsFactoryInput::SaveTask
 								},

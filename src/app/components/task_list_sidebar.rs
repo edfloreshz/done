@@ -1,4 +1,3 @@
-use adw::prelude::{ActionableExt, ActionableExtManual};
 use core_done::{models::list::List, service::Service};
 use relm4::{
 	adw,

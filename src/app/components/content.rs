@@ -20,6 +20,7 @@ use relm4::gtk::traits::ButtonExt;
 use relm4::prelude::DynamicIndex;
 use relm4::{
 	adw, gtk,
+	adw::prelude::NavigationPageExt,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 };
 use relm4::{Component, ComponentController, Controller, RelmWidgetExt};
@@ -216,84 +217,74 @@ impl AsyncComponent for ContentModel {
 								}
 							},
 							ContentState::TasksLoaded | ContentState::Details => {
-								#[name(flap)]
-								adw::Flap {
-									set_modal: true,
-									set_locked: true,
-									#[watch]
-									set_reveal_flap: model.state == ContentState::Details,
-									#[wrap(Some)]
-									set_content = &gtk::Box {
-										set_width_request: 400,
-										set_orientation: gtk::Orientation::Vertical,
-										set_margin_all: 10,
-										gtk::Box {
-											#[watch]
-											set_orientation: gtk::Orientation::Horizontal,
-											gtk::Image {
+								#[name(split_view)]
+								adw::NavigationView {
+									add = &adw::NavigationPage {
+										#[wrap(Some)]
+										set_child = &gtk::Box {
+											set_orientation: gtk::Orientation::Vertical,
+											set_margin_all: 10,
+											gtk::Box {
 												#[watch]
-												set_visible: model.parent_list.as_ref().unwrap().smart(),
-												#[watch]
-												set_icon_name: model.parent_list.as_ref().unwrap().icon(),
-												set_margin_start: 10,
+												set_orientation: gtk::Orientation::Horizontal,
+												gtk::Image {
+													#[watch]
+													set_visible: model.parent_list.as_ref().unwrap().smart(),
+													#[watch]
+													set_icon_name: model.parent_list.as_ref().unwrap().icon(),
+													set_margin_start: 10,
+												},
+												gtk::Label {
+													#[watch]
+													set_visible: !model.parent_list.as_ref().unwrap().smart(),
+													#[watch]
+													set_text: model.parent_list.as_ref().unwrap().icon().unwrap_or_default(),
+													set_margin_start: 10,
+												},
+												gtk::Label {
+													set_css_classes: &["title-3"],
+													set_halign: gtk::Align::Start,
+													set_margin_start: 10,
+													set_margin_end: 10,
+													#[watch]
+													set_text: model.parent_list.as_ref().unwrap().name().as_str()
+												},
 											},
 											gtk::Label {
 												#[watch]
-												set_visible: !model.parent_list.as_ref().unwrap().smart(),
-												#[watch]
-												set_text: model.parent_list.as_ref().unwrap().icon().unwrap_or_default(),
-												set_margin_start: 10,
-											},
-											gtk::Label {
-												set_css_classes: &["title-3"],
+												set_visible: !model.parent_list.as_ref().unwrap().description().is_empty(),
+												set_css_classes: &["title-5"],
 												set_halign: gtk::Align::Start,
+												set_margin_bottom: 10,
 												set_margin_start: 10,
 												set_margin_end: 10,
 												#[watch]
-												set_text: model.parent_list.as_ref().unwrap().name().as_str()
+												set_text: model.parent_list.as_ref().unwrap().description().as_str()
 											},
-										},
-										gtk::Label {
-											#[watch]
-											set_visible: !model.parent_list.as_ref().unwrap().description().is_empty(),
-											set_css_classes: &["title-5"],
-											set_halign: gtk::Align::Start,
-											set_margin_bottom: 10,
-											set_margin_start: 10,
-											set_margin_end: 10,
-											#[watch]
-											set_text: model.parent_list.as_ref().unwrap().description().as_str()
-										},
-										#[name(task_container)]
-										gtk::Stack {
-											set_transition_duration: 250,
-											set_transition_type: gtk::StackTransitionType::Crossfade,
-											gtk::ScrolledWindow {
-												#[watch]
-												set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
-												set_vexpand: true,
-												set_hexpand: true,
-
-												#[local_ref]
-												list_box -> adw::PreferencesGroup {
-													set_css_classes: &["boxed-list"],
-													set_valign: gtk::Align::Fill,
-													set_margin_all: 5,
+											#[name(task_container)]
+											gtk::Stack {
+												set_transition_duration: 250,
+												set_transition_type: gtk::StackTransitionType::Crossfade,
+												gtk::ScrolledWindow {
+													#[watch]
+													set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
+													set_vexpand: true,
+													set_hexpand: true,
+	
+													#[local_ref]
+													list_box -> adw::PreferencesGroup {
+														set_css_classes: &["boxed-list"],
+														set_valign: gtk::Align::Fill,
+														set_margin_all: 5,
+													},
 												},
 											},
 										},
 									},
-									#[wrap(Some)]
-									#[local_ref]
-									set_flap = flap_container -> gtk::Box {
-										set_width_request: 400,
-										set_css_classes: &["background"],
+									add = &adw::NavigationPage {
+										set_tag: Some("task-details-page"),
+										set_child: Some(model.task_details_factory.widget()),
 									},
-									#[wrap(Some)]
-									set_separator = &gtk::Separator {
-										set_orientation: gtk::Orientation::Vertical,
-									},
-									set_flap_position: gtk::PackType::End,
 								}
 							}
 						},
@@ -346,8 +337,8 @@ impl AsyncComponent for ContentModel {
 			selected_task: None,
 			warning_revealed: true,
 		};
+		
 		let list_box = model.task_factory.widget();
-		let flap_container = model.task_details_factory.widget();
 
 		let widgets = view_output!();
 
