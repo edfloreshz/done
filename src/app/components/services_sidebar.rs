@@ -65,17 +65,7 @@ impl AsyncComponent for ServicesSidebarModel {
 			#[name = "services_sidebar_header"]
 			add_top_bar = &adw::HeaderBar {
 				set_css_classes: &["flat"],
-				set_show_start_title_buttons: false,
-				pack_start = &gtk::Button {
-					set_css_classes: &["flat"],
-					gtk::CenterBox {
-						#[wrap(Some)]
-						set_center_widget = &gtk::Image {
-							set_icon_name: Some("controls")
-						},
-					},
-					connect_clicked => ServicesSidebarInput::OpenPreferences
-				},
+				set_show_start_title_buttons: true,
 				pack_end = &gtk::MenuButton {
 					set_tooltip: fl!("menu"),
 					set_valign: gtk::Align::Center,
@@ -104,6 +94,26 @@ impl AsyncComponent for ServicesSidebarModel {
 						},
 					},
 				}
+			},
+			add_bottom_bar = &adw::HeaderBar {
+				set_show_start_title_buttons: false,
+				set_show_end_title_buttons: false,
+				#[wrap(Some)]
+				set_title_widget = &gtk::Button {
+					set_hexpand: true,
+					set_css_classes: &["flat"],
+					gtk::Box {
+						set_halign: gtk::Align::Center,
+						gtk::Image {
+							set_icon_name: Some(icon_name::CONTROLS),
+							set_margin_end: 10,
+						},
+						gtk::Label {
+							set_text: fl!("preferences"),
+						},
+					},
+					connect_clicked => ServicesSidebarInput::OpenPreferences
+				},
 			},
 		},
 	}
