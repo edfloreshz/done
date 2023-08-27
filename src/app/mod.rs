@@ -97,8 +97,44 @@ impl AsyncComponent for Done {
 				None
 			},
 
-			add_breakpoint: first_breakpoint.clone(),
-			add_breakpoint: second_breakpoint.clone(),
+			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+				adw::BreakpointConditionLengthType::MaxWidth,
+				800.0,
+				adw::LengthUnit::Sp,
+			)) {
+				add_setter: (
+					&outter_view,
+					"collapsed",
+					&true.into(),
+				),
+				add_setter: (
+					&outter_view,
+					"sidebar-width-fraction",
+					&0.33.into(),
+				)
+			},
+
+			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+				adw::BreakpointConditionLengthType::MaxWidth,
+				500.0,
+				adw::LengthUnit::Sp,
+			)) {
+				add_setter: (
+					&outter_view,
+					"collapsed",
+					&true.into(),
+				),
+				add_setter: (
+					&outter_view,
+					"sidebar-width-fraction",
+					&0.33.into(),
+				),
+				add_setter: (
+					&inner_view,
+					"collapsed",
+					&true.into(),
+				),
+			},
 
 			#[name(outter_view)]
 			adw::NavigationSplitView {
@@ -217,48 +253,7 @@ impl AsyncComponent for Done {
 			about_dialog,
 		};
 
-		let first_breakpoint =
-			adw::Breakpoint::new(adw::BreakpointCondition::new_length(
-				adw::BreakpointConditionLengthType::MaxWidth,
-				800.0,
-				adw::LengthUnit::Sp,
-			));
-
-		let second_breakpoint =
-			adw::Breakpoint::new(adw::BreakpointCondition::new_length(
-				adw::BreakpointConditionLengthType::MaxWidth,
-				500.0,
-				adw::LengthUnit::Sp,
-			));
-
 		let widgets = view_output!();
-
-		first_breakpoint.add_setter(
-			&widgets.outter_view,
-			"collapsed",
-			&true.into(),
-		);
-		first_breakpoint.add_setter(
-			&widgets.outter_view,
-			"sidebar-width-fraction",
-			&0.33.into(),
-		);
-
-		second_breakpoint.add_setter(
-			&widgets.outter_view,
-			"collapsed",
-			&true.into(),
-		);
-		second_breakpoint.add_setter(
-			&widgets.outter_view,
-			"sidebar-width-fraction",
-			&0.33.into(),
-		);
-		second_breakpoint.add_setter(
-			&widgets.inner_view,
-			"collapsed",
-			&true.into(),
-		);
 
 		let mut actions = RelmActionGroup::<WindowActionGroup>::new();
 

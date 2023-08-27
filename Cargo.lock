@@ -1093,14 +1093,12 @@ dependencies = [
 
 [[package]]
 name = "gvdb"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00421b382029e13501f36b7243dd05c3e7caa92d252790c3492e5fc7caca165b"
+checksum = "ead1f8c5dc5917b2005de786ba61cddc239cf4327f2708ee3279f7e06536a983"
 dependencies = [
  "byteorder",
  "flate2",
- "lazy_static",
- "memmap2",
  "quick-xml",
  "safe-transmute",
  "serde",
@@ -1569,15 +1567,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
-name = "memmap2"
-version = "0.5.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83faa42c0a078c393f6b29d5db232d8be22776a891f8f56e5284faee4a20b327"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "memoffset"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1937,9 +1926,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.27.1"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffc053f057dd768a56f62cd7e434c42c831d296968997e9ac1f76ea7c2d14c41"
+checksum = "eff6510e86862b57b210fd8cbe8ed3f0d7d600b9c2863cd4549a2e033c66e956"
 dependencies = [
  "memchr",
  "serde",
@@ -2019,8 +2008,8 @@ dependencies = [
 
 [[package]]
 name = "relm4-icons"
-version = "0.6.1"
-source = "git+https://github.com/edfloreshz/icons#f6d8913d8b96e6de1bca6d6eca2f7492c0dcc19a"
+version = "0.7.0"
+source = "git+https://github.com/Relm4/icons#32d6e3a50a891ad5859377a3f8b6ae4c0c87583a"
 dependencies = [
  "gtk4",
  "gvdb",
