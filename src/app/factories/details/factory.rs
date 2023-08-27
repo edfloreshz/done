@@ -20,6 +20,7 @@ use relm4::{
 	gtk,
 	gtk::glib::{clone, Cast},
 	gtk::prelude::EditableExt,
+	adw::prelude::PreferencesPageExt,
 	loading_widgets::LoadingWidgets,
 	prelude::DynamicIndex,
 	AsyncFactorySender, RelmWidgetExt,
@@ -109,440 +110,436 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 		#[root]
 		#[name(overlay)]
 		adw::ToastOverlay {
-			gtk::ScrolledWindow {
-				gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					set_margin_all: 20,
-						adw::PreferencesGroup {
-							set_title: fl!("details"),
-							#[wrap(Some)]
-							set_header_suffix = &gtk::Box {
-								set_spacing: 5,
-								gtk::Button {
-									set_icon_name: icon_name::LEFT,
-									set_tooltip: fl!("cancel"),
-									set_action_name: Some("navigation.pop"),
-									connect_clicked => TaskDetailsFactoryInput::CancelWarning
-								},
-								gtk::Button {
-									set_icon_name: icon_name::FLOPPY,
-									set_tooltip: fl!("save"),
-									set_action_name: Some("navigation.pop"),
-									set_css_classes: &["suggested-action"],
-									connect_clicked => TaskDetailsFactoryInput::SaveTask
-								},
-							},
-							adw::EntryRow {
-								set_title: fl!("title"),
-								set_text: self.task.title.as_str(),
-								set_show_apply_button: true,
-								set_enable_emoji_completion: true,
-								#[name(favorite)]
-								add_suffix = &gtk::ToggleButton {
-									set_tooltip: fl!("favorite-task"),
-									add_css_class: "opaque",
-									add_css_class: "circular",
-									#[watch]
-									set_class_active: ("favorite", self.task.favorite),
-									set_icon_name: icon_name::STAR_FILLED_ROUNDED,
-									set_valign: gtk::Align::Center,
-									connect_toggled[sender] => move |toggle| {
-										sender.input(TaskDetailsFactoryInput::SetFavorite(toggle.is_active()));
-									}
-								},
-								connect_changed[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
-								},
-								connect_activate[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
-								},
-								connect_apply[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
-								},
-							},
-							adw::EntryRow {
-								set_title: fl!("notes"),
-								set_show_apply_button: true,
-								set_enable_emoji_completion: true,
-								set_text: self.task.notes.as_deref().unwrap_or(""),
-								connect_changed[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									if buffer.is_empty() {
-										sender.input(TaskDetailsFactoryInput::SetNotes(None));
-									} else {
-										sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
-									}
-								},
-								connect_activate[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									if buffer.is_empty() {
-										sender.input(TaskDetailsFactoryInput::SetNotes(None));
-									} else {
-										sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
-									}
-								},
-								connect_apply[sender] => move |entry| {
-									let buffer = entry.text().to_string();
-									if buffer.is_empty() {
-										sender.input(TaskDetailsFactoryInput::SetNotes(None));
-									} else {
-										sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
-									}
-								},
-							},
-							adw::EntryRow {
-								set_title: fl!("add-tags"),
-								set_show_apply_button: true,
-								connect_apply[sender] => move |entry| {
-									let text = entry.text().to_string();
-									if !text.is_empty() {
-										sender.input(TaskDetailsFactoryInput::AddTag(text));
-										entry.set_text("")
-									}
-								}
-							},
-							adw::ActionRow {
-								#[watch]
-								set_visible: !self.task.tags.is_empty(),
-								#[local_ref]
-								add_prefix = tags -> gtk::FlowBox {
-									set_selection_mode: gtk::SelectionMode::None,
-									set_orientation: gtk::Orientation::Horizontal,
-									set_hexpand: true
-								}
-							},
-							adw::ActionRow {
-								set_title: fl!("today"),
-								set_subtitle: fl!("today-desc"),
-								add_prefix = &gtk::Image {
-									set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
-								},
-								add_suffix = &gtk::Switch {
-									set_tooltip: fl!("today-tooltip"),
-									#[watch]
-									set_active: self.task.today,
-									set_valign: gtk::Align::Center,
-									connect_state_set[sender] => move |_, state| {
-										sender.input(TaskDetailsFactoryInput::SetToday(state));
-										Propagation::Proceed
-									}
-								}
-							},
-							adw::ActionRow {
-								set_title: fl!("completed"),
-								set_subtitle: fl!("completed-desc"),
-								add_prefix = &gtk::Image {
-									set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE)
-								},
-								add_suffix = &gtk::Switch {
-									set_tooltip: fl!("completed-tooltip"),
-									#[watch]
-									set_active: self.task.status == Status::Completed,
-									set_valign: gtk::Align::Center,
-									connect_state_set[sender] => move |_, state| {
-										sender.input(TaskDetailsFactoryInput::SetStatus(state));
-										Propagation::Proceed
-									}
-								}
-							},
-							adw::ActionRow {
-								set_title: fl!("importance"),
-								set_subtitle: fl!("importance-desc"),
-								add_prefix = &gtk::Image {
-									set_icon_name: Some(icon_name::WARNING)
-								},
-								add_suffix = &gtk::Box {
-									set_css_classes: &["linked"],
-									#[name(low_importance)]
-									gtk::ToggleButton {
-										set_icon_name: icon_name::FLAG_OUTLINE_THIN,
-										set_tooltip: fl!("low"),
-										set_css_classes: &["flat", "image-button"],
-										set_valign: gtk::Align::Center,
-										set_active: self.task.priority == Priority::Low,
-										connect_toggled[sender] => move |toggle| {
-											if toggle.is_active() {
-												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
-											}
-										}
-									},
-									gtk::ToggleButton {
-										set_icon_name: icon_name::FLAG_OUTLINE_THICK,
-										set_tooltip: fl!("medium"),
-										set_css_classes: &["flat", "image-button"],
-										set_valign: gtk::Align::Center,
-										set_group: Some(&low_importance),
-										set_active: self.task.priority == Priority::Normal,
-										connect_toggled[sender] => move |toggle| {
-											if toggle.is_active() {
-												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
-											}
-										}
-									},
-									gtk::ToggleButton {
-										set_icon_name: icon_name::FLAG_FILLED,
-										set_tooltip: fl!("high"),
-										set_css_classes: &["flat", "image-button"],
-										set_valign: gtk::Align::Center,
-										set_group: Some(&low_importance),
-										set_active: self.task.priority == Priority::High,
-										connect_toggled[sender] => move |toggle| {
-											if toggle.is_active() {
-												sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
-											}
-										}
-									}
-								}
-							},
-						adw::ExpanderRow {
-							set_title: fl!("reminder"),
-							set_subtitle: fl!("reminder-desc"),
-							set_enable_expansion: true,
-							add_prefix = &gtk::Image {
-								set_icon_name: Some(icon_name::ALARM)
-							},
-							#[name(reminder_label)]
-							add_suffix = &gtk::Label {
-								set_css_classes: &["accent"],
-								#[watch]
-								set_label: self.selected_reminder_date.as_deref().unwrap_or(fl!("no-date-set")),
-								set_valign: gtk::Align::Center,
-							},
-							add_row = &gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								adw::ExpanderRow {
-									set_title: fl!("date"),
-									set_subtitle: fl!("set-date"),
-									add_row = &gtk::Box {
-										set_orientation: gtk::Orientation::Vertical,
-										#[name(reminder_calendar)]
-										gtk::Calendar {
-											set_margin_all: 10,
-											add_css_class: "card",
-											set_day: self.task.reminder_date.unwrap_or(Utc::now()).day() as i32,
-											set_month: self.task.reminder_date.unwrap_or(Utc::now()).month() as i32 - 1,
-											set_year: self.task.reminder_date.unwrap_or(Utc::now()).year(),
-											connect_day_selected[sender] => move |calendar| {
-												if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
-													if let Ok(date) = DateTime::<Utc>::from_str(date.to_string().as_str()) {
-														sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
-													}
-												}
-											}
-										},
-										gtk::Box {
-											set_margin_all: 10,
-											set_margin_bottom: 5,
-											set_margin_top: 5,
-											set_spacing: 10,
-											gtk::Button {
-												set_hexpand: true,
-												set_label: fl!("today"),
-												set_tooltip: fl!("set-day-today"),
-												connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today)
-											},
-											gtk::Button {
-												set_hexpand: true,
-												set_label: fl!("tomorrow"),
-												set_tooltip: fl!("set-day-tomorrow"),
-												connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow)
-											}
-										},
-										gtk::Button {
-											set_margin_all:10,
-											set_margin_top: 5,
-											set_label: fl!("none"),
-											set_tooltip: fl!("unset"),
-											connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None)
-										}
-									}
-								},
-								adw::ExpanderRow {
-									set_title: fl!("time"),
-									set_subtitle: fl!("set-time"),
-									add_row = &gtk::Box {
-										set_css_classes: &["toolbar"],
-										set_orientation: gtk::Orientation::Horizontal,
-										set_halign: gtk::Align::Center,
-										set_valign: gtk::Align::Center,
-										set_spacing: 6,
-										gtk::SpinButton {
-											set_adjustment: &gtk::Adjustment::new(
-												self.task.reminder_date.unwrap_or_default().time().hour().try_into().unwrap_or(0.0), 0.0, 23.0, 1.0, 1.0, 0.0
-											),
-											set_orientation: gtk::Orientation::Vertical,
-											set_wrap: true,
-											set_numeric: true,
-											set_tooltip: fl!("hour"),
-											connect_value_changed[sender] => move |spin| {
-												sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
-											},
-											connect_change_value[sender] => move |spin, _| {
-												sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
-											},
-										},
-										gtk::Label {
-											set_text: ":",
-										},
-										gtk::SpinButton {
-											set_adjustment: &gtk::Adjustment::new(
-												self.task.reminder_date.unwrap_or_default().time().minute().try_into().unwrap_or(0.0), 0.0, 59.0, 1.0, 1.0, 0.0
-											),
-											set_orientation: gtk::Orientation::Vertical,
-											set_wrap: true,
-											set_numeric: true,
-											set_tooltip: fl!("minute"),
-											connect_value_changed[sender] => move |spin| {
-												sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
-											},
-											connect_change_value[sender] => move |spin, _| {
-												sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
-											},
-										},
-									},
-								},
-								adw::ExpanderRow {
-									set_title: fl!("recurrence"),
-									set_subtitle: fl!("set-recurrence"),
-									add_row = &gtk::Box {
-										set_valign: gtk::Align::Center,
-										set_halign: gtk::Align::Center,
-										set_margin_all: 5,
-										set_css_classes: &["linked"],
-										gtk::ToggleButton {
-											set_label: fl!("mon"),
-											set_tooltip: fl!("monday"),
-											#[watch]
-											set_active: self.task.recurrence.monday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Monday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("tue"),
-											set_tooltip: fl!("tuesday"),
-											#[watch]
-											set_active: self.task.recurrence.tuesday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Tuesday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("wed"),
-											set_tooltip: fl!("wednesday"),
-											#[watch]
-											set_active: self.task.recurrence.wednesday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Wednesday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("thu"),
-											set_tooltip: fl!("thursday"),
-											#[watch]
-											set_active: self.task.recurrence.thursday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Thursday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("fri"),
-											set_tooltip: fl!("friday"),
-											#[watch]
-											set_active: self.task.recurrence.friday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Friday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("sat"),
-											set_tooltip: fl!("saturday"),
-											#[watch]
-											set_active: self.task.recurrence.saturday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Saturday)))
-										},
-										gtk::ToggleButton {
-											set_label: fl!("sun"),
-											set_tooltip: fl!("sunday"),
-											#[watch]
-											set_active: self.task.recurrence.sunday,
-											connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Sunday)))
-										},
-									},
-								}
+			adw::PreferencesPage {
+				add = &adw::PreferencesGroup {
+					set_title: fl!("details"),
+					#[wrap(Some)]
+					set_header_suffix = &gtk::Box {
+						set_spacing: 5,
+						gtk::Button {
+							set_icon_name: icon_name::LEFT,
+							set_tooltip: fl!("cancel"),
+							set_action_name: Some("navigation.pop"),
+							connect_clicked => TaskDetailsFactoryInput::CancelWarning
+						},
+						gtk::Button {
+							set_icon_name: icon_name::FLOPPY,
+							set_tooltip: fl!("save"),
+							set_action_name: Some("navigation.pop"),
+							set_css_classes: &["suggested-action"],
+							connect_clicked => TaskDetailsFactoryInput::SaveTask
+						},
+					},
+					adw::EntryRow {
+						set_title: fl!("title"),
+						set_text: self.task.title.as_str(),
+						set_show_apply_button: true,
+						set_enable_emoji_completion: true,
+						#[name(favorite)]
+						add_suffix = &gtk::ToggleButton {
+							set_tooltip: fl!("favorite-task"),
+							add_css_class: "opaque",
+							add_css_class: "circular",
+							#[watch]
+							set_class_active: ("favorite", self.task.favorite),
+							set_icon_name: icon_name::STAR_FILLED_ROUNDED,
+							set_valign: gtk::Align::Center,
+							connect_toggled[sender] => move |toggle| {
+								sender.input(TaskDetailsFactoryInput::SetFavorite(toggle.is_active()));
 							}
 						},
-						adw::ExpanderRow {
-							add_prefix = &gtk::Image {
-								set_icon_name: Some(icon_name::WORK_WEEK)
-							},
-							set_title: fl!("due-date"),
-							set_subtitle: fl!("set-due-date"),
-							set_enable_expansion: true,
-							#[name(due_date_label)]
-							add_suffix = &gtk::Label {
-								set_css_classes: &["accent"],
-								#[watch]
-								set_label: self.selected_due_date.as_deref().unwrap_or(fl!("no-date-set")),
-								set_valign: gtk::Align::Center,
-							},
-							add_row = &gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								#[name(due_date_calendar)]
-								gtk::Calendar {
-									set_margin_all: 10,
-									add_css_class: "card",
-									set_day: self.task.due_date.unwrap_or(Utc::now()).day() as i32,
-									set_month: self.task.due_date.unwrap_or(Utc::now()).month() as i32 - 1,
-									set_year: self.task.due_date.unwrap_or(Utc::now()).year(),
-									connect_day_selected[sender] => move |calendar| {
-										if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
-											println!("{date}");
-											if let Ok(date) = DateTime::<Utc>::from_str(date.as_str()) {
-													sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
-											}
-										}
-									}
-								},
-								gtk::Box {
-									set_margin_all: 10,
-									set_margin_bottom: 5,
-									set_margin_top: 5,
-									set_spacing: 10,
-									gtk::Button {
-										set_hexpand: true,
-										set_label: fl!("today"),
-										set_tooltip: fl!("set-day-today"),
-										connect_clicked[sender] => move |_| {
-											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
-										}
-									},
-									gtk::Button {
-										set_hexpand: true,
-										set_label: fl!("tomorrow"),
-										set_tooltip: fl!("set-day-tomorrow"),
-										connect_clicked[sender] => move |_| {
-											sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
-										}
-									}
-								},
-								gtk::Button {
-									set_margin_all:10,
-									set_margin_top: 5,
-									set_label: fl!("none"),
-									set_tooltip: fl!("unset"),
-									connect_clicked[sender] => move |_| {
-										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
-									}
-								}
+						connect_changed[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
+						},
+						connect_activate[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
+						},
+						connect_apply[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							sender.input(TaskDetailsFactoryInput::SetTitle(buffer));
+						},
+					},
+					adw::EntryRow {
+						set_title: fl!("notes"),
+						set_show_apply_button: true,
+						set_enable_emoji_completion: true,
+						set_text: self.task.notes.as_deref().unwrap_or(""),
+						connect_changed[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							if buffer.is_empty() {
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
+							} else {
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
 							}
 						},
-						#[local_ref]
-						sub_tasks -> adw::PreferencesGroup {
-							set_margin_top: 10,
-							set_title: fl!("sub-tasks"),
-							#[wrap(Some)]
-							set_header_suffix = &gtk::Button {
-								add_css_class: "flat",
-								set_icon_name: icon_name::PLUS,
-								set_tooltip: fl!("add-sub-task"),
-								connect_clicked => TaskDetailsFactoryInput::CreateSubTask
+						connect_activate[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							if buffer.is_empty() {
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
+							} else {
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
+							}
+						},
+						connect_apply[sender] => move |entry| {
+							let buffer = entry.text().to_string();
+							if buffer.is_empty() {
+								sender.input(TaskDetailsFactoryInput::SetNotes(None));
+							} else {
+								sender.input(TaskDetailsFactoryInput::SetNotes(Some(buffer)));
+							}
+						},
+					},
+					adw::EntryRow {
+						set_title: fl!("add-tags"),
+						set_show_apply_button: true,
+						connect_apply[sender] => move |entry| {
+							let text = entry.text().to_string();
+							if !text.is_empty() {
+								sender.input(TaskDetailsFactoryInput::AddTag(text));
+								entry.set_text("")
 							}
 						}
 					},
+					adw::ActionRow {
+						#[watch]
+						set_visible: !self.task.tags.is_empty(),
+						#[local_ref]
+						add_prefix = tags -> gtk::FlowBox {
+							set_selection_mode: gtk::SelectionMode::None,
+							set_orientation: gtk::Orientation::Horizontal,
+							set_hexpand: true
+						}
+					},
+					adw::ActionRow {
+						set_title: fl!("today"),
+						set_subtitle: fl!("today-desc"),
+						add_prefix = &gtk::Image {
+							set_icon_name: Some(icon_name::IMAGE_ADJUST_BRIGHTNESS)
+						},
+						add_suffix = &gtk::Switch {
+							set_tooltip: fl!("today-tooltip"),
+							#[watch]
+							set_active: self.task.today,
+							set_valign: gtk::Align::Center,
+							connect_state_set[sender] => move |_, state| {
+								sender.input(TaskDetailsFactoryInput::SetToday(state));
+								Propagation::Proceed
+							}
+						}
+					},
+					adw::ActionRow {
+						set_title: fl!("completed"),
+						set_subtitle: fl!("completed-desc"),
+						add_prefix = &gtk::Image {
+							set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE_WHOLE)
+						},
+						add_suffix = &gtk::Switch {
+							set_tooltip: fl!("completed-tooltip"),
+							#[watch]
+							set_active: self.task.status == Status::Completed,
+							set_valign: gtk::Align::Center,
+							connect_state_set[sender] => move |_, state| {
+								sender.input(TaskDetailsFactoryInput::SetStatus(state));
+								Propagation::Proceed
+							}
+						}
+					},
+					adw::ActionRow {
+						set_title: fl!("importance"),
+						set_subtitle: fl!("importance-desc"),
+						add_prefix = &gtk::Image {
+							set_icon_name: Some(icon_name::WARNING)
+						},
+						add_suffix = &gtk::Box {
+							set_css_classes: &["linked"],
+							#[name(low_importance)]
+							gtk::ToggleButton {
+								set_icon_name: icon_name::FLAG_OUTLINE_THIN,
+								set_tooltip: fl!("low"),
+								set_css_classes: &["flat", "image-button"],
+								set_valign: gtk::Align::Center,
+								set_active: self.task.priority == Priority::Low,
+								connect_toggled[sender] => move |toggle| {
+									if toggle.is_active() {
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Low as i32));
+									}
+								}
+							},
+							gtk::ToggleButton {
+								set_icon_name: icon_name::FLAG_OUTLINE_THICK,
+								set_tooltip: fl!("medium"),
+								set_css_classes: &["flat", "image-button"],
+								set_valign: gtk::Align::Center,
+								set_group: Some(&low_importance),
+								set_active: self.task.priority == Priority::Normal,
+								connect_toggled[sender] => move |toggle| {
+									if toggle.is_active() {
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::Normal as i32));
+									}
+								}
+							},
+							gtk::ToggleButton {
+								set_icon_name: icon_name::FLAG_FILLED,
+								set_tooltip: fl!("high"),
+								set_css_classes: &["flat", "image-button"],
+								set_valign: gtk::Align::Center,
+								set_group: Some(&low_importance),
+								set_active: self.task.priority == Priority::High,
+								connect_toggled[sender] => move |toggle| {
+									if toggle.is_active() {
+										sender.input(TaskDetailsFactoryInput::SetPriority(Priority::High as i32));
+									}
+								}
+							}
+						}
+					},
+					adw::ExpanderRow {
+						set_title: fl!("reminder"),
+						set_subtitle: fl!("reminder-desc"),
+						set_enable_expansion: true,
+						add_prefix = &gtk::Image {
+							set_icon_name: Some(icon_name::ALARM)
+						},
+						#[name(reminder_label)]
+						add_suffix = &gtk::Label {
+							set_css_classes: &["accent"],
+							#[watch]
+							set_label: self.selected_reminder_date.as_deref().unwrap_or(fl!("no-date-set")),
+							set_valign: gtk::Align::Center,
+						},
+						add_row = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							adw::ExpanderRow {
+								set_title: fl!("date"),
+								set_subtitle: fl!("set-date"),
+								add_row = &gtk::Box {
+									set_orientation: gtk::Orientation::Vertical,
+									#[name(reminder_calendar)]
+									gtk::Calendar {
+										set_margin_all: 10,
+										add_css_class: "card",
+										set_day: self.task.reminder_date.unwrap_or(Utc::now()).day() as i32,
+										set_month: self.task.reminder_date.unwrap_or(Utc::now()).month() as i32 - 1,
+										set_year: self.task.reminder_date.unwrap_or(Utc::now()).year(),
+										connect_day_selected[sender] => move |calendar| {
+											if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
+												if let Ok(date) = DateTime::<Utc>::from_str(date.to_string().as_str()) {
+													sender.input(TaskDetailsFactoryInput::SetReminderDate(Some(date)))
+												}
+											}
+										}
+									},
+									gtk::Box {
+										set_margin_all: 10,
+										set_margin_bottom: 5,
+										set_margin_top: 5,
+										set_spacing: 10,
+										gtk::Button {
+											set_hexpand: true,
+											set_label: fl!("today"),
+											set_tooltip: fl!("set-day-today"),
+											connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Today)
+										},
+										gtk::Button {
+											set_hexpand: true,
+											set_label: fl!("tomorrow"),
+											set_tooltip: fl!("set-day-tomorrow"),
+											connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::Tomorrow)
+										}
+									},
+									gtk::Button {
+										set_margin_all:10,
+										set_margin_top: 5,
+										set_label: fl!("none"),
+										set_tooltip: fl!("unset"),
+										connect_clicked => TaskDetailsFactoryInput::SetDate(DateTpe::Reminder, DateDay::None)
+									}
+								}
+							},
+							adw::ExpanderRow {
+								set_title: fl!("time"),
+								set_subtitle: fl!("set-time"),
+								add_row = &gtk::Box {
+									set_css_classes: &["toolbar"],
+									set_orientation: gtk::Orientation::Horizontal,
+									set_halign: gtk::Align::Center,
+									set_valign: gtk::Align::Center,
+									set_spacing: 6,
+									gtk::SpinButton {
+										set_adjustment: &gtk::Adjustment::new(
+											self.task.reminder_date.unwrap_or_default().time().hour().try_into().unwrap_or(0.0), 0.0, 23.0, 1.0, 1.0, 0.0
+										),
+										set_orientation: gtk::Orientation::Vertical,
+										set_wrap: true,
+										set_numeric: true,
+										set_tooltip: fl!("hour"),
+										connect_value_changed[sender] => move |spin| {
+											sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
+										},
+										connect_change_value[sender] => move |spin, _| {
+											sender.input(TaskDetailsFactoryInput::SetReminderHour(spin.value() as u32))
+										},
+									},
+									gtk::Label {
+										set_text: ":",
+									},
+									gtk::SpinButton {
+										set_adjustment: &gtk::Adjustment::new(
+											self.task.reminder_date.unwrap_or_default().time().minute().try_into().unwrap_or(0.0), 0.0, 59.0, 1.0, 1.0, 0.0
+										),
+										set_orientation: gtk::Orientation::Vertical,
+										set_wrap: true,
+										set_numeric: true,
+										set_tooltip: fl!("minute"),
+										connect_value_changed[sender] => move |spin| {
+											sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
+										},
+										connect_change_value[sender] => move |spin, _| {
+											sender.input(TaskDetailsFactoryInput::SetReminderMinute(spin.value() as u32))
+										},
+									},
+								},
+							},
+							adw::ExpanderRow {
+								set_title: fl!("recurrence"),
+								set_subtitle: fl!("set-recurrence"),
+								add_row = &gtk::Box {
+									set_valign: gtk::Align::Center,
+									set_halign: gtk::Align::Center,
+									set_margin_all: 5,
+									set_css_classes: &["linked"],
+									gtk::ToggleButton {
+										set_label: fl!("mon"),
+										set_tooltip: fl!("monday"),
+										#[watch]
+										set_active: self.task.recurrence.monday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Monday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("tue"),
+										set_tooltip: fl!("tuesday"),
+										#[watch]
+										set_active: self.task.recurrence.tuesday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Tuesday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("wed"),
+										set_tooltip: fl!("wednesday"),
+										#[watch]
+										set_active: self.task.recurrence.wednesday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Wednesday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("thu"),
+										set_tooltip: fl!("thursday"),
+										#[watch]
+										set_active: self.task.recurrence.thursday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Thursday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("fri"),
+										set_tooltip: fl!("friday"),
+										#[watch]
+										set_active: self.task.recurrence.friday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Friday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("sat"),
+										set_tooltip: fl!("saturday"),
+										#[watch]
+										set_active: self.task.recurrence.saturday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Saturday)))
+									},
+									gtk::ToggleButton {
+										set_label: fl!("sun"),
+										set_tooltip: fl!("sunday"),
+										#[watch]
+										set_active: self.task.recurrence.sunday,
+										connect_toggled[sender] => move |toggled_button| sender.input(TaskDetailsFactoryInput::SetDayInRecurrence((toggled_button.is_active(), Day::Sunday)))
+									},
+								},
+							}
+						}
+					},
+					adw::ExpanderRow {
+						add_prefix = &gtk::Image {
+							set_icon_name: Some(icon_name::WORK_WEEK)
+						},
+						set_title: fl!("due-date"),
+						set_subtitle: fl!("set-due-date"),
+						set_enable_expansion: true,
+						#[name(due_date_label)]
+						add_suffix = &gtk::Label {
+							set_css_classes: &["accent"],
+							#[watch]
+							set_label: self.selected_due_date.as_deref().unwrap_or(fl!("no-date-set")),
+							set_valign: gtk::Align::Center,
+						},
+						add_row = &gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							#[name(due_date_calendar)]
+							gtk::Calendar {
+								set_margin_all: 10,
+								add_css_class: "card",
+								set_day: self.task.due_date.unwrap_or(Utc::now()).day() as i32,
+								set_month: self.task.due_date.unwrap_or(Utc::now()).month() as i32 - 1,
+								set_year: self.task.due_date.unwrap_or(Utc::now()).year(),
+								connect_day_selected[sender] => move |calendar| {
+									if let Ok(date) = calendar.date().format("%Y-%m-%dT%H:%M:%SZ") {
+										println!("{date}");
+										if let Ok(date) = DateTime::<Utc>::from_str(date.as_str()) {
+												sender.input(TaskDetailsFactoryInput::SetDueDate(Some(date)))
+										}
+									}
+								}
+							},
+							gtk::Box {
+								set_margin_all: 10,
+								set_margin_bottom: 5,
+								set_margin_top: 5,
+								set_spacing: 10,
+								gtk::Button {
+									set_hexpand: true,
+									set_label: fl!("today"),
+									set_tooltip: fl!("set-day-today"),
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Today));
+									}
+								},
+								gtk::Button {
+									set_hexpand: true,
+									set_label: fl!("tomorrow"),
+									set_tooltip: fl!("set-day-tomorrow"),
+									connect_clicked[sender] => move |_| {
+										sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::Tomorrow));
+									}
+								}
+							},
+							gtk::Button {
+								set_margin_all:10,
+								set_margin_top: 5,
+								set_label: fl!("none"),
+								set_tooltip: fl!("unset"),
+								connect_clicked[sender] => move |_| {
+									sender.input(TaskDetailsFactoryInput::SetDate(DateTpe::DueDate, DateDay::None));
+								}
+							}
+						}
+					},
+				},
+				#[local_ref]
+				add = sub_tasks -> adw::PreferencesGroup {
+				set_margin_top: 10,
+					set_title: fl!("sub-tasks"),
+					#[wrap(Some)]
+					set_header_suffix = &gtk::Button {
+						add_css_class: "flat",
+						set_icon_name: icon_name::PLUS,
+						set_tooltip: fl!("add-sub-task"),
+						connect_clicked => TaskDetailsFactoryInput::CreateSubTask
+					}
 				}
 			}
 		}
