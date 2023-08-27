@@ -305,7 +305,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 								set_icon_name: Some(icon_name::ALARM)
 							},
 							#[name(reminder_label)]
-							add_action = &gtk::Label {
+							add_suffix = &gtk::Label {
 								set_css_classes: &["accent"],
 								#[watch]
 								set_label: self.selected_reminder_date.as_deref().unwrap_or(fl!("no-date-set")),
@@ -473,7 +473,7 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 							set_subtitle: fl!("set-due-date"),
 							set_enable_expansion: true,
 							#[name(due_date_label)]
-							add_action = &gtk::Label {
+							add_suffix = &gtk::Label {
 								set_css_classes: &["accent"],
 								#[watch]
 								set_label: self.selected_due_date.as_deref().unwrap_or(fl!("no-date-set")),
