@@ -92,8 +92,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 	) {
 		match message {
 			ServiceFactoryInput::Selected => {
-				sender
-					.output(ServiceFactoryOutput::ServiceSelected(self.service));
+				sender.output(ServiceFactoryOutput::ServiceSelected(self.service));
 				tracing::info!("Service selected: {}", self.service.to_string());
 			},
 		}

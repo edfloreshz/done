@@ -72,13 +72,6 @@ pub mod service {
 			Ok(())
 		}
 
-		fn logout(&self) -> anyhow::Result<()> {
-			keytar::delete_password("dev.edfloreshz.Done", "msft_expires_in")?;
-			keytar::delete_password("dev.edfloreshz.Done", "msft_access_token")?;
-			keytar::delete_password("dev.edfloreshz.Done", "msft_refresh_token")?;
-			Ok(())
-		}
-
 		async fn token(&mut self) -> Result<()> {
 			let client = reqwest::Client::new();
 			let params = cascade! {
@@ -184,6 +177,13 @@ pub mod service {
 				&response_mode=query
 				&scope=offline_access%20user.read%20tasks.read%20tasks.read.shared%20tasks.readwrite%20tasks.readwrite.shared%20");
 			open::that(url)?;
+			Ok(())
+		}
+
+		fn logout(&self) -> anyhow::Result<()> {
+			keytar::delete_password("dev.edfloreshz.Done", "msft_expires_in")?;
+			keytar::delete_password("dev.edfloreshz.Done", "msft_access_token")?;
+			keytar::delete_password("dev.edfloreshz.Done", "msft_refresh_token")?;
 			Ok(())
 		}
 

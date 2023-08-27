@@ -1,21 +1,22 @@
-use crate::app::config::appearance::ColorScheme;
-use crate::app::config::preferences::Preferences;
-use crate::fl;
-use adw::prelude::{BoxExt, GtkWindowExt, OrientableExt, WidgetExt};
 use anyhow::Result;
 use core_done::service::Service;
 use libset::format::FileFormat;
 use libset::project::Project;
-use relm4::adw::prelude::{
-	ActionRowExt, AdwWindowExt, PreferencesGroupExt, PreferencesPageExt,
-	PreferencesRowExt,
+use relm4::{
+	adw,
+	adw::prelude::{
+		ActionRowExt, AdwWindowExt, BoxExt, GtkWindowExt, OrientableExt,
+		PreferencesGroupExt, PreferencesPageExt, PreferencesRowExt, WidgetExt,
+	},
+	adw::traits::ComboRowExt,
+	component::{AsyncComponent, AsyncComponentParts},
+	gtk, AsyncComponentSender,
 };
-use relm4::adw::traits::ComboRowExt;
-use relm4::component::{AsyncComponent, AsyncComponentParts};
-use relm4::gtk::traits::ButtonExt;
-use relm4::AsyncComponentSender;
-use relm4::{adw, gtk};
 use relm4_icons::icon_name;
+
+use crate::app::config::appearance::ColorScheme;
+use crate::app::config::preferences::Preferences;
+use crate::fl;
 
 #[derive(Debug)]
 pub struct PreferencesComponentModel {
@@ -26,10 +27,13 @@ pub struct PreferencesComponentModel {
 pub enum PreferencesComponentInput {
 	SetColorScheme(ColorScheme),
 	MicrosoftLogin,
+	MicrosoftLogout,
 }
 
 #[derive(Debug)]
-pub enum PreferencesComponentOutput {}
+pub enum PreferencesComponentOutput {
+	ServiceDisabled(Service),
+}
 
 #[relm4::component(pub async)]
 impl AsyncComponent for PreferencesComponentModel {
@@ -84,18 +88,19 @@ impl AsyncComponent for PreferencesComponentModel {
 							},
 							add = &adw::PreferencesGroup {
 								set_title: fl!("services"),
-								adw::ActionRow {
+								adw::SwitchRow {
 									set_title: "Microsoft To Do",
 									set_subtitle: fl!("msft-todo-description"),
 									add_prefix = &gtk::Image {
 										set_icon_name: Some(icon_name::CHECKMARK)
 									},
-									add_suffix = &gtk::Box {
-										set_halign: gtk::Align::Center,
-										set_valign: gtk::Align::Center,
-										gtk::Button {
-											set_label: "Login",
-											connect_clicked => PreferencesComponentInput::MicrosoftLogin
+									set_active: Service::Microsoft.get_service().available(),
+									connect_active_notify[sender] => move |switch| {
+										println!("Switch activated");
+										if switch.is_active() {
+											sender.input_sender().send(PreferencesComponentInput::MicrosoftLogin).unwrap();
+										} else {
+											sender.input_sender().send(PreferencesComponentInput::MicrosoftLogout).unwrap();
 										}
 									}
 								}
@@ -163,6 +168,20 @@ impl AsyncComponent for PreferencesComponentModel {
 				let service = Service::Microsoft.get_service();
 				match service.login() {
 					Ok(_) => println!("Login started"),
+					Err(err) => eprintln!("{err}"),
+				};
+			},
+			PreferencesComponentInput::MicrosoftLogout => {
+				let service = Service::Microsoft.get_service();
+				match service.logout() {
+					Ok(_) => {
+						println!("Logout completed");
+						sender
+							.output(PreferencesComponentOutput::ServiceDisabled(
+								Service::Microsoft,
+							))
+							.unwrap();
+					},
 					Err(err) => eprintln!("{err}"),
 				};
 			},

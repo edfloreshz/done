@@ -9,8 +9,11 @@ pub trait TaskService: Sync + Send {
 	/// Sets the initial config for this service.
 	async fn handle_uri_params(&mut self, uri: Url) -> Result<()>;
 
-	/// Checks to see if the service is available.
+	/// Handles the login action.
 	fn login(&self) -> Result<()>;
+
+	/// Handles the logout action.
+	fn logout(&self) -> Result<()>;
 
 	/// Checks to see if the service is available.
 	fn available(&self) -> bool;

@@ -36,6 +36,10 @@ impl TaskService for LocalStorage {
 		Ok(())
 	}
 
+	fn logout(&self) -> anyhow::Result<()> {
+		Ok(())
+	}
+
 	fn available(&self) -> bool {
 		true
 	}

@@ -37,6 +37,7 @@ pub enum TaskListSidebarInput {
 	OpenNewTaskListDialog,
 	AddTaskListToSidebar(String),
 	ServiceSelected(Service),
+	ServiceDisabled(Service),
 	SelectList(SidebarList),
 	DeleteTaskList(DynamicIndex, String),
 }
@@ -155,6 +156,13 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				self.status = TaskListSidebarStatus::Loading;
 				sender.input(TaskListSidebarInput::LoadTaskLists);
 			},
+			TaskListSidebarInput::ServiceDisabled(service) => {
+				if self.service == service {
+					self.service = Service::Smart;
+					self.status = TaskListSidebarStatus::Loading;
+					sender.input(TaskListSidebarInput::LoadTaskLists);
+				}
+			},
 			TaskListSidebarInput::LoadTaskLists => {
 				let mut guard = self.task_list_factory.guard();
 				guard.clear();
@@ -179,10 +187,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				self.status = TaskListSidebarStatus::Loaded;
 			},
 			TaskListSidebarInput::SelectList(list) => sender
-				.output(TaskListSidebarOutput::SelectList(
-					list,
-					self.service
-				))
+				.output(TaskListSidebarOutput::SelectList(list, self.service))
 				.unwrap(),
 			TaskListSidebarInput::DeleteTaskList(index, list_id) => {
 				self.task_list_factory.guard().remove(index.current_index());

@@ -1,6 +1,6 @@
 use crate::app::components::content::{ContentInput, TaskInput, TaskOutput};
 use crate::fl;
-use adw::prelude::{ActionableExtManual, ActionableExt};
+use adw::prelude::{ActionableExt, ActionableExtManual};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use core_done::models::list::List;
 use core_done::models::status::Status;

@@ -62,8 +62,9 @@ pub struct Done {
 #[derive(Debug)]
 pub enum AppInput {
 	ServiceSelected(Service),
+	ServiceDisabled(Service),
 	ListSelected(SidebarList, Service),
-	ReloadSidebar,
+	ReloadSidebar(Service),
 	Quit,
 }
 
@@ -222,7 +223,7 @@ impl AsyncComponent for Done {
 					.await;
 				match response {
 					Ok(_) => {
-						captured_sender.input(AppInput::ReloadSidebar);
+						captured_sender.input(AppInput::ReloadSidebar(Service::Microsoft));
 						tracing::info!("Token stored");
 					},
 					Err(err) => tracing::error!("An error ocurred: {}", err),
@@ -240,6 +241,9 @@ impl AsyncComponent for Done {
 				.forward(sender.input_sender(), |message| match message {
 					ServicesSidebarOutput::ServiceSelected(service) => {
 						AppInput::ServiceSelected(service)
+					},
+					ServicesSidebarOutput::ServiceDisabled(service) => {
+						AppInput::ServiceDisabled(service)
 					},
 				}),
 			task_list_sidebar_controller: TaskListSidebarModel::builder()
@@ -308,16 +312,28 @@ impl AsyncComponent for Done {
 					.send(ContentInput::SelectList(list, service))
 					.unwrap_or_default();
 			},
-			AppInput::ReloadSidebar => self
+			AppInput::ReloadSidebar(service) => self
 				.services_sidebar_controller
 				.sender()
-				.send(ServicesSidebarInput::ReloadSidebar)
+				.send(ServicesSidebarInput::ReloadSidebar(service))
 				.unwrap_or_default(),
 			AppInput::ServiceSelected(service) => self
 				.task_list_sidebar_controller
 				.sender()
 				.send(TaskListSidebarInput::ServiceSelected(service))
 				.unwrap_or_default(),
+			AppInput::ServiceDisabled(service) => {
+				self
+					.task_list_sidebar_controller
+					.sender()
+					.send(TaskListSidebarInput::ServiceDisabled(service))
+					.unwrap_or_default();
+				self
+					.content_controller
+					.sender()
+					.send(ContentInput::ServiceDisabled(service))
+					.unwrap_or_default();
+			},
 		}
 	}
 }

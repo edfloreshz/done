@@ -23,7 +23,9 @@ use crate::{
 	fl,
 };
 
-use super::preferences::PreferencesComponentModel;
+use super::preferences::{
+	PreferencesComponentModel, PreferencesComponentOutput,
+};
 
 pub struct ServicesSidebarModel {
 	services_factory: AsyncFactoryVecDeque<ServiceFactoryModel>,
@@ -33,13 +35,14 @@ pub struct ServicesSidebarModel {
 #[derive(Debug)]
 pub enum ServicesSidebarInput {
 	ServiceSelected(Service),
-	ReloadSidebar,
+	ReloadSidebar(Service),
 	OpenPreferences,
 }
 
 #[derive(Debug)]
 pub enum ServicesSidebarOutput {
 	ServiceSelected(Service),
+	ServiceDisabled(Service),
 }
 
 #[relm4::component(pub async)]
@@ -134,13 +137,22 @@ impl AsyncComponent for ServicesSidebarModel {
 			let mut guard = services_factory.guard();
 
 			for service in Service::list() {
-				guard.push_back(service);
+				if service.get_service().available() {
+					guard.push_back(service);
+				}
 			}
 		}
 
 		let model = ServicesSidebarModel {
 			services_factory,
-			preferences: PreferencesComponentModel::builder().launch(()).detach(),
+			preferences: PreferencesComponentModel::builder().launch(()).forward(
+				sender.input_sender(),
+				move |message| match message {
+					PreferencesComponentOutput::ServiceDisabled(service) => {
+						ServicesSidebarInput::ReloadSidebar(service)
+					},
+				},
+			),
 		};
 
 		let services_list = model.services_factory.widget();
@@ -156,7 +168,18 @@ impl AsyncComponent for ServicesSidebarModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ServicesSidebarInput::ReloadSidebar => {},
+			ServicesSidebarInput::ReloadSidebar(service) => {
+				let mut guard = self.services_factory.guard();
+				guard.clear();
+				for service in Service::list() {
+					if service.get_service().available() {
+						guard.push_back(service);
+					}
+				}
+				sender
+					.output(ServicesSidebarOutput::ServiceDisabled(service))
+					.unwrap()
+			},
 			ServicesSidebarInput::ServiceSelected(service) => {
 				sender
 					.output(ServicesSidebarOutput::ServiceSelected(service))

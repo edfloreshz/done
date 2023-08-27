@@ -26,6 +26,10 @@ impl TaskService for Smart {
 		Ok(())
 	}
 
+	fn logout(&self) -> anyhow::Result<()> {
+		Ok(())
+	}
+
 	fn available(&self) -> bool {
 		true
 	}

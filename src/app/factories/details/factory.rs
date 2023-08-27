@@ -1,6 +1,6 @@
 use adw::{
 	glib::Propagation,
-	prelude::{MessageDialogExtManual, ActionableExt},
+	prelude::{ActionableExt, MessageDialogExtManual},
 	traits::{
 		ActionRowExt, EntryRowExt, ExpanderRowExt, MessageDialogExt,
 		PreferencesGroupExt, PreferencesRowExt,

@@ -19,8 +19,9 @@ use relm4::factory::AsyncFactoryVecDeque;
 use relm4::gtk::traits::ButtonExt;
 use relm4::prelude::DynamicIndex;
 use relm4::{
-	adw, gtk,
+	adw,
 	adw::prelude::NavigationPageExt,
+	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 };
 use relm4::{Component, ComponentController, Controller, RelmWidgetExt};
@@ -56,9 +57,9 @@ pub enum ContentInput {
 	RemoveTask(DynamicIndex),
 	UpdateTask(Task),
 	SelectList(SidebarList, Service),
+	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
-	DisablePlugin,
 	CleanTaskEntry,
 	CloseWarning,
 	HideFlap,
@@ -270,7 +271,7 @@ impl AsyncComponent for ContentModel {
 													set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
 													set_vexpand: true,
 													set_hexpand: true,
-	
+
 													#[local_ref]
 													list_box -> adw::PreferencesGroup {
 														set_css_classes: &["boxed-list"],
@@ -337,7 +338,7 @@ impl AsyncComponent for ContentModel {
 			selected_task: None,
 			warning_revealed: true,
 		};
-		
+
 		let list_box = model.task_factory.widget();
 
 		let widgets = view_output!();
@@ -430,7 +431,11 @@ impl AsyncComponent for ContentModel {
 					guard.push_back(TaskDetailsFactoryInit::new(task, None));
 				}
 			},
-			ContentInput::DisablePlugin => self.state = ContentState::Empty,
+			ContentInput::ServiceDisabled(service) => {
+				if self.service == service {
+					self.state = ContentState::Empty;
+				}
+			},
 			ContentInput::CleanTaskEntry => self
 				.task_entry
 				.sender()
