@@ -1,6 +1,9 @@
+use std::pin::Pin;
+
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use futures::Stream;
 use url::Url;
 
 use crate::{
@@ -44,6 +47,10 @@ impl TaskService for LocalStorage {
 		true
 	}
 
+	fn stream_support(&self) -> bool {
+		false
+	}
+
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		let task_list: Vec<Task> = tasks
 			.load::<QueryableTask>(&mut Database::establish_connection()?)?
@@ -66,6 +73,13 @@ impl TaskService for LocalStorage {
 			.collect();
 
 		Ok(response)
+	}
+
+	fn get_task_stream(
+		&mut self,
+		_parent_list: String,
+	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
+		todo!("This service does not implement streams")
 	}
 
 	async fn read_task(
@@ -138,6 +152,12 @@ impl TaskService for LocalStorage {
 
 		let results: Vec<List> = results.iter().map(|t| t.clone().into()).collect();
 		Ok(results)
+	}
+
+	fn get_task_list_stream(
+		&mut self,
+	) -> Pin<Box<dyn Stream<Item = Result<List>> + Send + '_>> {
+		todo!("This service does not implement streams")
 	}
 
 	async fn read_list(&mut self, id: String) -> Result<List> {

@@ -1,5 +1,7 @@
 pub mod service {
-	use std::collections::HashMap;
+	use std::{collections::HashMap, pin::Pin};
+
+	use async_stream::stream;
 
 	use crate::models::list::List;
 	use crate::models::task::Task;
@@ -7,6 +9,7 @@ pub mod service {
 	use anyhow::{bail, Result};
 	use async_trait::async_trait;
 	use cascade::cascade;
+	use futures::{Stream, StreamExt};
 	use msft_todo_types::{
 		checklist_item::ChecklistItem, collection::Collection, list::ToDoTaskList,
 		task::ToDoTask, token::Token,
@@ -192,6 +195,10 @@ pub mod service {
 			password.is_ok() && !password.unwrap().password.is_empty()
 		}
 
+		fn stream_support(&self) -> bool {
+			true
+		}
+
 		async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 			Ok(vec![])
 		}
@@ -228,6 +235,55 @@ pub mod service {
 				},
 				Err(error) => Err(error.into()),
 			}
+		}
+
+		fn get_task_stream(
+			&mut self,
+			parent_list: String,
+		) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
+			let page_size = 20;
+			let mut skip = 0;
+			let client = reqwest::Client::new();
+			stream! {
+				loop {
+					self.refresh_token().await?;
+					let response = client
+						.get(format!(
+						"https://graph.microsoft.com/v1.0/me/todo/lists/{}/tasks/?$top={}&$skip={}",
+						parent_list, page_size, skip
+					))
+						.bearer_auth(&self.token.access_token)
+						.send()
+						.await?;
+
+					match response.error_for_status() {
+						Ok(response) => {
+							let response_text = response.text().await?;
+							let collection: Collection<ToDoTask> =
+								serde_json::from_str(&response_text)?;
+							let tasks: Vec<Task> = collection.value.iter().map(|task| {
+								let mut task: Task = task.clone().into();
+								task.parent = parent_list.clone();
+								task
+							}).collect();
+
+							if tasks.is_empty() {
+								break;
+							}
+
+							for task in tasks {
+								yield Ok(task.clone());
+							}
+						},
+						Err(err) => {
+							tracing::error!("Error while fetching tasks: {}", err);
+							yield Err(err.into());
+						},
+					};
+					skip += page_size;
+				}
+			}
+			.boxed()
 		}
 
 		async fn read_task(
@@ -369,6 +425,47 @@ pub mod service {
 			}
 		}
 
+		fn get_task_list_stream(
+			&mut self,
+		) -> Pin<Box<dyn Stream<Item = Result<List>> + Send + '_>> {
+			let page_size = 20;
+			let mut skip = 0;
+			let client = reqwest::Client::new();
+			stream! {
+				loop {
+					self.refresh_token().await?;
+					let client = reqwest::Client::new();
+					let response = client
+						.get(format!("https://graph.microsoft.com/v1.0/me/todo/lists?$top={}&$skip={}", page_size, skip))
+						.bearer_auth(&self.token.access_token)
+						.send()
+						.await?;
+					match response.error_for_status() {
+						Ok(response) => {
+							let lists = response.text().await?;
+							let lists: Collection<ToDoTaskList> =
+								serde_json::from_str(lists.as_str())?;
+							let lists: Vec<List> = lists.value.iter().map(|t| t.clone().into()).collect();
+
+							if lists.is_empty() {
+								break;
+							}
+
+							for list in lists {
+								yield Ok(list.clone());
+							}
+						},
+						Err(err) => {
+							tracing::error!("Error while fetching tasks: {}", err);
+							yield Err(err.into());
+						},
+					};
+					skip += page_size;
+				}
+			}
+			.boxed()
+		}
+
 		async fn read_list(&mut self, id: String) -> Result<List> {
 			self.refresh_token().await?;
 			let client = reqwest::Client::new();
@@ -463,4 +560,40 @@ pub mod service {
 			}
 		}
 	}
+
+	// #[derive(Debug, Default, Clone)]
+	// pub struct MicrosoftTaskStream {
+	// 	service: Microsoft,
+	// 	client: Client,
+	// 	parent_list: String,
+	// 	page_size: usize,
+	// 	skip: usize,
+	// }
+
+	// impl Stream for MicrosoftTaskStream {
+	// 	type Item = Task;
+
+	// 	fn poll_next(
+	// 		self: Pin<&mut Self>,
+	// 		cx: &mut Context<'_>,
+	// 	) -> Poll<Option<Self::Item>> {
+	// 		let this = self.get_mut();
+	// 		this.skip += 1;
+	// 		let future = this.service.get_task(
+	// 			this.parent_list.clone(),
+	// 			this.page_size,
+	// 			this.skip,
+	// 			this.client.clone(),
+	// 		);
+	// 		match Pin::new(&mut future.boxed()).poll_unpin(cx) {
+	// 			Poll::Ready(Ok(Some(task))) => Poll::Ready(Some(task)),
+	// 			Poll::Ready(Ok(None)) => Poll::Ready(None),
+	// 			Poll::Ready(Err(err)) => {
+	// 				tracing::error!("Error while fetching tasks: {}", err);
+	// 				Poll::Ready(None)
+	// 			},
+	// 			Poll::Pending => Poll::Pending,
+	// 		}
+	// 	}
+	// }
 }

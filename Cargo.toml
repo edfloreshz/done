@@ -24,9 +24,10 @@ glib = "0.16.2"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 reqwest = "0.11.18"
+futures = "0.3.28"
 
 [dependencies.relm4-icons]
-git = "https://github.com/Relm4/icons"
+version = "0.7.0-alpha.1"
 features = [
     "menu",
     "loupe",
@@ -66,7 +67,7 @@ version = "0.4.23"
 features = ["serde"]
 
 [dependencies.relm4]
-git = "https://github.com/edfloreshz/Relm4"
+version = "0.7.0-alpha.1"
 features = ["macros", "libadwaita", "gnome_45"]
 
 [dependencies.libadwaita]

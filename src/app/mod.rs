@@ -247,7 +247,7 @@ impl AsyncComponent for Done {
 					},
 				}),
 			task_list_sidebar_controller: TaskListSidebarModel::builder()
-				.launch(Service::default())
+				.launch(Service::Smart)
 				.forward(sender.input_sender(), |message| match message {
 					TaskListSidebarOutput::SelectList(list, service) => {
 						AppInput::ListSelected(list, service)

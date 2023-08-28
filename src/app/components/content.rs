@@ -1,5 +1,4 @@
 use crate::app::components::task_input::TaskInputOutput;
-use crate::app::config::info::PROFILE;
 use crate::app::factories::details::factory::{
 	TaskDetailsFactoryInit, TaskDetailsFactoryModel,
 };
@@ -7,11 +6,11 @@ use crate::app::factories::task::{TaskInit, TaskModel};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
-use anyhow::Result;
 use chrono::{DateTime, Utc};
 use core_done::models::status::Status;
 use core_done::models::task::Task;
 use core_done::service::Service;
+use futures::stream::StreamExt;
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
@@ -24,7 +23,7 @@ use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 };
-use relm4::{Component, ComponentController, Controller, RelmWidgetExt};
+use relm4::{tokio, Component, ComponentController, Controller, RelmWidgetExt};
 use relm4_icons::icon_name;
 
 use super::task_input::{TaskInputInput, TaskInputModel};
@@ -39,7 +38,6 @@ pub struct ContentModel {
 	service: Service,
 	parent_list: Option<SidebarList>,
 	selected_task: Option<Task>,
-	warning_revealed: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -56,12 +54,12 @@ pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
 	UpdateTask(Task),
+	LoadTask(Task),
 	SelectList(SidebarList, Service),
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 	CleanTaskEntry,
-	CloseWarning,
 	HideFlap,
 	Refresh,
 }
@@ -298,14 +296,6 @@ impl AsyncComponent for ContentModel {
 					}
 				}
 			},
-			add_bottom_bar = &adw::Banner {
-				set_visible: PROFILE == "Devel",
-				#[watch]
-				set_revealed: model.warning_revealed,
-				set_title: fl!("alpha-warning"),
-				connect_button_clicked => ContentInput::CloseWarning,
-				set_button_label: Some(fl!("close"))
-			},
 		},
 	}
 
@@ -336,7 +326,6 @@ impl AsyncComponent for ContentModel {
 			service: Service::Smart,
 			parent_list: None,
 			selected_task: None,
-			warning_revealed: true,
 		};
 
 		let list_box = model.task_factory.widget();
@@ -354,11 +343,18 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ContentInput::CloseWarning => self.warning_revealed = false,
 			ContentInput::Refresh => sender.input(ContentInput::SelectList(
 				self.parent_list.as_ref().unwrap().clone(),
 				self.service,
 			)),
+			ContentInput::LoadTask(task) => {
+				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
+				{
+					let mut guard = self.task_factory.guard();
+					guard.push_back(TaskInit::new(task, parent.clone()));
+					self.state = ContentState::TasksLoaded;
+				}
+			},
 			ContentInput::AddTask(mut task) => {
 				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
 				{
@@ -415,9 +411,127 @@ impl AsyncComponent for ContentModel {
 				sender.input(ContentInput::LoadTasks(list, service));
 			},
 			ContentInput::LoadTasks(list, service) => {
-				if let Err(err) = select_task_list(self, list, service).await {
-					tracing::error!("{err}");
+				let mut guard = self.task_factory.guard();
+				guard.clear();
+				self.service = service;
+
+				let mut service = service.get_service();
+				if let Ok(tasks) = service.read_tasks().await {
+					match &list {
+						SidebarList::All => {
+							self.parent_list = Some(SidebarList::All);
+							for task in tasks {
+								guard.push_back(TaskInit::new(
+									task.clone(),
+									service.read_list(task.parent).await.unwrap(),
+								));
+							}
+							self.state = ContentState::TasksLoaded;
+						},
+						SidebarList::Today => {
+							self.parent_list = Some(SidebarList::Today);
+							for task in tasks.iter().filter(|task| {
+								task.today
+									|| task.due_date.is_some()
+										&& task.due_date.unwrap().date_naive()
+											== Utc::now().date_naive()
+							}) {
+								guard.push_back(TaskInit::new(
+									task.clone(),
+									service.read_list(task.parent.clone()).await.unwrap(),
+								));
+							}
+							self.state = ContentState::TasksLoaded;
+						},
+						SidebarList::Starred => {
+							self.parent_list = Some(SidebarList::Starred);
+							for task in tasks.iter().filter(|task| task.favorite) {
+								guard.push_back(TaskInit::new(
+									task.clone(),
+									service.read_list(task.parent.clone()).await.unwrap(),
+								));
+							}
+							self.state = ContentState::TasksLoaded;
+						},
+						SidebarList::Next7Days => {
+							self.parent_list = Some(SidebarList::Next7Days);
+							for task in tasks.iter().filter(|task: &&Task| {
+								task.due_date.is_some()
+									&& is_within_next_7_days(task.due_date.unwrap())
+							}) {
+								guard.push_back(TaskInit::new(
+									task.clone(),
+									service.read_list(task.parent.clone()).await.unwrap(),
+								));
+							}
+							self.state = ContentState::TasksLoaded;
+						},
+						SidebarList::Done => {
+							self.parent_list = Some(SidebarList::Done);
+							for task in tasks
+								.iter()
+								.filter(|task: &&Task| task.status == Status::Completed)
+							{
+								guard.push_back(TaskInit::new(
+									task.clone(),
+									service.read_list(task.parent.clone()).await.unwrap(),
+								));
+							}
+							self.state = ContentState::TasksLoaded;
+						},
+						SidebarList::Custom(list) => {
+							self.parent_list = Some(SidebarList::Custom(list.clone()));
+							let sender_clone = sender.clone();
+							let list_clone = list.clone();
+							let mut service = self.service.get_service();
+							if service.stream_support() {
+								tokio::spawn(async move {
+									let mut stream =
+										service.get_task_stream(list_clone.id.clone());
+									while let Some(task) = stream.next().await {
+										match task {
+											Ok(task) => {
+												sender_clone.input(ContentInput::LoadTask(task));
+											},
+											Err(err) => {
+												tracing::error!("{err}");
+											},
+										}
+									}
+								});
+								self.state = ContentState::Loading;
+							} else {
+								if let Ok(tasks) =
+									service.read_tasks_from_list(list_clone.id.clone()).await
+								{
+									for task in tasks {
+										guard.push_back(TaskInit::new(
+											task.clone(),
+											service.read_list(task.parent.clone()).await.unwrap(),
+										));
+									}
+									self.state = ContentState::TasksLoaded;
+								}
+							}
+						},
+					}
 				}
+
+				if guard.is_empty() && self.state != ContentState::Loading {
+					self.state = ContentState::AllDone;
+				}
+
+				if list.smart() {
+					self.state = ContentState::Empty;
+				}
+
+				self
+					.task_entry
+					.sender()
+					.send(TaskInputInput::SetParentList(
+						self.parent_list.as_ref().unwrap().clone(),
+					))
+					.unwrap();
 			},
 			ContentInput::RevealTaskDetails(index, task) => {
 				self.state = ContentState::Details;
@@ -448,121 +562,6 @@ impl AsyncComponent for ContentModel {
 		}
 		self.update_view(widgets, sender)
 	}
-}
-
-pub async fn select_task_list(
-	model: &mut ContentModel,
-	list: SidebarList,
-	service: Service,
-) -> Result<()> {
-	let mut guard = model.task_factory.guard();
-	guard.clear();
-	model.service = service;
-
-	let mut service = service.get_service();
-	match &list {
-		SidebarList::All => {
-			model.parent_list = Some(SidebarList::All);
-			if let Ok(response) = service.read_tasks().await {
-				for task in response {
-					guard.push_back(TaskInit::new(
-						task.clone(),
-						service.read_list(task.parent).await.unwrap(),
-					));
-				}
-			}
-		},
-		SidebarList::Today => {
-			model.parent_list = Some(SidebarList::Today);
-			if let Ok(response) = service.read_tasks().await {
-				for task in response.iter().filter(|task| {
-					task.today
-						|| task.due_date.is_some()
-							&& task.due_date.unwrap().date_naive() == Utc::now().date_naive()
-				}) {
-					guard.push_back(TaskInit::new(
-						task.clone(),
-						service.read_list(task.parent.clone()).await.unwrap(),
-					));
-				}
-			}
-		},
-		SidebarList::Starred => {
-			model.parent_list = Some(SidebarList::Starred);
-			if let Ok(response) = service.read_tasks().await {
-				for task in response.iter().filter(|task| task.favorite) {
-					guard.push_back(TaskInit::new(
-						task.clone(),
-						service.read_list(task.parent.clone()).await.unwrap(),
-					));
-				}
-			}
-		},
-		SidebarList::Next7Days => {
-			model.parent_list = Some(SidebarList::Next7Days);
-			if let Ok(response) = service.read_tasks().await {
-				for task in response.iter().filter(|task: &&Task| {
-					task.due_date.is_some()
-						&& is_within_next_7_days(task.due_date.unwrap())
-				}) {
-					guard.push_back(TaskInit::new(
-						task.clone(),
-						service.read_list(task.parent.clone()).await.unwrap(),
-					));
-				}
-			}
-		},
-		SidebarList::Done => {
-			model.parent_list = Some(SidebarList::Done);
-			if let Ok(response) = service.read_tasks().await {
-				for task in response
-					.iter()
-					.filter(|task: &&Task| task.status == Status::Completed)
-				{
-					guard.push_back(TaskInit::new(
-						task.clone(),
-						service.read_list(task.parent.clone()).await.unwrap(),
-					));
-				}
-			}
-		},
-		SidebarList::Custom(list) => {
-			model.parent_list = Some(SidebarList::Custom(list.clone()));
-
-			match service.read_tasks_from_list(list.id.clone()).await {
-				Ok(response) => {
-					for task in response
-						.iter()
-						.filter(|task| task.status != Status::Completed)
-						.map(|task| task.to_owned())
-					{
-						guard.push_back(TaskInit::new(task, list.clone()));
-					}
-				},
-				Err(err) => tracing::error!("{err}"),
-			}
-		},
-	}
-
-	model.state = ContentState::TasksLoaded;
-
-	if guard.is_empty() {
-		model.state = ContentState::AllDone;
-	}
-
-	if list.smart() {
-		model.state = ContentState::Empty;
-	}
-
-	model
-		.task_entry
-		.sender()
-		.send(TaskInputInput::SetParentList(
-			model.parent_list.as_ref().unwrap().clone(),
-		))
-		.unwrap();
-
-	Ok(())
 }
 
 fn is_within_next_7_days(date: DateTime<Utc>) -> bool {

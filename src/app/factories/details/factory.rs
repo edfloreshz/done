@@ -16,11 +16,11 @@ use gtk::traits::{
 };
 use relm4::{
 	adw,
+	adw::prelude::PreferencesPageExt,
 	factory::{AsyncFactoryComponent, FactoryVecDeque, FactoryView},
 	gtk,
 	gtk::glib::{clone, Cast},
 	gtk::prelude::EditableExt,
-	adw::prelude::PreferencesPageExt,
 	loading_widgets::LoadingWidgets,
 	prelude::DynamicIndex,
 	AsyncFactorySender, RelmWidgetExt,

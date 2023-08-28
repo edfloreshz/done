@@ -1,9 +1,12 @@
+use std::pin::Pin;
+
 use crate::{
 	models::{list::List, task::Task},
 	task_service::TaskService,
 };
 use anyhow::Result;
 use async_trait::async_trait;
+use futures::Stream;
 use url::Url;
 
 #[derive(Debug, Clone, Copy)]
@@ -34,6 +37,10 @@ impl TaskService for Smart {
 		true
 	}
 
+	fn stream_support(&self) -> bool {
+		false
+	}
+
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		Ok(vec![])
 	}
@@ -43,6 +50,13 @@ impl TaskService for Smart {
 		parent_list: String,
 	) -> Result<Vec<Task>> {
 		Ok(vec![])
+	}
+
+	fn get_task_stream(
+		&mut self,
+		_parent_list: String,
+	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
+		todo!("This service does not implement streams")
 	}
 
 	async fn read_task(
@@ -71,6 +85,12 @@ impl TaskService for Smart {
 
 	async fn read_lists(&mut self) -> Result<Vec<List>> {
 		Ok(vec![])
+	}
+
+	fn get_task_list_stream(
+		&mut self,
+	) -> Pin<Box<dyn Stream<Item = Result<List>> + Send + '_>> {
+		todo!("This service does not implement streams")
 	}
 
 	async fn read_list(&mut self, id: String) -> Result<List> {

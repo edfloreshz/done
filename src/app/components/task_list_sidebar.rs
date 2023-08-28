@@ -1,4 +1,5 @@
 use core_done::{models::list::List, service::Service};
+use futures::StreamExt;
 use relm4::{
 	adw,
 	component::{AsyncComponentParts, SimpleAsyncComponent},
@@ -6,9 +7,10 @@ use relm4::{
 	gtk::{
 		self,
 		traits::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
+		prelude::BoxExt,
 	},
 	prelude::DynamicIndex,
-	AsyncComponentSender, Component, ComponentController, Controller,
+	tokio, AsyncComponentSender, Component, ComponentController, Controller,
 	RelmWidgetExt,
 };
 use relm4_icons::icon_name;
@@ -26,7 +28,7 @@ use super::list_dialog::ListDialogComponent;
 
 pub struct TaskListSidebarModel {
 	service: Service,
-	status: TaskListSidebarStatus,
+	state: TaskListSidebarStatus,
 	task_list_factory: AsyncFactoryVecDeque<TaskListFactoryModel>,
 	list_entry: Controller<ListDialogComponent>,
 }
@@ -35,6 +37,7 @@ pub struct TaskListSidebarModel {
 pub enum TaskListSidebarInput {
 	LoadTaskLists,
 	OpenNewTaskListDialog,
+	LoadTaskList(List),
 	AddTaskListToSidebar(String),
 	ServiceSelected(Service),
 	ServiceDisabled(Service),
@@ -49,6 +52,7 @@ pub enum TaskListSidebarOutput {
 
 #[derive(Debug, PartialEq, Eq)]
 enum TaskListSidebarStatus {
+	Empty,
 	Loading,
 	Loaded,
 }
@@ -78,23 +82,39 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			#[wrap(Some)]
 			set_content = &gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
-				gtk::CenterBox {
-					set_vexpand: true,
-					#[watch]
-					set_visible: model.status == TaskListSidebarStatus::Loading,
-					#[wrap(Some)]
-					set_center_widget = &gtk::Spinner {
-						start: ()
-					}
-				},
-				gtk::ScrolledWindow {
-					set_vexpand: true,
-					#[watch]
-					set_visible: model.status == TaskListSidebarStatus::Loaded,
-					#[local_ref]
-					task_list_widget -> gtk::ListBox {
-						set_css_classes: &["navigation-sidebar"],
+				append = match model.state {
+					TaskListSidebarStatus::Empty => {
+						gtk::Box {
+							set_css_classes: &["empty-state"],
+							set_orientation: gtk::Orientation::Vertical,
+							gtk::Image {
+								set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED),
+								set_pixel_size: 128,
+							},
+							gtk::Label {
+								set_label: "Select a service from the sidebar to get started.",
+							}
+						}
 					},
+					TaskListSidebarStatus::Loading => {
+						gtk::CenterBox {
+							set_orientation: gtk::Orientation::Vertical,
+							#[name(spinner)]
+							#[wrap(Some)]
+							set_center_widget = &gtk::Spinner {
+								start: ()
+							}
+						}
+					},
+					TaskListSidebarStatus::Loaded => {
+						gtk::ScrolledWindow {
+							set_vexpand: true,
+							#[local_ref]
+							task_list_widget -> gtk::ListBox {
+								set_css_classes: &["navigation-sidebar"],
+							},
+						}
+					}
 				}
 			},
 			add_bottom_bar = &adw::HeaderBar {
@@ -113,7 +133,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 	) -> AsyncComponentParts<Self> {
 		let model = TaskListSidebarModel {
 			service: init,
-			status: TaskListSidebarStatus::Loaded,
+			state: TaskListSidebarStatus::Empty,
 			task_list_factory: AsyncFactoryVecDeque::new(
 				gtk::ListBox::default(),
 				sender.input_sender(),
@@ -153,38 +173,60 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			},
 			TaskListSidebarInput::ServiceSelected(service) => {
 				self.service = service;
-				self.status = TaskListSidebarStatus::Loading;
+				self.state = TaskListSidebarStatus::Loading;
 				sender.input(TaskListSidebarInput::LoadTaskLists);
 			},
 			TaskListSidebarInput::ServiceDisabled(service) => {
 				if self.service == service {
 					self.service = Service::Smart;
-					self.status = TaskListSidebarStatus::Loading;
+					self.state = TaskListSidebarStatus::Loading;
 					sender.input(TaskListSidebarInput::LoadTaskLists);
 				}
+			},
+			TaskListSidebarInput::LoadTaskList(list) => {
+				let mut guard = self.task_list_factory.guard();
+				guard.push_back(TaskListFactoryInit::new(
+					self.service,
+					SidebarList::Custom(list),
+				));
+				self.state = TaskListSidebarStatus::Loaded;
 			},
 			TaskListSidebarInput::LoadTaskLists => {
 				let mut guard = self.task_list_factory.guard();
 				guard.clear();
-				if matches!(self.service, Service::Smart) {
-					for smart_list in SidebarList::list() {
-						guard
-							.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
-					}
-				} else {
-					match self.service.get_service().read_lists().await {
-						Ok(lists) => {
-							for list in lists {
-								guard.push_back(TaskListFactoryInit::new(
-									self.service,
-									SidebarList::Custom(list),
-								));
+
+				let mut service = self.service.get_service();
+				if service.stream_support() {
+					let sender_clone = sender.clone();
+					tokio::spawn(async move {
+						let mut stream = service.get_task_list_stream();
+						while let Some(list) = stream.next().await {
+							match list {
+								Ok(list) => {
+									sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
+								},
+								Err(err) => {
+									tracing::error!("{err}");
+								},
 							}
-						},
-						Err(err) => tracing::error!("{err}"),
+						}
+					});
+				} else {
+					if matches!(self.service, Service::Smart) {
+						for smart_list in SidebarList::list() {
+							guard
+								.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
+						}
+					} else {
+						for list in service.read_lists().await.unwrap() {
+							guard.push_back(TaskListFactoryInit::new(
+								self.service,
+								SidebarList::Custom(list),
+							));
+						}
 					}
+					self.state = TaskListSidebarStatus::Loaded;
 				}
-				self.status = TaskListSidebarStatus::Loaded;
 			},
 			TaskListSidebarInput::SelectList(list) => sender
 				.output(TaskListSidebarOutput::SelectList(list, self.service))

@@ -45,6 +45,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
 
 [[package]]
+name = "async-stream"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd56dd203fef61ac097dd65721a419ddccb106b2d2b70ba60a6b529f03961a51"
+dependencies = [
+ "async-stream-impl",
+ "futures-core",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "async-stream-impl"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.18",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -212,11 +234,13 @@ name = "core_done"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-stream",
  "async-trait",
  "cascade",
  "chrono",
  "diesel",
  "diesel_migrations",
+ "futures",
  "keytar",
  "libset",
  "msft-todo-types",
@@ -431,6 +455,7 @@ dependencies = [
  "chrono",
  "core_done",
  "derive-new",
+ "futures",
  "gettext-rs",
  "glib 0.16.9",
  "glib-build-tools",
@@ -579,14 +604,13 @@ dependencies = [
 
 [[package]]
 name = "flume"
-version = "0.10.14"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1657b4441c3403d9f7b3409e47575237dac27b1b5726df654a6ecbf92f0f7577"
+checksum = "55ac459de2512911e4b674ce33cf20befaba382d05b62b008afc1c8b57cbf181"
 dependencies = [
  "futures-core",
  "futures-sink",
  "nanorand",
- "pin-project",
  "spin",
 ]
 
@@ -1844,26 +1868,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
 
 [[package]]
-name = "pin-project"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c95a7476719eab1e366eaf73d0260af3021184f18177925b07f54b30089ceead"
-dependencies = [
- "pin-project-internal",
-]
-
-[[package]]
-name = "pin-project-internal"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39407670928234ebc5e6e580247dd567ad73a3578460c5990f9503df207e8f07"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.18",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1991,8 +1995,9 @@ checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
 
 [[package]]
 name = "relm4"
-version = "0.6.1"
-source = "git+https://github.com/edfloreshz/Relm4#c7e162419356285ff4345cfc49ab3151b10ecc39"
+version = "0.7.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d307673e36bb450a4823d500d661f53e1622a685b330149c193b791687146b3f"
 dependencies = [
  "async-trait",
  "flume",
@@ -2008,8 +2013,9 @@ dependencies = [
 
 [[package]]
 name = "relm4-icons"
-version = "0.7.0"
-source = "git+https://github.com/Relm4/icons#32d6e3a50a891ad5859377a3f8b6ae4c0c87583a"
+version = "0.7.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ac16f5e6ed25fbd23c667f060fdc2f320d317a3997063503cbdeffb14dcaf06"
 dependencies = [
  "gtk4",
  "gvdb",
@@ -2017,8 +2023,9 @@ dependencies = [
 
 [[package]]
 name = "relm4-macros"
-version = "0.6.1"
-source = "git+https://github.com/edfloreshz/Relm4#c7e162419356285ff4345cfc49ab3151b10ecc39"
+version = "0.7.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d1892cdfb2df6c8bbe5a84451d3979125255e31437c0bfd14c81bde93ff0cf6"
 dependencies = [
  "proc-macro2",
  "quote",
