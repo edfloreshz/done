@@ -1,4 +1,4 @@
-use msft_todo_types::status::TaskStatus;
+use crate::services::microsoft::models::status::TaskStatus;
 use serde::{Deserialize, Serialize};
 
 #[derive(

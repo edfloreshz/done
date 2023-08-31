@@ -7,8 +7,10 @@ use url::Url;
 
 use crate::models::{list::List, task::Task};
 
+pub type PinnedStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
+
 #[async_trait]
-pub trait TaskService: Sync + Send {
+pub trait TodoProvider: Sync + Send {
 	/// Sets the initial config for this service.
 	async fn handle_uri_params(&mut self, uri: Url) -> Result<()>;
 
@@ -63,9 +65,7 @@ pub trait TaskService: Sync + Send {
 	async fn read_lists(&mut self) -> Result<Vec<List>>;
 
 	/// Returns a stream of lists.
-	fn get_task_list_stream(
-		&mut self,
-	) -> Pin<Box<dyn Stream<Item = Result<List>> + Send + '_>>;
+	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>>;
 
 	/// Read a single list from a service.
 	async fn read_list(&mut self, id: String) -> Result<List>;

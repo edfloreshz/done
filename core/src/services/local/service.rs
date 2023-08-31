@@ -12,7 +12,7 @@ use crate::{
 	schema::lists::*,
 	schema::tasks::dsl::tasks,
 	schema::tasks::*,
-	task_service::TaskService,
+	task_service::{PinnedStream, TodoProvider},
 };
 
 use super::database::{
@@ -30,7 +30,7 @@ impl LocalStorage {
 }
 
 #[async_trait]
-impl TaskService for LocalStorage {
+impl TodoProvider for LocalStorage {
 	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}
@@ -154,9 +154,7 @@ impl TaskService for LocalStorage {
 		Ok(results)
 	}
 
-	fn get_task_list_stream(
-		&mut self,
-	) -> Pin<Box<dyn Stream<Item = Result<List>> + Send + '_>> {
+	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>> {
 		todo!("This service does not implement streams")
 	}
 

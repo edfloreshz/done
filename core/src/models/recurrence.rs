@@ -1,5 +1,5 @@
-use msft_todo_types::recurrence::DayOfWeek;
-use msft_todo_types::recurrence::TaskRecurrence;
+use crate::services::microsoft::models::recurrence::DayOfWeek;
+use crate::services::microsoft::models::recurrence::TaskRecurrence;
 use serde::{Deserialize, Serialize};
 #[derive(Debug)]
 pub enum Day {

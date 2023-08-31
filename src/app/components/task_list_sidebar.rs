@@ -6,8 +6,8 @@ use relm4::{
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
-		traits::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
 		prelude::BoxExt,
+		traits::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
 	},
 	prelude::DynamicIndex,
 	tokio, AsyncComponentSender, Component, ComponentController, Controller,
@@ -199,23 +199,25 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				if service.stream_support() {
 					let sender_clone = sender.clone();
 					tokio::spawn(async move {
-						let mut stream = service.get_task_list_stream();
-						while let Some(list) = stream.next().await {
-							match list {
-								Ok(list) => {
+						let stream = service.get_task_list_stream();
+						match stream {
+							Ok(mut stream) => {
+								while let Some(list) = stream.next().await {
 									sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
-								},
-								Err(err) => {
-									tracing::error!("{err}");
-								},
-							}
-						}
+								}
+							},
+							Err(e) => {
+								tracing::error!("Error while reading task lists: {}", e);
+							},
+						};
 					});
 				} else {
 					if matches!(self.service, Service::Smart) {
 						for smart_list in SidebarList::list() {
-							guard
-								.push_back(TaskListFactoryInit::new(Service::Smart, smart_list));
+							guard.push_back(TaskListFactoryInit::new(
+								Service::Smart,
+								smart_list,
+							));
 						}
 					} else {
 						for list in service.read_lists().await.unwrap() {

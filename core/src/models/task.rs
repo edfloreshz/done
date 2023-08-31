@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use chrono::{DateTime, Utc};
-use msft_todo_types::{
+use crate::services::microsoft::models::{
 	body::{BodyType, ItemBody},
 	checklist_item::ChecklistItem,
 	task::ToDoTask,
 };
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

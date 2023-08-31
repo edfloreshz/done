@@ -500,18 +500,16 @@ impl AsyncComponent for ContentModel {
 									}
 								});
 								self.state = ContentState::Loading;
-							} else {
-								if let Ok(tasks) =
-									service.read_tasks_from_list(list_clone.id.clone()).await
-								{
-									for task in tasks {
-										guard.push_back(TaskInit::new(
-											task.clone(),
-											service.read_list(task.parent.clone()).await.unwrap(),
-										));
-									}
-									self.state = ContentState::TasksLoaded;
+							} else if let Ok(tasks) =
+								service.read_tasks_from_list(list_clone.id.clone()).await
+							{
+								for task in tasks {
+									guard.push_back(TaskInit::new(
+										task.clone(),
+										service.read_list(task.parent.clone()).await.unwrap(),
+									));
 								}
+								self.state = ContentState::TasksLoaded;
 							}
 						},
 					}

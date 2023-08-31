@@ -1,9 +1,9 @@
-use msft_todo_types::list::ToDoTaskList;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::service::Service;
+use crate::services::microsoft::models::list::ToDoTaskList;
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct List {
@@ -12,6 +12,16 @@ pub struct List {
 	pub description: String,
 	pub icon: Option<String>,
 	pub service: Service,
+}
+
+impl FromIterator<List> for List {
+	fn from_iter<T: IntoIterator<Item = List>>(iter: T) -> Self {
+		let mut list = Self::default();
+		for item in iter {
+			list.name.push_str(&item.name);
+		}
+		list
+	}
 }
 
 impl List {

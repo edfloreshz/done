@@ -1,4 +1,4 @@
-use msft_todo_types::importance::TaskImportance;
+use crate::services::microsoft::models::importance::TaskImportance;
 use serde::{Deserialize, Serialize};
 
 #[derive(
