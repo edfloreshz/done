@@ -19,7 +19,7 @@ impl From<DateTimeTimeZone> for DateTime<Utc> {
 				})
 				.expect("Failed to parse date string");
 
-		DateTime::<Utc>::from_utc(datetime, Utc)
+		DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc)
 	}
 }
 

@@ -14,7 +14,7 @@ pub static LANGUAGE_LOADER: Lazy<FluentLanguageLoader> = Lazy::new(|| {
 	let loader: FluentLanguageLoader = fluent_language_loader!();
 
 	loader
-		.load_fallback_language(&Localizations)
+		.load_languages(&Localizations, &[loader.fallback_language()])
 		.expect("Error while loading fallback language");
 
 	loader

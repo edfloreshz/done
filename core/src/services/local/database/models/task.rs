@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{NaiveDateTime, Utc};
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -94,27 +94,13 @@ impl From<QueryableTask> for Task {
 			priority: value.priority.into(),
 			sub_tasks: serde_json::from_str(&value.sub_tasks).unwrap(),
 			tags: serde_json::from_str(&value.tags).unwrap(),
-			completion_date: value
-				.completion_date
-				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
-			deletion_date: value
-				.deletion_date
-				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
-			due_date: value
-				.due_date
-				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
-			reminder_date: value
-				.reminder_date
-				.map(|ndt| DateTime::<Utc>::from_local(ndt, Utc)),
+			completion_date: value.completion_date.map(|ndt| ndt.and_utc()),
+			deletion_date: value.deletion_date.map(|ndt| ndt.and_utc()),
+			due_date: value.due_date.map(|ndt| ndt.and_utc()),
+			reminder_date: value.reminder_date.map(|ndt| ndt.and_utc()),
 			recurrence: Recurrence::from_string(value.recurrence),
-			created_date_time: DateTime::<Utc>::from_local(
-				value.created_date_time,
-				Utc,
-			),
-			last_modified_date_time: DateTime::<Utc>::from_local(
-				value.last_modified_date_time,
-				Utc,
-			),
+			created_date_time: value.created_date_time.and_utc(),
+			last_modified_date_time: value.last_modified_date_time.and_utc(),
 		}
 	}
 }
