@@ -1,20 +1,19 @@
-use std::pin::Pin;
-
+use futures::StreamExt;
 use graph_rs_sdk::{
 	oauth::{AccessToken, OAuth},
 	Graph,
 };
+use tokio::sync::mpsc::Sender;
 
+use crate::models::list::List;
 use crate::models::task::Task;
 use crate::services::microsoft::models::{
-	checklist_item::ChecklistItem, collection::Collection, list::ToDoTaskList,
-	task::ToDoTask,
+	checklist_item::ChecklistItem, collection::Collection, list::TodoTaskList,
+	task::TodoTask,
 };
 use crate::task_service::TodoProvider;
-use crate::{models::list::List, task_service::PinnedStream};
 use anyhow::{bail, Result};
 use async_trait::async_trait;
-use futures::Stream;
 use reqwest::StatusCode;
 use url::Url;
 
@@ -157,7 +156,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	fn stream_support(&self) -> bool {
-		false
+		true
 	}
 
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
@@ -177,7 +176,7 @@ impl TodoProvider for MicrosoftService {
 			.list_tasks()
 			.send()
 			.await?;
-		let collection: Collection<ToDoTask> = response.json().await?;
+		let collection: Collection<TodoTask> = response.json().await?;
 		Ok(
 			collection
 				.value
@@ -191,28 +190,30 @@ impl TodoProvider for MicrosoftService {
 		)
 	}
 
-	fn get_task_stream(
-		&mut self,
-		parent_list: String,
-	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
-		// self
-		// 	.client
-		// 	.me()
-		// 	.todo()
-		// 	.list(parent_list.clone())
-		// 	.tasks()
-		// 	.list_tasks()
-		// 	.paging()
-		// 	.stream::<ToDoTask>()
-		// 	.unwrap()
-		// 	.map(|f| f.unwrap())
-		// 	.map(|s| s.json().unwrap())
-		// 	.map(|x| {
-		// 		let list: Task = serde_json::from_value(x).unwrap();
-		// 		Ok(list.into())
-		// 	})
-		// 	.boxed()
-		todo!("This service does not implement streams")
+	fn get_tasks(&mut self, parent_list: String, tx: Sender<Task>) -> Result<()> {
+		let mut stream = self
+			.client
+			.me()
+			.todo()
+			.list(parent_list.clone())
+			.tasks()
+			.list_tasks()
+			.paging()
+			.stream::<Collection<TodoTask>>()?;
+
+		tokio::spawn(async move {
+			while let Some(task) = stream.next().await {
+				let mut tasks = task?.into_body()?.value;
+				for task in tasks {
+					let mut task: Task = task.into();
+					task.parent = parent_list.clone();
+					tx.send(task).await?;
+				}
+			}
+			anyhow::Ok(())
+		});
+
+		Ok(())
 	}
 
 	async fn read_task(
@@ -229,14 +230,14 @@ impl TodoProvider for MicrosoftService {
 			.get_tasks()
 			.send()
 			.await?;
-		let task: ToDoTask = response.json().await?;
+		let task: TodoTask = response.json().await?;
 		let mut task: Task = task.clone().into();
 		task.parent = task_list_id;
 		Ok(task)
 	}
 
 	async fn create_task(&mut self, task: Task) -> Result<()> {
-		let todo_task: ToDoTask = task.clone().into();
+		let todo_task: TodoTask = task.clone().into();
 		let response = self
 			.client
 			.me()
@@ -255,7 +256,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn update_task(&mut self, task: Task) -> Result<Task> {
-		let mut todo_task: ToDoTask = task.clone().into();
+		let mut todo_task: TodoTask = task.clone().into();
 		self
 			.update_check_list_items(
 				&task.parent,
@@ -275,7 +276,7 @@ impl TodoProvider for MicrosoftService {
 			.await?;
 
 		if response.status() == StatusCode::OK {
-			let task: ToDoTask = response.json().await?;
+			let task: TodoTask = response.json().await?;
 			Ok(task.into())
 		} else {
 			bail!("An error ocurred while updating the list.")
@@ -306,48 +307,42 @@ impl TodoProvider for MicrosoftService {
 	async fn read_lists(&mut self) -> Result<Vec<List>> {
 		let response = self.client.me().todo().lists().list_lists().send().await?;
 
-		let lists: Collection<ToDoTaskList> = response.json().await?;
+		let lists: Collection<TodoTaskList> = response.json().await?;
 		Ok(lists.value.iter().map(|t| t.clone().into()).collect())
 	}
 
-	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>> {
-		// let stream: Pin<Box<dyn Stream<Item = List> + Send>> = self
-		// 	.client
-		// 	.me()
-		// 	.todo()
-		// 	.lists()
-		// 	.list_lists()
-		// 	.paging()
-		// 	.stream::<Collection<ToDoTaskList>>()?
-		// 	.flat_map(|result| {
-		// 		stream::iter(
-		// 			result
-		// 				.unwrap()
-		// 				.into_body()
-		// 				.unwrap()
-		// 				.value
-		// 				.iter()
-		// 				.map(|l| {
-		// 					let list: List = l.clone().into();
-		// 					list
-		// 				})
-		// 				.collect::<Vec<List>>(),
-		// 		)
-		// 	})
-		// 	.boxed();
+	fn get_lists(&mut self, tx: Sender<List>) -> Result<()> {
+		let mut stream = self
+			.client
+			.me()
+			.todo()
+			.lists()
+			.list_lists()
+			.paging()
+			.stream::<Collection<TodoTaskList>>()?;
 
-		// Ok(stream)
-		todo!("This service does not implement streams")
+		tokio::spawn(async move {
+			while let Some(list) = stream.next().await {
+				let mut lists = list?.into_body()?.value;
+				for list in lists {
+					let list: List = list.into();
+					tx.send(list).await?;
+				}
+			}
+			anyhow::Ok(())
+		});
+
+		Ok(())
 	}
 
 	async fn read_list(&mut self, id: String) -> Result<List> {
 		let response = self.client.me().todo().list(id).get_lists().send().await?;
-		let list: ToDoTaskList = response.json().await?;
+		let list: TodoTaskList = response.json().await?;
 		Ok(list.into())
 	}
 
 	async fn create_list(&mut self, list: List) -> Result<List> {
-		let list: ToDoTaskList = list.into();
+		let list: TodoTaskList = list.into();
 		let response = self
 			.client
 			.me()
@@ -357,7 +352,7 @@ impl TodoProvider for MicrosoftService {
 			.send()
 			.await?;
 		if response.status() == StatusCode::CREATED {
-			let list: ToDoTaskList = response.json().await?;
+			let list: TodoTaskList = response.json().await?;
 			Ok(list.into())
 		} else {
 			bail!("An error ocurred while creating the list.")
@@ -365,7 +360,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn update_list(&mut self, list: List) -> Result<()> {
-		let list: ToDoTaskList = list.into();
+		let list: TodoTaskList = list.into();
 		let response = self
 			.client
 			.me()

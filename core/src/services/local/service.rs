@@ -1,9 +1,7 @@
-use std::pin::Pin;
-
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use futures::Stream;
+use tokio::sync::mpsc::Sender;
 use url::Url;
 
 use crate::{
@@ -12,7 +10,7 @@ use crate::{
 	schema::lists::*,
 	schema::tasks::dsl::tasks,
 	schema::tasks::*,
-	task_service::{PinnedStream, TodoProvider},
+	task_service::TodoProvider,
 };
 
 use super::database::{
@@ -75,10 +73,11 @@ impl TodoProvider for LocalStorage {
 		Ok(response)
 	}
 
-	fn get_task_stream(
+	fn get_tasks(
 		&mut self,
 		_parent_list: String,
-	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
+		_tx: Sender<Task>,
+	) -> Result<()> {
 		todo!("This service does not implement streams")
 	}
 
@@ -154,7 +153,7 @@ impl TodoProvider for LocalStorage {
 		Ok(results)
 	}
 
-	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>> {
+	fn get_lists(&mut self, _tx: Sender<List>) -> Result<()> {
 		todo!("This service does not implement streams")
 	}
 

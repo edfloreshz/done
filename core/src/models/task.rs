@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::services::microsoft::models::{
 	body::{BodyType, ItemBody},
 	checklist_item::ChecklistItem,
-	task::ToDoTask,
+	task::TodoTask,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -57,8 +57,8 @@ impl Task {
 	}
 }
 
-impl From<ToDoTask> for Task {
-	fn from(task: ToDoTask) -> Self {
+impl From<TodoTask> for Task {
+	fn from(task: TodoTask) -> Self {
 		Self {
 			id: task.id,
 			parent: String::new(),
@@ -93,7 +93,7 @@ impl From<ToDoTask> for Task {
 	}
 }
 
-impl From<Task> for ToDoTask {
+impl From<Task> for TodoTask {
 	fn from(task: Task) -> Self {
 		let checklist_items: Vec<ChecklistItem> =
 			task.sub_tasks.iter().map(|t| t.to_owned().into()).collect();

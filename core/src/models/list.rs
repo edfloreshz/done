@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::service::Service;
-use crate::services::microsoft::models::list::ToDoTaskList;
+use crate::services::microsoft::models::list::TodoTaskList;
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct List {
@@ -36,8 +36,8 @@ impl List {
 	}
 }
 
-impl From<ToDoTaskList> for List {
-	fn from(task: ToDoTaskList) -> Self {
+impl From<TodoTaskList> for List {
+	fn from(task: TodoTaskList) -> Self {
 		let display_name = remove_emoji(&task.display_name);
 		let icon = extract_emoji(&task.display_name);
 		Self {
@@ -50,7 +50,7 @@ impl From<ToDoTaskList> for List {
 	}
 }
 
-impl From<List> for ToDoTaskList {
+impl From<List> for TodoTaskList {
 	fn from(list: List) -> Self {
 		let mut display_name = list.icon.unwrap_or_default();
 		display_name.push(' ');

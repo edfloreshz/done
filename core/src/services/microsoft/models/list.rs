@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct ToDoTaskList {
+pub struct TodoTaskList {
 	pub id: String,
 	pub display_name: String,
 	pub is_owner: bool,

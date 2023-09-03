@@ -1,12 +1,10 @@
-use std::pin::Pin;
-
 use crate::{
 	models::{list::List, task::Task},
-	task_service::{PinnedStream, TodoProvider},
+	task_service::TodoProvider,
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use futures::Stream;
+use tokio::sync::mpsc::Sender;
 use url::Url;
 
 #[derive(Debug, Clone, Copy)]
@@ -52,10 +50,7 @@ impl TodoProvider for Smart {
 		Ok(vec![])
 	}
 
-	fn get_task_stream(
-		&mut self,
-		_parent_list: String,
-	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>> {
+	fn get_tasks(&mut self, parent_list: String, tx: Sender<Task>) -> Result<()> {
 		todo!("This service does not implement streams")
 	}
 
@@ -87,7 +82,7 @@ impl TodoProvider for Smart {
 		Ok(vec![])
 	}
 
-	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>> {
+	fn get_lists(&mut self, tx: Sender<List>) -> Result<()> {
 		todo!("This service does not implement streams")
 	}
 

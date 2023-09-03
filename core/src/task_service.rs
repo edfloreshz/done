@@ -1,13 +1,9 @@
-use std::pin::Pin;
-
 use anyhow::Result;
 use async_trait::async_trait;
-use futures::Stream;
+use tokio::sync::mpsc::Sender;
 use url::Url;
 
 use crate::models::{list::List, task::Task};
-
-pub type PinnedStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
 #[async_trait]
 pub trait TodoProvider: Sync + Send {
@@ -29,11 +25,8 @@ pub trait TodoProvider: Sync + Send {
 	/// Read all the tasks from a service, regardless of parent list.
 	async fn read_tasks(&mut self) -> Result<Vec<Task>>;
 
-	/// Returns a stream of tasks from a list.
-	fn get_task_stream(
-		&mut self,
-		parent_list: String,
-	) -> Pin<Box<dyn Stream<Item = Result<Task>> + Send + '_>>;
+	/// Returns a stream of tasks from a list and sends it through a channel.
+	fn get_tasks(&mut self, parent_list: String, tx: Sender<Task>) -> Result<()>;
 
 	/// Read all the tasks from a list.
 	async fn read_tasks_from_list(
@@ -64,8 +57,8 @@ pub trait TodoProvider: Sync + Send {
 	/// Read all the lists from a service.
 	async fn read_lists(&mut self) -> Result<Vec<List>>;
 
-	/// Returns a stream of lists.
-	fn get_task_list_stream(&mut self) -> Result<PinnedStream<List>>;
+	/// Returns a stream of lists and sends it through a channel.
+	fn get_lists(&mut self, tx: Sender<List>) -> Result<()>;
 
 	/// Read a single list from a service.
 	async fn read_list(&mut self, id: String) -> Result<List>;

@@ -8,7 +8,7 @@ use super::{
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct ToDoTask {
+pub struct TodoTask {
 	pub id: String,
 	pub body: ItemBody,
 	pub categories: Vec<String>,
