@@ -1,7 +1,9 @@
+use std::pin::Pin;
+
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use tokio::sync::mpsc::Sender;
+use futures::Stream;
 use url::Url;
 
 use crate::{
@@ -76,8 +78,7 @@ impl TodoProvider for LocalStorage {
 	fn get_tasks(
 		&mut self,
 		_parent_list: String,
-		_tx: Sender<Task>,
-	) -> Result<()> {
+	) -> Result<Pin<Box<dyn Stream<Item = Task> + Send>>> {
 		todo!("This service does not implement streams")
 	}
 
@@ -153,7 +154,7 @@ impl TodoProvider for LocalStorage {
 		Ok(results)
 	}
 
-	fn get_lists(&mut self, _tx: Sender<List>) -> Result<()> {
+	fn get_lists(&mut self) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
 		todo!("This service does not implement streams")
 	}
 

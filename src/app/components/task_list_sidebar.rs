@@ -1,4 +1,5 @@
 use core_done::{models::list::List, service::Service};
+use futures::StreamExt;
 use relm4::{
 	adw,
 	component::{AsyncComponentParts, SimpleAsyncComponent},
@@ -115,14 +116,8 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 						}
 					}
 				}
-			},
-			add_bottom_bar = &adw::HeaderBar {
-				set_show_title: false,
-				set_show_start_title_buttons: false,
-				set_show_end_title_buttons: false,
-				set_show_back_button: false,
-			},
-		},
+			}
+		}
 	}
 
 	async fn init(
@@ -198,9 +193,8 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				if service.stream_support() {
 					let sender_clone = sender.clone();
 					tokio::spawn(async move {
-						let (tx, mut rx) = tokio::sync::mpsc::channel(100);
-						service.get_lists(tx).unwrap();
-						while let Some(list) = rx.recv().await {
+						let mut stream = service.get_lists().unwrap();
+						while let Some(list) = stream.next().await {
 							sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
 						}
 					});

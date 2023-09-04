@@ -10,6 +10,7 @@ use chrono::{DateTime, Utc};
 use core_done::models::status::Status;
 use core_done::models::task::Task;
 use core_done::service::Service;
+use futures::StreamExt;
 use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
@@ -485,9 +486,9 @@ impl AsyncComponent for ContentModel {
 							let mut service = self.service.get_service();
 							if service.stream_support() {
 								tokio::spawn(async move {
-									let (tx, mut rx) = tokio::sync::mpsc::channel(100);
-									service.get_tasks(list_clone.id.clone(), tx).unwrap();
-									while let Some(task) = rx.recv().await {
+									let mut stream =
+										service.get_tasks(list_clone.id.clone()).unwrap();
+									while let Some(task) = stream.next().await {
 										sender_clone.input(ContentInput::LoadTask(task));
 									}
 								});

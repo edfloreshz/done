@@ -1,9 +1,10 @@
-use futures::StreamExt;
+use std::pin::Pin;
+
+use futures::{Stream, StreamExt};
 use graph_rs_sdk::{
 	oauth::{AccessToken, OAuth},
 	Graph,
 };
-use tokio::sync::mpsc::Sender;
 
 use crate::models::list::List;
 use crate::models::task::Task;
@@ -190,7 +191,10 @@ impl TodoProvider for MicrosoftService {
 		)
 	}
 
-	fn get_tasks(&mut self, parent_list: String, tx: Sender<Task>) -> Result<()> {
+	fn get_tasks(
+		&mut self,
+		parent_list: String,
+	) -> Result<Pin<Box<dyn Stream<Item = Task> + Send>>> {
 		let mut stream = self
 			.client
 			.me()
@@ -199,21 +203,44 @@ impl TodoProvider for MicrosoftService {
 			.tasks()
 			.list_tasks()
 			.paging()
-			.stream::<Collection<TodoTask>>()?;
+			.stream::<serde_json::Value>()?
+			.filter_map(|response| async move {
+				match response {
+					Ok(response) => {
+						let value = response.into_body().ok()?;
+						let tasks: Vec<serde_json::Value> =
+							value["value"].as_array().cloned()?;
 
-		tokio::spawn(async move {
-			while let Some(task) = stream.next().await {
-				let mut tasks = task?.into_body()?.value;
-				for task in tasks {
-					let mut task: Task = task.into();
-					task.parent = parent_list.clone();
-					tx.send(task).await?;
+						let task_list = tasks
+							.iter()
+							.flat_map(|t| serde_json::from_value(t.clone()).ok())
+							.flat_map(|t: TodoTask| Some(t.into()))
+							.collect::<Vec<Task>>();
+
+						Some(task_list)
+					},
+					Err(err) => {
+						tracing::error!("There was an error getting the tasks: {}", err);
+						None
+					},
 				}
-			}
-			anyhow::Ok(())
-		});
+			})
+			.flat_map(|tasks| futures::stream::iter(tasks))
+			.boxed();
 
-		Ok(())
+		// tokio::spawn(async move {
+		// 	while let Some(task) = stream.next().await {
+		// 		let mut tasks = task?.into_body()?.value;
+		// 		for task in tasks {
+		// 			let mut task: Task = task.into();
+		// 			task.parent = parent_list.clone();
+		// 			tx.send(task).await?;
+		// 		}
+		// 	}
+		// 	anyhow::Ok(())
+		// });
+
+		Ok(stream)
 	}
 
 	async fn read_task(
@@ -311,7 +338,7 @@ impl TodoProvider for MicrosoftService {
 		Ok(lists.value.iter().map(|t| t.clone().into()).collect())
 	}
 
-	fn get_lists(&mut self, tx: Sender<List>) -> Result<()> {
+	fn get_lists(&mut self) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
 		let mut stream = self
 			.client
 			.me()
@@ -319,20 +346,43 @@ impl TodoProvider for MicrosoftService {
 			.lists()
 			.list_lists()
 			.paging()
-			.stream::<Collection<TodoTaskList>>()?;
+			.stream::<serde_json::Value>()?
+			.filter_map(|response| async move {
+				match response {
+					Ok(response) => {
+						let value = response.into_body().ok()?;
+						let lists: Vec<serde_json::Value> =
+							value["value"].as_array().cloned()?;
 
-		tokio::spawn(async move {
-			while let Some(list) = stream.next().await {
-				let mut lists = list?.into_body()?.value;
-				for list in lists {
-					let list: List = list.into();
-					tx.send(list).await?;
+						let list = lists
+							.iter()
+							.flat_map(|t| serde_json::from_value(t.clone()).ok())
+							.flat_map(|t: TodoTaskList| Some(t.into()))
+							.collect::<Vec<List>>();
+
+						Some(list)
+					},
+					Err(err) => {
+						tracing::error!("There was an error getting the tasks: {}", err);
+						None
+					},
 				}
-			}
-			anyhow::Ok(())
-		});
+			})
+			.flat_map(|tasks| futures::stream::iter(tasks))
+			.boxed();
 
-		Ok(())
+		// tokio::spawn(async move {
+		// 	while let Some(list) = stream.next().await {
+		// 		let mut lists = list?.into_body()?.value;
+		// 		for list in lists {
+		// 			let list: List = list.into();
+		// 			tx.send(list).await?;
+		// 		}
+		// 	}
+		// 	anyhow::Ok(())
+		// });
+
+		Ok(stream)
 	}
 
 	async fn read_list(&mut self, id: String) -> Result<List> {
