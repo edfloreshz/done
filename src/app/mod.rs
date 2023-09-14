@@ -65,6 +65,7 @@ pub enum AppInput {
 	ServiceDisabled(Service),
 	ListSelected(SidebarList, Service),
 	ReloadSidebar(Service),
+	CleanContent,
 	Quit,
 }
 
@@ -252,6 +253,7 @@ impl AsyncComponent for Done {
 					TaskListSidebarOutput::SelectList(list, service) => {
 						AppInput::ListSelected(list, service)
 					},
+					TaskListSidebarOutput::CleanContent => AppInput::CleanContent,
 				}),
 			content_controller: ContentModel::builder().launch(None).detach(),
 			about_dialog,
@@ -312,6 +314,11 @@ impl AsyncComponent for Done {
 					.send(ContentInput::SelectList(list, service))
 					.unwrap_or_default();
 			},
+			AppInput::CleanContent => self
+				.content_controller
+				.sender()
+				.send(ContentInput::Clean)
+				.unwrap_or_default(),
 			AppInput::ReloadSidebar(service) => self
 				.services_sidebar_controller
 				.sender()

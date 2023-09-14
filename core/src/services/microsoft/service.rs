@@ -225,7 +225,7 @@ impl TodoProvider for MicrosoftService {
 					},
 				}
 			})
-			.flat_map(|tasks| futures::stream::iter(tasks))
+			.flat_map(futures::stream::iter)
 			.boxed();
 
 		// tokio::spawn(async move {
@@ -368,7 +368,7 @@ impl TodoProvider for MicrosoftService {
 					},
 				}
 			})
-			.flat_map(|tasks| futures::stream::iter(tasks))
+			.flat_map(futures::stream::iter)
 			.boxed();
 
 		// tokio::spawn(async move {

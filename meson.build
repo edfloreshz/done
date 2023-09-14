@@ -62,7 +62,7 @@ endif
 
 subdir('data')
 subdir('po')
-subdir('src/application')
+subdir('src/app/config')
 
 summary({
     'prefix': get_option('prefix'),

@@ -15,8 +15,8 @@ config = configure_file(
 # Copy the info.rs output to the source directory.
 run_command(
   'cp',
-  meson.project_build_root() / 'src' / 'application' / 'info.rs',
-  meson.project_source_root() / 'src' / 'application' / 'info.rs',
+  meson.project_build_root() / 'src' / 'app' / 'config' / 'info.rs',
+  meson.project_source_root() / 'src' / 'app'/ 'config' / 'info.rs',
   check: true
 )
 

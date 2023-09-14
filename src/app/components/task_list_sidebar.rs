@@ -48,6 +48,7 @@ pub enum TaskListSidebarInput {
 #[derive(Debug)]
 pub enum TaskListSidebarOutput {
 	SelectList(SidebarList, Service),
+	CleanContent,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -155,11 +156,23 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 	) {
 		match message {
 			TaskListSidebarInput::AddTaskListToSidebar(name) => {
-				let mut guard = self.task_list_factory.guard();
-				guard.push_back(TaskListFactoryInit {
-					service: self.service,
-					list: SidebarList::Custom(List::new(&name, self.service)),
-				});
+				match self
+					.service
+					.get_service()
+					.create_list(List::new(&name, self.service))
+					.await
+				{
+					Ok(list) => {
+						let mut guard = self.task_list_factory.guard();
+						guard.push_back(TaskListFactoryInit::new(
+							self.service,
+							SidebarList::Custom(list),
+						));
+					},
+					Err(e) => {
+						tracing::error!("Error while creating task list: {}", e);
+					},
+				}
 			},
 			TaskListSidebarInput::OpenNewTaskListDialog => {
 				let list_entry = self.list_entry.widget();
@@ -221,8 +234,17 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				.output(TaskListSidebarOutput::SelectList(list, self.service))
 				.unwrap(),
 			TaskListSidebarInput::DeleteTaskList(index, list_id) => {
-				self.task_list_factory.guard().remove(index.current_index());
-				tracing::info!("Deleted task list with id: {}", list_id);
+				match self.service.get_service().delete_list(list_id).await {
+					Ok(_) => {
+						self.task_list_factory.guard().remove(index.current_index());
+						sender
+							.output(TaskListSidebarOutput::CleanContent)
+							.unwrap_or_default()
+					},
+					Err(e) => {
+						tracing::error!("Error while deleting task list: {}", e);
+					},
+				}
 			},
 		}
 	}

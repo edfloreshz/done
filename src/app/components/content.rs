@@ -62,6 +62,7 @@ pub enum ContentInput {
 	CleanTaskEntry,
 	HideFlap,
 	Refresh,
+	Clean,
 }
 
 #[derive(Debug)]
@@ -343,6 +344,7 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
+			ContentInput::Clean => self.state = ContentState::AllDone,
 			ContentInput::Refresh => sender.input(ContentInput::SelectList(
 				self.parent_list.as_ref().unwrap().clone(),
 				self.service,

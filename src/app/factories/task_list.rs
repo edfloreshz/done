@@ -118,6 +118,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_halign: gtk::Align::Start,
 						set_wrap: true,
 						set_natural_wrap_mode: gtk::NaturalWrapMode::Word,
+						#[watch]
 						set_text: self.list.name().as_str(),
 						set_margin_all: 5,
 					},
