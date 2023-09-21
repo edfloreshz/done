@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2023-09-21
+- Fixed a bug where the app would fail to start if migrations failed to execute.
+
 ## [0.1.8] - 2023-09-21
 - Brand new UI.
 - Multiple services are now supported, starting with Microsoft To Do.
