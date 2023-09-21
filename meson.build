@@ -19,7 +19,6 @@ glib_compile_schemas = find_program('glib-compile-schemas', required: true)
 desktop_file_validate = find_program('desktop-file-validate', required: false)
 appstream_util = find_program('appstream-util', required: false)
 cargo = find_program('cargo', required: true)
-rustup = find_program('rustup', required: true)
 
 version = meson.project_version()
 

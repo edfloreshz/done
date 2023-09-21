@@ -124,53 +124,15 @@ impl AsyncComponent for ContentModel {
 						set_visible: model.parent_list.is_none(),
 						append: model.welcome.widget()
 					},
-					gtk::Box {
-						#[watch]
-						set_visible: model.parent_list.is_some(),
-						set_orientation: gtk::Orientation::Vertical,
-						#[transition = "Crossfade"]
-						append = match model.state {
-							ContentState::Empty => {
-								gtk::CenterBox {
-									set_vexpand: true,
-									set_hexpand: true,
-									set_orientation: gtk::Orientation::Vertical,
-									set_halign: gtk::Align::Center,
-									set_valign: gtk::Align::Center,
-									#[wrap(Some)]
-									set_center_widget = &gtk::Box {
-										set_orientation: gtk::Orientation::Vertical,
-										set_margin_all: 24,
-										set_spacing: 24,
-										gtk::Picture {
-											#[watch]
-											set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/empty.png"),
-											set_margin_all: 70
-										},
-										gtk::Label {
-											set_css_classes: &["title-3", "accent"],
-											set_wrap: true,
-											set_wrap_mode: gtk::pango::WrapMode::Word,
-											set_justify: gtk::Justification::Center,
-											#[watch]
-											set_text: fl!("list-empty"),
-										},
-										gtk::Label {
-											set_css_classes: &["body"],
-											#[watch]
-											set_text: fl!("instructions"),
-											set_wrap: true,
-											set_wrap_mode: gtk::pango::WrapMode::Word,
-											set_justify: gtk::Justification::Center,
-										},
-									}
-								}
-							},
-							ContentState::AllDone => {
-								gtk::Box {
-									set_orientation: gtk::Orientation::Vertical,
+					adw::Clamp {
+						gtk::Box {
+							#[watch]
+							set_visible: model.parent_list.is_some(),
+							set_orientation: gtk::Orientation::Vertical,
+							#[transition = "Crossfade"]
+							append = match model.state {
+								ContentState::Empty => {
 									gtk::CenterBox {
-										#[watch]
 										set_vexpand: true,
 										set_hexpand: true,
 										set_orientation: gtk::Orientation::Vertical,
@@ -183,7 +145,7 @@ impl AsyncComponent for ContentModel {
 											set_spacing: 24,
 											gtk::Picture {
 												#[watch]
-												set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/checked.png"),
+												set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/empty.png"),
 												set_margin_all: 70
 											},
 											gtk::Label {
@@ -192,109 +154,148 @@ impl AsyncComponent for ContentModel {
 												set_wrap_mode: gtk::pango::WrapMode::Word,
 												set_justify: gtk::Justification::Center,
 												#[watch]
-												set_text: fl!("all-done"),
+												set_text: fl!("list-empty"),
 											},
 											gtk::Label {
 												set_css_classes: &["body"],
 												#[watch]
-												set_text: fl!("all-done-instructions"),
+												set_text: fl!("instructions"),
 												set_wrap: true,
 												set_wrap_mode: gtk::pango::WrapMode::Word,
 												set_justify: gtk::Justification::Center,
 											},
 										}
-									},
-								}
-							},
-							ContentState::Loading => {
-								gtk::CenterBox {
-									set_orientation: gtk::Orientation::Vertical,
-									#[name(spinner)]
-									#[wrap(Some)]
-									set_center_widget = &gtk::Spinner {
-										start: ()
 									}
-								}
-							},
-							ContentState::TasksLoaded | ContentState::Details => {
-								#[name(split_view)]
-								adw::NavigationView {
-									add = &adw::NavigationPage {
-										#[wrap(Some)]
-										set_child = &gtk::Box {
+								},
+								ContentState::AllDone => {
+									gtk::Box {
+										set_orientation: gtk::Orientation::Vertical,
+										gtk::CenterBox {
+											#[watch]
+											set_vexpand: true,
+											set_hexpand: true,
 											set_orientation: gtk::Orientation::Vertical,
-											set_margin_all: 10,
-											gtk::Box {
-												#[watch]
-												set_orientation: gtk::Orientation::Horizontal,
-												gtk::Image {
+											set_halign: gtk::Align::Center,
+											set_valign: gtk::Align::Center,
+											#[wrap(Some)]
+											set_center_widget = &gtk::Box {
+												set_orientation: gtk::Orientation::Vertical,
+												set_margin_all: 24,
+												set_spacing: 24,
+												gtk::Picture {
 													#[watch]
-													set_visible: model.parent_list.as_ref().unwrap().smart(),
+													set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/checked.png"),
+													set_margin_all: 70
+												},
+												gtk::Label {
+													set_css_classes: &["title-3", "accent"],
+													set_wrap: true,
+													set_wrap_mode: gtk::pango::WrapMode::Word,
+													set_justify: gtk::Justification::Center,
 													#[watch]
-													set_icon_name: model.parent_list.as_ref().unwrap().icon(),
-													set_margin_start: 10,
+													set_text: fl!("all-done"),
+												},
+												gtk::Label {
+													set_css_classes: &["body"],
+													#[watch]
+													set_text: fl!("all-done-instructions"),
+													set_wrap: true,
+													set_wrap_mode: gtk::pango::WrapMode::Word,
+													set_justify: gtk::Justification::Center,
+												},
+											}
+										},
+									}
+								},
+								ContentState::Loading => {
+									gtk::CenterBox {
+										set_orientation: gtk::Orientation::Vertical,
+										#[name(spinner)]
+										#[wrap(Some)]
+										set_center_widget = &gtk::Spinner {
+											start: ()
+										}
+									}
+								},
+								ContentState::TasksLoaded | ContentState::Details => {
+									#[name(split_view)]
+									adw::NavigationView {
+										add = &adw::NavigationPage {
+											#[wrap(Some)]
+											set_child = &gtk::Box {
+												set_orientation: gtk::Orientation::Vertical,
+												set_margin_all: 10,
+												gtk::Box {
+													#[watch]
+													set_orientation: gtk::Orientation::Horizontal,
+													gtk::Image {
+														#[watch]
+														set_visible: model.parent_list.as_ref().unwrap().smart(),
+														#[watch]
+														set_icon_name: model.parent_list.as_ref().unwrap().icon(),
+														set_margin_start: 10,
+													},
+													gtk::Label {
+														#[watch]
+														set_visible: !model.parent_list.as_ref().unwrap().smart(),
+														#[watch]
+														set_text: model.parent_list.as_ref().unwrap().icon().unwrap_or_default(),
+														set_margin_start: 10,
+													},
+													gtk::Label {
+														set_css_classes: &["title-3"],
+														set_halign: gtk::Align::Start,
+														set_margin_start: 10,
+														set_margin_end: 10,
+														#[watch]
+														set_text: model.parent_list.as_ref().unwrap().name().as_str()
+													},
 												},
 												gtk::Label {
 													#[watch]
-													set_visible: !model.parent_list.as_ref().unwrap().smart(),
-													#[watch]
-													set_text: model.parent_list.as_ref().unwrap().icon().unwrap_or_default(),
-													set_margin_start: 10,
-												},
-												gtk::Label {
-													set_css_classes: &["title-3"],
+													set_visible: !model.parent_list.as_ref().unwrap().description().is_empty(),
+													set_css_classes: &["title-5"],
 													set_halign: gtk::Align::Start,
+													set_margin_bottom: 10,
 													set_margin_start: 10,
 													set_margin_end: 10,
 													#[watch]
-													set_text: model.parent_list.as_ref().unwrap().name().as_str()
+													set_text: model.parent_list.as_ref().unwrap().description().as_str()
 												},
-											},
-											gtk::Label {
-												#[watch]
-												set_visible: !model.parent_list.as_ref().unwrap().description().is_empty(),
-												set_css_classes: &["title-5"],
-												set_halign: gtk::Align::Start,
-												set_margin_bottom: 10,
-												set_margin_start: 10,
-												set_margin_end: 10,
-												#[watch]
-												set_text: model.parent_list.as_ref().unwrap().description().as_str()
-											},
-											#[name(task_container)]
-											gtk::Stack {
-												set_transition_duration: 250,
-												set_transition_type: gtk::StackTransitionType::Crossfade,
-												gtk::ScrolledWindow {
-													#[watch]
-													set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
-													set_vexpand: true,
-													set_hexpand: true,
-
-													#[local_ref]
-													list_box -> adw::PreferencesGroup {
-														set_css_classes: &["boxed-list"],
-														set_valign: gtk::Align::Fill,
-														set_margin_all: 5,
+												#[name(task_container)]
+												gtk::Stack {
+													set_transition_duration: 250,
+													set_transition_type: gtk::StackTransitionType::Crossfade,
+													gtk::ScrolledWindow {
+														#[watch]
+														set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
+														set_vexpand: true,
+														set_hexpand: true,
+														#[local_ref]
+														list_box -> adw::PreferencesGroup {
+															set_css_classes: &["boxed-list"],
+															set_valign: gtk::Align::Fill,
+															set_margin_all: 5,
+														},
 													},
 												},
 											},
 										},
-									},
-									add = &adw::NavigationPage {
-										set_tag: Some("task-details-page"),
-										set_child: Some(model.task_details_factory.widget()),
-									},
+										add = &adw::NavigationPage {
+											set_tag: Some("task-details-page"),
+											set_child: Some(model.task_details_factory.widget()),
+										},
+									}
 								}
+							},
+							gtk::Box {
+								#[watch]
+								set_visible: model.state != ContentState::Details,
+								set_margin_all: 5,
+								append: model.task_entry.widget()
 							}
-						},
-						gtk::Box {
-							#[watch]
-							set_visible: model.state != ContentState::Details,
-							set_margin_all: 5,
-							append: model.task_entry.widget()
 						}
-					}
+					},
 				}
 			},
 		},

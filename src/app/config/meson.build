@@ -44,10 +44,6 @@ cargo_build = custom_target(
   install_dir: bindir,
   depends: resources,
   command: [
-    rustup,
-    'default',
-    'stable',
-    '&&',
     'env',
     cargo_env,
     cargo, 'build',

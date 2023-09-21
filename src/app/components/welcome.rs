@@ -1,9 +1,7 @@
-use relm4::gtk;
-use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
-use relm4::RelmWidgetExt;
-use relm4::{ComponentParts, ComponentSender, SimpleComponent};
-
 use crate::fl;
+use relm4::gtk::prelude::{BoxExt, OrientableExt, WidgetExt};
+use relm4::{adw, gtk, RelmWidgetExt};
+use relm4::{ComponentParts, ComponentSender, SimpleComponent};
 
 #[derive(Debug)]
 pub struct WelcomeComponent;
@@ -16,17 +14,16 @@ impl SimpleComponent for WelcomeComponent {
 
 	view! {
 		#[root]
-		gtk::Stack {
-			set_transition_duration: 250,
-			set_transition_type: gtk::StackTransitionType::Crossfade,
+		adw::Clamp {
+			set_maximum_size: 450,
 			gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
 				set_vexpand: true,
 				set_hexpand: true,
-				set_orientation: gtk::Orientation::Vertical,
-				set_halign: gtk::Align::Center,
 				set_valign: gtk::Align::Center,
-				set_margin_all: 50,
-				set_spacing: 20,
+				set_halign: gtk::Align::Center,
+				set_spacing: 10,
+				set_margin_all: 20,
 				gtk::Label {
 					set_css_classes: &["title-1"],
 					set_wrap: true,
@@ -42,6 +39,7 @@ impl SimpleComponent for WelcomeComponent {
 					set_text: fl!("welcome-subtitle")
 				},
 				gtk::Picture {
+					set_vexpand: true,
 					set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
 					set_content_fit: gtk::ContentFit::ScaleDown,
 				},
@@ -51,7 +49,7 @@ impl SimpleComponent for WelcomeComponent {
 					set_wrap_mode: gtk::pango::WrapMode::Word,
 					set_justify: gtk::Justification::Center,
 					set_text: fl!("welcome-body")
-				}
+				},
 			}
 		}
 	}
