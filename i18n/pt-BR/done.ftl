@@ -2,6 +2,10 @@ done = Done
 
 # Warning
 alpha-warning = Está executando uma versão de desenvolvimento em etapa inicial.
+error-ocurred = An error ocurred
+error-instructions = We need to refresh the app, this means that any previous data will be lost.
+refresh-app = Refresh application
+restart-app = Restart the app after refreshing.
 
 # New task dialog
 new-task = Nova tarefa...

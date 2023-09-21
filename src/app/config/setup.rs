@@ -16,9 +16,7 @@ pub fn init() -> Result<()> {
 	resources::init()?;
 	relm4_icons::initialize_icons();
 	actions::init();
-
 	connect_signals();
-
 	Ok(())
 }
 
@@ -28,8 +26,11 @@ pub fn connect_signals() {
 	app.connect_open(|_, _, _| {});
 }
 
-pub async fn init_services() -> Result<()> {
-	settings::init().await?;
-	appearance::init()?;
-	Ok(())
+pub fn init_services() -> Result<()> {
+	settings::init()?;
+	appearance::init()
+}
+
+pub fn refresh() -> Result<()> {
+	settings::refresh()
 }

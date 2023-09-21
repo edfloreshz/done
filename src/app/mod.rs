@@ -15,7 +15,9 @@ use relm4::{
 	},
 	gtk::{
 		self,
-		prelude::{ApplicationExt, ApplicationExtManual, Cast, FileExt},
+		prelude::{
+			ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, Cast, FileExt,
+		},
 		traits::{ApplicationWindowExt, GtkWindowExt, OrientableExt, WidgetExt},
 	},
 	loading_widgets::LoadingWidgets,
@@ -23,6 +25,7 @@ use relm4::{
 	AsyncComponentSender, ComponentBuilder, ComponentController, Controller,
 	RelmWidgetExt,
 };
+use relm4_icons::icon_name;
 
 use crate::{
 	app::{
@@ -57,6 +60,7 @@ pub struct Done {
 	task_list_sidebar_controller: AsyncController<TaskListSidebarModel>,
 	content_controller: AsyncController<ContentModel>,
 	about_dialog: Controller<AboutDialog>,
+	startup_failed: bool,
 }
 
 #[derive(Debug)]
@@ -66,6 +70,7 @@ pub enum AppInput {
 	ListSelected(SidebarList, Service),
 	ReloadSidebar(Service),
 	CleanContent,
+	Refresh,
 	Quit,
 }
 
@@ -79,7 +84,6 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-			set_size_request: (320, 200),
 			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
 				Propagation::Stop
@@ -138,38 +142,96 @@ impl AsyncComponent for Done {
 				),
 			},
 
-			#[name(outter_view)]
-			adw::NavigationSplitView {
-				set_min_sidebar_width: 470.0,
-				set_sidebar_width_fraction: 0.47,
-				#[wrap(Some)]
-				set_sidebar = &adw::NavigationPage {
-					#[name(inner_view)]
-					#[wrap(Some)]
-					set_child = &adw::NavigationSplitView {
-						set_max_sidebar_width: 260.0,
-						set_sidebar_width_fraction: 0.38,
-						#[wrap(Some)]
-						set_sidebar = &adw::NavigationPage {
-							set_title: "Services",
-							set_tag: Some("services-page"),
-							set_child: Some(model.services_sidebar_controller.widget()),
-						},
-						#[wrap(Some)]
-						set_content = &adw::NavigationPage {
-							set_title: "Lists",
-							set_tag: Some("lists-page"),
-							set_child: Some(model.task_list_sidebar_controller.widget()),
-						}
+			if model.startup_failed {
+				adw::ToolbarView {
+					#[name = "content_header"]
+					add_top_bar = &adw::HeaderBar {
+						set_hexpand: true,
+						set_css_classes: &["flat"],
+						set_show_start_title_buttons: true,
+						set_show_end_title_buttons: true,
+						#[watch]
+						set_title_widget: Some(&gtk::Label::new(
+							Some("Error")
+						)),
 					},
-				},
-				#[wrap(Some)]
-				set_content = &adw::NavigationPage {
-					set_title: "Tasks",
-					set_tag: Some("content-page"),
-					set_child: Some(model.content_controller.widget()),
+					#[wrap(Some)]
+					set_content = &gtk::Box {
+						set_margin_all: 20,
+						set_orientation: gtk::Orientation::Vertical,
+						set_halign: gtk::Align::Center,
+						set_valign: gtk::Align::Center,
+						set_spacing: 10,
+						gtk::Image {
+							set_icon_name: Some(icon_name::WARNING),
+							set_pixel_size: 64,
+							set_margin_all: 10,
+						},
+						gtk::Label {
+							set_css_classes: &["title-2"],
+							set_wrap: true,
+							set_wrap_mode: gtk::pango::WrapMode::Word,
+							set_justify: gtk::Justification::Center,
+							#[watch]
+							set_text: fl!("error-ocurred"),
+						},
+						gtk::Label {
+							set_css_classes: &["body"],
+							#[watch]
+							set_text: fl!("error-instructions"),
+							set_wrap: true,
+							set_wrap_mode: gtk::pango::WrapMode::Word,
+							set_justify: gtk::Justification::Center,
+						},
+						gtk::Button {
+							set_label: fl!("refresh-app"),
+							set_valign: gtk::Align::End,
+							connect_clicked => AppInput::Refresh
+						},
+						gtk::Label {
+							set_css_classes: &["caption"],
+							#[watch]
+							set_text: fl!("restart-app"),
+							set_wrap: true,
+							set_wrap_mode: gtk::pango::WrapMode::Word,
+							set_justify: gtk::Justification::Center,
+						},
+					}
 				}
-			},
+			} else {
+				#[name(outter_view)]
+				adw::NavigationSplitView {
+					set_min_sidebar_width: 470.0,
+					set_sidebar_width_fraction: 0.47,
+					#[wrap(Some)]
+					set_sidebar = &adw::NavigationPage {
+						#[name(inner_view)]
+						#[wrap(Some)]
+						set_child = &adw::NavigationSplitView {
+							set_max_sidebar_width: 260.0,
+							set_sidebar_width_fraction: 0.38,
+							#[wrap(Some)]
+							set_sidebar = &adw::NavigationPage {
+								set_title: "Services",
+								set_tag: Some("services-page"),
+								set_child: Some(model.services_sidebar_controller.widget()),
+							},
+							#[wrap(Some)]
+							set_content = &adw::NavigationPage {
+								set_title: "Lists",
+								set_tag: Some("lists-page"),
+								set_child: Some(model.task_list_sidebar_controller.widget()),
+							}
+						},
+					},
+					#[wrap(Some)]
+					set_content = &adw::NavigationPage {
+						set_title: "Tasks",
+						set_tag: Some("content-page"),
+						set_child: Some(model.content_controller.widget()),
+					}
+				}
+			}
 		}
 	}
 
@@ -206,11 +268,6 @@ impl AsyncComponent for Done {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		match setup::init_services().await {
-			Ok(_) => (),
-			Err(_) => panic!("Failed to initialize services."),
-		};
-
 		let app = main_adw_application();
 		let captured_sender = sender.clone();
 		app.connect_open(move |_, files, _| {
@@ -236,7 +293,7 @@ impl AsyncComponent for Done {
 			.launch(root.upcast_ref::<gtk::Window>().clone())
 			.detach();
 
-		let model = Done {
+		let mut model = Done {
 			services_sidebar_controller: ServicesSidebarModel::builder()
 				.launch(())
 				.forward(sender.input_sender(), |message| match message {
@@ -257,6 +314,12 @@ impl AsyncComponent for Done {
 				}),
 			content_controller: ContentModel::builder().launch(None).detach(),
 			about_dialog,
+			startup_failed: false,
+		};
+
+		match setup::init_services() {
+			Ok(_) => (),
+			Err(_) => model.startup_failed = true,
 		};
 
 		let widgets = view_output!();
@@ -307,6 +370,12 @@ impl AsyncComponent for Done {
 	) {
 		match message {
 			AppInput::Quit => main_adw_application().quit(),
+			AppInput::Refresh => {
+				match setup::refresh() {
+					Ok(_) => main_adw_application().quit(),
+					Err(_) => main_adw_application().quit(),
+				};
+			},
 			AppInput::ListSelected(list, service) => {
 				self
 					.content_controller

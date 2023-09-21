@@ -4,7 +4,7 @@ use libset::{format::FileFormat, new_file, project::Project};
 
 use super::{info::VERSION, preferences::Preferences};
 
-pub(crate) async fn init() -> Result<()> {
+pub(crate) fn init() -> Result<()> {
 	let project = Project::new("dev", "edfloreshz", "done")
 		.about("Done is a simple to do app.")
 		.author("Eduardo Flores")
@@ -19,8 +19,13 @@ pub(crate) async fn init() -> Result<()> {
 	if !project.integrity::<Preferences>("preferences", FileFormat::JSON) {
 		project
 			.get_file("preferences", FileFormat::JSON)?
-			.set_content(Preferences::new().await)?
+			.set_content(Preferences::new())?
 			.write()?;
 	}
 	Ok(())
+}
+
+pub(crate) fn refresh() -> Result<()> {
+	Project::open("dev", "edfloreshz", "done")?.clear()?;
+	init()
 }
