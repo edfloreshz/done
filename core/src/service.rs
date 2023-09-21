@@ -35,7 +35,7 @@ impl Service {
 		match self {
 			Service::Smart => "dialog-information-symbolic",
 			Service::Computer => "computer-symbolic",
-			Service::Microsoft => "tools-symbolic",
+			Service::Microsoft => "task-symbolic",
 		}
 	}
 }
