@@ -1,3 +1,4 @@
+use crate::services::microsoft::models::importance::TaskImportance;
 use serde::{Deserialize, Serialize};
 
 #[derive(
@@ -31,9 +32,9 @@ impl From<i32> for Priority {
 	}
 }
 
-impl Into<i32> for Priority {
-	fn into(self) -> i32 {
-		match self {
+impl From<Priority> for i32 {
+	fn from(value: Priority) -> Self {
+		match value {
 			Priority::Low => 0,
 			Priority::Normal => 1,
 			Priority::High => 2,
@@ -56,6 +57,26 @@ impl Priority {
 			"NORMAL" => Some(Self::Normal),
 			"HIGH" => Some(Self::High),
 			_ => None,
+		}
+	}
+}
+
+impl From<TaskImportance> for Priority {
+	fn from(value: TaskImportance) -> Self {
+		match value {
+			TaskImportance::Low => Self::Low,
+			TaskImportance::Normal => Self::Normal,
+			TaskImportance::High => Self::High,
+		}
+	}
+}
+
+impl From<Priority> for TaskImportance {
+	fn from(value: Priority) -> Self {
+		match value {
+			Priority::Low => Self::Low,
+			Priority::Normal => Self::Normal,
+			Priority::High => Self::High,
 		}
 	}
 }

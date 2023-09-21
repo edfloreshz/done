@@ -1,11 +1,12 @@
 [package]
-name = "done_local_storage"
+name = "core_done"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+tokio = { version = "1.32.0", features = ["full"] }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
 diesel = { version = "2.0.2", features = ["sqlite", "chrono"] }
@@ -14,6 +15,20 @@ anyhow = "1.0.66"
 uuid = { version = "1.2.1", features = ["v4"] }
 diesel_migrations = "2.0.0"
 tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
+strum = "0.25"
+strum_macros = "0.25.2"
+async-trait = "0.1.68"
+reqwest = "0.11.18"
+cascade = "1.0.1"
+open = "5.0.0"
+keytar = "0.1.6"
+url = "2.3.1"
+regex = "1.8.4"
+futures = "0.3"
+async-stream = "0.3.5"
+graph-rs-sdk = "1.1.1"
+http = "0.2.9"
 
 [dependencies.libset]
 git = "https://github.com/edfloreshz/libset"

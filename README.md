@@ -56,15 +56,15 @@ Meson:
 
 Ubuntu 22.10:
 ```bash
-sudo apt install libadwaita-1-dev libgtk-4-dev protobuf-compiler
+sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev libsecret-1-dev
 ```
 Arch Linux:
 ```bash
-sudo pacman -S libadwaita gtk4 protobuf
+sudo pacman -S libadwaita gtk4 sqlite libsecret
 ```
 Fedora:
 ```
-sudo dnf -y install libadwaita-devel gtk4-devel protobuf protobuf-compiler protobuf-devel
+sudo dnf -y install libadwaita-devel gtk4-devel sqlite-devel libsecret-devel
 ```
 
 ## Debug

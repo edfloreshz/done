@@ -1,6 +1,6 @@
 [package]
 name = "done"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
 license = "MPL 2.0"
@@ -10,26 +10,34 @@ documentation = "https://docs.rs/done"
 repository = "https://github.com/edfloreshz/done/"
 readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["core"]
 
 [dependencies]
-i18n-embed-fl = "0.6.4"
+i18n-embed-fl = "0.6.7"
 once_cell = "1.13.0"
 derive-new = "0.5.9"
 anyhow = "1.0.56"
-strum = "0.24.1"
-strum_macros = "0.24.3"
-glib = "0.16.2"
+strum = "0.25.0"
+strum_macros = "0.25.2"
+glib = "0.18.1"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
+reqwest = "0.11.18"
+futures = "0.3.28"
 
 [dependencies.relm4-icons]
-version = "0.6.0-beta.1"
+version = "0.7.0-alpha.1"
 features = [
     "menu",
     "loupe",
     "floppy",
+    "computer",
     "star-filled-rounded",
+    "dock-left",
+    "task",
+    "sonar",
+    "check-round-outline2",
     "checkmark",
     "check-round-outline-whole",
     "left",
@@ -56,7 +64,7 @@ features = [
     "dock-left",
 ]
 
-[dependencies.done_local_storage]
+[dependencies.core_done]
 path = "core"
 
 [dependencies.chrono]
@@ -64,8 +72,11 @@ version = "0.4.23"
 features = ["serde"]
 
 [dependencies.relm4]
-version = "0.6.0"
-features = ["macros", "libadwaita", "gnome_43"]
+version = "0.7.0-alpha.1"
+features = ["macros", "libadwaita", "gnome_45"]
+
+[dependencies.libadwaita]
+version = "0.5.2"
 
 [dependencies.serde]
 version = "1.0.126"
@@ -76,7 +87,7 @@ version = "0.7"
 features = ["gettext-system"]
 
 [dependencies.rust-embed]
-version = "6.4.0"
+version = "6.8.1"
 features = ["debug-embed"]
 
 [dependencies.i18n-embed]
@@ -88,4 +99,4 @@ git = "https://github.com/edfloreshz/libset"
 branch = "beta"
 
 [build-dependencies]
-glib-build-tools = "0.16.3"
+glib-build-tools = "0.18.0"

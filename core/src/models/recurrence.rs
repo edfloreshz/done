@@ -1,5 +1,6 @@
+use crate::services::microsoft::models::recurrence::DayOfWeek;
+use crate::services::microsoft::models::recurrence::TaskRecurrence;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug)]
 pub enum Day {
 	Monday,
@@ -75,5 +76,19 @@ impl ToString for Recurrence {
 			rec.push(Day::Sunday.to_string())
 		}
 		rec.join(", ")
+	}
+}
+
+impl From<TaskRecurrence> for Recurrence {
+	fn from(value: TaskRecurrence) -> Self {
+		Self {
+			monday: value.pattern.days_of_week.contains(&DayOfWeek::Monday),
+			tuesday: value.pattern.days_of_week.contains(&DayOfWeek::Tuesday),
+			wednesday: value.pattern.days_of_week.contains(&DayOfWeek::Wednesday),
+			thursday: value.pattern.days_of_week.contains(&DayOfWeek::Thursday),
+			friday: value.pattern.days_of_week.contains(&DayOfWeek::Friday),
+			saturday: value.pattern.days_of_week.contains(&DayOfWeek::Saturday),
+			sunday: value.pattern.days_of_week.contains(&DayOfWeek::Sunday),
+		}
 	}
 }

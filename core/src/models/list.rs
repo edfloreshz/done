@@ -1,70 +1,77 @@
-use diesel::{Insertable, Queryable};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::schema::lists;
+use crate::service::Service;
+use crate::services::microsoft::models::list::TodoTaskList;
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct List {
 	pub id: String,
 	pub name: String,
 	pub description: String,
 	pub icon: Option<String>,
+	pub service: Service,
+}
+
+impl FromIterator<List> for List {
+	fn from_iter<T: IntoIterator<Item = List>>(iter: T) -> Self {
+		let mut list = Self::default();
+		for item in iter {
+			list.name.push_str(&item.name);
+		}
+		list
+	}
 }
 
 impl List {
-	pub fn new(name: &str) -> Self {
+	pub fn new(name: &str, service: Service) -> Self {
 		Self {
 			id: Uuid::new_v4().to_string(),
 			name: name.to_string(),
+			service,
 			description: String::new(),
 			icon: Some("✍️".to_string()),
 		}
 	}
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable)]
-#[diesel(table_name = lists)]
-pub struct QueryableList {
-	pub id_list: String,
-	pub name: String,
-	pub description: String,
-	pub icon_name: Option<String>,
-}
-
-impl QueryableList {
-	pub fn new(
-		display_name: &str,
-		description: &str,
-		icon_name: Option<String>,
-	) -> Self {
+impl From<TodoTaskList> for List {
+	fn from(task: TodoTaskList) -> Self {
+		let display_name = remove_emoji(&task.display_name);
+		let icon = extract_emoji(&task.display_name);
 		Self {
-			id_list: Uuid::new_v4().to_string(),
-			name: display_name.to_string(),
-			description: description.to_string(),
-			icon_name,
+			id: task.id,
+			name: display_name,
+			description: String::new(),
+			icon,
+			service: Service::Microsoft,
 		}
 	}
 }
 
-impl From<QueryableList> for List {
-	fn from(value: QueryableList) -> Self {
-		List {
-			id: value.id_list,
-			name: value.name,
-			icon: value.icon_name,
-			description: value.description,
-		}
-	}
-}
-
-impl From<List> for QueryableList {
+impl From<List> for TodoTaskList {
 	fn from(list: List) -> Self {
+		let mut display_name = list.icon.unwrap_or_default();
+		display_name.push(' ');
+		display_name.push_str(&list.name);
 		Self {
-			id_list: list.id,
-			name: list.name,
-			description: list.description,
-			icon_name: list.icon,
+			id: list.id,
+			display_name,
+			is_owner: true,
+			is_shared: false,
+			wellknown_list_name: None,
 		}
 	}
+}
+
+fn extract_emoji(string: &str) -> Option<String> {
+	let re = Regex::new(r"\p{Emoji}").unwrap();
+	let match_result = re.find(string);
+	match_result.map(|matched| matched.as_str().to_string())
+}
+
+fn remove_emoji(string: &str) -> String {
+	let re = Regex::new(r"([\p{Emoji}\u{FE0E}\u{FE0F}])").unwrap();
+	re.replace_all(string, "").trim().to_string()
 }

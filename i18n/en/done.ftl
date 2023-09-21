@@ -1,7 +1,7 @@
 done = Done
 
 # Warning
-alpha-warning = You are running an early stage development version. Be aware it is a work in progress and far from complete yet.
+alpha-warning = You are running an early stage development version.
 
 # New task dialog
 new-task = New task...
@@ -26,6 +26,7 @@ preferences = Preferences
 keyboard-shortcuts = Keyboard shortcuts
 about-done = About Done
 quit = Quit
+close = Close
 
 # Sidebar
 all = All
@@ -40,18 +41,21 @@ add-new-task-list = Add new task list
 completed-list = Completed
 completed-list-desc = Tasks that have been completed
 
-# Empty task list
-list-empty = This is a smart list
-instructions = Modify some tasks to make them appear here
+# Middle pane
+empty-middle-tittle = This is looking quite empty.
+middle-empty-instructions = Tap the + button on the header bar to add a list.
 
+# Empty task list
+list-empty = Something's missing...
+instructions = Select a list from the middle pane to load your tasks.
+
+# All done
 all-done = All done
 all-done-instructions = Use the entry at the bottom to add more tasks
 
 # Preferences
 preferences = Preferences
 appearance = Appearance
-extended-sidebar = Extended sidebar
-extended-sidebar-description = Extend the sidebar to include icons and labels.
 color-scheme = Color scheme
 color-scheme-description = Set the color scheme of the app
 color-scheme-light = Light
@@ -65,6 +69,10 @@ save = Save
 cancel = Cancel
 back = Back
 search = Search
+
+# Services
+msft-todo = Microsoft To Do
+msft-todo-description = To Do gives you focus, from work to play
 
 # Details
 details = Details

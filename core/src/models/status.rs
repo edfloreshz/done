@@ -1,3 +1,4 @@
+use crate::services::microsoft::models::status::TaskStatus;
 use serde::{Deserialize, Serialize};
 
 #[derive(
@@ -29,9 +30,9 @@ impl From<i32> for Status {
 	}
 }
 
-impl Into<i32> for Status {
-	fn into(self) -> i32 {
-		match self {
+impl From<Status> for i32 {
+	fn from(value: Status) -> Self {
+		match value {
 			Status::NotStarted => 0,
 			Status::Completed => 1,
 		}
@@ -51,6 +52,27 @@ impl Status {
 			"NOT_STARTED" => Some(Self::NotStarted),
 			"COMPLETED" => Some(Self::Completed),
 			_ => None,
+		}
+	}
+}
+
+impl From<TaskStatus> for Status {
+	fn from(value: TaskStatus) -> Self {
+		match value {
+			TaskStatus::NotStarted => Self::NotStarted,
+			TaskStatus::Started => Self::NotStarted,
+			TaskStatus::Completed => Self::Completed,
+			TaskStatus::WaitingOnOthers => Self::NotStarted,
+			TaskStatus::Deferred => Self::NotStarted,
+		}
+	}
+}
+
+impl From<Status> for TaskStatus {
+	fn from(value: Status) -> Self {
+		match value {
+			Status::NotStarted => TaskStatus::NotStarted,
+			Status::Completed => TaskStatus::Completed,
 		}
 	}
 }

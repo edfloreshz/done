@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2023-09-21
+- Brand new UI.
+- Multiple services are now supported, starting with Microsoft To Do.
+- Temporarily removed smart lists.
+- Updated localization.
+- Updated screenshots.
+
 ## [0.1.7] - 2023-05-17
 - Tasks can now set reminders by date, time and recurrence.
 - Tasks pane now extends to the bottom and aligns with the task entry.
