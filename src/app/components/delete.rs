@@ -47,7 +47,6 @@ impl Component for DeleteComponent {
 
 			gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
-
 				adw::HeaderBar {
 					set_show_end_title_buttons: true,
 					set_css_classes: &["flat"],
@@ -57,25 +56,25 @@ impl Component for DeleteComponent {
 					set_orientation: gtk::Orientation::Vertical,
 					set_margin_all: 20,
 					set_spacing: 10,
-										gtk::Image {
-												set_icon_size: gtk::IconSize::Large,
-												set_icon_name: Some(icon_name::WARNING),
-										},
-						gtk::Label {
+					gtk::Image {
+						set_icon_size: gtk::IconSize::Large,
+						set_icon_name: Some(icon_name::WARNING),
+					},
+					gtk::Label {
 						set_css_classes: &["title-4"],
 						set_label: model.warning.as_str(),
 					},
-						gtk::Label {
-												set_label: model.delete_warning.as_str(),
-					},
-					gtk::Button {
-						set_label: "Cancel",
-						connect_clicked => DeleteInput::Cancel,
+					gtk::Label {
+						set_label: model.delete_warning.as_str(),
 					},
 					gtk::Button {
 						set_css_classes: &["destructive-action"],
 						set_label: "Delete",
 						connect_clicked => DeleteInput::Delete,
+					},
+					gtk::Button {
+						set_label: "Cancel",
+						connect_clicked => DeleteInput::Cancel,
 					},
 				}
 			}

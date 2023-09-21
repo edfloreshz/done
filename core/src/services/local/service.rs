@@ -21,16 +21,16 @@ use super::database::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct LocalStorage;
+pub struct ComputerStorage;
 
-impl LocalStorage {
+impl ComputerStorage {
 	pub(crate) fn new() -> Self {
 		Self
 	}
 }
 
 #[async_trait]
-impl TodoProvider for LocalStorage {
+impl TodoProvider for ComputerStorage {
 	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}

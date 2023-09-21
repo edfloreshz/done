@@ -158,6 +158,10 @@ impl AsyncComponent for ServicesSidebarModel {
 		let services_list = model.services_factory.widget();
 		let widgets = view_output!();
 
+		widgets
+			.services_list
+			.select_row(widgets.services_list.row_at_index(0).as_ref());
+
 		AsyncComponentParts { model, widgets }
 	}
 

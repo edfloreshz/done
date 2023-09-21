@@ -86,14 +86,24 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				append = match model.state {
 					TaskListSidebarStatus::Empty => {
 						gtk::Box {
+							set_margin_all: 20,
+							set_vexpand: true,
+							set_valign: gtk::Align::Center,
 							set_css_classes: &["empty-state"],
 							set_orientation: gtk::Orientation::Vertical,
+							set_spacing: 10,
 							gtk::Image {
-								set_icon_name: Some(icon_name::STAR_FILLED_ROUNDED),
-								set_pixel_size: 128,
+								set_icon_name: Some(icon_name::DOCK_LEFT),
+								set_pixel_size: 64,
+								set_margin_all: 10,
 							},
 							gtk::Label {
-								set_label: "Select a service from the sidebar to get started.",
+								add_css_class: "title-2",
+								set_label: fl!("empty-middle-tittle"),
+							},
+							gtk::Label {
+								add_css_class: "body",
+								set_label: fl!("middle-empty-instructions"),
 							}
 						}
 					},
@@ -143,7 +153,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				},
 			),
 		};
-		sender.input(TaskListSidebarInput::ServiceSelected(model.service));
+		sender.input(TaskListSidebarInput::LoadTaskLists);
 		let task_list_widget = model.task_list_factory.widget();
 		let widgets = view_output!();
 		AsyncComponentParts { model, widgets }
@@ -168,6 +178,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							self.service,
 							SidebarList::Custom(list),
 						));
+						self.state = TaskListSidebarStatus::Loaded;
 					},
 					Err(e) => {
 						tracing::error!("Error while creating task list: {}", e);
@@ -227,7 +238,11 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							));
 						}
 					}
-					self.state = TaskListSidebarStatus::Loaded;
+					if guard.is_empty() {
+						self.state = TaskListSidebarStatus::Empty;
+					} else {
+						self.state = TaskListSidebarStatus::Loaded;
+					}
 				}
 			},
 			TaskListSidebarInput::SelectList(list) => sender
@@ -239,7 +254,10 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 						self.task_list_factory.guard().remove(index.current_index());
 						sender
 							.output(TaskListSidebarOutput::CleanContent)
-							.unwrap_or_default()
+							.unwrap_or_default();
+						if self.task_list_factory.is_empty() {
+							self.state = TaskListSidebarStatus::Empty;
+						}
 					},
 					Err(e) => {
 						tracing::error!("Error while deleting task list: {}", e);

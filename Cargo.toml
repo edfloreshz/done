@@ -1,6 +1,6 @@
 [package]
 name = "done"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 authors = ["Eduardo Flores <edfloreshz@gmail.com>"]
 license = "MPL 2.0"
@@ -32,7 +32,12 @@ features = [
     "menu",
     "loupe",
     "floppy",
+    "computer",
     "star-filled-rounded",
+    "dock-left",
+    "task",
+    "sonar",
+    "check-round-outline2",
     "checkmark",
     "check-round-outline-whole",
     "left",

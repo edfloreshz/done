@@ -41,18 +41,21 @@ add-new-task-list = Add new task list
 completed-list = Completed
 completed-list-desc = Tasks that have been completed
 
-# Empty task list
-list-empty = This is a smart list
-instructions = Modify some tasks to make them appear here
+# Middle pane
+empty-middle-tittle = This is looking quite empty.
+middle-empty-instructions = Tap the + button on the header bar to add a list.
 
+# Empty task list
+list-empty = Something's missing...
+instructions = Select a list from the middle pane to load your tasks.
+
+# All done
 all-done = All done
 all-done-instructions = Use the entry at the bottom to add more tasks
 
 # Preferences
 preferences = Preferences
 appearance = Appearance
-extended-sidebar = Extended sidebar
-extended-sidebar-description = Extend the sidebar to include icons and labels.
 color-scheme = Color scheme
 color-scheme-description = Set the color scheme of the app
 color-scheme-light = Light

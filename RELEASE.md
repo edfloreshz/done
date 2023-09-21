@@ -30,7 +30,7 @@ docker run -ti -v $(pwd):/mnt mglolenstine/gtk4-cross:rust-gtk-4.6
 
 Then, we need to install some dependencies:
 ```bash
-sudo dnf -y install libadwaita libadwaita-devel gtk4-devel protobuf protobuf-compiler protobuf-devel
+sudo dnf -y install libadwaita-devel gtk4-devel
 ```
 
 After that, run `build` to build the project and `package` to package it into a zip file.

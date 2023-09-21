@@ -33,7 +33,7 @@ impl From<QueryableList> for List {
 		List {
 			id: value.id_list,
 			name: value.name,
-			service: Service::Local,
+			service: Service::Computer,
 			icon: value.icon_name,
 			description: value.description,
 		}

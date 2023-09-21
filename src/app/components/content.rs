@@ -141,15 +141,14 @@ impl AsyncComponent for ContentModel {
 										#[wrap(Some)]
 										set_center_widget = &gtk::Box {
 											set_orientation: gtk::Orientation::Vertical,
-											set_margin_all: 24,
-											set_spacing: 24,
-											gtk::Picture {
-												#[watch]
-												set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/empty.png"),
-												set_margin_all: 70
+											set_spacing: 10,
+											gtk::Image {
+												set_icon_name: Some(icon_name::SONAR),
+												set_pixel_size: 64,
+												set_margin_all: 10,
 											},
 											gtk::Label {
-												set_css_classes: &["title-3", "accent"],
+												set_css_classes: &["title-2"],
 												set_wrap: true,
 												set_wrap_mode: gtk::pango::WrapMode::Word,
 												set_justify: gtk::Justification::Center,
@@ -180,15 +179,14 @@ impl AsyncComponent for ContentModel {
 											#[wrap(Some)]
 											set_center_widget = &gtk::Box {
 												set_orientation: gtk::Orientation::Vertical,
-												set_margin_all: 24,
-												set_spacing: 24,
-												gtk::Picture {
-													#[watch]
-													set_resource: Some("/dev/edfloreshz/Done/icons/scalable/actions/checked.png"),
-													set_margin_all: 70
+												set_spacing: 10,
+												gtk::Image {
+													set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE2),
+													set_pixel_size: 64,
+													set_margin_all: 10,
 												},
 												gtk::Label {
-													set_css_classes: &["title-3", "accent"],
+													set_css_classes: &["title-2"],
 													set_wrap: true,
 													set_wrap_mode: gtk::pango::WrapMode::Word,
 													set_justify: gtk::Justification::Center,
@@ -290,7 +288,7 @@ impl AsyncComponent for ContentModel {
 							},
 							gtk::Box {
 								#[watch]
-								set_visible: model.state != ContentState::Details,
+								set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::AllDone,
 								set_margin_all: 5,
 								append: model.task_entry.widget()
 							}
@@ -345,7 +343,7 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ContentInput::Clean => self.state = ContentState::AllDone,
+			ContentInput::Clean => self.state = ContentState::Empty,
 			ContentInput::Refresh => sender.input(ContentInput::SelectList(
 				self.parent_list.as_ref().unwrap().clone(),
 				self.service,

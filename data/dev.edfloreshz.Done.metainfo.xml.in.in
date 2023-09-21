@@ -43,6 +43,16 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.1.8" date="2023-09-21">
+      <description>
+        <p>Services!</p>
+        <ul>
+          <li>Multiple services are now supported, starting with Microsoft To Do.</li>
+          <li>Better overall design.</li>
+          <li>The app now has 3 panes: services, lists and tasks.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.7" date="2023-05-21">
       <description>
         <p>Reminders!</p>

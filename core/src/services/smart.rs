@@ -34,7 +34,7 @@ impl TodoProvider for Smart {
 	}
 
 	fn available(&self) -> bool {
-		true
+		false
 	}
 
 	fn stream_support(&self) -> bool {
