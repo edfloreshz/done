@@ -487,10 +487,13 @@ impl AsyncComponent for ContentModel {
 							let mut service = self.service.get_service();
 							if service.stream_support() {
 								tokio::spawn(async move {
-									let mut stream =
-										service.get_tasks(list_clone.id.clone()).unwrap();
-									while let Some(task) = stream.next().await {
-										sender_clone.input(ContentInput::LoadTask(task));
+									match service.get_tasks(list_clone.id.clone()).await {
+										Ok(mut stream) => {
+											while let Some(task) = stream.next().await {
+												sender_clone.input(ContentInput::LoadTask(task));
+											}
+										},
+										Err(err) => tracing::error!("{err}"),
 									}
 								});
 								self.state = ContentState::Loading;

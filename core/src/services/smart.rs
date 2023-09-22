@@ -52,7 +52,7 @@ impl TodoProvider for Smart {
 		Ok(vec![])
 	}
 
-	fn get_tasks(
+	async fn get_tasks(
 		&mut self,
 		_parent_list: String,
 	) -> Result<Pin<Box<dyn Stream<Item = Task> + Send>>> {
@@ -87,7 +87,9 @@ impl TodoProvider for Smart {
 		Ok(vec![])
 	}
 
-	fn get_lists(&mut self) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
+	async fn get_lists(
+		&mut self,
+	) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
 		todo!("This service does not implement streams")
 	}
 

@@ -217,9 +217,13 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				if service.stream_support() {
 					let sender_clone = sender.clone();
 					tokio::spawn(async move {
-						let mut stream = service.get_lists().unwrap();
-						while let Some(list) = stream.next().await {
-							sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
+						match service.get_lists().await {
+							Ok(mut stream) => {
+								while let Some(list) = stream.next().await {
+									sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
+								}
+							},
+							Err(err) => tracing::error!("{err}"),
 						}
 					});
 				} else {

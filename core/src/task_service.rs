@@ -28,7 +28,7 @@ pub trait TodoProvider: Sync + Send {
 	async fn read_tasks(&mut self) -> Result<Vec<Task>>;
 
 	/// Returns a stream of tasks from a list and sends it through a channel.
-	fn get_tasks(
+	async fn get_tasks(
 		&mut self,
 		parent_list: String,
 	) -> Result<Pin<Box<dyn Stream<Item = Task> + Send>>>;
@@ -63,7 +63,9 @@ pub trait TodoProvider: Sync + Send {
 	async fn read_lists(&mut self) -> Result<Vec<List>>;
 
 	/// Returns a stream of lists and sends it through a channel.
-	fn get_lists(&mut self) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>>;
+	async fn get_lists(
+		&mut self,
+	) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>>;
 
 	/// Read a single list from a service.
 	async fn read_list(&mut self, id: String) -> Result<List>;

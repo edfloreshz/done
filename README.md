@@ -56,15 +56,15 @@ Meson:
 
 Ubuntu 22.10:
 ```bash
-sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev libsecret-1-dev
+sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev libsecret-1-dev meson
 ```
 Arch Linux:
 ```bash
-sudo pacman -S libadwaita gtk4 sqlite libsecret
+sudo pacman -S libadwaita gtk4 sqlite libsecret meson
 ```
 Fedora:
 ```
-sudo dnf -y install libadwaita-devel gtk4-devel sqlite-devel libsecret-devel
+sudo dnf -y install libadwaita-devel gtk4-devel sqlite-devel libsecret-devel meson
 ```
 
 ## Debug

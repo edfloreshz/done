@@ -69,6 +69,25 @@ impl MicrosoftService {
 		oauth
 	}
 
+	async fn refresh_token(&mut self) -> Result<()> {
+		if self.token.is_expired() {
+			if let Some(refresh_token) = self.token.refresh_token() {
+				let mut oauth = Self::oauth_client();
+				oauth.access_token(self.token.clone());
+				let token: AccessToken = oauth
+					.build_async()
+					.authorization_code_grant()
+					.refresh_token()
+					.send()
+					.await?
+					.json()
+					.await?;
+				self.store_token(token)?;
+			}
+		}
+		Ok(())
+	}
+
 	fn store_token(&mut self, token: AccessToken) -> Result<()> {
 		keytar::set_password(
 			"dev.edfloreshz.Done",
@@ -168,6 +187,7 @@ impl TodoProvider for MicrosoftService {
 		&mut self,
 		parent_list: String,
 	) -> Result<Vec<Task>> {
+		self.refresh_token().await?;
 		let response = self
 			.client
 			.me()
@@ -191,10 +211,11 @@ impl TodoProvider for MicrosoftService {
 		)
 	}
 
-	fn get_tasks(
+	async fn get_tasks(
 		&mut self,
 		parent_list: String,
 	) -> Result<Pin<Box<dyn Stream<Item = Task> + Send>>> {
+		self.refresh_token().await?;
 		let mut stream = self
 			.client
 			.me()
@@ -228,18 +249,6 @@ impl TodoProvider for MicrosoftService {
 			.flat_map(futures::stream::iter)
 			.boxed();
 
-		// tokio::spawn(async move {
-		// 	while let Some(task) = stream.next().await {
-		// 		let mut tasks = task?.into_body()?.value;
-		// 		for task in tasks {
-		// 			let mut task: Task = task.into();
-		// 			task.parent = parent_list.clone();
-		// 			tx.send(task).await?;
-		// 		}
-		// 	}
-		// 	anyhow::Ok(())
-		// });
-
 		Ok(stream)
 	}
 
@@ -248,6 +257,7 @@ impl TodoProvider for MicrosoftService {
 		task_list_id: String,
 		task_id: String,
 	) -> Result<Task> {
+		self.refresh_token().await?;
 		let response = self
 			.client
 			.me()
@@ -264,6 +274,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn create_task(&mut self, task: Task) -> Result<()> {
+		self.refresh_token().await?;
 		let todo_task: TodoTask = task.clone().into();
 		let response = self
 			.client
@@ -283,6 +294,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn update_task(&mut self, task: Task) -> Result<Task> {
+		self.refresh_token().await?;
 		let mut todo_task: TodoTask = task.clone().into();
 		self
 			.update_check_list_items(
@@ -315,6 +327,7 @@ impl TodoProvider for MicrosoftService {
 		list_id: String,
 		task_id: String,
 	) -> Result<()> {
+		self.refresh_token().await?;
 		let response = self
 			.client
 			.me()
@@ -332,13 +345,17 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn read_lists(&mut self) -> Result<Vec<List>> {
+		self.refresh_token().await?;
 		let response = self.client.me().todo().lists().list_lists().send().await?;
 
 		let lists: Collection<TodoTaskList> = response.json().await?;
 		Ok(lists.value.iter().map(|t| t.clone().into()).collect())
 	}
 
-	fn get_lists(&mut self) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
+	async fn get_lists(
+		&mut self,
+	) -> Result<Pin<Box<dyn Stream<Item = List> + Send>>> {
+		self.refresh_token().await?;
 		let mut stream = self
 			.client
 			.me()
@@ -371,27 +388,18 @@ impl TodoProvider for MicrosoftService {
 			.flat_map(futures::stream::iter)
 			.boxed();
 
-		// tokio::spawn(async move {
-		// 	while let Some(list) = stream.next().await {
-		// 		let mut lists = list?.into_body()?.value;
-		// 		for list in lists {
-		// 			let list: List = list.into();
-		// 			tx.send(list).await?;
-		// 		}
-		// 	}
-		// 	anyhow::Ok(())
-		// });
-
 		Ok(stream)
 	}
 
 	async fn read_list(&mut self, id: String) -> Result<List> {
+		self.refresh_token().await?;
 		let response = self.client.me().todo().list(id).get_lists().send().await?;
 		let list: TodoTaskList = response.json().await?;
 		Ok(list.into())
 	}
 
 	async fn create_list(&mut self, list: List) -> Result<List> {
+		self.refresh_token().await?;
 		let list: TodoTaskList = list.into();
 		let response = self
 			.client
@@ -410,6 +418,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn update_list(&mut self, list: List) -> Result<()> {
+		self.refresh_token().await?;
 		let list: TodoTaskList = list.into();
 		let response = self
 			.client
@@ -428,6 +437,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	async fn delete_list(&mut self, id: String) -> Result<()> {
+		self.refresh_token().await?;
 		let response = self
 			.client
 			.me()
