@@ -100,10 +100,16 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							},
 							gtk::Label {
 								add_css_class: "title-2",
+								set_wrap: true,
+								set_wrap_mode: gtk::pango::WrapMode::Word,
+								set_justify: gtk::Justification::Center,
 								set_label: fl!("empty-middle-tittle"),
 							},
 							gtk::Label {
 								add_css_class: "body",
+								set_wrap: true,
+								set_wrap_mode: gtk::pango::WrapMode::Word,
+								set_justify: gtk::Justification::Center,
 								set_label: fl!("middle-empty-instructions"),
 							}
 						}

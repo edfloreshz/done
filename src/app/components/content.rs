@@ -135,76 +135,64 @@ impl AsyncComponent for ContentModel {
 							#[transition = "Crossfade"]
 							append = match model.state {
 								ContentState::Empty => {
-									gtk::CenterBox {
+									gtk::Box {
 										set_vexpand: true,
 										set_hexpand: true,
 										set_orientation: gtk::Orientation::Vertical,
 										set_halign: gtk::Align::Center,
 										set_valign: gtk::Align::Center,
-										#[wrap(Some)]
-										set_center_widget = &gtk::Box {
-											set_orientation: gtk::Orientation::Vertical,
-											set_spacing: 10,
-											gtk::Image {
-												set_icon_name: Some(icon_name::SONAR),
-												set_pixel_size: 64,
-												set_margin_all: 10,
-											},
-											gtk::Label {
-												set_css_classes: &["title-2"],
-												set_wrap: true,
-												set_wrap_mode: gtk::pango::WrapMode::Word,
-												set_justify: gtk::Justification::Center,
-												#[watch]
-												set_text: fl!("list-empty"),
-											},
-											gtk::Label {
-												set_css_classes: &["body"],
-												#[watch]
-												set_text: fl!("instructions"),
-												set_wrap: true,
-												set_wrap_mode: gtk::pango::WrapMode::Word,
-												set_justify: gtk::Justification::Center,
-											},
-										}
+										set_spacing: 10,
+										gtk::Image {
+											set_icon_name: Some(icon_name::SONAR),
+											set_pixel_size: 64,
+											set_margin_all: 10,
+										},
+										gtk::Label {
+											set_css_classes: &["title-2"],
+											set_wrap: true,
+											set_wrap_mode: gtk::pango::WrapMode::Word,
+											set_justify: gtk::Justification::Center,
+											#[watch]
+											set_text: fl!("list-empty"),
+										},
+										gtk::Label {
+											set_css_classes: &["body"],
+											#[watch]
+											set_text: fl!("instructions"),
+											set_wrap: true,
+											set_wrap_mode: gtk::pango::WrapMode::Word,
+											set_justify: gtk::Justification::Center,
+										},
 									}
 								},
 								ContentState::AllDone => {
 									gtk::Box {
+										set_vexpand: true,
+										set_hexpand: true,
 										set_orientation: gtk::Orientation::Vertical,
-										gtk::CenterBox {
+										set_halign: gtk::Align::Center,
+										set_valign: gtk::Align::Center,
+										set_spacing: 10,
+										gtk::Image {
+											set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE2),
+											set_pixel_size: 64,
+											set_margin_all: 10,
+										},
+										gtk::Label {
+											set_css_classes: &["title-2"],
+											set_wrap: true,
+											set_wrap_mode: gtk::pango::WrapMode::Word,
+											set_justify: gtk::Justification::Center,
 											#[watch]
-											set_vexpand: true,
-											set_hexpand: true,
-											set_orientation: gtk::Orientation::Vertical,
-											set_halign: gtk::Align::Center,
-											set_valign: gtk::Align::Center,
-											#[wrap(Some)]
-											set_center_widget = &gtk::Box {
-												set_orientation: gtk::Orientation::Vertical,
-												set_spacing: 10,
-												gtk::Image {
-													set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE2),
-													set_pixel_size: 64,
-													set_margin_all: 10,
-												},
-												gtk::Label {
-													set_css_classes: &["title-2"],
-													set_wrap: true,
-													set_wrap_mode: gtk::pango::WrapMode::Word,
-													set_justify: gtk::Justification::Center,
-													#[watch]
-													set_text: fl!("all-done"),
-												},
-												gtk::Label {
-													set_css_classes: &["body"],
-													#[watch]
-													set_text: fl!("all-done-instructions"),
-													set_wrap: true,
-													set_wrap_mode: gtk::pango::WrapMode::Word,
-													set_justify: gtk::Justification::Center,
-												},
-											}
+											set_text: fl!("all-done"),
+										},
+										gtk::Label {
+											set_css_classes: &["body"],
+											#[watch]
+											set_text: fl!("all-done-instructions"),
+											set_wrap: true,
+											set_wrap_mode: gtk::pango::WrapMode::Word,
+											set_justify: gtk::Justification::Center,
 										},
 									}
 								},

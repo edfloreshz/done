@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2023-09-22
+- Fixed issue where async tasks would overlap the results in the UI.
+- Implemented token refreshing for Microsoft To Do. 
+
 ## [0.1.9] - 2023-09-21
 - Fixed a bug where the app would fail to start if migrations failed to execute.
 
