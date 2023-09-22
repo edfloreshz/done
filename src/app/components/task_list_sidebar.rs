@@ -11,7 +11,7 @@ use relm4::{
 	},
 	prelude::DynamicIndex,
 	tokio, AsyncComponentSender, Component, ComponentController, Controller,
-	RelmWidgetExt,
+	JoinHandle, RelmWidgetExt,
 };
 use relm4_icons::icon_name;
 
@@ -31,6 +31,7 @@ pub struct TaskListSidebarModel {
 	state: TaskListSidebarStatus,
 	task_list_factory: AsyncFactoryVecDeque<TaskListFactoryModel>,
 	list_entry: Controller<ListDialogComponent>,
+	handle: Option<JoinHandle<()>>,
 }
 
 #[derive(Debug)]
@@ -152,6 +153,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					ListDialogOutput::RenameList(_) => todo!(),
 				},
 			),
+			handle: None,
 		};
 		sender.input(TaskListSidebarInput::LoadTaskLists);
 		let task_list_widget = model.task_list_factory.widget();
@@ -191,6 +193,9 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			},
 			TaskListSidebarInput::ServiceSelected(service) => {
 				self.service = service;
+				if let Some(handle) = &self.handle {
+					handle.abort()
+				}
 				self.state = TaskListSidebarStatus::Loading;
 				sender.input(TaskListSidebarInput::LoadTaskLists);
 			},
@@ -216,7 +221,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				let mut service = self.service.get_service();
 				if service.stream_support() {
 					let sender_clone = sender.clone();
-					tokio::spawn(async move {
+					self.handle = Some(tokio::spawn(async move {
 						match service.get_lists().await {
 							Ok(mut stream) => {
 								while let Some(list) = stream.next().await {
@@ -225,7 +230,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							},
 							Err(err) => tracing::error!("{err}"),
 						}
-					});
+					}));
 				} else {
 					if matches!(self.service, Service::Smart) {
 						for smart_list in SidebarList::list() {

@@ -23,7 +23,9 @@ use relm4::{
 	gtk,
 	gtk::prelude::{BoxExt, OrientableExt, WidgetExt},
 };
-use relm4::{tokio, Component, ComponentController, Controller, RelmWidgetExt};
+use relm4::{
+	tokio, Component, ComponentController, Controller, JoinHandle, RelmWidgetExt,
+};
 use relm4_icons::icon_name;
 
 use super::task_input::{TaskInputInput, TaskInputModel};
@@ -38,6 +40,7 @@ pub struct ContentModel {
 	service: Service,
 	parent_list: Option<SidebarList>,
 	selected_task: Option<Task>,
+	handle: Option<JoinHandle<()>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -326,6 +329,7 @@ impl AsyncComponent for ContentModel {
 			service: Service::Smart,
 			parent_list: None,
 			selected_task: None,
+			handle: None,
 		};
 
 		let list_box = model.task_factory.widget();
@@ -409,6 +413,9 @@ impl AsyncComponent for ContentModel {
 			},
 			ContentInput::SelectList(list, service) => {
 				self.state = ContentState::Loading;
+				if let Some(handle) = &self.handle {
+					handle.abort()
+				}
 				sender.input(ContentInput::LoadTasks(list, service));
 			},
 			ContentInput::LoadTasks(list, service) => {
@@ -486,7 +493,7 @@ impl AsyncComponent for ContentModel {
 							let list_clone = list.clone();
 							let mut service = self.service.get_service();
 							if service.stream_support() {
-								tokio::spawn(async move {
+								self.handle = Some(tokio::spawn(async move {
 									match service.get_tasks(list_clone.id.clone()).await {
 										Ok(mut stream) => {
 											while let Some(task) = stream.next().await {
@@ -495,7 +502,7 @@ impl AsyncComponent for ContentModel {
 										},
 										Err(err) => tracing::error!("{err}"),
 									}
-								});
+								}));
 								self.state = ContentState::Loading;
 							} else if let Ok(tasks) =
 								service.read_tasks_from_list(list_clone.id.clone()).await
