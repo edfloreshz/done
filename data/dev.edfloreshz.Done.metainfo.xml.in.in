@@ -43,6 +43,15 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.0" />
   <releases>
+    <release version="0.2.0" date="2023-09-21">
+      <description>
+        <p>Bug fixes</p>
+        <ul>
+          <li>Fixed issue where async tasks would overlap the results in the UI.</li>
+          <li>Implemented token refreshing for Microsoft To Do.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.9" date="2023-09-21">
       <description>
         <p>Bug fix</p>
