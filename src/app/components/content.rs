@@ -2,7 +2,7 @@ use crate::app::components::task_input::TaskInputOutput;
 use crate::app::factories::details::factory::{
 	TaskDetailsFactoryInit, TaskDetailsFactoryModel,
 };
-use crate::app::factories::task::{TaskInit, TaskModel};
+use crate::app::factories::task::{TaskInit, TaskInput, TaskModel};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
@@ -56,35 +56,18 @@ pub enum ContentState {
 pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
-	UpdateTask(Task),
+	UpdateTask(Option<DynamicIndex>, Task),
 	LoadTask(Task),
 	SelectList(SidebarList, Service),
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
 	CleanTaskEntry,
-	HideFlap,
-	Refresh,
 	Clean,
 }
 
 #[derive(Debug)]
 pub enum ContentOutput {}
-
-#[derive(Debug)]
-pub enum TaskInput {
-	SetCompleted(bool),
-	Favorite(DynamicIndex),
-	ModifyTitle(String),
-	RevealTaskDetails(Option<DynamicIndex>),
-}
-
-#[derive(Debug)]
-pub enum TaskOutput {
-	Remove(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, Task),
-	RevealTaskDetails(Option<DynamicIndex>, Task),
-}
 
 #[relm4::component(pub async)]
 impl AsyncComponent for ContentModel {
@@ -336,10 +319,6 @@ impl AsyncComponent for ContentModel {
 	) {
 		match message {
 			ContentInput::Clean => self.state = ContentState::Empty,
-			ContentInput::Refresh => sender.input(ContentInput::SelectList(
-				self.parent_list.as_ref().unwrap().clone(),
-				self.service,
-			)),
 			ContentInput::LoadTask(task) => {
 				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
 				{
@@ -360,7 +339,6 @@ impl AsyncComponent for ContentModel {
 								.guard()
 								.push_back(TaskInit::new(task.clone(), parent.clone()));
 							self.state = ContentState::Details;
-							sender.input(ContentInput::HideFlap);
 						},
 						Err(err) => {
 							tracing::error!("An error ocurred: {err}");
@@ -379,24 +357,28 @@ impl AsyncComponent for ContentModel {
 						Ok(_) => {
 							guard.remove(index.current_index());
 						},
-						Err(err) => {
-							tracing::error!("An error ocurred: {err}");
-						},
+						Err(err) => tracing::error!("An error ocurred: {err}"),
 					}
 				}
 			},
-			ContentInput::UpdateTask(task) => {
+			ContentInput::UpdateTask(index, task) => {
+				if let Some(index) = index.clone() {
+					self
+						.task_factory
+						.guard()
+						.send(index.current_index(), TaskInput::SetTask(task.clone()));
+				}
 				let mut service = self.service.get_service();
 				match service.update_task(task).await {
-					Ok(_) => {
-						if self.state == ContentState::Details {
-							sender.input(ContentInput::HideFlap);
+					Ok(task) => {
+						if let Some(index) = index {
+							self
+								.task_factory
+								.guard()
+								.send(index.current_index(), TaskInput::SetTask(task));
 						}
-						sender.input(ContentInput::Refresh);
 					},
-					Err(err) => {
-						tracing::error!("An error ocurred: {err}");
-					},
+					Err(err) => tracing::error!("An error ocurred: {err}"),
 				}
 			},
 			ContentInput::SelectList(list, service) => {
@@ -545,10 +527,6 @@ impl AsyncComponent for ContentModel {
 				.sender()
 				.send(TaskInputInput::CleanTaskEntry)
 				.unwrap(),
-			ContentInput::HideFlap => sender.input(ContentInput::SelectList(
-				self.parent_list.as_ref().unwrap().clone(),
-				self.service,
-			)),
 		}
 		self.update_view(widgets, sender)
 	}

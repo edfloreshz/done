@@ -1,11 +1,5 @@
 use std::pin::Pin;
 
-use futures::{Stream, StreamExt};
-use graph_rs_sdk::{
-	oauth::{AccessToken, OAuth},
-	Graph,
-};
-
 use crate::models::list::List;
 use crate::models::task::Task;
 use crate::services::microsoft::models::{
@@ -15,6 +9,11 @@ use crate::services::microsoft::models::{
 use crate::task_service::TodoProvider;
 use anyhow::{bail, Result};
 use async_trait::async_trait;
+use futures::{Stream, StreamExt};
+use graph_rs_sdk::{
+	oauth::{AccessToken, OAuth},
+	Graph,
+};
 use reqwest::StatusCode;
 use url::Url;
 
@@ -304,6 +303,7 @@ impl TodoProvider for MicrosoftService {
 			)
 			.await?;
 		todo_task.checklist_items = None;
+		println!("{}", serde_json::json!(todo_task));
 		let response = self
 			.client
 			.me()
@@ -314,11 +314,15 @@ impl TodoProvider for MicrosoftService {
 			.send()
 			.await?;
 
-		if response.status() == StatusCode::OK {
-			let task: TodoTask = response.json().await?;
-			Ok(task.into())
-		} else {
-			bail!("An error ocurred while updating the list.")
+		let status = response.status();
+		match response.error_for_status() {
+			Ok(response) => {
+				let task: TodoTask = response.json().await?;
+				Ok(task.into())
+			},
+			Err(err) => {
+				bail!("An error ocurred while updating the list: {err}")
+			},
 		}
 	}
 

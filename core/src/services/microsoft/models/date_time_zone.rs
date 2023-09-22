@@ -26,7 +26,7 @@ impl From<DateTimeTimeZone> for DateTime<Utc> {
 impl From<DateTime<Utc>> for DateTimeTimeZone {
 	fn from(date: DateTime<Utc>) -> Self {
 		Self {
-			date_time: date.to_string(),
+			date_time: date.format("%Y-%m-%dT%H:%M:%S").to_string(),
 			time_zone: date.timezone().to_string(),
 		}
 	}

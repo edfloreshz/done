@@ -1,10 +1,10 @@
 pub const APP_ID: &str = "dev.edfloreshz.Done";
 pub const GETTEXT_PACKAGE: &str = "done";
-pub const LOCALEDIR: &str = "/app/share/locale";
+pub const LOCALEDIR: &str = "/usr/local/share/locale";
 #[allow(dead_code)]
-pub const PKGDATADIR: &str = "/app/share/done";
+pub const PKGDATADIR: &str = "/usr/local/share/done";
 pub const PROFILE: &str = "";
 #[allow(dead_code)]
 pub const RESOURCES_FILE: &str =
-	concat!("/app/share/done", "/resources.gresource");
+	concat!("/usr/local/share/done", "/resources.gresource");
 pub const VERSION: &str = "0.2.0";

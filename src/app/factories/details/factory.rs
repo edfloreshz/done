@@ -39,7 +39,7 @@ use super::{
 pub struct TaskDetailsFactoryModel {
 	pub original_task: Task,
 	pub task: Task,
-	pub task_details_index: DynamicIndex,
+	pub parent_task_index: Option<DynamicIndex>,
 	pub update: bool,
 	pub selected_due_date: Option<String>,
 	pub selected_reminder_date: Option<String>,
@@ -94,7 +94,6 @@ pub enum TaskDetailsFactoryInput {
 pub enum TaskDetailsFactoryOutput {
 	SaveTask(Option<DynamicIndex>, Box<Task>, bool),
 	CleanTaskEntry,
-	HideFlap,
 }
 
 #[relm4::factory(pub async)]
@@ -119,9 +118,9 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						gtk::Button {
 							set_icon_name: icon_name::LEFT,
 							set_tooltip: fl!("cancel"),
-							set_action_name: Some("navigation.pop"),
 							connect_clicked => TaskDetailsFactoryInput::CancelWarning
 						},
+						#[name = "save_button"]
 						gtk::Button {
 							set_icon_name: icon_name::FLOPPY,
 							set_tooltip: fl!("save"),
@@ -560,13 +559,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 
 	async fn init_model(
 		init: Self::Init,
-		index: &DynamicIndex,
+		_index: &DynamicIndex,
 		sender: AsyncFactorySender<Self>,
 	) -> Self {
 		let mut model = Self {
 			original_task: init.task.clone(),
 			task: init.task.clone(),
-			task_details_index: index.clone(),
+			parent_task_index: init.index.clone(),
 			update: init.index.is_some(),
 			selected_due_date: init
 				.task
@@ -728,27 +727,31 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 						"yes",
 						adw::ResponseAppearance::Destructive,
 					);
-					let dirty = self.dirty;
+					let save_button = widgets.save_button.clone();
 					dialog.connect_response(
 						None,
 						clone!(@strong sender => move |dialog, response| {
 							if response == "yes" {
-								sender.output(TaskDetailsFactoryOutput::HideFlap)
+								save_button
+								.activate_action("navigation.pop", None).unwrap();
 							}
 							dialog.close();
 						}),
 					);
-					if dirty {
+					if self.dirty {
 						dialog.present();
 					} else {
-						sender.output(TaskDetailsFactoryOutput::HideFlap)
+						widgets
+							.save_button
+							.activate_action("navigation.pop", None)
+							.unwrap();
 					}
 				}
 			},
 			TaskDetailsFactoryInput::SaveTask => {
 				if self.update {
 					sender.output(TaskDetailsFactoryOutput::SaveTask(
-						Some(self.task_details_index.clone()),
+						self.parent_task_index.clone(),
 						Box::new(self.task.clone()),
 						self.update,
 					));
@@ -834,14 +837,13 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		let output = match output {
 			TaskDetailsFactoryOutput::CleanTaskEntry => ContentInput::CleanTaskEntry,
-			TaskDetailsFactoryOutput::SaveTask(_, task, is_update) => {
+			TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
 				if is_update {
-					ContentInput::UpdateTask(*task)
+					ContentInput::UpdateTask(index, *task)
 				} else {
 					ContentInput::AddTask(*task)
 				}
 			},
-			TaskDetailsFactoryOutput::HideFlap => ContentInput::HideFlap,
 		};
 		Some(output)
 	}

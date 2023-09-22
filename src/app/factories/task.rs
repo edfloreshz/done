@@ -1,4 +1,4 @@
-use crate::app::components::content::{ContentInput, TaskInput, TaskOutput};
+use crate::app::components::content::ContentInput;
 use crate::fl;
 use adw::prelude::{ActionableExt, ActionableExtManual};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
@@ -20,12 +20,29 @@ use relm4_icons::icon_name;
 pub struct TaskModel {
 	pub task: Task,
 	pub parent_list: List,
+	pub index: DynamicIndex,
 }
 
 #[derive(derive_new::new)]
 pub struct TaskInit {
 	pub task: Task,
 	pub parent_list: List,
+}
+
+#[derive(Debug)]
+pub enum TaskInput {
+	SetCompleted(bool),
+	Favorite,
+	ModifyTitle(String),
+	RevealTaskDetails,
+	SetTask(Task),
+}
+
+#[derive(Debug)]
+pub enum TaskOutput {
+	Remove(DynamicIndex),
+	UpdateTask(DynamicIndex, Task),
+	RevealTaskDetails(DynamicIndex, Task),
 }
 
 #[relm4::factory(pub async)]
@@ -40,13 +57,16 @@ impl AsyncFactoryComponent for TaskModel {
 
 	view! {
 		root = adw::EntryRow {
+			#[watch]
 			set_title: &self.parent_list.name,
+			#[watch]
 			set_text: self.task.title.as_str(),
 			set_show_apply_button: true,
 			set_enable_emoji_completion: true,
 			#[name(check_button)]
 			add_prefix = &gtk::CheckButton {
 				set_tooltip: fl!("completed-tooltip"),
+				#[watch]
 				set_active: self.task.status == Status::Completed,
 				connect_toggled[sender] => move |checkbox| {
 					sender.input(TaskInput::SetCompleted(checkbox.is_active()));
@@ -61,9 +81,7 @@ impl AsyncFactoryComponent for TaskModel {
 				set_icon_name: icon_name::STAR_FILLED_ROUNDED,
 				set_valign: gtk::Align::Center,
 				set_tooltip: fl!("favorite-task"),
-				connect_clicked[sender, index] => move |_| {
-					sender.input(TaskInput::Favorite(index.clone()));
-				}
+				connect_clicked => TaskInput::Favorite,
 			},
 			#[name(details)]
 			add_suffix = &gtk::Button {
@@ -74,9 +92,7 @@ impl AsyncFactoryComponent for TaskModel {
 				set_tooltip: fl!("edit-task-details"),
 				set_action_name: Some("navigation.push"),
 				set_action_target: Some("task-details-page"),
-				connect_clicked[sender, index] => move |_| {
-					sender.input(TaskInput::RevealTaskDetails(Some(index.clone())))
-				}
+				connect_clicked => TaskInput::RevealTaskDetails
 			},
 			#[name(delete)]
 			add_suffix = &gtk::Button {
@@ -102,12 +118,15 @@ impl AsyncFactoryComponent for TaskModel {
 
 	async fn init_model(
 		init: Self::Init,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		_sender: AsyncFactorySender<Self>,
 	) -> Self {
+		let mut task = init.task.clone();
+		task.parent = init.parent_list.id.clone();
 		Self {
-			task: init.task,
+			task,
 			parent_list: init.parent_list,
+			index: index.clone(),
 		}
 	}
 
@@ -128,9 +147,10 @@ impl AsyncFactoryComponent for TaskModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			TaskInput::RevealTaskDetails(index) => {
-				sender.output(TaskOutput::RevealTaskDetails(index, self.task.clone()))
-			},
+			TaskInput::SetTask(task) => self.task = task,
+			TaskInput::RevealTaskDetails => sender.output(
+				TaskOutput::RevealTaskDetails(self.index.clone(), self.task.clone()),
+			),
 			TaskInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
 					Status::Completed
@@ -139,15 +159,21 @@ impl AsyncFactoryComponent for TaskModel {
 				};
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(None, self.task.clone()))
+					.send(TaskOutput::UpdateTask(
+						self.index.clone(),
+						self.task.clone(),
+					))
 					.unwrap_or_default();
 			},
-			TaskInput::Favorite(index) => {
+			TaskInput::Favorite => {
 				self.task.favorite = !self.task.favorite;
 
 				sender
 					.output_sender()
-					.send(TaskOutput::UpdateTask(Some(index), self.task.clone()))
+					.send(TaskOutput::UpdateTask(
+						self.index.clone(),
+						self.task.clone(),
+					))
 					.unwrap_or_default();
 			},
 			TaskInput::ModifyTitle(title) => {
@@ -155,7 +181,10 @@ impl AsyncFactoryComponent for TaskModel {
 					self.task.title = title;
 					sender
 						.output_sender()
-						.send(TaskOutput::UpdateTask(None, self.task.clone()))
+						.send(TaskOutput::UpdateTask(
+							self.index.clone(),
+							self.task.clone(),
+						))
 						.unwrap_or_default();
 				}
 			},
@@ -165,9 +194,11 @@ impl AsyncFactoryComponent for TaskModel {
 	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
 		Some(match output {
 			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::UpdateTask(_, task) => ContentInput::UpdateTask(task),
+			TaskOutput::UpdateTask(index, task) => {
+				ContentInput::UpdateTask(Some(index), task)
+			},
 			TaskOutput::RevealTaskDetails(index, task) => {
-				ContentInput::RevealTaskDetails(index, task)
+				ContentInput::RevealTaskDetails(Some(index), task)
 			},
 		})
 	}
