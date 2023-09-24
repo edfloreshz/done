@@ -1,5 +1,8 @@
 use crate::{app::models::sidebar_list::SidebarList, fl};
-use adw::traits::{EntryRowExt, PreferencesRowExt};
+use adw::{
+	prelude::{ActionableExt, ActionableExtManual},
+	traits::{EntryRowExt, PreferencesRowExt},
+};
 use core_done::models::task::Task;
 use gtk::traits::{EditableExt, ListBoxRowExt};
 use relm4::{
@@ -54,11 +57,11 @@ impl Component for TaskInputModel {
 				set_tooltip: fl!("more-details"),
 				add_css_class: "suggested-action",
 				add_css_class: "circular",
+				set_action_name: Some("navigation.push"),
+				set_action_target: Some("task-details-page"),
 				set_icon_name: icon_name::PENCIL_AND_PAPER,
 				set_valign: gtk::Align::Center,
-				connect_clicked[sender] => move |_| {
-					sender.input(TaskInputInput::EnterCreationMode);
-				}
+				connect_clicked => TaskInputInput::EnterCreationMode
 			},
 			connect_apply[sender] => move |_| {
 				sender.input(TaskInputInput::AddTask);

@@ -1,6 +1,6 @@
 use crate::app::components::task_input::TaskInputOutput;
 use crate::app::factories::details::factory::{
-	TaskDetailsFactoryInit, TaskDetailsFactoryModel,
+	TaskDetailsFactoryInit, TaskDetailsFactoryInput, TaskDetailsFactoryModel,
 };
 use crate::app::factories::task::{TaskInit, TaskInput, TaskModel};
 use crate::app::models::sidebar_list::SidebarList;
@@ -45,8 +45,8 @@ pub struct ContentModel {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ContentState {
+	Unselected,
 	Empty,
-	AllDone,
 	Loading,
 	TasksLoaded,
 	Details,
@@ -62,6 +62,7 @@ pub enum ContentInput {
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	RevealTaskDetails(Option<DynamicIndex>, Task),
+	SetState(ContentState),
 	CleanTaskEntry,
 	Clean,
 }
@@ -117,7 +118,7 @@ impl AsyncComponent for ContentModel {
 							set_orientation: gtk::Orientation::Vertical,
 							#[transition = "Crossfade"]
 							append = match model.state {
-								ContentState::Empty => {
+								ContentState::Unselected => {
 									gtk::Box {
 										set_vexpand: true,
 										set_hexpand: true,
@@ -148,37 +149,6 @@ impl AsyncComponent for ContentModel {
 										},
 									}
 								},
-								ContentState::AllDone => {
-									gtk::Box {
-										set_vexpand: true,
-										set_hexpand: true,
-										set_orientation: gtk::Orientation::Vertical,
-										set_halign: gtk::Align::Center,
-										set_valign: gtk::Align::Center,
-										set_spacing: 10,
-										gtk::Image {
-											set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE2),
-											set_pixel_size: 64,
-											set_margin_all: 10,
-										},
-										gtk::Label {
-											set_css_classes: &["title-2"],
-											set_wrap: true,
-											set_wrap_mode: gtk::pango::WrapMode::Word,
-											set_justify: gtk::Justification::Center,
-											#[watch]
-											set_text: fl!("all-done"),
-										},
-										gtk::Label {
-											set_css_classes: &["body"],
-											#[watch]
-											set_text: fl!("all-done-instructions"),
-											set_wrap: true,
-											set_wrap_mode: gtk::pango::WrapMode::Word,
-											set_justify: gtk::Justification::Center,
-										},
-									}
-								},
 								ContentState::Loading => {
 									gtk::CenterBox {
 										set_orientation: gtk::Orientation::Vertical,
@@ -189,7 +159,7 @@ impl AsyncComponent for ContentModel {
 										}
 									}
 								},
-								ContentState::TasksLoaded | ContentState::Details => {
+								ContentState::TasksLoaded | ContentState::Empty | ContentState::Details => {
 									#[name(split_view)]
 									adw::NavigationView {
 										add = &adw::NavigationPage {
@@ -238,19 +208,57 @@ impl AsyncComponent for ContentModel {
 												gtk::Stack {
 													set_transition_duration: 250,
 													set_transition_type: gtk::StackTransitionType::Crossfade,
-													gtk::ScrolledWindow {
-														#[watch]
-														set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
-														set_vexpand: true,
-														set_hexpand: true,
-														#[local_ref]
-														list_box -> adw::PreferencesGroup {
-															set_css_classes: &["boxed-list"],
-															set_valign: gtk::Align::Fill,
-															set_margin_all: 5,
-														},
-													},
+													if model.task_factory.is_empty() {
+														gtk::Box {
+															set_vexpand: true,
+															set_hexpand: true,
+															set_orientation: gtk::Orientation::Vertical,
+															set_halign: gtk::Align::Center,
+															set_valign: gtk::Align::Center,
+															set_spacing: 10,
+															gtk::Image {
+																set_icon_name: Some(icon_name::CHECK_ROUND_OUTLINE2),
+																set_pixel_size: 64,
+																set_margin_all: 10,
+															},
+															gtk::Label {
+																set_css_classes: &["title-2"],
+																set_wrap: true,
+																set_wrap_mode: gtk::pango::WrapMode::Word,
+																set_justify: gtk::Justification::Center,
+																#[watch]
+																set_text: fl!("all-done"),
+															},
+															gtk::Label {
+																set_css_classes: &["body"],
+																#[watch]
+																set_text: fl!("all-done-instructions"),
+																set_wrap: true,
+																set_wrap_mode: gtk::pango::WrapMode::Word,
+																set_justify: gtk::Justification::Center,
+															},
+														}
+													} else {
+														gtk::ScrolledWindow {
+															set_visible: !model.task_factory.is_empty(),
+															#[watch]
+															set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
+															set_vexpand: true,
+															set_hexpand: true,
+															#[local_ref]
+															list_box -> adw::PreferencesGroup {
+																set_css_classes: &["boxed-list"],
+																set_valign: gtk::Align::Fill,
+																set_margin_all: 5,
+															},
+														}
+													}
 												},
+												gtk::Box {
+													set_visible: model.state != ContentState::Details,
+													set_margin_all: 5,
+													append: model.task_entry.widget()
+												}
 											},
 										},
 										add = &adw::NavigationPage {
@@ -259,12 +267,6 @@ impl AsyncComponent for ContentModel {
 										},
 									}
 								}
-							},
-							gtk::Box {
-								#[watch]
-								set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::AllDone,
-								set_margin_all: 5,
-								append: model.task_entry.widget()
 							}
 						}
 					},
@@ -296,7 +298,7 @@ impl AsyncComponent for ContentModel {
 					TaskInputOutput::AddTask(task) => ContentInput::AddTask(task),
 				}),
 			welcome: WelcomeComponent::builder().launch(()).detach(),
-			state: ContentState::Empty,
+			state: ContentState::Unselected,
 			service: Service::Smart,
 			parent_list: None,
 			selected_task: None,
@@ -318,7 +320,8 @@ impl AsyncComponent for ContentModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ContentInput::Clean => self.state = ContentState::Empty,
+			ContentInput::Clean => self.state = ContentState::Unselected,
+			ContentInput::SetState(state) => self.state = state,
 			ContentInput::LoadTask(task) => {
 				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
 				{
@@ -338,7 +341,7 @@ impl AsyncComponent for ContentModel {
 								.task_factory
 								.guard()
 								.push_back(TaskInit::new(task.clone(), parent.clone()));
-							self.state = ContentState::Details;
+							self.state = ContentState::TasksLoaded;
 						},
 						Err(err) => {
 							tracing::error!("An error ocurred: {err}");
@@ -382,11 +385,17 @@ impl AsyncComponent for ContentModel {
 				}
 			},
 			ContentInput::SelectList(list, service) => {
-				self.state = ContentState::Loading;
-				if let Some(handle) = &self.handle {
-					handle.abort()
+				if self.state != ContentState::Details {
+					self.state = ContentState::Loading;
+					if let Some(handle) = &self.handle {
+						handle.abort()
+					}
+					sender.input(ContentInput::LoadTasks(list, service));
+				} else {
+					self
+						.task_details_factory
+						.send(0, TaskDetailsFactoryInput::CancelWarning)
 				}
-				sender.input(ContentInput::LoadTasks(list, service));
 			},
 			ContentInput::LoadTasks(list, service) => {
 				let mut guard = self.task_factory.guard();
@@ -462,39 +471,52 @@ impl AsyncComponent for ContentModel {
 							let sender_clone = sender.clone();
 							let list_clone = list.clone();
 							let mut service = self.service.get_service();
+							self.state = ContentState::Loading;
 							if service.stream_support() {
 								self.handle = Some(tokio::spawn(async move {
 									match service.get_tasks(list_clone.id.clone()).await {
 										Ok(mut stream) => {
-											while let Some(task) = stream.next().await {
+											let first = stream.next().await;
+											if let Some(task) = first {
 												sender_clone.input(ContentInput::LoadTask(task));
+												while let Some(task) = stream.next().await {
+													sender_clone.input(ContentInput::LoadTask(task));
+												}
+											} else {
+												sender_clone
+													.input(ContentInput::SetState(ContentState::Empty));
 											}
 										},
 										Err(err) => tracing::error!("{err}"),
 									}
 								}));
-								self.state = ContentState::Loading;
 							} else if let Ok(tasks) =
 								service.read_tasks_from_list(list_clone.id.clone()).await
 							{
-								for task in tasks {
-									guard.push_back(TaskInit::new(
-										task.clone(),
-										service.read_list(task.parent.clone()).await.unwrap(),
-									));
+								if tasks.is_empty() {
+									self.state = ContentState::Empty;
+								} else {
+									for task in &tasks {
+										guard.push_back(TaskInit::new(
+											task.clone(),
+											service.read_list(task.parent.clone()).await.unwrap(),
+										));
+									}
+									self.state = ContentState::TasksLoaded;
 								}
-								self.state = ContentState::TasksLoaded;
+							} else {
+								self.state = ContentState::Empty;
 							}
 						},
 					}
 				}
 
 				if guard.is_empty() && self.state != ContentState::Loading {
-					self.state = ContentState::AllDone;
+					self.state = ContentState::Empty;
 				}
 
 				if list.smart() {
-					self.state = ContentState::Empty;
+					self.state = ContentState::Unselected;
 				}
 
 				self
@@ -519,7 +541,7 @@ impl AsyncComponent for ContentModel {
 			},
 			ContentInput::ServiceDisabled(service) => {
 				if self.service == service {
-					self.state = ContentState::Empty;
+					self.state = ContentState::Unselected;
 				}
 			},
 			ContentInput::CleanTaskEntry => self

@@ -7,7 +7,7 @@ pub struct TodoTaskList {
 	pub display_name: String,
 	pub is_owner: bool,
 	pub is_shared: bool,
-	pub wellknown_list_name: Option<WellKnownListName>,
+	pub wellknown_list_name: WellKnownListName,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]

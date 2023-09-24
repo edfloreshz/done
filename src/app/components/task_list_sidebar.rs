@@ -43,7 +43,8 @@ pub enum TaskListSidebarInput {
 	ServiceSelected(Service),
 	ServiceDisabled(Service),
 	SelectList(SidebarList),
-	DeleteTaskList(DynamicIndex, String),
+	DeleteTaskList(DynamicIndex),
+	SetStatus(TaskListSidebarStatus),
 }
 
 #[derive(Debug)]
@@ -53,7 +54,7 @@ pub enum TaskListSidebarOutput {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum TaskListSidebarStatus {
+pub enum TaskListSidebarStatus {
 	Empty,
 	Loading,
 	Loaded,
@@ -220,6 +221,9 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				));
 				self.state = TaskListSidebarStatus::Loaded;
 			},
+			TaskListSidebarInput::SetStatus(status) => {
+				self.state = status;
+			},
 			TaskListSidebarInput::LoadTaskLists => {
 				let mut guard = self.task_list_factory.guard();
 				guard.clear();
@@ -230,8 +234,17 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					self.handle = Some(tokio::spawn(async move {
 						match service.get_lists().await {
 							Ok(mut stream) => {
-								while let Some(list) = stream.next().await {
+								let first = stream.next().await;
+								if let Some(list) = first {
 									sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
+									while let Some(list) = stream.next().await {
+										sender_clone
+											.input(TaskListSidebarInput::LoadTaskList(list));
+									}
+								} else {
+									sender_clone.input(TaskListSidebarInput::SetStatus(
+										TaskListSidebarStatus::Empty,
+									));
 								}
 							},
 							Err(err) => tracing::error!("{err}"),
@@ -263,20 +276,13 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			TaskListSidebarInput::SelectList(list) => sender
 				.output(TaskListSidebarOutput::SelectList(list, self.service))
 				.unwrap(),
-			TaskListSidebarInput::DeleteTaskList(index, list_id) => {
-				match self.service.get_service().delete_list(list_id).await {
-					Ok(_) => {
-						self.task_list_factory.guard().remove(index.current_index());
-						sender
-							.output(TaskListSidebarOutput::CleanContent)
-							.unwrap_or_default();
-						if self.task_list_factory.is_empty() {
-							self.state = TaskListSidebarStatus::Empty;
-						}
-					},
-					Err(e) => {
-						tracing::error!("Error while deleting task list: {}", e);
-					},
+			TaskListSidebarInput::DeleteTaskList(index) => {
+				self.task_list_factory.guard().remove(index.current_index());
+				sender
+					.output(TaskListSidebarOutput::CleanContent)
+					.unwrap_or_default();
+				if self.task_list_factory.is_empty() {
+					self.state = TaskListSidebarStatus::Empty;
 				}
 			},
 		}

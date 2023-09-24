@@ -405,6 +405,7 @@ impl TodoProvider for MicrosoftService {
 	async fn create_list(&mut self, list: List) -> Result<List> {
 		self.refresh_token().await?;
 		let list: TodoTaskList = list.into();
+		println!("{}", serde_json::json!(list));
 		let response = self
 			.client
 			.me()
@@ -413,11 +414,12 @@ impl TodoProvider for MicrosoftService {
 			.create_lists(&serde_json::json!(list))
 			.send()
 			.await?;
-		if response.status() == StatusCode::CREATED {
-			let list: TodoTaskList = response.json().await?;
-			Ok(list.into())
-		} else {
-			bail!("An error ocurred while creating the list.")
+		match response.error_for_status() {
+			Ok(response) => {
+				let list: TodoTaskList = response.json().await?;
+				Ok(list.into())
+			},
+			Err(err) => bail!("An error ocurred while creating the list: {err}"),
 		}
 	}
 
@@ -450,10 +452,10 @@ impl TodoProvider for MicrosoftService {
 			.delete_lists()
 			.send()
 			.await?;
-		if response.status() == StatusCode::NO_CONTENT {
-			Ok(())
-		} else {
-			bail!("An error ocurred while deleting the list.")
+
+		match response.error_for_status() {
+			Ok(_) => Ok(()),
+			Err(err) => bail!("An error ocurred while deleting the list: {err}"),
 		}
 	}
 }

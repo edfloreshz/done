@@ -46,7 +46,7 @@ pub enum TaskListFactoryInput {
 #[derive(Debug)]
 pub enum TaskListFactoryOutput {
 	Select(SidebarList),
-	DeleteTaskList(DynamicIndex, String),
+	DeleteTaskList(DynamicIndex),
 }
 
 relm4::new_action_group!(pub(super) TaskListActionGroup, "win");
@@ -228,13 +228,11 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			},
 			TaskListFactoryInput::Delete => {
 				if let SidebarList::Custom(list) = &self.list {
-					let list_id = list.id.clone();
 					let mut service = self.service.get_service();
-					match service.delete_list(list_id.clone()).await {
+					match service.delete_list(list.id.clone()).await {
 						Ok(_) => {
 							sender.output(TaskListFactoryOutput::DeleteTaskList(
 								self.index.clone(),
-								list_id,
 							));
 						},
 						Err(err) => {
@@ -264,8 +262,8 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			TaskListFactoryOutput::Select(list) => {
 				Some(TaskListSidebarInput::SelectList(list))
 			},
-			TaskListFactoryOutput::DeleteTaskList(index, list_id) => {
-				Some(TaskListSidebarInput::DeleteTaskList(index, list_id))
+			TaskListFactoryOutput::DeleteTaskList(index) => {
+				Some(TaskListSidebarInput::DeleteTaskList(index))
 			},
 		}
 	}

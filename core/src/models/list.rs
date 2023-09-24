@@ -60,7 +60,7 @@ impl From<List> for TodoTaskList {
 			display_name,
 			is_owner: true,
 			is_shared: false,
-			wellknown_list_name: None,
+			wellknown_list_name: Default::default(),
 		}
 	}
 }
