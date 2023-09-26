@@ -1,9 +1,9 @@
 use crate::{
 	services::{
-		local::service::ComputerStorage, microsoft::service::MicrosoftService,
+		computer::service::ComputerStorage, microsoft::service::MicrosoftService,
 		smart::Smart,
 	},
-	task_service::TodoProvider,
+	traits::todo::{service::TodoService, session::TodoSession},
 };
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -54,7 +54,18 @@ impl Service {
 	/// Finds the requested service and returns it.
 	/// After implemeting the Service trait in your service
 	/// struct, register your service here.
-	pub fn get_service(&self) -> Box<dyn TodoProvider> {
+	pub fn get_service(&self) -> Box<dyn TodoService> {
+		match self {
+			Service::Smart => Box::new(Smart::new()),
+			Service::Computer => Box::new(ComputerStorage::new()),
+			Service::Microsoft => Box::new(MicrosoftService::new()),
+		}
+	}
+
+	/// Finds the requested service and returns it.
+	/// After implemeting the Service trait in your service
+	/// struct, register your service here.
+	pub fn get_session(&self) -> Box<dyn TodoSession> {
 		match self {
 			Service::Smart => Box::new(Smart::new()),
 			Service::Computer => Box::new(ComputerStorage::new()),

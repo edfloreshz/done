@@ -94,7 +94,7 @@ impl AsyncComponent for PreferencesComponentModel {
 									add_prefix = &gtk::Image {
 										set_icon_name: Some(icon_name::CHECKMARK)
 									},
-									set_active: Service::Microsoft.get_service().available(),
+									set_active: Service::Microsoft.get_session().available(),
 									connect_active_notify[sender] => move |switch| {
 										println!("Switch activated");
 										if switch.is_active() {
@@ -165,14 +165,14 @@ impl AsyncComponent for PreferencesComponentModel {
 				}
 			},
 			PreferencesComponentInput::MicrosoftLogin => {
-				let service = Service::Microsoft.get_service();
+				let service = Service::Microsoft.get_session();
 				match service.login() {
 					Ok(_) => println!("Login started"),
 					Err(err) => eprintln!("{err}"),
 				};
 			},
 			PreferencesComponentInput::MicrosoftLogout => {
-				let service = Service::Microsoft.get_service();
+				let service = Service::Microsoft.get_session();
 				match service.logout() {
 					Ok(_) => {
 						println!("Logout completed");

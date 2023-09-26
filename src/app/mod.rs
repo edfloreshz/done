@@ -277,7 +277,7 @@ impl AsyncComponent for Done {
 			let captured_sender = captured_sender.clone();
 			relm4::tokio::spawn(async move {
 				let response = Service::Microsoft
-					.get_service()
+					.get_session()
 					.handle_uri_params(uri)
 					.await;
 				match response {

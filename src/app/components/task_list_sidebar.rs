@@ -229,7 +229,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				guard.clear();
 
 				let mut service = self.service.get_service();
-				if service.stream_support() {
+				if self.service.get_session().stream_support() {
 					let sender_clone = sender.clone();
 					self.handle = Some(tokio::spawn(async move {
 						match service.get_lists().await {

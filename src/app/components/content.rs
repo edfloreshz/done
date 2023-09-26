@@ -472,7 +472,7 @@ impl AsyncComponent for ContentModel {
 							let list_clone = list.clone();
 							let mut service = self.service.get_service();
 							self.state = ContentState::Loading;
-							if service.stream_support() {
+							if self.service.get_session().stream_support() {
 								self.handle = Some(tokio::spawn(async move {
 									match service.get_tasks(list_clone.id.clone()).await {
 										Ok(mut stream) => {

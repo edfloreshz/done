@@ -6,7 +6,8 @@ use crate::services::microsoft::models::{
 	checklist_item::ChecklistItem, collection::Collection, list::TodoTaskList,
 	task::TodoTask,
 };
-use crate::task_service::TodoProvider;
+use crate::traits::todo::service::TodoService;
+use crate::traits::todo::session::TodoSession;
 use anyhow::{bail, Result};
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
@@ -147,35 +148,21 @@ impl MicrosoftService {
 
 #[async_trait]
 #[allow(unused)]
-impl TodoProvider for MicrosoftService {
-	async fn handle_uri_params(&mut self, uri: Url) -> Result<()> {
-		let mut pairs = uri.query_pairs();
-		if uri.as_str().contains("msft") {
-			let code = pairs.next().unwrap().1.to_string();
-			self.request_token(code).await?;
-		}
-		Ok(())
-	}
-
-	fn login(&self) -> anyhow::Result<()> {
-		let mut oauth = MicrosoftService::oauth_client();
-		let mut request = oauth.build_async().authorization_code_grant();
-		request.browser_authorization().open()?;
-		Ok(())
-	}
-
-	fn logout(&self) -> anyhow::Result<()> {
-		keytar::delete_password("dev.edfloreshz.Done", "access_token")?;
-		Ok(())
-	}
-
-	fn available(&self) -> bool {
-		let password = keytar::get_password(APP_ID, "access_token");
-		password.is_ok() && !password.unwrap().password.is_empty()
-	}
-
-	fn stream_support(&self) -> bool {
-		true
+impl TodoService for MicrosoftService {
+	async fn task_count(&mut self, task_list_id: String) -> Result<usize> {
+		self.refresh_token().await?;
+		let response = self
+			.client
+			.me()
+			.todo()
+			.list(task_list_id)
+			.tasks()
+			.get_tasks_count()
+			.send()
+			.await?;
+		let result: serde_json::Value = response.json().await?;
+		println!("{result}");
+		Ok(0)
 	}
 
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
@@ -457,5 +444,38 @@ impl TodoProvider for MicrosoftService {
 			Ok(_) => Ok(()),
 			Err(err) => bail!("An error ocurred while deleting the list: {err}"),
 		}
+	}
+}
+
+#[async_trait]
+impl TodoSession for MicrosoftService {
+	async fn handle_uri_params(&mut self, uri: Url) -> Result<()> {
+		let mut pairs = uri.query_pairs();
+		if uri.as_str().contains("msft") {
+			let code = pairs.next().unwrap().1.to_string();
+			self.request_token(code).await?;
+		}
+		Ok(())
+	}
+
+	fn login(&self) -> anyhow::Result<()> {
+		let mut oauth = MicrosoftService::oauth_client();
+		let mut request = oauth.build_async().authorization_code_grant();
+		request.browser_authorization().open()?;
+		Ok(())
+	}
+
+	fn logout(&self) -> anyhow::Result<()> {
+		keytar::delete_password("dev.edfloreshz.Done", "access_token")?;
+		Ok(())
+	}
+
+	fn available(&self) -> bool {
+		let password = keytar::get_password(APP_ID, "access_token");
+		password.is_ok() && !password.unwrap().password.is_empty()
+	}
+
+	fn stream_support(&self) -> bool {
+		true
 	}
 }

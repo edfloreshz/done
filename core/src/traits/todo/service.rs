@@ -3,26 +3,13 @@ use std::pin::Pin;
 use anyhow::Result;
 use async_trait::async_trait;
 use futures::Stream;
-use url::Url;
 
 use crate::models::{list::List, task::Task};
 
 #[async_trait]
-pub trait TodoProvider: Sync + Send {
-	/// Sets the initial config for this service.
-	async fn handle_uri_params(&mut self, uri: Url) -> Result<()>;
-
-	/// Handles the login action.
-	fn login(&self) -> Result<()>;
-
-	/// Handles the logout action.
-	fn logout(&self) -> Result<()>;
-
-	/// Checks to see if the service is available.
-	fn available(&self) -> bool;
-
-	/// Checks to see if the service is available.
-	fn stream_support(&self) -> bool;
+pub trait TodoService: Sync + Send {
+	/// Gets the task count of a task list.
+	async fn task_count(&mut self, task_list_id: String) -> Result<usize>;
 
 	/// Read all the tasks from a service, regardless of parent list.
 	async fn read_tasks(&mut self) -> Result<Vec<Task>>;

@@ -2,7 +2,7 @@ use std::pin::Pin;
 
 use crate::{
 	models::{list::List, task::Task},
-	task_service::TodoProvider,
+	traits::todo::{service::TodoService, session::TodoSession},
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -19,8 +19,7 @@ impl Smart {
 }
 
 #[async_trait]
-#[allow(unused)]
-impl TodoProvider for Smart {
+impl TodoSession for Smart {
 	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}
@@ -39,6 +38,14 @@ impl TodoProvider for Smart {
 
 	fn stream_support(&self) -> bool {
 		false
+	}
+}
+
+#[async_trait]
+#[allow(unused)]
+impl TodoService for Smart {
+	async fn task_count(&mut self, task_list_id: String) -> Result<usize> {
+		Ok(0)
 	}
 
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {

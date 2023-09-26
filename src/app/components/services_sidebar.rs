@@ -137,7 +137,7 @@ impl AsyncComponent for ServicesSidebarModel {
 			let mut guard = services_factory.guard();
 
 			for service in Service::list() {
-				if service.get_service().available() {
+				if service.get_session().available() {
 					guard.push_back(service);
 				}
 			}
@@ -176,7 +176,7 @@ impl AsyncComponent for ServicesSidebarModel {
 				let mut guard = self.services_factory.guard();
 				guard.clear();
 				for service in Service::list() {
-					if service.get_service().available() {
+					if service.get_session().available() {
 						guard.push_back(service);
 					}
 				}

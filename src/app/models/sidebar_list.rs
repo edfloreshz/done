@@ -28,6 +28,22 @@ impl SidebarList {
 		list
 	}
 
+	pub fn id(&self) -> String {
+		let all = "all";
+		let today = "today";
+		let starred = "starred";
+		let next_7_days = "next-7-days";
+		let completed_list = "completed-list";
+		match self {
+			SidebarList::All => all.into(),
+			SidebarList::Today => today.into(),
+			SidebarList::Starred => starred.into(),
+			SidebarList::Next7Days => next_7_days.into(),
+			SidebarList::Done => completed_list.into(),
+			SidebarList::Custom(list) => list.id.clone(),
+		}
+	}
+
 	pub fn name(&self) -> String {
 		let all: &String = fl!("all");
 		let today: &String = fl!("today");

@@ -12,7 +12,7 @@ use crate::{
 	schema::lists::*,
 	schema::tasks::dsl::tasks,
 	schema::tasks::*,
-	task_service::TodoProvider,
+	traits::todo::{service::TodoService, session::TodoSession},
 };
 
 use super::database::{
@@ -30,7 +30,7 @@ impl ComputerStorage {
 }
 
 #[async_trait]
-impl TodoProvider for ComputerStorage {
+impl TodoSession for ComputerStorage {
 	async fn handle_uri_params(&mut self, _uri: Url) -> Result<()> {
 		Ok(())
 	}
@@ -49,6 +49,13 @@ impl TodoProvider for ComputerStorage {
 
 	fn stream_support(&self) -> bool {
 		false
+	}
+}
+
+#[async_trait]
+impl TodoService for ComputerStorage {
+	async fn task_count(&mut self, _task_list_id: String) -> Result<usize> {
+		Ok(0)
 	}
 
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {

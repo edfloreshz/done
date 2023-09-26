@@ -1,4 +1,5 @@
 use core_done::service::Service;
+use libadwaita::prelude::ButtonExt;
 use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
@@ -25,6 +26,7 @@ pub struct TaskListFactoryModel {
 	pub service: Service,
 	pub index: DynamicIndex,
 	pub list: SidebarList,
+	pub count: usize,
 	pub rename: Controller<ListDialogComponent>,
 	pub delete: Controller<DeleteComponent>,
 }
@@ -122,6 +124,12 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						set_text: self.list.name().as_str(),
 						set_margin_all: 5,
 					},
+					gtk::Button {
+						set_halign: gtk::Align::End,
+						set_css_classes: &["circular", "small"],
+						#[watch]
+						set_label: &self.count.to_string(),
+					},
 					#[name(list_actions)]
 					gtk::MenuButton {
 						#[watch]
@@ -164,7 +172,13 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			index: index.clone(),
 			rename,
 			delete,
-			list: init.list,
+			list: init.list.clone(),
+			count: init
+				.service
+				.get_service()
+				.task_count(init.list.id())
+				.await
+				.unwrap(),
 		}
 	}
 
