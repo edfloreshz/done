@@ -43,12 +43,13 @@ pub fn settings() -> Settings {
 	use image::EncodableLayout;
 
 	let img = image::load_from_memory_with_format(
-		include_bytes!("../../../resources/icons/dev.edfloreshz.Done.png"),
+		include_bytes!("resources\\icons\\dev.edfloreshz.Done.png"),
 		image::ImageFormat::Png,
 	);
 	match img {
 		Ok(img) => match img.as_rgba8() {
 			Some(icon) => Settings {
+				decorations: false,
 				icon: window::icon::from_rgba(
 					icon.as_bytes().to_vec(),
 					icon.width(),
