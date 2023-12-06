@@ -1,416 +1,110 @@
-pub mod components;
-pub mod factories;
-pub mod models;
-use std::str::FromStr;
-
-use adw::glib::Propagation;
-use core_done::service::Service;
-use relm4::{
-	actions::{ActionGroupName, RelmAction, RelmActionGroup},
-	adw,
-	adw::prelude::{AdwApplicationWindowExt, NavigationPageExt},
-	component::{
-		AsyncComponent, AsyncComponentController, AsyncComponentParts,
-		AsyncController,
-	},
-	gtk::{
-		self,
-		prelude::{
-			ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, Cast, FileExt,
-		},
-		traits::{ApplicationWindowExt, GtkWindowExt, OrientableExt, WidgetExt},
-	},
-	loading_widgets::LoadingWidgets,
-	main_adw_application, new_action_group, new_stateless_action, view,
-	AsyncComponentSender, ComponentBuilder, ComponentController, Controller,
-	RelmWidgetExt,
-};
-use relm4_icons::icon_name;
-
-use crate::{
-	app::{
-		components::{
-			services_sidebar::ServicesSidebarOutput,
-			task_list_sidebar::TaskListSidebarOutput,
-		},
-		config::{info::PROFILE, setup},
-	},
-	fl,
-};
-
 use self::{
-	components::{
-		about_dialog::AboutDialog,
-		content::{ContentInput, ContentModel},
-		services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
-		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel},
-	},
-	models::sidebar_list::SidebarList,
+	settings::Config,
+	ui::{theme, theme::Theme, widget::Element, widgets::header_bar::header_bar},
 };
+use iced::{
+	executor, font,
+	widget::{column, container},
+	Application, Length,
+};
+use iced_aw::graphics::icons::ICON_FONT_BYTES;
+use log::{error, info};
 
-pub mod config;
-
-new_action_group!(pub(super) WindowActionGroup, "win");
-new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
-new_stateless_action!(AboutAction, WindowActionGroup, "about");
-new_stateless_action!(QuitAction, WindowActionGroup, "quit");
-
-pub struct Done {
-	services_sidebar_controller: AsyncController<ServicesSidebarModel>,
-	task_list_sidebar_controller: AsyncController<TaskListSidebarModel>,
-	content_controller: AsyncController<ContentModel>,
-	about_dialog: Controller<AboutDialog>,
-	startup_failed: bool,
-}
+pub mod environment;
+pub mod logger;
+pub mod notifications;
+pub mod settings;
+pub mod ui;
 
 #[derive(Debug)]
-pub enum AppInput {
-	ServiceSelected(Service),
-	ServiceDisabled(Service),
-	ListSelected(SidebarList, Service),
-	ReloadSidebar(Service),
-	CleanContent,
-	Refresh,
-	Quit,
+pub enum Page {
+	Welcome(ui::pages::Welcome),
+	Home(ui::pages::Home),
+	Help(ui::pages::Help),
 }
 
-#[relm4::component(pub async)]
-impl AsyncComponent for Done {
-	type CommandOutput = ();
-	type Input = AppInput;
-	type Output = ();
-	type Init = ();
+impl Default for Page {
+	fn default() -> Self {
+		Page::Welcome(ui::pages::Welcome::default())
+	}
+}
 
-	view! {
-		#[root]
-		adw::ApplicationWindow {
-			set_size_request: (200, 300),
-			connect_close_request[sender] => move |_| {
-				sender.input(AppInput::Quit);
-				Propagation::Stop
-			},
+#[derive(Debug, Default)]
+pub struct Done {
+	page: Page,
+	theme: Theme,
+	config: Config,
+}
 
-			#[wrap(Some)]
-			set_help_overlay: shortcuts = &gtk::Builder::from_resource(
-					"/dev/edfloreshz/Done/ui/gtk/help-overlay.ui"
-			).object::<gtk::ShortcutsWindow>("help_overlay").unwrap() -> gtk::ShortcutsWindow {
-				set_transient_for: Some(&root),
-				set_application: Some(&main_adw_application()),
-			},
+#[derive(Debug, Clone)]
+pub enum Message {
+	Welcome(ui::pages::welcome::Message),
+	Home(ui::pages::home::Message),
+	Help(ui::pages::help::Message),
+	FontsLoaded(Result<(), font::Error>),
+	Minimize,
+	Maximize,
+	Close,
+}
 
-			add_css_class?: if PROFILE == "Devel" {
-				Some("devel")
-			} else {
-				None
-			},
+impl Application for Done {
+	type Executor = executor::Default;
+	type Message = Message;
+	type Theme = Theme;
+	type Flags = Config;
 
-			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
-				adw::BreakpointConditionLengthType::MaxWidth,
-				800.0,
-				adw::LengthUnit::Sp,
-			)) {
-				add_setter: (
-					&outter_view,
-					"collapsed",
-					&true.into(),
-				),
-				add_setter: (
-					&outter_view,
-					"sidebar-width-fraction",
-					&0.33.into(),
-				)
-			},
-
-			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
-				adw::BreakpointConditionLengthType::MaxWidth,
-				500.0,
-				adw::LengthUnit::Sp,
-			)) {
-				add_setter: (
-					&outter_view,
-					"collapsed",
-					&true.into(),
-				),
-				add_setter: (
-					&outter_view,
-					"sidebar-width-fraction",
-					&0.33.into(),
-				),
-				add_setter: (
-					&inner_view,
-					"collapsed",
-					&true.into(),
-				),
-			},
-
-			if model.startup_failed {
-				adw::ToolbarView {
-					#[name = "content_header"]
-					add_top_bar = &adw::HeaderBar {
-						set_hexpand: true,
-						set_css_classes: &["flat"],
-						set_show_start_title_buttons: true,
-						set_show_end_title_buttons: true,
-						#[watch]
-						set_title_widget: Some(&gtk::Label::new(
-							Some("Error")
-						)),
-					},
-					#[wrap(Some)]
-					set_content = &gtk::Box {
-						set_margin_all: 20,
-						set_orientation: gtk::Orientation::Vertical,
-						set_halign: gtk::Align::Center,
-						set_valign: gtk::Align::Center,
-						set_spacing: 10,
-						gtk::Image {
-							set_icon_name: Some(icon_name::WARNING),
-							set_pixel_size: 64,
-							set_margin_all: 10,
-						},
-						gtk::Label {
-							set_css_classes: &["title-2"],
-							set_wrap: true,
-							set_wrap_mode: gtk::pango::WrapMode::Word,
-							set_justify: gtk::Justification::Center,
-							#[watch]
-							set_text: fl!("error-ocurred"),
-						},
-						gtk::Label {
-							set_css_classes: &["body"],
-							#[watch]
-							set_text: fl!("error-instructions"),
-							set_wrap: true,
-							set_wrap_mode: gtk::pango::WrapMode::Word,
-							set_justify: gtk::Justification::Center,
-						},
-						gtk::Button {
-							set_label: fl!("refresh-app"),
-							set_valign: gtk::Align::End,
-							connect_clicked => AppInput::Refresh
-						},
-						gtk::Label {
-							set_css_classes: &["caption"],
-							#[watch]
-							set_text: fl!("restart-app"),
-							set_wrap: true,
-							set_wrap_mode: gtk::pango::WrapMode::Word,
-							set_justify: gtk::Justification::Center,
-						},
-					}
-				}
-			} else {
-				#[name(outter_view)]
-				adw::NavigationSplitView {
-					set_min_sidebar_width: 470.0,
-					set_sidebar_width_fraction: 0.47,
-					#[wrap(Some)]
-					set_sidebar = &adw::NavigationPage {
-						#[name(inner_view)]
-						#[wrap(Some)]
-						set_child = &adw::NavigationSplitView {
-							set_max_sidebar_width: 260.0,
-							set_sidebar_width_fraction: 0.38,
-							#[wrap(Some)]
-							set_sidebar = &adw::NavigationPage {
-								set_title: "Services",
-								set_tag: Some("services-page"),
-								set_child: Some(model.services_sidebar_controller.widget()),
-							},
-							#[wrap(Some)]
-							set_content = &adw::NavigationPage {
-								set_title: "Lists",
-								set_tag: Some("lists-page"),
-								set_child: Some(model.task_list_sidebar_controller.widget()),
-							}
-						},
-					},
-					#[wrap(Some)]
-					set_content = &adw::NavigationPage {
-						set_title: "Tasks",
-						set_tag: Some("content-page"),
-						set_child: Some(model.content_controller.widget()),
-					}
-				}
-			}
-		}
+	fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+		(
+			Done::default(),
+			iced::Command::batch(vec![
+				font::load(ICON_FONT_BYTES).map(Message::FontsLoaded)
+			]),
+		)
 	}
 
-	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
-		view! {
-				#[local_ref]
-				root {
-					set_title: Some(fl!("done")),
-
-					#[name(loading)]
-					gtk::CenterBox {
-						set_margin_all: 100,
-						set_orientation: gtk::Orientation::Vertical,
-						#[wrap(Some)]
-						set_center_widget = &gtk::Picture {
-							set_resource: Some("/dev/edfloreshz/Done/icons/scalable/apps/app-icon.svg"),
-							set_margin_all: 150
-						},
-						#[wrap(Some)]
-						set_end_widget = &gtk::Spinner {
-							start: (),
-							set_size_request: (40, 40),
-							set_halign: gtk::Align::Center,
-							set_valign: gtk::Align::Center,
-						},
-					}
-				}
-		}
-		Some(LoadingWidgets::new(root, loading))
+	fn title(&self) -> String {
+		String::from("Done")
 	}
 
-	async fn init(
-		_init: Self::Init,
-		root: Self::Root,
-		sender: AsyncComponentSender<Self>,
-	) -> AsyncComponentParts<Self> {
-		let app = main_adw_application();
-		let captured_sender = sender.clone();
-		app.connect_open(move |_, files, _| {
-			let bytes = files[0].uri();
-			let uri = reqwest::Url::from_str(bytes.to_string().as_str()).unwrap();
-			let captured_sender = captured_sender.clone();
-			relm4::tokio::spawn(async move {
-				let response = Service::Microsoft
-					.get_service()
-					.handle_uri_params(uri)
-					.await;
-				match response {
-					Ok(_) => {
-						captured_sender.input(AppInput::ReloadSidebar(Service::Microsoft));
-						tracing::info!("Token stored");
-					},
-					Err(err) => tracing::error!("An error ocurred: {}", err),
-				}
-			});
-		});
-
-		let about_dialog = ComponentBuilder::default()
-			.launch(root.upcast_ref::<gtk::Window>().clone())
-			.detach();
-
-		let mut model = Done {
-			services_sidebar_controller: ServicesSidebarModel::builder()
-				.launch(())
-				.forward(sender.input_sender(), |message| match message {
-					ServicesSidebarOutput::ServiceSelected(service) => {
-						AppInput::ServiceSelected(service)
-					},
-					ServicesSidebarOutput::ServiceDisabled(service) => {
-						AppInput::ServiceDisabled(service)
-					},
-				}),
-			task_list_sidebar_controller: TaskListSidebarModel::builder()
-				.launch(Service::Computer)
-				.forward(sender.input_sender(), |message| match message {
-					TaskListSidebarOutput::SelectList(list, service) => {
-						AppInput::ListSelected(list, service)
-					},
-					TaskListSidebarOutput::CleanContent => AppInput::CleanContent,
-				}),
-			content_controller: ContentModel::builder().launch(None).detach(),
-			about_dialog,
-			startup_failed: false,
-		};
-
-		match setup::init_services() {
-			Ok(_) => (),
-			Err(_) => model.startup_failed = true,
-		};
-
-		let widgets = view_output!();
-
-		let mut actions = RelmActionGroup::<WindowActionGroup>::new();
-
-		let shortcuts_action = {
-			let shortcuts = widgets.shortcuts.clone();
-			RelmAction::<ShortcutsAction>::new_stateless(move |_| {
-				shortcuts.present();
-			})
-		};
-
-		let about_action = {
-			let sender = model.about_dialog.sender().clone();
-			RelmAction::<AboutAction>::new_stateless(move |_| {
-				sender.send(()).unwrap_or_default();
-			})
-		};
-
-		let quit_action = {
-			let sender = sender.clone();
-			RelmAction::<QuitAction>::new_stateless(move |_| {
-				sender
-					.input_sender()
-					.send(Self::Input::Quit)
-					.unwrap_or_default();
-			})
-		};
-
-		actions.add_action(shortcuts_action);
-		actions.add_action(about_action);
-		actions.add_action(quit_action);
-
-		root.insert_action_group(
-			WindowActionGroup::NAME,
-			Some(&actions.into_action_group()),
-		);
-
-		AsyncComponentParts { model, widgets }
-	}
-
-	async fn update(
-		&mut self,
-		message: Self::Input,
-		_sender: AsyncComponentSender<Self>,
-		_root: &Self::Root,
-	) {
+	fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
 		match message {
-			AppInput::Quit => main_adw_application().quit(),
-			AppInput::Refresh => {
-				match setup::refresh() {
-					Ok(_) => main_adw_application().quit(),
-					Err(_) => main_adw_application().quit(),
-				};
+			Message::Welcome(message) => match message {},
+			Message::Home(message) => match message {},
+			Message::Help(message) => match message {},
+			Message::FontsLoaded(result) => match result {
+				Ok(_) => info!("Fonts loaded."),
+				Err(e) => error!("{e:?}"),
 			},
-			AppInput::ListSelected(list, service) => {
-				self
-					.content_controller
-					.sender()
-					.send(ContentInput::SelectList(list, service))
-					.unwrap_or_default();
-			},
-			AppInput::CleanContent => self
-				.content_controller
-				.sender()
-				.send(ContentInput::Clean)
-				.unwrap_or_default(),
-			AppInput::ReloadSidebar(service) => self
-				.services_sidebar_controller
-				.sender()
-				.send(ServicesSidebarInput::ReloadSidebar(service))
-				.unwrap_or_default(),
-			AppInput::ServiceSelected(service) => self
-				.task_list_sidebar_controller
-				.sender()
-				.send(TaskListSidebarInput::ServiceSelected(service))
-				.unwrap_or_default(),
-			AppInput::ServiceDisabled(service) => {
-				self
-					.task_list_sidebar_controller
-					.sender()
-					.send(TaskListSidebarInput::ServiceDisabled(service))
-					.unwrap_or_default();
-				self
-					.content_controller
-					.sender()
-					.send(ContentInput::ServiceDisabled(service))
-					.unwrap_or_default();
-			},
+			Message::Minimize => return iced_runtime::window::minimize(true),
+			Message::Maximize => return iced_runtime::window::toggle_maximize(),
+			Message::Close => return iced_runtime::window::close(),
 		}
+		iced::Command::none()
+	}
+
+	fn view(&self) -> Element<Self::Message> {
+		let content = match &self.page {
+			Page::Welcome(welcome) => welcome.view().map(Message::Welcome),
+			Page::Home(home) => home.view().map(Message::Home),
+			Page::Help(help) => help.view().map(Message::Help),
+		};
+
+		container(column(vec![
+			header_bar()
+				.title("Done")
+				.on_minimize(Message::Minimize)
+				.on_maximize(Message::Maximize)
+				.on_close(Message::Close)
+				.into(),
+			container(content).padding(10.0).into(),
+		]))
+		.width(Length::Fill)
+		.height(Length::Fill)
+		.style(theme::Container::Primary)
+		.into()
+	}
+
+	fn theme(&self) -> Theme {
+		self.theme.clone()
 	}
 }

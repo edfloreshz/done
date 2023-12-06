@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<schemalist>
-  <schema path="/dev/edfloreshz/Done/" id="@app-id@" gettext-domain="@gettext-package@">
-    <key name="enable-recoloring" type="b">
-	    <default>true</default>
-	  </key>
-  </schema>
-</schemalist>

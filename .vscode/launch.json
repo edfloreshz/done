@@ -7,6 +7,25 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug unit tests in library 'core_done'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=core_done"
+                ],
+                "filter": {
+                    "name": "core_done",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'done'",
             "cargo": {
                 "args": [
@@ -20,10 +39,7 @@
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "RUST_INFO": "info"
-            }
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",

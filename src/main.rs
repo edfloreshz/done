@@ -1,14 +1,15 @@
-use anyhow::Result;
-use app::config::{info::APP_ID, setup};
-use relm4::RelmApp;
-
-use app::Done;
+use app::{
+	logger, notifications,
+	settings::{self, Config},
+	Done,
+};
+use iced::Application;
 
 mod app;
 
-fn main() -> Result<()> {
-	let app = RelmApp::new(APP_ID);
-	setup::init()?;
-	app.run_async::<Done>(());
-	Ok(())
+fn main() -> iced::Result {
+	logger::setup();
+	notifications::setup();
+	let settings = settings::setup(Config::default());
+	Done::run(settings)
 }
