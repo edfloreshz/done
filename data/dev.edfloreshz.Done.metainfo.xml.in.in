@@ -18,7 +18,7 @@
     </ul>
   </description>
   <screenshots>
-    <screenshot>
+    <screenshot type="default">
       <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/tasks.png</image>
     </screenshot>
     <screenshot>
@@ -36,12 +36,14 @@
   </screenshots>
   <url type="homepage">https://done.edfloreshz.dev/</url>
   <url type="bugtracker">https://github.com/done-devs/done/issues</url>
+  <url type="vcs-browser">https://github.com/done-devs/done/</url>
+  <url type="translate">https://github.com/done-devs/done/tree/main/i18n</url>
   <url type="donation">https://github.com/sponsors/edfloreshz</url>
 <!--
 Open Age Rating Service
 https://hughsie.github.io/oars/index.html
 -->
-  <content_rating type="oars-1.0" />
+  <content_rating type="oars-1.1" />
   <releases>
     <release version="0.2.0" date="2023-09-21">
       <description>
