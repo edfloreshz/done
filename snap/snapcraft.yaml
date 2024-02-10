@@ -1,0 +1,47 @@
+name: done
+base: core22
+adopt-info: done
+grade: stable
+confinement: strict
+
+compression: lzo
+
+parts:
+  rustup:
+    plugin: rust
+    source: .
+    rust-channel: "1.70"
+    override-build: ''
+    override-prime: 
+
+  done:
+    after: [rustup]
+    plugin: meson
+    source: https://github.com/done-devs/done.git
+    source-tag: 'v0.2.0'
+    source-depth: 1
+    build-environment:
+      - PATH: ${HOME}/.cargo/bin:$PATH 
+    meson-parameters:
+      - --prefix=/snap/done/current/usr
+    parse-info: [usr/share/metainfo/dev.edfloreshz.Done.metainfo.xml]
+    build-packages:
+      - libssl-dev
+    organize:
+      snap/done/current: .
+
+slots:
+  done:
+    interface: dbus
+    bus: session
+    name: dev.edfloreshz.Done
+
+apps:
+  done:
+    command: usr/bin/done
+    desktop: usr/share/applications/dev.edfloreshz.Done.desktop
+    extensions: [gnome]
+    common-id: dev.edfloreshz.Done
+    plugs:
+      - home
+      - network
