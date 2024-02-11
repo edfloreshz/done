@@ -24,3 +24,6 @@ bin
 releases
 
 .flatpak/
+
+*.snap
+done*.txt
