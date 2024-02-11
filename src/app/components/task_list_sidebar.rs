@@ -2,7 +2,10 @@ use core_done::{models::list::List, service::Service};
 use futures::StreamExt;
 use relm4::{
 	adw,
-	component::{AsyncComponentParts, SimpleAsyncComponent},
+	component::{
+		AsyncComponent, AsyncComponentController, AsyncComponentParts,
+		AsyncController, SimpleAsyncComponent,
+	},
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
@@ -17,22 +20,29 @@ use relm4_icons::icon_name;
 
 use crate::{
 	app::{
-		components::list_dialog::ListDialogOutput,
+		components::{
+			list_dialog::ListDialogOutput, services_sidebar::ServicesSidebarOutput,
+		},
 		factories::task_list::{
 			TaskListFactoryInit, TaskListFactoryModel, TaskListFactoryOutput,
 		},
 		models::sidebar_list::SidebarList,
+		AboutAction, PreferencesAction, QuitAction, ShortcutsAction,
 	},
 	fl,
 };
 
-use super::list_dialog::ListDialogComponent;
+use super::{
+	list_dialog::ListDialogComponent,
+	services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
+};
 
 pub struct TaskListSidebarModel {
 	service: Service,
 	state: TaskListSidebarStatus,
 	task_list_factory: AsyncFactoryVecDeque<TaskListFactoryModel>,
 	list_entry: Controller<ListDialogComponent>,
+	services_sidebar_controller: AsyncController<ServicesSidebarModel>,
 	handle: Option<JoinHandle<()>>,
 }
 
@@ -47,11 +57,13 @@ pub enum TaskListSidebarInput {
 	SelectList(SidebarList),
 	DeleteTaskList(DynamicIndex),
 	SetStatus(TaskListSidebarStatus),
+	ReloadSidebar(Service),
 }
 
 #[derive(Debug)]
 pub enum TaskListSidebarOutput {
 	SelectList(SidebarList, Service),
+	ServiceDisabled(Service),
 	CleanContent,
 }
 
@@ -68,6 +80,17 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 	type Output = TaskListSidebarOutput;
 	type Init = Service;
 
+	menu! {
+		primary_menu: {
+			section! {
+				keyboard_shortcuts => ShortcutsAction,
+				about_done => AboutAction,
+				preferences => PreferencesAction,
+				quit => QuitAction,
+			}
+		}
+	}
+
 	view! {
 		#[root]
 		adw::ToolbarView {
@@ -76,12 +99,19 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 				set_show_start_title_buttons: false,
 				set_show_back_button: true,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
-				pack_end = &gtk::Button {
+				pack_start = &gtk::Button {
 					set_tooltip: fl!("add-new-task-list"),
 					set_icon_name: icon_name::PLUS,
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
 					connect_clicked => TaskListSidebarInput::OpenNewTaskListDialog
+				},
+				pack_end = &gtk::MenuButton {
+					set_tooltip: fl!("menu"),
+					set_valign: gtk::Align::Center,
+					set_css_classes: &["flat"],
+					set_icon_name: icon_name::MENU,
+					set_menu_model: Some(&primary_menu),
 				},
 			},
 			#[wrap(Some)]
@@ -146,6 +176,11 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
+		let keyboard_shortcuts: &str = fl!("keyboard-shortcuts");
+		let about_done: &str = fl!("about-done");
+		let preferences: &str = fl!("preferences");
+		let quit: &str = fl!("quit");
+
 		let model = TaskListSidebarModel {
 			service: init,
 			state: TaskListSidebarStatus::Empty,
@@ -168,6 +203,16 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					ListDialogOutput::RenameList(_) => todo!(),
 				},
 			),
+			services_sidebar_controller: ServicesSidebarModel::builder()
+				.launch(())
+				.forward(sender.input_sender(), |message| match message {
+					ServicesSidebarOutput::ServiceSelected(service) => {
+						TaskListSidebarInput::ServiceSelected(service)
+					},
+					ServicesSidebarOutput::ServiceDisabled(service) => {
+						TaskListSidebarInput::ServiceDisabled(service)
+					},
+				}),
 			handle: None,
 		};
 		sender.input(TaskListSidebarInput::LoadTaskLists);
@@ -202,6 +247,11 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					},
 				}
 			},
+			TaskListSidebarInput::ReloadSidebar(service) => self
+				.services_sidebar_controller
+				.sender()
+				.send(ServicesSidebarInput::ReloadSidebar(service))
+				.unwrap_or_default(),
 			TaskListSidebarInput::OpenNewTaskListDialog => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
@@ -220,6 +270,9 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					self.state = TaskListSidebarStatus::Loading;
 					sender.input(TaskListSidebarInput::LoadTaskLists);
 				}
+				sender
+					.output(TaskListSidebarOutput::ServiceDisabled(service))
+					.unwrap_or_default()
 			},
 			TaskListSidebarInput::LoadTaskList(list) => {
 				let mut guard = self.task_list_factory.guard();

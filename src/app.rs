@@ -30,7 +30,7 @@ use relm4_icons::icon_name;
 use crate::{
 	app::{
 		components::{
-			services_sidebar::ServicesSidebarOutput,
+			preferences::PreferencesComponentOutput,
 			task_list_sidebar::TaskListSidebarOutput,
 		},
 		config::{info::PROFILE, setup},
@@ -42,7 +42,7 @@ use self::{
 	components::{
 		about_dialog::AboutDialog,
 		content::{ContentInput, ContentModel},
-		services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
+		preferences::PreferencesComponentModel,
 		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel},
 	},
 	models::sidebar_list::SidebarList,
@@ -53,19 +53,19 @@ pub mod config;
 new_action_group!(pub(super) WindowActionGroup, "win");
 new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
 new_stateless_action!(AboutAction, WindowActionGroup, "about");
+new_stateless_action!(PreferencesAction, WindowActionGroup, "preferences");
 new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
 pub struct Done {
-	services_sidebar_controller: AsyncController<ServicesSidebarModel>,
 	task_list_sidebar_controller: AsyncController<TaskListSidebarModel>,
 	content_controller: AsyncController<ContentModel>,
 	about_dialog: Controller<AboutDialog>,
+	preferences: AsyncController<PreferencesComponentModel>,
 	startup_failed: bool,
 }
 
 #[derive(Debug)]
 pub enum AppInput {
-	ServiceSelected(Service),
 	ServiceDisabled(Service),
 	ListSelected(SidebarList, Service),
 	ReloadSidebar(Service),
@@ -84,7 +84,8 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-			set_size_request: (200, 300),
+			set_size_request: (450, 600),
+			set_default_size: (800, 800),
 			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
 				Propagation::Stop
@@ -106,38 +107,11 @@ impl AsyncComponent for Done {
 
 			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
 				adw::BreakpointConditionLengthType::MaxWidth,
-				800.0,
-				adw::LengthUnit::Sp,
-			)) {
-				add_setter: (
-					&outter_view,
-					"collapsed",
-					&true.into(),
-				),
-				add_setter: (
-					&outter_view,
-					"sidebar-width-fraction",
-					&0.33.into(),
-				)
-			},
-
-			add_breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
-				adw::BreakpointConditionLengthType::MaxWidth,
 				500.0,
 				adw::LengthUnit::Sp,
 			)) {
 				add_setter: (
 					&outter_view,
-					"collapsed",
-					&true.into(),
-				),
-				add_setter: (
-					&outter_view,
-					"sidebar-width-fraction",
-					&0.33.into(),
-				),
-				add_setter: (
-					&inner_view,
 					"collapsed",
 					&true.into(),
 				),
@@ -202,28 +176,33 @@ impl AsyncComponent for Done {
 			} else {
 				#[name(outter_view)]
 				adw::NavigationSplitView {
-					set_min_sidebar_width: 470.0,
-					set_sidebar_width_fraction: 0.47,
+					set_sidebar_width_fraction: 0.33,
+					// #[wrap(Some)]
+					// set_sidebar = &adw::NavigationPage {
+					// 	#[name(inner_view)]
+					// 	#[wrap(Some)]
+					// 	set_child = &adw::NavigationSplitView {
+					// 		set_max_sidebar_width: 260.0,
+					// 		set_sidebar_width_fraction: 0.38,
+					// 		#[wrap(Some)]
+					// 		set_sidebar = &adw::NavigationPage {
+					// 			set_title: "Services",
+					// 			set_tag: Some("services-page"),
+					// 			set_child: Some(model.services_sidebar_controller.widget()),
+					// 		},
+					// 		#[wrap(Some)]
+					// 		set_content = &adw::NavigationPage {
+					// 			set_title: "Lists",
+					// 			set_tag: Some("lists-page"),
+					// 			set_child: Some(model.task_list_sidebar_controller.widget()),
+					// 		}
+					// 	},
+					// },
 					#[wrap(Some)]
 					set_sidebar = &adw::NavigationPage {
-						#[name(inner_view)]
-						#[wrap(Some)]
-						set_child = &adw::NavigationSplitView {
-							set_max_sidebar_width: 260.0,
-							set_sidebar_width_fraction: 0.38,
-							#[wrap(Some)]
-							set_sidebar = &adw::NavigationPage {
-								set_title: "Services",
-								set_tag: Some("services-page"),
-								set_child: Some(model.services_sidebar_controller.widget()),
-							},
-							#[wrap(Some)]
-							set_content = &adw::NavigationPage {
-								set_title: "Lists",
-								set_tag: Some("lists-page"),
-								set_child: Some(model.task_list_sidebar_controller.widget()),
-							}
-						},
+						set_title: "Lists",
+						set_tag: Some("lists-page"),
+						set_child: Some(model.task_list_sidebar_controller.widget()),
 					},
 					#[wrap(Some)]
 					set_content = &adw::NavigationPage {
@@ -295,19 +274,12 @@ impl AsyncComponent for Done {
 			.detach();
 
 		let mut model = Done {
-			services_sidebar_controller: ServicesSidebarModel::builder()
-				.launch(())
-				.forward(sender.input_sender(), |message| match message {
-					ServicesSidebarOutput::ServiceSelected(service) => {
-						AppInput::ServiceSelected(service)
-					},
-					ServicesSidebarOutput::ServiceDisabled(service) => {
-						AppInput::ServiceDisabled(service)
-					},
-				}),
 			task_list_sidebar_controller: TaskListSidebarModel::builder()
 				.launch(Service::Computer)
 				.forward(sender.input_sender(), |message| match message {
+					TaskListSidebarOutput::ServiceDisabled(service) => {
+						AppInput::ServiceDisabled(service)
+					},
 					TaskListSidebarOutput::SelectList(list, service) => {
 						AppInput::ListSelected(list, service)
 					},
@@ -315,6 +287,14 @@ impl AsyncComponent for Done {
 				}),
 			content_controller: ContentModel::builder().launch(None).detach(),
 			about_dialog,
+			preferences: PreferencesComponentModel::builder().launch(()).forward(
+				sender.input_sender(),
+				move |message| match message {
+					PreferencesComponentOutput::ServiceDisabled(service) => {
+						AppInput::ReloadSidebar(service)
+					},
+				},
+			),
 			startup_failed: false,
 		};
 
@@ -341,6 +321,13 @@ impl AsyncComponent for Done {
 			})
 		};
 
+		let preferences_action = {
+			let window = model.preferences.widget().clone();
+			RelmAction::<PreferencesAction>::new_stateless(move |_| {
+				window.present();
+			})
+		};
+
 		let quit_action = {
 			let sender = sender.clone();
 			RelmAction::<QuitAction>::new_stateless(move |_| {
@@ -353,6 +340,7 @@ impl AsyncComponent for Done {
 
 		actions.add_action(shortcuts_action);
 		actions.add_action(about_action);
+		actions.add_action(preferences_action);
 		actions.add_action(quit_action);
 
 		root.insert_action_group(
@@ -389,28 +377,18 @@ impl AsyncComponent for Done {
 				.sender()
 				.send(ContentInput::Clean)
 				.unwrap_or_default(),
-			AppInput::ReloadSidebar(service) => self
-				.services_sidebar_controller
-				.sender()
-				.send(ServicesSidebarInput::ReloadSidebar(service))
-				.unwrap_or_default(),
-			AppInput::ServiceSelected(service) => self
-				.task_list_sidebar_controller
-				.sender()
-				.send(TaskListSidebarInput::ServiceSelected(service))
-				.unwrap_or_default(),
 			AppInput::ServiceDisabled(service) => {
-				self
-					.task_list_sidebar_controller
-					.sender()
-					.send(TaskListSidebarInput::ServiceDisabled(service))
-					.unwrap_or_default();
 				self
 					.content_controller
 					.sender()
 					.send(ContentInput::ServiceDisabled(service))
 					.unwrap_or_default();
 			},
+			AppInput::ReloadSidebar(service) => self
+				.task_list_sidebar_controller
+				.sender()
+				.send(TaskListSidebarInput::ReloadSidebar(service))
+				.unwrap_or_default(),
 		}
 	}
 }

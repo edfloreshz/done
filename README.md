@@ -8,12 +8,6 @@
   <a href="https://github.com/edfloreshz/done/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/edfloreshz/done/ci.yml?style=for-the-badge" alt="build"/>
   </a>
-  <a href="https://crates.io/crates/done">
-    <img src="https://img.shields.io/crates/v/done?label=Done&style=for-the-badge" alt="crate"/>
-  </a>
-   <a href="https://crates.io/crates/done">
-    <img src="https://img.shields.io/crates/d/done?style=for-the-badge" alt="downloads"/>
-  </a>
   <br/>
   <a href="https://github.com/sponsors/edfloreshz">
     <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white"/>

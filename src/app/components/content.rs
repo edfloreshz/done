@@ -1,9 +1,5 @@
 use crate::app::components::task_input::TaskInputOutput;
-use crate::app::factories::details::factory::{
-	TaskDetailsFactoryInit, TaskDetailsFactoryInput, TaskDetailsFactoryModel,
-	TaskDetailsFactoryOutput,
-};
-use crate::app::factories::task::{TaskInit, TaskInput, TaskModel, TaskOutput};
+use crate::app::factories::task::{TaskInit, TaskModel, TaskOutput};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
@@ -34,13 +30,11 @@ use super::welcome::WelcomeComponent;
 
 pub struct ContentModel {
 	task_factory: AsyncFactoryVecDeque<TaskModel>,
-	task_details_factory: AsyncFactoryVecDeque<TaskDetailsFactoryModel>,
 	task_entry: Controller<TaskInputModel>,
 	welcome: Controller<WelcomeComponent>,
 	state: ContentState,
 	service: Service,
 	parent_list: Option<SidebarList>,
-	selected_task: Option<Task>,
 	handle: Option<JoinHandle<()>>,
 }
 
@@ -50,21 +44,18 @@ pub enum ContentState {
 	Empty,
 	Loading,
 	TasksLoaded,
-	Details,
 }
 
 #[derive(Debug)]
 pub enum ContentInput {
 	AddTask(Task),
 	RemoveTask(DynamicIndex),
-	UpdateTask(Option<DynamicIndex>, Task),
+	UpdateTask(Task),
 	LoadTask(Task),
 	SelectList(SidebarList, Service),
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
-	RevealTaskDetails(Option<DynamicIndex>, Task),
 	SetState(ContentState),
-	CleanTaskEntry,
 	Clean,
 }
 
@@ -160,7 +151,7 @@ impl AsyncComponent for ContentModel {
 										}
 									}
 								},
-								ContentState::TasksLoaded | ContentState::Empty | ContentState::Details => {
+								ContentState::TasksLoaded | ContentState::Empty => {
 									#[name(split_view)]
 									adw::NavigationView {
 										add = &adw::NavigationPage {
@@ -243,7 +234,7 @@ impl AsyncComponent for ContentModel {
 														gtk::ScrolledWindow {
 															set_visible: !model.task_factory.is_empty(),
 															#[watch]
-															set_visible: model.state == ContentState::TasksLoaded || model.state == ContentState::Details,
+															set_visible: model.state == ContentState::TasksLoaded,
 															set_vexpand: true,
 															set_hexpand: true,
 															#[local_ref]
@@ -256,15 +247,10 @@ impl AsyncComponent for ContentModel {
 													}
 												},
 												gtk::Box {
-													set_visible: model.state != ContentState::Details,
 													set_margin_all: 5,
 													append: model.task_entry.widget()
 												}
 											},
-										},
-										add = &adw::NavigationPage {
-											set_tag: Some("task-details-page"),
-											set_child: Some(model.task_details_factory.widget()),
 										},
 									}
 								}
@@ -286,40 +272,17 @@ impl AsyncComponent for ContentModel {
 				.launch(adw::PreferencesGroup::default())
 				.forward(sender.input_sender(), |output| match output {
 					TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-					TaskOutput::UpdateTask(index, task) => {
-						ContentInput::UpdateTask(Some(index), task)
-					},
-					TaskOutput::RevealTaskDetails(index, task) => {
-						ContentInput::RevealTaskDetails(Some(index), task)
-					},
-				}),
-			task_details_factory: AsyncFactoryVecDeque::builder()
-				.launch(gtk::Box::default())
-				.forward(sender.input_sender(), |output| match output {
-					TaskDetailsFactoryOutput::CleanTaskEntry => {
-						ContentInput::CleanTaskEntry
-					},
-					TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
-						if is_update {
-							ContentInput::UpdateTask(index, *task)
-						} else {
-							ContentInput::AddTask(*task)
-						}
-					},
+					TaskOutput::UpdateTask(task) => ContentInput::UpdateTask(task),
 				}),
 			task_entry: TaskInputModel::builder()
 				.launch(SidebarList::default())
 				.forward(sender.input_sender(), |message| match message {
-					TaskInputOutput::EnterCreationMode(task) => {
-						ContentInput::RevealTaskDetails(None, task)
-					},
 					TaskInputOutput::AddTask(task) => ContentInput::AddTask(task),
 				}),
 			welcome: WelcomeComponent::builder().launch(()).detach(),
 			state: ContentState::Unselected,
 			service: Service::Smart,
 			parent_list: None,
-			selected_task: None,
 			handle: None,
 		};
 
@@ -372,7 +335,7 @@ impl AsyncComponent for ContentModel {
 				if let Some(task) = guard.get(index.current_index()) {
 					let mut service = self.service.get_service();
 					match service
-						.delete_task(task.clone().task.parent, task.clone().task.id)
+						.delete_task(task.task.clone().parent, task.task.clone().id)
 						.await
 					{
 						Ok(_) => {
@@ -382,38 +345,19 @@ impl AsyncComponent for ContentModel {
 					}
 				}
 			},
-			ContentInput::UpdateTask(index, task) => {
-				if let Some(index) = index.clone() {
-					self
-						.task_factory
-						.guard()
-						.send(index.current_index(), TaskInput::SetTask(task.clone()));
-				}
+			ContentInput::UpdateTask(task) => {
 				let mut service = self.service.get_service();
 				match service.update_task(task).await {
-					Ok(task) => {
-						if let Some(index) = index {
-							self
-								.task_factory
-								.guard()
-								.send(index.current_index(), TaskInput::SetTask(task));
-						}
-					},
+					Ok(task) => tracing::info!("Task {} successfully saved.", task.id),
 					Err(err) => tracing::error!("An error ocurred: {err}"),
 				}
 			},
 			ContentInput::SelectList(list, service) => {
-				if self.state != ContentState::Details {
-					self.state = ContentState::Loading;
-					if let Some(handle) = &self.handle {
-						handle.abort()
-					}
-					sender.input(ContentInput::LoadTasks(list, service));
-				} else {
-					self
-						.task_details_factory
-						.send(0, TaskDetailsFactoryInput::CancelWarning)
+				self.state = ContentState::Loading;
+				if let Some(handle) = &self.handle {
+					handle.abort()
 				}
+				sender.input(ContentInput::LoadTasks(list, service));
 			},
 			ContentInput::LoadTasks(list, service) => {
 				let mut guard = self.task_factory.guard();
@@ -545,28 +489,11 @@ impl AsyncComponent for ContentModel {
 					))
 					.unwrap();
 			},
-			ContentInput::RevealTaskDetails(index, task) => {
-				self.state = ContentState::Details;
-				let mut guard = self.task_details_factory.guard();
-				if let Some(task_index) = index {
-					self.selected_task = Some(task.clone());
-					guard.clear();
-					guard.push_back(TaskDetailsFactoryInit::new(task, Some(task_index)));
-				} else {
-					guard.clear();
-					guard.push_back(TaskDetailsFactoryInit::new(task, None));
-				}
-			},
 			ContentInput::ServiceDisabled(service) => {
 				if self.service == service {
 					self.state = ContentState::Unselected;
 				}
 			},
-			ContentInput::CleanTaskEntry => self
-				.task_entry
-				.sender()
-				.send(TaskInputInput::CleanTaskEntry)
-				.unwrap(),
 		}
 		self.update_view(widgets, sender)
 	}

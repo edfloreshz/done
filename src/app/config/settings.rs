@@ -10,7 +10,7 @@ pub(crate) fn init() -> Result<()> {
 	if !config.path("preferences", FileType::Json)?.exists() {
 		config.set_json("preferences", Preferences::new())?;
 	}
-	if !config.path(DATABASE_NAME, FileType::Plain)?.exists() {
+	if !database.path(DATABASE_NAME, FileType::Plain)?.exists() {
 		database.set_plain(DATABASE_NAME, String::new())?;
 	}
 
