@@ -8,8 +8,6 @@ use relm4::{
 	AsyncFactorySender, RelmWidgetExt,
 };
 
-use crate::app::components::services_sidebar::ServicesSidebarInput;
-
 pub struct ServiceFactoryModel {
 	service: Service,
 }
@@ -27,7 +25,6 @@ pub enum ServiceFactoryOutput {
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for ServiceFactoryModel {
 	type ParentWidget = gtk::ListBox;
-	type ParentInput = ServicesSidebarInput;
 	type Input = ServiceFactoryInput;
 	type Output = ServiceFactoryOutput;
 	type Init = Service;
@@ -92,18 +89,11 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 	) {
 		match message {
 			ServiceFactoryInput::Selected => {
-				sender.output(ServiceFactoryOutput::ServiceSelected(self.service));
+				sender
+					.output(ServiceFactoryOutput::ServiceSelected(self.service))
+					.unwrap_or_default();
 				tracing::info!("Service selected: {}", self.service.to_string());
 			},
 		}
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		let output = match output {
-			ServiceFactoryOutput::ServiceSelected(service) => {
-				ServicesSidebarInput::ServiceSelected(service)
-			},
-		};
-		Some(output)
 	}
 }

@@ -12,7 +12,6 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::app::factories::details::factory::TaskDetailsFactoryInput;
 use crate::fl;
 
 use super::{
@@ -23,7 +22,6 @@ use super::{
 #[relm4::factory(pub)]
 impl FactoryComponent for SubTaskModel {
 	type ParentWidget = adw::PreferencesGroup;
-	type ParentInput = TaskDetailsFactoryInput;
 	type Input = SubTaskInput;
 	type Output = SubTaskOutput;
 	type Init = SubTaskInit;
@@ -93,27 +91,19 @@ impl FactoryComponent for SubTaskModel {
 				} else {
 					self.sub_task.status = Status::NotStarted;
 				}
-				sender.output(SubTaskOutput::Update(index, self.sub_task.clone()))
+				sender
+					.output(SubTaskOutput::Update(index, self.sub_task.clone()))
+					.unwrap_or_default()
 			},
 			SubTaskInput::ModifyTitle(index, title) => {
 				self.sub_task.title = title;
-				sender.output(SubTaskOutput::Update(index, self.sub_task.clone()))
+				sender
+					.output(SubTaskOutput::Update(index, self.sub_task.clone()))
+					.unwrap_or_default()
 			},
-			SubTaskInput::Remove(index) => {
-				sender.output(SubTaskOutput::Remove(index))
-			},
+			SubTaskInput::Remove(index) => sender
+				.output(SubTaskOutput::Remove(index))
+				.unwrap_or_default(),
 		}
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		let output = match output {
-			SubTaskOutput::Update(index, sub_task) => {
-				TaskDetailsFactoryInput::UpdateSubTask(index, sub_task)
-			},
-			SubTaskOutput::Remove(index) => {
-				TaskDetailsFactoryInput::RemoveSubTask(index)
-			},
-		};
-		Some(output)
 	}
 }

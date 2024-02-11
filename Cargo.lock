@@ -2242,9 +2242,9 @@ checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
 name = "relm4"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d307673e36bb450a4823d500d661f53e1622a685b330149c193b791687146b3f"
+checksum = "f505ac255c34dc85b8b189cbc8e12d012765aa9294727c6082e76777e56a50bf"
 dependencies = [
  "async-trait",
  "flume",

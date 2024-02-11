@@ -17,8 +17,8 @@ use relm4_icons::icon_name;
 
 use crate::{
 	app::{
-		factories::service::ServiceFactoryModel, AboutAction, QuitAction,
-		ShortcutsAction,
+		factories::service::{ServiceFactoryModel, ServiceFactoryOutput},
+		AboutAction, QuitAction, ShortcutsAction,
 	},
 	fl,
 };
@@ -130,8 +130,13 @@ impl AsyncComponent for ServicesSidebarModel {
 		let about_done: &str = fl!("about-done");
 		let quit: &str = fl!("quit");
 
-		let mut services_factory =
-			AsyncFactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+		let mut services_factory = AsyncFactoryVecDeque::builder()
+			.launch(gtk::ListBox::default())
+			.forward(sender.input_sender(), |output| match output {
+				ServiceFactoryOutput::ServiceSelected(service) => {
+					ServicesSidebarInput::ServiceSelected(service)
+				},
+			});
 
 		{
 			let mut guard = services_factory.guard();

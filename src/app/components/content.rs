@@ -1,8 +1,9 @@
 use crate::app::components::task_input::TaskInputOutput;
 use crate::app::factories::details::factory::{
 	TaskDetailsFactoryInit, TaskDetailsFactoryInput, TaskDetailsFactoryModel,
+	TaskDetailsFactoryOutput,
 };
-use crate::app::factories::task::{TaskInit, TaskInput, TaskModel};
+use crate::app::factories::task::{TaskInit, TaskInput, TaskModel, TaskOutput};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
@@ -281,14 +282,31 @@ impl AsyncComponent for ContentModel {
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
 		let model = ContentModel {
-			task_factory: AsyncFactoryVecDeque::new(
-				adw::PreferencesGroup::default(),
-				sender.input_sender(),
-			),
-			task_details_factory: AsyncFactoryVecDeque::new(
-				gtk::Box::default(),
-				sender.input_sender(),
-			),
+			task_factory: AsyncFactoryVecDeque::builder()
+				.launch(adw::PreferencesGroup::default())
+				.forward(sender.input_sender(), |output| match output {
+					TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
+					TaskOutput::UpdateTask(index, task) => {
+						ContentInput::UpdateTask(Some(index), task)
+					},
+					TaskOutput::RevealTaskDetails(index, task) => {
+						ContentInput::RevealTaskDetails(Some(index), task)
+					},
+				}),
+			task_details_factory: AsyncFactoryVecDeque::builder()
+				.launch(gtk::Box::default())
+				.forward(sender.input_sender(), |output| match output {
+					TaskDetailsFactoryOutput::CleanTaskEntry => {
+						ContentInput::CleanTaskEntry
+					},
+					TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
+						if is_update {
+							ContentInput::UpdateTask(index, *task)
+						} else {
+							ContentInput::AddTask(*task)
+						}
+					},
+				}),
 			task_entry: TaskInputModel::builder()
 				.launch(SidebarList::default())
 				.forward(sender.input_sender(), |message| match message {

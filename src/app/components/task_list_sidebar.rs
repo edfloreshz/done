@@ -18,7 +18,9 @@ use relm4_icons::icon_name;
 use crate::{
 	app::{
 		components::list_dialog::ListDialogOutput,
-		factories::task_list::{TaskListFactoryInit, TaskListFactoryModel},
+		factories::task_list::{
+			TaskListFactoryInit, TaskListFactoryModel, TaskListFactoryOutput,
+		},
 		models::sidebar_list::SidebarList,
 	},
 	fl,
@@ -147,10 +149,16 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 		let model = TaskListSidebarModel {
 			service: init,
 			state: TaskListSidebarStatus::Empty,
-			task_list_factory: AsyncFactoryVecDeque::new(
-				gtk::ListBox::default(),
-				sender.input_sender(),
-			),
+			task_list_factory: AsyncFactoryVecDeque::builder()
+				.launch(gtk::ListBox::default())
+				.forward(sender.input_sender(), |output| match output {
+					TaskListFactoryOutput::Select(list) => {
+						TaskListSidebarInput::SelectList(list)
+					},
+					TaskListFactoryOutput::DeleteTaskList(index) => {
+						TaskListSidebarInput::DeleteTaskList(index)
+					},
+				}),
 			list_entry: ListDialogComponent::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {

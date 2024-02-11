@@ -7,7 +7,7 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
-use crate::{app::factories::details::factory::TaskDetailsFactoryInput, fl};
+use crate::fl;
 
 pub struct TagModel {
 	pub title: String,
@@ -32,7 +32,6 @@ pub struct TagInit {
 #[relm4::factory(pub)]
 impl FactoryComponent for TagModel {
 	type ParentWidget = gtk::FlowBox;
-	type ParentInput = TaskDetailsFactoryInput;
 	type Input = TagInput;
 	type Output = TagOutput;
 	type Init = TagInit;
@@ -83,14 +82,9 @@ impl FactoryComponent for TagModel {
 
 	fn update(&mut self, message: Self::Input, sender: FactorySender<Self>) {
 		match message {
-			TagInput::RemoveTag(index) => sender.output(TagOutput::RemoveTag(index)),
+			TagInput::RemoveTag(index) => sender
+				.output(TagOutput::RemoveTag(index))
+				.unwrap_or_default(),
 		}
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		let output = match output {
-			TagOutput::RemoveTag(index) => TaskDetailsFactoryInput::RemoveTag(index),
-		};
-		Some(output)
 	}
 }

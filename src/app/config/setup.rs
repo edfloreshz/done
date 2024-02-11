@@ -9,6 +9,7 @@ pub fn init() -> Result<()> {
 	gtk::init()?;
 	gettext::init();
 	localization::init();
+	#[cfg(debug_assertions)]
 	tracing_subscriber::fmt()
 		.with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
 		.with_max_level(tracing::Level::INFO)

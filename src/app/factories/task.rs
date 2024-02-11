@@ -1,4 +1,3 @@
-use crate::app::components::content::ContentInput;
 use crate::fl;
 use adw::prelude::{ActionableExt, ActionableExtManual};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
@@ -47,7 +46,6 @@ pub enum TaskOutput {
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskModel {
-	type ParentInput = ContentInput;
 	type ParentWidget = adw::PreferencesGroup;
 	type CommandOutput = ();
 	type Input = TaskInput;
@@ -102,7 +100,7 @@ impl AsyncFactoryComponent for TaskModel {
 				set_tooltip: fl!("remove-task"),
 				set_valign: gtk::Align::Center,
 				connect_clicked[sender, index] => move |_| {
-					sender.output(TaskOutput::Remove(index.clone()))
+					sender.output(TaskOutput::Remove(index.clone())).unwrap()
 				}
 			},
 			connect_activate[sender] => move |entry| {
@@ -148,9 +146,12 @@ impl AsyncFactoryComponent for TaskModel {
 	) {
 		match message {
 			TaskInput::SetTask(task) => self.task = task,
-			TaskInput::RevealTaskDetails => sender.output(
-				TaskOutput::RevealTaskDetails(self.index.clone(), self.task.clone()),
-			),
+			TaskInput::RevealTaskDetails => sender
+				.output(TaskOutput::RevealTaskDetails(
+					self.index.clone(),
+					self.task.clone(),
+				))
+				.unwrap(),
 			TaskInput::SetCompleted(toggled) => {
 				self.task.status = if toggled {
 					Status::Completed
@@ -189,17 +190,5 @@ impl AsyncFactoryComponent for TaskModel {
 				}
 			},
 		}
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		Some(match output {
-			TaskOutput::Remove(index) => ContentInput::RemoveTask(index),
-			TaskOutput::UpdateTask(index, task) => {
-				ContentInput::UpdateTask(Some(index), task)
-			},
-			TaskOutput::RevealTaskDetails(index, task) => {
-				ContentInput::RevealTaskDetails(Some(index), task)
-			},
-		})
 	}
 }

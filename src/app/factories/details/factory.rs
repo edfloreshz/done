@@ -28,9 +28,12 @@ use relm4::{
 use relm4_icons::icon_name;
 use std::str::FromStr;
 
-use crate::{app::components::content::ContentInput, fl};
+use crate::fl;
 
-use super::tags::factory::TagInit;
+use super::{
+	sub_tasks::messages::SubTaskOutput,
+	tags::factory::{TagInit, TagOutput},
+};
 use super::{
 	sub_tasks::model::{SubTaskInit, SubTaskModel},
 	tags::factory::TagModel,
@@ -99,7 +102,6 @@ pub enum TaskDetailsFactoryOutput {
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 	type ParentWidget = gtk::Box;
-	type ParentInput = ContentInput;
 	type Input = TaskDetailsFactoryInput;
 	type Output = TaskDetailsFactoryOutput;
 	type Init = TaskDetailsFactoryInit;
@@ -575,14 +577,23 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 				.task
 				.reminder_date
 				.map(|date| date.format("%m/%d/%Y %H:%M").to_string()),
-			sub_tasks: FactoryVecDeque::new(
-				adw::PreferencesGroup::default(),
-				sender.input_sender(),
-			),
-			tags: FactoryVecDeque::new(
-				gtk::FlowBox::default(),
-				sender.input_sender(),
-			),
+			sub_tasks: FactoryVecDeque::builder()
+				.launch(adw::PreferencesGroup::default())
+				.forward(sender.input_sender(), |output| match output {
+					SubTaskOutput::Update(index, sub_task) => {
+						TaskDetailsFactoryInput::UpdateSubTask(index, sub_task)
+					},
+					SubTaskOutput::Remove(index) => {
+						TaskDetailsFactoryInput::RemoveSubTask(index)
+					},
+				}),
+			tags: FactoryVecDeque::builder()
+				.launch(gtk::FlowBox::default())
+				.forward(sender.input_sender(), |output| match output {
+					TagOutput::RemoveTag(index) => {
+						TaskDetailsFactoryInput::RemoveTag(index)
+					},
+				}),
 			dirty: false,
 		};
 		{
@@ -750,22 +761,28 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			},
 			TaskDetailsFactoryInput::SaveTask => {
 				if self.update {
-					sender.output(TaskDetailsFactoryOutput::SaveTask(
-						self.parent_task_index.clone(),
-						Box::new(self.task.clone()),
-						self.update,
-					));
+					sender
+						.output(TaskDetailsFactoryOutput::SaveTask(
+							self.parent_task_index.clone(),
+							Box::new(self.task.clone()),
+							self.update,
+						))
+						.unwrap_or_default();
 					self.original_task = self.task.clone();
 					self.dirty = false;
 				} else {
-					sender.output(TaskDetailsFactoryOutput::SaveTask(
-						None,
-						Box::new(self.task.clone()),
-						self.update,
-					));
+					sender
+						.output(TaskDetailsFactoryOutput::SaveTask(
+							None,
+							Box::new(self.task.clone()),
+							self.update,
+						))
+						.unwrap_or_default();
 				}
 				if !self.update {
-					sender.output(TaskDetailsFactoryOutput::CleanTaskEntry)
+					sender
+						.output(TaskDetailsFactoryOutput::CleanTaskEntry)
+						.unwrap_or_default()
 				}
 			},
 			TaskDetailsFactoryInput::SetTitle(title) => {
@@ -832,19 +849,5 @@ impl AsyncFactoryComponent for TaskDetailsFactoryModel {
 			self.dirty = true;
 		}
 		self.update_view(widgets, sender);
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		let output = match output {
-			TaskDetailsFactoryOutput::CleanTaskEntry => ContentInput::CleanTaskEntry,
-			TaskDetailsFactoryOutput::SaveTask(index, task, is_update) => {
-				if is_update {
-					ContentInput::UpdateTask(index, *task)
-				} else {
-					ContentInput::AddTask(*task)
-				}
-			},
-		};
-		Some(output)
 	}
 }

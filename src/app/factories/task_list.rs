@@ -16,7 +16,6 @@ use crate::app::components::delete::{
 use crate::app::components::list_dialog::{
 	ListDialogComponent, ListDialogOutput,
 };
-use crate::app::components::task_list_sidebar::TaskListSidebarInput;
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
@@ -55,7 +54,6 @@ relm4::new_stateless_action!(DeleteAction, TaskListActionGroup, "delete");
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for TaskListFactoryModel {
-	type ParentInput = TaskListSidebarInput;
 	type ParentWidget = gtk::ListBox;
 	type CommandOutput = ();
 	type Input = TaskListFactoryInput;
@@ -211,7 +209,9 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	) {
 		match message {
 			TaskListFactoryInput::Select => {
-				sender.output(TaskListFactoryOutput::Select(self.list.clone()));
+				sender
+					.output(TaskListFactoryOutput::Select(self.list.clone()))
+					.unwrap_or_default();
 			},
 			TaskListFactoryInput::RenameList(name) => {
 				if let SidebarList::Custom(list) = &self.list {
@@ -231,9 +231,11 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 					let mut service = self.service.get_service();
 					match service.delete_list(list.id.clone()).await {
 						Ok(_) => {
-							sender.output(TaskListFactoryOutput::DeleteTaskList(
-								self.index.clone(),
-							));
+							sender
+								.output(TaskListFactoryOutput::DeleteTaskList(
+									self.index.clone(),
+								))
+								.unwrap_or_default();
 						},
 						Err(err) => {
 							tracing::error!("{err}");
@@ -253,17 +255,6 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 						},
 					}
 				}
-			},
-		}
-	}
-
-	fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
-		match output {
-			TaskListFactoryOutput::Select(list) => {
-				Some(TaskListSidebarInput::SelectList(list))
-			},
-			TaskListFactoryOutput::DeleteTaskList(index) => {
-				Some(TaskListSidebarInput::DeleteTaskList(index))
 			},
 		}
 	}
