@@ -5,7 +5,7 @@ use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{
 	embed_migrations, EmbeddedMigrations, MigrationHarness,
 };
-use libset::project::Project;
+use libset::Config;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 pub const DATABASE_NAME: &str = "dev.edfloreshz.Done.db";
@@ -14,14 +14,9 @@ pub struct Database;
 
 impl Database {
 	fn database_url() -> Result<String> {
-		let url = Project::open("dev", "edfloreshz", "done")?
-			.path()
-			.context("The project has not been created")?
-			.join(DATABASE_NAME)
-			.to_str()
-			.context("Failed to convert path to string")?
-			.to_string();
-		Ok(url)
+		let url = Config::new("dev.edfloreshz.done", 1, Some("database"))?
+			.path(DATABASE_NAME, libset::FileType::Plain)?;
+		Ok(url.display().to_string())
 	}
 
 	pub fn establish_connection() -> Result<SqliteConnection> {

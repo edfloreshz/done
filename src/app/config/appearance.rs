@@ -1,5 +1,5 @@
 use anyhow::Result;
-use libset::{format::FileFormat, project::Project};
+use libset::Config;
 use relm4::adw;
 use serde::{Deserialize, Serialize};
 
@@ -19,8 +19,8 @@ impl Default for ColorScheme {
 }
 
 pub(crate) fn init() -> Result<()> {
-	let project = Project::open("dev", "edfloreshz", "done").unwrap();
-	match project.get_file_as::<Preferences>("preferences", FileFormat::JSON) {
+	let project = Config::new("dev.edfloreshz.done", 1, None).unwrap();
+	match project.get_json::<Preferences>("preferences") {
 		Ok(preferences) => {
 			let color_scheme = match preferences.color_scheme {
 				ColorScheme::Dark => adw::ColorScheme::ForceDark,

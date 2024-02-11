@@ -25,6 +25,7 @@ tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 reqwest = "0.11.18"
 futures = "0.3.28"
+libset = "0.1.6"
 
 [dependencies.relm4-icons]
 version = "0.7.0-alpha.1"
@@ -93,10 +94,6 @@ features = ["debug-embed"]
 [dependencies.i18n-embed]
 version = "0.13.4"
 features = ["fluent-system", "desktop-requester"]
-
-[dependencies.libset]
-git = "https://github.com/edfloreshz/libset"
-branch = "beta"
 
 [build-dependencies]
 glib-build-tools = "0.18.0"

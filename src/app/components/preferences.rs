@@ -1,7 +1,6 @@
 use anyhow::Result;
 use core_done::service::Service;
-use libset::format::FileFormat;
-use libset::project::Project;
+use libset::Config;
 use relm4::{
 	adw,
 	adw::prelude::{
@@ -118,10 +117,8 @@ impl AsyncComponent for PreferencesComponentModel {
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
 		let preferences =
-			if let Ok(project) = Project::open("dev", "edfloreshz", "done") {
-				project
-					.get_file_as::<Preferences>("preferences", FileFormat::JSON)
-					.unwrap_or(Preferences::new())
+			if let Ok(config) = Config::new("dev.edfloreshz.done", 1, None) {
+				config.get_json("preferences").unwrap_or(Preferences::new())
 			} else {
 				Preferences::new()
 			};
@@ -191,8 +188,7 @@ impl AsyncComponent for PreferencesComponentModel {
 }
 
 fn update_preferences(preferences: &Preferences) -> Result<()> {
-	Project::open("dev", "edfloreshz", "done")?
-		.get_file("preferences", FileFormat::JSON)?
-		.set_content(preferences)?
-		.write()
+	Config::new("dev.edfloreshz.done", 1, None)?
+		.set_json::<Preferences>("preferences", preferences.to_owned())?;
+	Ok(())
 }
