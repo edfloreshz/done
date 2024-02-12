@@ -52,8 +52,8 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 					set_text: &self.service.to_string(),
 				}
 			},
-			set_action_name: Some("navigation.push"),
 			set_action_target: Some("lists-page"),
+			set_action_name: Some("navigation.push"),
 			connect_clicked[sender, index] => move |_| {
 				sender.input(ServiceFactoryInput::Selected(index.clone()));
 			}

@@ -507,29 +507,6 @@ impl AsyncFactoryComponent for TaskModel {
 					set_margin_all: 10,
 				}
 			}
-			// #[name(details)]
-			// add_suffix = &gtk::Button {
-			// 	add_css_class: "suggested-action",
-			// 	add_css_class: "circular",
-			// 	set_icon_name: icon_name::INFO,
-			// 	set_valign: gtk::Align::Center,
-			// 	set_tooltip: fl!("edit-task-details"),
-			// 	set_action_name: Some("navigation.push"),
-			// 	set_action_target: Some("task-details-page"),
-			// 	connect_clicked => TaskInput::RevealTaskDetails
-			// },
-			// add_row = &adw::EntryRow {
-			// 	set_show_apply_button: true,
-			// 	set_enable_emoji_completion: true,
-			// 	connect_activate[sender] => move |entry| {
-			// 		let buffer = entry.text().to_string();
-			// 		sender.input(TaskInput::ModifyTitle(buffer));
-			// 	},
-			// 	connect_apply[sender] => move |entry| {
-			// 		let buffer = entry.text().to_string();
-			// 		sender.input(TaskInput::ModifyTitle(buffer));
-			// 	},
-			// }
 		}
 	}
 

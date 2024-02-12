@@ -155,6 +155,8 @@ impl AsyncComponent for ContentModel {
 									#[name(split_view)]
 									adw::NavigationView {
 										add = &adw::NavigationPage {
+											set_title: "Smart",
+											set_tag: Some("smart"),
 											#[wrap(Some)]
 											set_child = &gtk::Box {
 												set_orientation: gtk::Orientation::Vertical,
