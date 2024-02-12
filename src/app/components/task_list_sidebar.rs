@@ -163,6 +163,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							set_vexpand: true,
 							#[local_ref]
 							task_list_widget -> gtk::ListBox {
+								set_margin_all: 5,
 								set_css_classes: &["navigation-sidebar"],
 							},
 						}

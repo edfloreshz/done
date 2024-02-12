@@ -34,8 +34,12 @@ impl Service {
 	pub fn icon(&self) -> &str {
 		match self {
 			Service::Smart => "dialog-information-symbolic",
-			Service::Computer => "computer-symbolic",
-			Service::Microsoft => "task-symbolic",
+			Service::Computer => {
+				"/dev/edfloreshz/Done/icons/scalable/services/computer.png"
+			},
+			Service::Microsoft => {
+				"/dev/edfloreshz/Done/icons/scalable/services/microsoft-todo.png"
+			},
 		}
 	}
 }

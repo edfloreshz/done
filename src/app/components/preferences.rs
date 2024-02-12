@@ -11,7 +11,6 @@ use relm4::{
 	component::{AsyncComponent, AsyncComponentParts},
 	gtk, AsyncComponentSender,
 };
-use relm4_icons::icon_name;
 
 use crate::app::config::appearance::ColorScheme;
 use crate::app::config::preferences::Preferences;
@@ -91,7 +90,7 @@ impl AsyncComponent for PreferencesComponentModel {
 									set_title: "Microsoft To Do",
 									set_subtitle: fl!("msft-todo-description"),
 									add_prefix = &gtk::Image {
-										set_icon_name: Some(icon_name::CHECKMARK)
+										set_resource: Some(Service::Microsoft.icon())
 									},
 									set_active: Service::Microsoft.get_service().available(),
 									connect_active_notify[sender] => move |switch| {

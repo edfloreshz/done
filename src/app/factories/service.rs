@@ -1,5 +1,5 @@
 use core_done::service::Service;
-use libadwaita::prelude::ButtonExt;
+use libadwaita::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt};
 use relm4::{
 	adw::prelude::{ActionableExt, ActionableExtManual},
 	factory::{AsyncFactoryComponent, FactoryView},
@@ -15,17 +15,17 @@ pub struct ServiceFactoryModel {
 
 #[derive(Debug)]
 pub enum ServiceFactoryInput {
-	Selected,
+	Selected(DynamicIndex),
 }
 
 #[derive(Debug)]
 pub enum ServiceFactoryOutput {
-	ServiceSelected(Service),
+	ServiceSelected(DynamicIndex, Service),
 }
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for ServiceFactoryModel {
-	type ParentWidget = gtk::Box;
+	type ParentWidget = gtk::FlowBox;
 	type Input = ServiceFactoryInput;
 	type Output = ServiceFactoryOutput;
 	type Init = Service;
@@ -34,13 +34,29 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 	view! {
 		#[root]
 		gtk::ToggleButton {
+			set_hexpand: true,
 			set_tooltip: &self.service.to_string(),
-			gtk::Image {
-				set_icon_name: Some(self.service.icon()),
+			gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
+				set_margin_all: 5,
+				set_spacing: 5,
+				set_halign: gtk::Align::Center,
+				set_valign: gtk::Align::Center,
+				gtk::Image {
+					set_resource: Some(self.service.icon()),
+				},
+				gtk::Label {
+					set_justify: gtk::Justification::Center,
+					set_wrap: true,
+					set_css_classes: &["caption"],
+					set_text: &self.service.to_string(),
+				}
 			},
 			set_action_name: Some("navigation.push"),
 			set_action_target: Some("lists-page"),
-			connect_clicked => ServiceFactoryInput::Selected
+			connect_clicked[sender, index] => move |_| {
+				sender.input(ServiceFactoryInput::Selected(index.clone()));
+			}
 		}
 	}
 
@@ -67,7 +83,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 
 	fn init_widgets(
 		&mut self,
-		_index: &DynamicIndex,
+		index: &DynamicIndex,
 		root: &Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
@@ -82,9 +98,9 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 		sender: AsyncFactorySender<Self>,
 	) {
 		match message {
-			ServiceFactoryInput::Selected => {
+			ServiceFactoryInput::Selected(index) => {
 				sender
-					.output(ServiceFactoryOutput::ServiceSelected(self.service))
+					.output(ServiceFactoryOutput::ServiceSelected(index, self.service))
 					.unwrap_or_default();
 				tracing::info!("Service selected: {}", self.service.to_string());
 			},

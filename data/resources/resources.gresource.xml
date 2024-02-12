@@ -12,6 +12,10 @@
     <file alias="checked.png">../icons/actions/checked.png</file>
     <file alias="document-edit-symbolic.svg" preprocess="xml-stripblanks">../icons/actions/document-edit-symbolic.svg</file>
   </gresource>
+  <gresource prefix="/dev/edfloreshz/Done/icons/scalable/services">
+    <file alias="computer.png">../icons/services/computer.png</file>
+    <file alias="microsoft-todo.png">../icons/services/microsoft-todo.png</file>
+  </gresource>
   <gresource prefix="/dev/edfloreshz/Done/icons/scalable/apps">
     <file alias="app-icon.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.svg</file>
     <file alias="app-icon-devel.svg" preprocess="xml-stripblanks">../icons/dev.edfloreshz.Done.Devel.svg</file>
