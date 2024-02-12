@@ -84,7 +84,7 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-			set_size_request: (450, 600),
+			set_size_request: (450, 700),
 			set_default_size: (800, 800),
 			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
@@ -177,27 +177,6 @@ impl AsyncComponent for Done {
 				#[name(outter_view)]
 				adw::NavigationSplitView {
 					set_sidebar_width_fraction: 0.33,
-					// #[wrap(Some)]
-					// set_sidebar = &adw::NavigationPage {
-					// 	#[name(inner_view)]
-					// 	#[wrap(Some)]
-					// 	set_child = &adw::NavigationSplitView {
-					// 		set_max_sidebar_width: 260.0,
-					// 		set_sidebar_width_fraction: 0.38,
-					// 		#[wrap(Some)]
-					// 		set_sidebar = &adw::NavigationPage {
-					// 			set_title: "Services",
-					// 			set_tag: Some("services-page"),
-					// 			set_child: Some(model.services_sidebar_controller.widget()),
-					// 		},
-					// 		#[wrap(Some)]
-					// 		set_content = &adw::NavigationPage {
-					// 			set_title: "Lists",
-					// 			set_tag: Some("lists-page"),
-					// 			set_child: Some(model.task_list_sidebar_controller.widget()),
-					// 		}
-					// 	},
-					// },
 					#[wrap(Some)]
 					set_sidebar = &adw::NavigationPage {
 						set_title: "Lists",

@@ -1,6 +1,6 @@
 use core_done::service::Service;
+use libadwaita::prelude::BoxExt;
 use relm4::{
-	adw,
 	component::{AsyncComponent, AsyncComponentParts},
 	factory::AsyncFactoryVecDeque,
 	gtk::{self, prelude::OrientableExt, traits::WidgetExt},
@@ -37,42 +37,19 @@ impl AsyncComponent for ServicesSidebarModel {
 
 	view! {
 		#[root]
-		adw::ToolbarView {
-			#[name = "services_sidebar_header"]
-			add_top_bar = &adw::HeaderBar {
-				set_css_classes: &["flat"],
-				set_show_start_title_buttons: true,
-				// pack_end = &gtk::MenuButton {
-				// 	set_tooltip: fl!("menu"),
-				// 	set_valign: gtk::Align::Center,
-				// 	set_css_classes: &["flat"],
-				// 	set_icon_name: icon_name::MENU,
-				// 	set_menu_model: Some(&primary_menu),
-				// },
-				#[wrap(Some)]
-				set_title_widget = &gtk::Label {
-					set_hexpand: true,
-					set_text: fl!("done"),
-				},
+		gtk::ScrolledWindow {
+			set_direction: gtk::TextDirection::Ltr,
+			#[local_ref]
+			services_list -> gtk::Box {
+				set_margin_start: 5,
+				set_margin_end: 5,
+				set_spacing: 5,
+				set_hexpand: true,
+				set_halign: gtk::Align::Start,
+				set_valign: gtk::Align::Center,
+				set_orientation: gtk::Orientation::Horizontal,
 			},
-			#[wrap(Some)]
-			set_content = &gtk::ScrolledWindow {
-				set_direction: gtk::TextDirection::Ltr,
-				gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					set_vexpand: true,
-					#[local_ref]
-					services_list -> gtk::ListBox {
-						set_css_classes: &["navigation-sidebar"],
-						connect_row_selected => move |_, listbox_row| {
-							if let Some(row) = listbox_row {
-								row.activate();
-							}
-						},
-					},
-				}
-			},
-		},
+		}
 	}
 
 	async fn init(
@@ -85,7 +62,7 @@ impl AsyncComponent for ServicesSidebarModel {
 		let _quit: &str = fl!("quit");
 
 		let mut services_factory = AsyncFactoryVecDeque::builder()
-			.launch(gtk::ListBox::default())
+			.launch(gtk::Box::default())
 			.forward(sender.input_sender(), |output| match output {
 				ServiceFactoryOutput::ServiceSelected(service) => {
 					ServicesSidebarInput::ServiceSelected(service)
@@ -107,9 +84,9 @@ impl AsyncComponent for ServicesSidebarModel {
 		let services_list = model.services_factory.widget();
 		let widgets = view_output!();
 
-		widgets
-			.services_list
-			.select_row(widgets.services_list.row_at_index(0).as_ref());
+		// widgets
+		// 	.services_list
+		// 	.select_row(widgets.services_list.row_at_index(0).as_ref());
 
 		AsyncComponentParts { model, widgets }
 	}

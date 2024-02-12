@@ -1,8 +1,9 @@
 use core_done::service::Service;
+use libadwaita::prelude::ButtonExt;
 use relm4::{
 	adw::prelude::{ActionableExt, ActionableExtManual},
 	factory::{AsyncFactoryComponent, FactoryView},
-	gtk::{self, prelude::ListBoxRowExt, traits::WidgetExt},
+	gtk::{self},
 	loading_widgets::LoadingWidgets,
 	prelude::DynamicIndex,
 	AsyncFactorySender, RelmWidgetExt,
@@ -24,7 +25,7 @@ pub enum ServiceFactoryOutput {
 
 #[relm4::factory(pub async)]
 impl AsyncFactoryComponent for ServiceFactoryModel {
-	type ParentWidget = gtk::ListBox;
+	type ParentWidget = gtk::Box;
 	type Input = ServiceFactoryInput;
 	type Output = ServiceFactoryOutput;
 	type Init = Service;
@@ -32,21 +33,14 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 
 	view! {
 		#[root]
-		gtk::ListBoxRow {
+		gtk::ToggleButton {
 			set_tooltip: &self.service.to_string(),
-			gtk::Box {
-				set_css_classes: &["plugin"],
-				gtk::Image {
-					set_icon_name: Some(self.service.icon()),
-					set_margin_end: 10,
-				},
-				gtk::Label {
-					set_text: &self.service.to_string()
-				}
+			gtk::Image {
+				set_icon_name: Some(self.service.icon()),
 			},
 			set_action_name: Some("navigation.push"),
 			set_action_target: Some("lists-page"),
-			connect_activate => ServiceFactoryInput::Selected
+			connect_clicked => ServiceFactoryInput::Selected
 		}
 	}
 

@@ -117,6 +117,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			#[wrap(Some)]
 			set_content = &gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
+				append = model.services_sidebar_controller.widget(),
 				append = match model.state {
 					TaskListSidebarStatus::Empty => {
 						gtk::Box {
