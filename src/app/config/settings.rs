@@ -2,15 +2,28 @@ use anyhow::Result;
 use core_done::services::local::database::{Database, DATABASE_NAME};
 use libset::{Config, FileType};
 
-use super::preferences::Preferences;
+use super::{info::APP_ID, preferences::Preferences};
 
 pub(crate) fn init() -> Result<()> {
-	let config = Config::new("dev.edfloreshz.done", 1, None)?;
-	let database = Config::new("dev.edfloreshz.done", 1, Some("database"))?;
+	let config = Config::new(APP_ID, 1, None)?;
+	let database = Config::new(APP_ID, 1, Some("database"))?;
+	let database_path = database.path(DATABASE_NAME, FileType::Plain)?;
+
+	let previous_database_path = dirs::data_dir()
+		.unwrap()
+		.join("done")
+		.join("dev.edfloreshz.Done.db");
+
+	if previous_database_path.exists() {
+		let db = std::fs::read(&previous_database_path)?;
+		std::fs::write(&database_path, db)?;
+		std::fs::remove_dir_all(previous_database_path.parent().unwrap())?;
+	}
+
 	if !config.path("preferences", FileType::Json)?.exists() {
 		config.set_json("preferences", Preferences::new())?;
 	}
-	if !database.path(DATABASE_NAME, FileType::Plain)?.exists() {
+	if !database_path.exists() {
 		database.set_plain(DATABASE_NAME, String::new())?;
 	}
 
@@ -20,6 +33,6 @@ pub(crate) fn init() -> Result<()> {
 }
 
 pub(crate) fn refresh() -> Result<()> {
-	Config::new("dev.edfloreshz.done", 1, None)?.clean()?;
+	Config::new(APP_ID, 1, None)?.clean()?;
 	init()
 }

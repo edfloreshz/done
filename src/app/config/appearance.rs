@@ -3,7 +3,7 @@ use libset::Config;
 use relm4::adw;
 use serde::{Deserialize, Serialize};
 
-use super::preferences::Preferences;
+use super::{info::APP_ID, preferences::Preferences};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ColorScheme {
@@ -19,7 +19,7 @@ impl Default for ColorScheme {
 }
 
 pub(crate) fn init() -> Result<()> {
-	let project = Config::new("dev.edfloreshz.done", 1, None).unwrap();
+	let project = Config::new(APP_ID, 1, None).unwrap();
 	match project.get_json::<Preferences>("preferences") {
 		Ok(preferences) => {
 			let color_scheme = match preferences.color_scheme {

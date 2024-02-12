@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2024-02-11
+- Moved services bar to the top of the sidebar.
+- Task details can now be expanded from within each task.
+
 ## [0.2.0] - 2023-09-22
 - Fixed issue where async tasks would overlap the results in the UI.
 - Implemented token refreshing for Microsoft To Do. 

@@ -12,8 +12,8 @@ use relm4::{
 	gtk, AsyncComponentSender,
 };
 
-use crate::app::config::appearance::ColorScheme;
 use crate::app::config::preferences::Preferences;
+use crate::app::config::{appearance::ColorScheme, info::APP_ID};
 use crate::fl;
 
 #[derive(Debug)]
@@ -115,12 +115,11 @@ impl AsyncComponent for PreferencesComponentModel {
 		root: Self::Root,
 		sender: AsyncComponentSender<Self>,
 	) -> AsyncComponentParts<Self> {
-		let preferences =
-			if let Ok(config) = Config::new("dev.edfloreshz.done", 1, None) {
-				config.get_json("preferences").unwrap_or(Preferences::new())
-			} else {
-				Preferences::new()
-			};
+		let preferences = if let Ok(config) = Config::new(APP_ID, 1, None) {
+			config.get_json("preferences").unwrap_or(Preferences::new())
+		} else {
+			Preferences::new()
+		};
 
 		let model = Self { preferences };
 
@@ -187,7 +186,7 @@ impl AsyncComponent for PreferencesComponentModel {
 }
 
 fn update_preferences(preferences: &Preferences) -> Result<()> {
-	Config::new("dev.edfloreshz.done", 1, None)?
+	Config::new(APP_ID, 1, None)?
 		.set_json::<Preferences>("preferences", preferences.to_owned())?;
 	Ok(())
 }

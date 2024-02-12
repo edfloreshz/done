@@ -331,7 +331,7 @@ impl AsyncFactoryComponent for TaskModel {
 							set_spacing: 6,
 							gtk::SpinButton {
 								set_adjustment: &gtk::Adjustment::new(
-									self.task.reminder_date.unwrap_or_default().time().hour().try_into().unwrap_or(0.0), 0.0, 23.0, 1.0, 1.0, 0.0
+									self.task.reminder_date.unwrap_or_default().time().hour() as f64, 0.0, 23.0, 1.0, 1.0, 0.0
 								),
 								set_orientation: gtk::Orientation::Vertical,
 								set_wrap: true,
@@ -349,7 +349,7 @@ impl AsyncFactoryComponent for TaskModel {
 							},
 							gtk::SpinButton {
 								set_adjustment: &gtk::Adjustment::new(
-									self.task.reminder_date.unwrap_or_default().time().minute().try_into().unwrap_or(0.0), 0.0, 59.0, 1.0, 1.0, 0.0
+									self.task.reminder_date.unwrap_or_default().time().minute() as f64, 0.0, 59.0, 1.0, 1.0, 0.0
 								),
 								set_orientation: gtk::Orientation::Vertical,
 								set_wrap: true,

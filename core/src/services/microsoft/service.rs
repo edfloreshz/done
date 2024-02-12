@@ -17,7 +17,7 @@ use graph_rs_sdk::{
 use reqwest::StatusCode;
 use url::Url;
 
-const APP_ID: &str = "dev.edfloreshz.Done";
+pub const APP_ID: &str = "dev.edfloreshz.Done";
 const CLIENT_ID: &str = "75d8509b-cf9b-4245-9550-1e5f1d7c66e4";
 const REDIRECT_URI: &str = "done://msft";
 
@@ -89,7 +89,7 @@ impl MicrosoftService {
 
 	fn store_token(&mut self, token: AccessToken) -> Result<()> {
 		keytar::set_password(
-			"dev.edfloreshz.Done",
+			APP_ID,
 			"access_token",
 			&serde_json::to_string(&token)?,
 		);
@@ -165,7 +165,7 @@ impl TodoProvider for MicrosoftService {
 	}
 
 	fn logout(&self) -> anyhow::Result<()> {
-		keytar::delete_password("dev.edfloreshz.Done", "access_token")?;
+		keytar::delete_password(APP_ID, "access_token")?;
 		Ok(())
 	}
 

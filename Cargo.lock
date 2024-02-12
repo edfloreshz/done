@@ -538,12 +538,13 @@ dependencies = [
 
 [[package]]
 name = "done"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "chrono",
  "core_done",
  "derive-new",
+ "dirs",
  "futures",
  "gettext-rs",
  "glib",

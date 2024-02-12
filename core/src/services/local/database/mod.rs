@@ -7,6 +7,8 @@ use diesel_migrations::{
 };
 use libset::Config;
 
+use crate::services::microsoft::service::APP_ID;
+
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 pub const DATABASE_NAME: &str = "dev.edfloreshz.Done.db";
 
@@ -14,7 +16,7 @@ pub struct Database;
 
 impl Database {
 	fn database_url() -> Result<String> {
-		let url = Config::new("dev.edfloreshz.done", 1, Some("database"))?
+		let url = Config::new(APP_ID, 1, Some("database"))?
 			.path(DATABASE_NAME, libset::FileType::Plain)?;
 		Ok(url.display().to_string())
 	}

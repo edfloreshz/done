@@ -72,7 +72,7 @@ impl From<TodoTask> for Task {
 			priority: task.importance.into(),
 			sub_tasks: task
 				.checklist_items
-				.unwrap_or(vec![])
+				.unwrap_or_default()
 				.iter()
 				.map(|item| item.clone().into())
 				.collect(),

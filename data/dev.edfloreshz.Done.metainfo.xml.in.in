@@ -45,6 +45,15 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.2.1" date="2024-02-11">
+      <description>
+        <p>New design!</p>
+        <ul>
+          <li>Moved services bar to the top of the sidebar.</li>
+          <li>Task details can now be expanded from within each task.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.2.0" date="2023-09-21">
       <description>
         <p>Bug fixes</p>
