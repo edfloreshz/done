@@ -28,8 +28,42 @@ futures = "0.3.28"
 libset = "0.1.6"
 dirs = "5.0.1"
 
+
+[dependencies.core_done]
+path = "core"
+
+[dependencies.chrono]
+version = "0.4.23"
+features = ["serde"]
+
+[dependencies.relm4]
+git = "https://github.com/Relm4/Relm4"
+branch = "libadwaita-1.5"
+features = ["macros", "libadwaita", "gnome_46"]
+
+[dependencies.libadwaita]
+version = "0.6.0"
+
+[dependencies.serde]
+version = "1.0.126"
+features = ["derive"]
+
+[dependencies.gettext-rs]
+version = "0.7"
+features = ["gettext-system"]
+
+[dependencies.rust-embed]
+version = "6.8.1"
+features = ["debug-embed"]
+
+[dependencies.i18n-embed]
+version = "0.13.4"
+features = ["fluent-system", "desktop-requester"]
+
+
 [dependencies.relm4-icons]
-version = "0.7.0-alpha.1"
+git = "https://github.com/Relm4/icons"
+branch = "gnome-0.8"
 features = [
     "menu",
     "loupe",
@@ -67,36 +101,6 @@ features = [
     "horizontal-arrows",
     "size-vertically",
 ]
-
-[dependencies.core_done]
-path = "core"
-
-[dependencies.chrono]
-version = "0.4.23"
-features = ["serde"]
-
-[dependencies.relm4]
-version = "0.7.0-beta.2"
-features = ["macros", "libadwaita", "gnome_45"]
-
-[dependencies.libadwaita]
-version = "0.5.2"
-
-[dependencies.serde]
-version = "1.0.126"
-features = ["derive"]
-
-[dependencies.gettext-rs]
-version = "0.7"
-features = ["gettext-system"]
-
-[dependencies.rust-embed]
-version = "6.8.1"
-features = ["debug-embed"]
-
-[dependencies.i18n-embed]
-version = "0.13.4"
-features = ["fluent-system", "desktop-requester"]
 
 [build-dependencies]
 glib-build-tools = "0.18.0"
