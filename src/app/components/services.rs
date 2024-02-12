@@ -1,11 +1,13 @@
 use core_done::service::Service;
-use glib::Cast;
-use libadwaita::prelude::{FlowBoxChildExt, ToggleButtonExt};
+use libadwaita::prelude::Cast;
+use libadwaita::prelude::FlowBoxChildExt;
+use libadwaita::prelude::ToggleButtonExt;
+use relm4::RelmIterChildrenExt;
 use relm4::{
 	component::{AsyncComponent, AsyncComponentParts},
 	factory::{AsyncFactoryVecDeque, DynamicIndex},
 	gtk::{self, prelude::OrientableExt},
-	AsyncComponentSender, RelmIterChildrenExt, RelmWidgetExt,
+	AsyncComponentSender, RelmWidgetExt,
 };
 
 use crate::{

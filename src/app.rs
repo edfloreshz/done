@@ -3,7 +3,7 @@ pub mod factories;
 pub mod models;
 use std::str::FromStr;
 
-use adw::glib::Propagation;
+use adw::{glib::Propagation, prelude::AdwDialogExt};
 use core_done::service::Service;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
@@ -18,7 +18,7 @@ use relm4::{
 		prelude::{
 			ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, Cast, FileExt,
 		},
-		traits::{ApplicationWindowExt, GtkWindowExt, OrientableExt, WidgetExt},
+		prelude::{ApplicationWindowExt, GtkWindowExt, OrientableExt, WidgetExt},
 	},
 	loading_widgets::LoadingWidgets,
 	main_adw_application, new_action_group, new_stateless_action, view,
@@ -54,6 +54,7 @@ new_action_group!(pub(super) WindowActionGroup, "win");
 new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
 new_stateless_action!(AboutAction, WindowActionGroup, "about");
 new_stateless_action!(PreferencesAction, WindowActionGroup, "preferences");
+new_stateless_action!(NewListAction, WindowActionGroup, "new-list");
 new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
 pub struct Done {
@@ -189,7 +190,7 @@ impl AsyncComponent for Done {
 		}
 	}
 
-	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
+	fn init_loading_widgets(root: Self::Root) -> Option<LoadingWidgets> {
 		view! {
 				#[local_ref]
 				root {
@@ -305,8 +306,9 @@ impl AsyncComponent for Done {
 
 		let preferences_action = {
 			let window = model.preferences.widget().clone();
+			let root = root.clone();
 			RelmAction::<PreferencesAction>::new_stateless(move |_| {
-				window.present();
+				window.present(&root);
 			})
 		};
 

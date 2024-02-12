@@ -1,7 +1,7 @@
-use adw::traits::{EntryRowExt, PreferencesRowExt};
+use adw::prelude::{EntryRowExt, PreferencesRowExt};
 use core_done::models::status::Status;
-use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
-use relm4::gtk::traits::EditableExt;
+use gtk::prelude::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
+use relm4::gtk::prelude::EditableExt;
 use relm4::RelmWidgetExt;
 use relm4::{
 	adw,
@@ -74,7 +74,7 @@ impl FactoryComponent for SubTaskModel {
 	fn init_widgets(
 		&mut self,
 		index: &DynamicIndex,
-		root: &Self::Root,
+		root: Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: FactorySender<Self>,
 	) -> Self::Widgets {

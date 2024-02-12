@@ -12,7 +12,7 @@ use relm4::component::{
 	AsyncComponent, AsyncComponentParts, AsyncComponentSender,
 };
 use relm4::factory::AsyncFactoryVecDeque;
-use relm4::gtk::traits::ButtonExt;
+use relm4::gtk::prelude::ButtonExt;
 use relm4::prelude::DynamicIndex;
 use relm4::{
 	adw,

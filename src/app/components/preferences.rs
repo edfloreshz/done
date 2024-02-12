@@ -1,17 +1,17 @@
+use adw::prelude::PreferencesDialogExt;
 use anyhow::Result;
 use core_done::service::Service;
 use libset::Config;
 use relm4::{
 	adw,
+	adw::prelude::ComboRowExt,
 	adw::prelude::{
-		ActionRowExt, AdwWindowExt, BoxExt, GtkWindowExt, OrientableExt,
-		PreferencesGroupExt, PreferencesPageExt, PreferencesRowExt, WidgetExt,
+		ActionRowExt, PreferencesGroupExt, PreferencesPageExt, PreferencesRowExt,
+		WidgetExt,
 	},
-	adw::traits::ComboRowExt,
 	component::{AsyncComponent, AsyncComponentParts},
 	gtk, AsyncComponentSender,
 };
-use relm4_icons::icon_name;
 
 use crate::app::config::preferences::Preferences;
 use crate::app::config::{appearance::ColorScheme, info::APP_ID};
@@ -44,75 +44,52 @@ impl AsyncComponent for PreferencesComponentModel {
 	type Init = ();
 
 	view! {
-		adw::PreferencesWindow {
-			set_title: Some(fl!("preferences")),
-			set_hide_on_close: true,
-			#[wrap(Some)]
+		adw::PreferencesDialog {
 			#[name = "overlay"]
-			set_content = &adw::ToastOverlay {
-				#[wrap(Some)]
-				set_child = &gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					append = &adw::HeaderBar {
-						set_show_end_title_buttons: true
+			add = &adw::PreferencesPage {
+				set_vexpand: true,
+				add = &adw::PreferencesGroup {
+					set_title: fl!("appearance"),
+					adw::ComboRow {
+						set_title: fl!("color-scheme"),
+						set_subtitle: fl!("color-scheme-description"),
+						add_prefix = &gtk::Image {
+							set_icon_name: Some("dark-mode-symbolic")
+						},
+						set_model: Some(&gtk::StringList::new(&[
+							fl!("color-scheme-light"),
+							fl!("color-scheme-dark"),
+							fl!("color-scheme-default")
+						])),
+						set_selected: match model.preferences.color_scheme {
+							ColorScheme::Light => 0,
+							ColorScheme::Dark => 1,
+							ColorScheme::Default => 2,
+						},
+						connect_selected_notify[sender] => move |combo_row| {
+							match combo_row.selected() {
+								0 => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Light)).unwrap(),
+								1 => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Dark)).unwrap(),
+								_ => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Default)).unwrap(),
+							}
+						},
 					},
-					append = &adw::Clamp {
-						#[wrap(Some)]
-						set_child = &adw::PreferencesPage {
-							set_vexpand: true,
-							add = &adw::PreferencesGroup {
-								set_title: fl!("appearance"),
-								adw::ComboRow {
-									set_title: fl!("color-scheme"),
-									set_subtitle: fl!("color-scheme-description"),
-									add_prefix = &gtk::Image {
-										set_icon_name: Some("dark-mode-symbolic")
-									},
-									set_model: Some(&gtk::StringList::new(&[
-										fl!("color-scheme-light"),
-										fl!("color-scheme-dark"),
-										fl!("color-scheme-default")
-									])),
-									set_selected: match model.preferences.color_scheme {
-										ColorScheme::Light => 0,
-										ColorScheme::Dark => 1,
-										ColorScheme::Default => 2,
-									},
-									connect_selected_notify[sender] => move |combo_row| {
-										match combo_row.selected() {
-											0 => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Light)).unwrap(),
-											1 => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Dark)).unwrap(),
-											_ => sender.input_sender().send(PreferencesComponentInput::SetColorScheme(ColorScheme::Default)).unwrap(),
-										}
-									},
-								},
-								adw::SwitchRow {
-									set_title: fl!("expand-subtask"),
-									set_subtitle: fl!("expand-subtask-desc"),
-									add_prefix = &gtk::Image {
-										set_icon_name: Some(icon_name::SIZE_VERTICALLY),
-									},
-									set_active: model.preferences.expand_subtasks,
-									connect_active_notify => PreferencesComponentInput::ExpandSubTasks
-								}
-							},
-							add = &adw::PreferencesGroup {
-								set_title: fl!("services"),
-								adw::SwitchRow {
-									set_title: "Microsoft To Do",
-									set_subtitle: fl!("msft-todo-description"),
-									add_prefix = &gtk::Image {
-										set_resource: Some(Service::Microsoft.icon())
-									},
-									set_active: Service::Microsoft.get_service().available(),
-									connect_active_notify[sender] => move |switch| {
-										if switch.is_active() {
-											sender.input_sender().send(PreferencesComponentInput::MicrosoftLogin).unwrap();
-										} else {
-											sender.input_sender().send(PreferencesComponentInput::MicrosoftLogout).unwrap();
-										}
-									}
-								}
+				},
+				add = &adw::PreferencesGroup {
+					set_title: fl!("services"),
+					adw::SwitchRow {
+						set_title: "Microsoft To Do",
+						set_subtitle: fl!("msft-todo-description"),
+						add_prefix = &gtk::Image {
+							set_resource: Some(Service::Microsoft.icon())
+						},
+						set_active: Service::Microsoft.get_service().available(),
+						connect_active_notify[sender] => move |switch| {
+							println!("Switch activated");
+							if switch.is_active() {
+								sender.input_sender().send(PreferencesComponentInput::MicrosoftLogin).unwrap();
+							} else {
+								sender.input_sender().send(PreferencesComponentInput::MicrosoftLogout).unwrap();
 							}
 						}
 					}

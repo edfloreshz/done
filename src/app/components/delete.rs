@@ -1,8 +1,9 @@
+use adw::prelude::AdwDialogExt;
 use relm4::{
 	adw,
 	gtk::{
 		self,
-		traits::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
+		prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
 	},
 	Component, ComponentParts, RelmWidgetExt,
 };
@@ -39,13 +40,9 @@ impl Component for DeleteComponent {
 
 	view! {
 		#[root]
-		adw::Window {
-			set_hide_on_close: true,
-			set_default_width: 320,
-			set_resizable: false,
-			set_modal: true,
-
-			gtk::Box {
+		adw::Dialog {
+			#[wrap(Some)]
+			set_child = &gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				adw::HeaderBar {
 					set_show_end_title_buttons: true,
@@ -88,17 +85,19 @@ impl Component for DeleteComponent {
 		root: &Self::Root,
 	) {
 		match message {
-			DeleteInput::Cancel => root.close(),
+			DeleteInput::Cancel => {
+				root.close();
+			},
 			DeleteInput::Delete => {
 				sender.output(DeleteOutput::Delete).unwrap_or_default();
 			},
 		}
-		root.close()
+		root.close();
 	}
 
 	fn init(
 		init: Self::Init,
-		root: &Self::Root,
+		root: Self::Root,
 		_sender: relm4::ComponentSender<Self>,
 	) -> relm4::ComponentParts<Self> {
 		let model = DeleteComponent {

@@ -1,7 +1,7 @@
 use crate::{app::models::sidebar_list::SidebarList, fl};
-use adw::traits::{EntryRowExt, PreferencesRowExt};
+use adw::prelude::{EntryRowExt, PreferencesRowExt};
 use core_done::models::task::Task;
-use gtk::traits::{EditableExt, ListBoxRowExt};
+use gtk::prelude::{EditableExt, ListBoxRowExt};
 use relm4::{
 	adw, gtk, gtk::prelude::WidgetExt, Component, ComponentParts,
 	ComponentSender, RelmWidgetExt,
@@ -61,7 +61,7 @@ impl Component for TaskInputModel {
 
 	fn init(
 		init: Self::Init,
-		root: &Self::Root,
+		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let model = TaskInputModel {

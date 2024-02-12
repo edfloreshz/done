@@ -1,9 +1,10 @@
 use core_done::service::Service;
+use libadwaita::prelude::AdwDialogExt;
 use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
+use relm4::gtk::prelude::BoxExt;
 use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
-use relm4::gtk::traits::{BoxExt, GtkWindowExt};
 use relm4::{
 	gtk, AsyncFactorySender, Component, ComponentController, Controller,
 	RelmWidgetExt,
@@ -166,25 +167,26 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 	fn init_widgets(
 		&mut self,
 		_index: &DynamicIndex,
-		root: &Self::Root,
+		root: Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
 		let widgets = view_output!();
 
 		let mut actions = RelmActionGroup::<TaskListActionGroup>::new();
-
 		let rename_action = {
 			let rename_widget = self.rename.widget().clone();
+			let root_widget = root.clone();
 			RelmAction::<RenameAction>::new_stateless(move |_| {
-				rename_widget.present()
+				rename_widget.present(&root_widget)
 			})
 		};
 
 		let delete_action = {
 			let delete_widget = self.delete.widget().clone();
+			let root_widget = root.clone();
 			RelmAction::<DeleteAction>::new_stateless(move |_| {
-				delete_widget.present()
+				delete_widget.present(&root_widget)
 			})
 		};
 

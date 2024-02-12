@@ -3,10 +3,8 @@ use gtk::prelude::{
 };
 use relm4::{
 	adw,
-	gtk::{
-		self,
-		traits::{GtkWindowExt, OrientableExt},
-	},
+	adw::prelude::AdwDialogExt,
+	gtk::{self, prelude::OrientableExt},
 	Component, ComponentParts, ComponentSender, RelmWidgetExt,
 };
 use relm4_icons::icon_name;
@@ -46,13 +44,9 @@ impl Component for ListDialogComponent {
 
 	view! {
 		#[root]
-		adw::Window {
-			set_hide_on_close: true,
-			set_default_width: 320,
-			set_resizable: false,
-			set_modal: true,
-
-			gtk::Box {
+		adw::Dialog {
+			#[wrap(Some)]
+			set_child = &gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 
 				adw::HeaderBar {
@@ -99,7 +93,7 @@ impl Component for ListDialogComponent {
 
 	fn init(
 		init: Self::Init,
-		root: &Self::Root,
+		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
 		let model = if let Some(name) = init {

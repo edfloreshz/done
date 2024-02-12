@@ -58,7 +58,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 		}
 	}
 
-	fn init_loading_widgets(root: &mut Self::Root) -> Option<LoadingWidgets> {
+	fn init_loading_widgets(root: Self::Root) -> Option<LoadingWidgets> {
 		relm4::view! {
 			#[local_ref]
 			root {
@@ -82,7 +82,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 	fn init_widgets(
 		&mut self,
 		index: &DynamicIndex,
-		root: &Self::Root,
+		root: Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {

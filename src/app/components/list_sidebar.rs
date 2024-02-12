@@ -1,6 +1,8 @@
+use adw::{gtk::prelude::ActionableExt, prelude::AdwDialogExt};
 use core_done::{models::list::List, service::Service};
 use futures::StreamExt;
 use relm4::{
+	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
 	component::{
 		AsyncComponent, AsyncComponentController, AsyncComponentParts,
@@ -9,8 +11,7 @@ use relm4::{
 	factory::AsyncFactoryVecDeque,
 	gtk::{
 		self,
-		prelude::BoxExt,
-		traits::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
+		prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt},
 	},
 	prelude::DynamicIndex,
 	tokio, AsyncComponentSender, Component, ComponentController, Controller,
@@ -25,7 +26,8 @@ use crate::{
 			TaskListFactoryInit, TaskListFactoryModel, TaskListFactoryOutput,
 		},
 		models::sidebar_list::SidebarList,
-		AboutAction, PreferencesAction, QuitAction, ShortcutsAction,
+		AboutAction, NewListAction, PreferencesAction, QuitAction, ShortcutsAction,
+		WindowActionGroup,
 	},
 	fl,
 };
@@ -47,7 +49,6 @@ pub struct ListSidebarModel {
 #[derive(Debug)]
 pub enum ListSidebarInput {
 	LoadTaskLists,
-	OpenNewTaskListDialog,
 	LoadTaskList(List),
 	AddTaskListToSidebar(String),
 	ServiceSelected(Service),
@@ -56,6 +57,7 @@ pub enum ListSidebarInput {
 	DeleteTaskList(DynamicIndex),
 	SetStatus(ListSidebarStatus),
 	ReloadSidebar(Service),
+	OpenNewTaskListDialog,
 }
 
 #[derive(Debug)]
@@ -97,12 +99,14 @@ impl SimpleAsyncComponent for ListSidebarModel {
 				set_show_start_title_buttons: false,
 				set_show_back_button: true,
 				set_title_widget: Some(&gtk::Label::new(Some("Lists"))),
-				pack_start = &gtk::Button {
+				#[name(new_list_button)]
+				pack_start = &gtk::ToggleButton {
 					set_tooltip: fl!("add-new-task-list"),
 					set_icon_name: icon_name::PLUS,
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
-					connect_clicked => ListSidebarInput::OpenNewTaskListDialog
+					connect_clicked => ListSidebarInput::OpenNewTaskListDialog,
+					set_action_name: Some("win.new-list"),
 				},
 				pack_end = &gtk::MenuButton {
 					set_tooltip: fl!("menu"),
@@ -229,9 +233,28 @@ impl SimpleAsyncComponent for ListSidebarModel {
 			),
 			handle: None,
 		};
+
+		let mut actions = RelmActionGroup::<WindowActionGroup>::new();
+
+		let new_list_action = {
+			let list_entry = model.list_entry.widget().clone();
+			let root_widget = root.clone();
+			RelmAction::<NewListAction>::new_stateless(move |_| {
+				list_entry.present(&root_widget)
+			})
+		};
+
+		actions.add_action(new_list_action);
+
 		sender.input(ListSidebarInput::LoadTaskLists);
+
 		let task_list_widget = model.task_list_factory.widget();
 		let widgets = view_output!();
+
+		widgets.new_list_button.insert_action_group(
+			WindowActionGroup::NAME,
+			Some(&actions.into_action_group()),
+		);
 		AsyncComponentParts { model, widgets }
 	}
 
@@ -268,7 +291,7 @@ impl SimpleAsyncComponent for ListSidebarModel {
 				.unwrap_or_default(),
 			ListSidebarInput::OpenNewTaskListDialog => {
 				let list_entry = self.list_entry.widget();
-				list_entry.present();
+				list_entry.present(&list_entry.parent().unwrap());
 			},
 			ListSidebarInput::ServiceSelected(service) => {
 				self.service = service;

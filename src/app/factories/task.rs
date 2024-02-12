@@ -7,7 +7,7 @@ use adw::prelude::{
 	ActionRowExt, BoxExt, ExpanderRowExt, OrientableExt, PreferencesGroupExt,
 	TextBufferExt, TextViewExt, ToggleButtonExt,
 };
-use adw::traits::{EntryRowExt, PreferencesRowExt};
+use adw::prelude::{EntryRowExt, PreferencesRowExt};
 use chrono::{DateTime, Datelike, Duration, Timelike, Utc};
 use core_done::models::list::List;
 use core_done::models::priority::Priority;
@@ -555,7 +555,7 @@ impl AsyncFactoryComponent for TaskModel {
 	fn init_widgets(
 		&mut self,
 		index: &DynamicIndex,
-		root: &Self::Root,
+		root: Self::Root,
 		_returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
 		sender: AsyncFactorySender<Self>,
 	) -> Self::Widgets {
