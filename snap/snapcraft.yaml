@@ -3,8 +3,13 @@ base: core22
 adopt-info: done
 grade: stable
 confinement: strict
+license: MPL-2.0
 
 compression: lzo
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
 
 parts:
   rustup:
