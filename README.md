@@ -35,7 +35,7 @@ Our user-friendly app allows you to effortlessly consolidate your existing tasks
 |------------|-----------------------------------------|
 | Flathub    | <a href="https://flathub.org/apps/details/dev.edfloreshz.Done"><img src="https://flathub.org/assets/badges/flathub-badge-en.png" width="150"/></a> |
 | AUR        | <a href="https://aur.archlinux.org/packages/done"><img src="https://aur.archlinux.org/static/css/archnavbar/aurlogo.png" width="150"></a> |
-| Snap       | <a href="https://snapcraft.io/done"><img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" /></a>|
+| Snap       | <a href="https://snapcraft.io/done"><img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" width="150"/></a>|
 
 # Build
 
@@ -50,7 +50,7 @@ Meson:
 - gettext
 - pkg-config
 
-Ubuntu 22.10:
+Ubuntu 23.10:
 ```bash
 sudo apt install libadwaita-1-dev libgtk-4-dev libsqlite3-dev libsecret-1-dev meson
 ```
