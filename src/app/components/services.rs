@@ -11,42 +11,42 @@ use crate::{
 	fl,
 };
 
-pub struct ServicesSidebarModel {
+pub struct ServicesModel {
 	services_factory: AsyncFactoryVecDeque<ServiceFactoryModel>,
 }
 
 #[derive(Debug)]
-pub enum ServicesSidebarInput {
+pub enum ServicesInput {
 	ServiceSelected(DynamicIndex, Service),
-	ReloadSidebar(Service),
+	ReloadServices(Service),
 }
 
 #[derive(Debug)]
-pub enum ServicesSidebarOutput {
+pub enum ServicesOutput {
 	ServiceSelected(Service),
 	ServiceDisabled(Service),
 }
 
 #[relm4::component(pub async)]
-impl AsyncComponent for ServicesSidebarModel {
+impl AsyncComponent for ServicesModel {
 	type CommandOutput = ();
-	type Input = ServicesSidebarInput;
-	type Output = ServicesSidebarOutput;
+	type Input = ServicesInput;
+	type Output = ServicesOutput;
 	type Init = ();
 
 	view! {
 		#[root]
-		gtk::ScrolledWindow {
-			set_height_request: 75,
-			set_policy: (gtk::PolicyType::Automatic, gtk::PolicyType::Never),
-			set_margin_all: 10,
+		gtk::Box {
 			#[local_ref]
 			services_list -> gtk::FlowBox {
+				set_margin_all: 10,
+				set_column_spacing: 5,
 				set_valign: gtk::Align::Start,
-				set_orientation: gtk::Orientation::Vertical,
+				set_orientation: gtk::Orientation::Horizontal,
 				set_selection_mode: gtk::SelectionMode::Single,
 				set_homogeneous: true,
-				set_max_children_per_line: 2,
+				set_max_children_per_line: 7,
+				set_min_children_per_line: 2,
 			},
 		}
 	}
@@ -64,7 +64,7 @@ impl AsyncComponent for ServicesSidebarModel {
 			.launch(gtk::FlowBox::default())
 			.forward(sender.input_sender(), |output| match output {
 				ServiceFactoryOutput::ServiceSelected(index, service) => {
-					ServicesSidebarInput::ServiceSelected(index, service)
+					ServicesInput::ServiceSelected(index, service)
 				},
 			});
 
@@ -78,7 +78,7 @@ impl AsyncComponent for ServicesSidebarModel {
 			}
 		}
 
-		let model = ServicesSidebarModel { services_factory };
+		let model = ServicesModel { services_factory };
 
 		let services_list = model.services_factory.widget();
 
@@ -97,7 +97,7 @@ impl AsyncComponent for ServicesSidebarModel {
 		_root: &Self::Root,
 	) {
 		match message {
-			ServicesSidebarInput::ReloadSidebar(service) => {
+			ServicesInput::ReloadServices(service) => {
 				let mut guard = self.services_factory.guard();
 				guard.clear();
 				for service in Service::list() {
@@ -106,17 +106,17 @@ impl AsyncComponent for ServicesSidebarModel {
 					}
 				}
 				sender
-					.output(ServicesSidebarOutput::ServiceDisabled(service))
+					.output(ServicesOutput::ServiceDisabled(service))
 					.unwrap()
 			},
-			ServicesSidebarInput::ServiceSelected(index, service) => {
+			ServicesInput::ServiceSelected(index, service) => {
 				let flow_box = self.services_factory.widget();
 				let selected_child = flow_box
 					.child_at_index(index.current_index() as i32)
 					.unwrap();
 				flow_box.select_child(&selected_child);
 				sender
-					.output(ServicesSidebarOutput::ServiceSelected(service))
+					.output(ServicesOutput::ServiceSelected(service))
 					.unwrap();
 			},
 		}

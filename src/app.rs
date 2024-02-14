@@ -8,7 +8,7 @@ use core_done::service::Service;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
-	adw::prelude::{AdwApplicationWindowExt, NavigationPageExt},
+	adw::prelude::AdwApplicationWindowExt,
 	component::{
 		AsyncComponent, AsyncComponentController, AsyncComponentParts,
 		AsyncController,
@@ -30,8 +30,8 @@ use relm4_icons::icon_name;
 use crate::{
 	app::{
 		components::{
+			content::ContentOutput, list_sidebar::ListSidebarOutput,
 			preferences::PreferencesComponentOutput,
-			task_list_sidebar::TaskListSidebarOutput,
 		},
 		config::{info::PROFILE, setup},
 	},
@@ -42,8 +42,8 @@ use self::{
 	components::{
 		about_dialog::AboutDialog,
 		content::{ContentInput, ContentModel},
+		list_sidebar::{ListSidebarInput, ListSidebarModel},
 		preferences::PreferencesComponentModel,
-		task_list_sidebar::{TaskListSidebarInput, TaskListSidebarModel},
 	},
 	models::sidebar_list::SidebarList,
 };
@@ -57,7 +57,7 @@ new_stateless_action!(PreferencesAction, WindowActionGroup, "preferences");
 new_stateless_action!(QuitAction, WindowActionGroup, "quit");
 
 pub struct Done {
-	task_list_sidebar_controller: AsyncController<TaskListSidebarModel>,
+	task_list_sidebar_controller: AsyncController<ListSidebarModel>,
 	content_controller: AsyncController<ContentModel>,
 	about_dialog: Controller<AboutDialog>,
 	preferences: AsyncController<PreferencesComponentModel>,
@@ -69,6 +69,7 @@ pub enum AppInput {
 	ServiceDisabled(Service),
 	ListSelected(SidebarList, Service),
 	ReloadSidebar(Service),
+	CollapseSidebar,
 	CleanContent,
 	Refresh,
 	Quit,
@@ -84,7 +85,7 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-			set_size_request: (450, 700),
+			set_size_request: (450, 500),
 			set_default_size: (800, 800),
 			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);
@@ -114,7 +115,7 @@ impl AsyncComponent for Done {
 					&outter_view,
 					"collapsed",
 					&true.into(),
-				),
+				)
 			},
 
 			if model.startup_failed {
@@ -175,20 +176,13 @@ impl AsyncComponent for Done {
 				}
 			} else {
 				#[name(outter_view)]
-				adw::NavigationSplitView {
-					set_sidebar_width_fraction: 0.33,
+				adw::OverlaySplitView {
+					set_enable_show_gesture: true,
+					set_sidebar_width_fraction: 0.40,
 					#[wrap(Some)]
-					set_sidebar = &adw::NavigationPage {
-						set_title: "Lists",
-						set_tag: Some("lists-page"),
-						set_child: Some(model.task_list_sidebar_controller.widget()),
-					},
+					set_sidebar = model.task_list_sidebar_controller.widget(),
 					#[wrap(Some)]
-					set_content = &adw::NavigationPage {
-						set_title: "Tasks",
-						set_tag: Some("content-page"),
-						set_child: Some(model.content_controller.widget()),
-					}
+					set_content = model.content_controller.widget(),
 				}
 			}
 		}
@@ -253,18 +247,23 @@ impl AsyncComponent for Done {
 			.detach();
 
 		let mut model = Done {
-			task_list_sidebar_controller: TaskListSidebarModel::builder()
+			task_list_sidebar_controller: ListSidebarModel::builder()
 				.launch(Service::Computer)
 				.forward(sender.input_sender(), |message| match message {
-					TaskListSidebarOutput::ServiceDisabled(service) => {
+					ListSidebarOutput::ServiceDisabled(service) => {
 						AppInput::ServiceDisabled(service)
 					},
-					TaskListSidebarOutput::SelectList(list, service) => {
+					ListSidebarOutput::SelectList(list, service) => {
 						AppInput::ListSelected(list, service)
 					},
-					TaskListSidebarOutput::CleanContent => AppInput::CleanContent,
+					ListSidebarOutput::CleanContent => AppInput::CleanContent,
 				}),
-			content_controller: ContentModel::builder().launch(None).detach(),
+			content_controller: ContentModel::builder().launch(None).forward(
+				sender.input_sender(),
+				|output| match output {
+					ContentOutput::CollapseSidebar => AppInput::CollapseSidebar,
+				},
+			),
 			about_dialog,
 			preferences: PreferencesComponentModel::builder().launch(()).forward(
 				sender.input_sender(),
@@ -330,10 +329,11 @@ impl AsyncComponent for Done {
 		AsyncComponentParts { model, widgets }
 	}
 
-	async fn update(
+	async fn update_with_view(
 		&mut self,
+		widgets: &mut Self::Widgets,
 		message: Self::Input,
-		_sender: AsyncComponentSender<Self>,
+		sender: AsyncComponentSender<Self>,
 		_root: &Self::Root,
 	) {
 		match message {
@@ -343,6 +343,10 @@ impl AsyncComponent for Done {
 					Ok(_) => main_adw_application().quit(),
 					Err(_) => main_adw_application().quit(),
 				};
+			},
+			AppInput::CollapseSidebar => {
+				let collapsed = widgets.outter_view.shows_sidebar();
+				widgets.outter_view.set_show_sidebar(!collapsed);
 			},
 			AppInput::ListSelected(list, service) => {
 				self
@@ -366,8 +370,9 @@ impl AsyncComponent for Done {
 			AppInput::ReloadSidebar(service) => self
 				.task_list_sidebar_controller
 				.sender()
-				.send(TaskListSidebarInput::ReloadSidebar(service))
+				.send(ListSidebarInput::ReloadSidebar(service))
 				.unwrap_or_default(),
 		}
+		self.update_view(widgets, sender)
 	}
 }

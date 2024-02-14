@@ -1,7 +1,6 @@
 use core_done::service::Service;
 use libadwaita::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt};
 use relm4::{
-	adw::prelude::{ActionableExt, ActionableExtManual},
 	factory::{AsyncFactoryComponent, FactoryView},
 	gtk::{self},
 	loading_widgets::LoadingWidgets,
@@ -36,6 +35,7 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 		gtk::ToggleButton {
 			set_hexpand: true,
 			set_tooltip: &self.service.to_string(),
+			set_css_classes: &["card"],
 			gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				set_margin_all: 5,
@@ -52,8 +52,6 @@ impl AsyncFactoryComponent for ServiceFactoryModel {
 					set_text: &self.service.to_string(),
 				}
 			},
-			set_action_target: Some("lists-page"),
-			set_action_name: Some("navigation.push"),
 			connect_clicked[sender, index] => move |_| {
 				sender.input(ServiceFactoryInput::Selected(index.clone()));
 			}
