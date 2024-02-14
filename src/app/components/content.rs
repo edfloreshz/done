@@ -56,11 +56,14 @@ pub enum ContentInput {
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	SetState(ContentState),
+	CollapseSidebar,
 	Clean,
 }
 
 #[derive(Debug)]
-pub enum ContentOutput {}
+pub enum ContentOutput {
+	CollapseSidebar,
+}
 
 #[relm4::component(pub async)]
 impl AsyncComponent for ContentModel {
@@ -82,10 +85,9 @@ impl AsyncComponent for ContentModel {
 				set_title_widget: Some(&gtk::Label::new(
 					Some("Tasks")
 				)),
-				pack_start: go_back_button = &gtk::Button {
-					set_tooltip: fl!("back"),
-					set_icon_name: icon_name::LEFT,
-					set_visible: false,
+				pack_start: sidebar_button = &gtk::Button {
+					set_icon_name: icon_name::DOCK_LEFT,
+					connect_clicked => ContentInput::CollapseSidebar,
 				},
 				pack_start = &gtk::Button {
 					set_visible: false,
@@ -305,6 +307,9 @@ impl AsyncComponent for ContentModel {
 		match message {
 			ContentInput::Clean => self.state = ContentState::Unselected,
 			ContentInput::SetState(state) => self.state = state,
+			ContentInput::CollapseSidebar => sender
+				.output(ContentOutput::CollapseSidebar)
+				.unwrap_or_default(),
 			ContentInput::LoadTask(task) => {
 				if let SidebarList::Custom(parent) = &self.parent_list.as_ref().unwrap()
 				{

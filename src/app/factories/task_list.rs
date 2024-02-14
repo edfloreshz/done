@@ -5,7 +5,6 @@ use relm4::factory::{DynamicIndex, FactoryView};
 use relm4::gtk::prelude::{ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::{BoxExt, GtkWindowExt};
 use relm4::{
-	adw::prelude::{ActionableExt, ActionableExtManual},
 	gtk, AsyncFactorySender, Component, ComponentController, Controller,
 	RelmWidgetExt,
 };
@@ -76,8 +75,7 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			#[watch]
 			set_tooltip: self.list.name().as_str(),
 			connect_activate => TaskListFactoryInput::Select,
-			set_action_target: Some("content-page"),
-			set_action_name: Some("navigation.push"),
+			set_css_classes: &["card"],
 			#[name(container)]
 			gtk::Box {
 				add_controller = gtk::GestureClick {

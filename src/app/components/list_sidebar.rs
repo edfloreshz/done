@@ -20,9 +20,7 @@ use relm4_icons::icon_name;
 
 use crate::{
 	app::{
-		components::{
-			list_dialog::ListDialogOutput, services_sidebar::ServicesSidebarOutput,
-		},
+		components::{list_dialog::ListDialogOutput, services::ServicesOutput},
 		factories::task_list::{
 			TaskListFactoryInit, TaskListFactoryModel, TaskListFactoryOutput,
 		},
@@ -34,20 +32,20 @@ use crate::{
 
 use super::{
 	list_dialog::ListDialogComponent,
-	services_sidebar::{ServicesSidebarInput, ServicesSidebarModel},
+	services::{ServicesInput, ServicesModel},
 };
 
-pub struct TaskListSidebarModel {
+pub struct ListSidebarModel {
 	service: Service,
-	state: TaskListSidebarStatus,
+	state: ListSidebarStatus,
 	task_list_factory: AsyncFactoryVecDeque<TaskListFactoryModel>,
 	list_entry: Controller<ListDialogComponent>,
-	services_sidebar_controller: AsyncController<ServicesSidebarModel>,
+	services_sidebar_controller: AsyncController<ServicesModel>,
 	handle: Option<JoinHandle<()>>,
 }
 
 #[derive(Debug)]
-pub enum TaskListSidebarInput {
+pub enum ListSidebarInput {
 	LoadTaskLists,
 	OpenNewTaskListDialog,
 	LoadTaskList(List),
@@ -56,28 +54,28 @@ pub enum TaskListSidebarInput {
 	ServiceDisabled(Service),
 	SelectList(SidebarList),
 	DeleteTaskList(DynamicIndex),
-	SetStatus(TaskListSidebarStatus),
+	SetStatus(ListSidebarStatus),
 	ReloadSidebar(Service),
 }
 
 #[derive(Debug)]
-pub enum TaskListSidebarOutput {
+pub enum ListSidebarOutput {
 	SelectList(SidebarList, Service),
 	ServiceDisabled(Service),
 	CleanContent,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum TaskListSidebarStatus {
+pub enum ListSidebarStatus {
 	Empty,
 	Loading,
 	Loaded,
 }
 
 #[relm4::component(pub async)]
-impl SimpleAsyncComponent for TaskListSidebarModel {
-	type Input = TaskListSidebarInput;
-	type Output = TaskListSidebarOutput;
+impl SimpleAsyncComponent for ListSidebarModel {
+	type Input = ListSidebarInput;
+	type Output = ListSidebarOutput;
 	type Init = Service;
 
 	menu! {
@@ -104,7 +102,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 					set_icon_name: icon_name::PLUS,
 					set_css_classes: &["flat", "image-button"],
 					set_valign: gtk::Align::Center,
-					connect_clicked => TaskListSidebarInput::OpenNewTaskListDialog
+					connect_clicked => ListSidebarInput::OpenNewTaskListDialog
 				},
 				pack_end = &gtk::MenuButton {
 					set_tooltip: fl!("menu"),
@@ -118,8 +116,18 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 			set_content = &gtk::Box {
 				set_orientation: gtk::Orientation::Vertical,
 				append = model.services_sidebar_controller.widget(),
+				append = &gtk::Box {
+					set_margin_start: 15,
+					set_margin_end: 15,
+					set_margin_bottom: 5,
+					gtk::Label {
+						set_css_classes: &["heading", "accent"],
+						#[watch]
+						set_text: &model.service.to_string()
+					}
+				},
 				append = match model.state {
-					TaskListSidebarStatus::Empty => {
+					ListSidebarStatus::Empty => {
 						gtk::Box {
 							set_margin_all: 20,
 							set_vexpand: true,
@@ -148,7 +156,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							}
 						}
 					},
-					TaskListSidebarStatus::Loading => {
+					ListSidebarStatus::Loading => {
 						gtk::CenterBox {
 							set_orientation: gtk::Orientation::Vertical,
 							#[name(spinner)]
@@ -158,14 +166,17 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							}
 						}
 					},
-					TaskListSidebarStatus::Loaded => {
+					ListSidebarStatus::Loaded => {
 						gtk::ScrolledWindow {
 							set_vexpand: true,
-							#[local_ref]
-							task_list_widget -> gtk::ListBox {
-								set_margin_all: 5,
-								set_css_classes: &["navigation-sidebar"],
-							},
+							gtk::Box {
+								set_orientation: gtk::Orientation::Vertical,
+								#[local_ref]
+								task_list_widget -> gtk::ListBox {
+									set_margin_all: 5,
+									set_css_classes: &["navigation-sidebar"],
+								},
+							}
 						}
 					}
 				}
@@ -183,41 +194,42 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 		let preferences: &str = fl!("preferences");
 		let quit: &str = fl!("quit");
 
-		let model = TaskListSidebarModel {
+		let model = ListSidebarModel {
 			service: init,
-			state: TaskListSidebarStatus::Empty,
+			state: ListSidebarStatus::Empty,
 			task_list_factory: AsyncFactoryVecDeque::builder()
 				.launch(gtk::ListBox::default())
 				.forward(sender.input_sender(), |output| match output {
 					TaskListFactoryOutput::Select(list) => {
-						TaskListSidebarInput::SelectList(list)
+						ListSidebarInput::SelectList(list)
 					},
 					TaskListFactoryOutput::DeleteTaskList(index) => {
-						TaskListSidebarInput::DeleteTaskList(index)
+						ListSidebarInput::DeleteTaskList(index)
 					},
 				}),
 			list_entry: ListDialogComponent::builder().launch(None).forward(
 				sender.input_sender(),
 				|message| match message {
 					ListDialogOutput::AddTaskListToSidebar(name) => {
-						TaskListSidebarInput::AddTaskListToSidebar(name)
+						ListSidebarInput::AddTaskListToSidebar(name)
 					},
 					ListDialogOutput::RenameList(_) => todo!(),
 				},
 			),
-			services_sidebar_controller: ServicesSidebarModel::builder()
-				.launch(())
-				.forward(sender.input_sender(), |message| match message {
-					ServicesSidebarOutput::ServiceSelected(service) => {
-						TaskListSidebarInput::ServiceSelected(service)
+			services_sidebar_controller: ServicesModel::builder().launch(()).forward(
+				sender.input_sender(),
+				|message| match message {
+					ServicesOutput::ServiceSelected(service) => {
+						ListSidebarInput::ServiceSelected(service)
 					},
-					ServicesSidebarOutput::ServiceDisabled(service) => {
-						TaskListSidebarInput::ServiceDisabled(service)
+					ServicesOutput::ServiceDisabled(service) => {
+						ListSidebarInput::ServiceDisabled(service)
 					},
-				}),
+				},
+			),
 			handle: None,
 		};
-		sender.input(TaskListSidebarInput::LoadTaskLists);
+		sender.input(ListSidebarInput::LoadTaskLists);
 		let task_list_widget = model.task_list_factory.widget();
 		let widgets = view_output!();
 		AsyncComponentParts { model, widgets }
@@ -229,7 +241,7 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 		sender: AsyncComponentSender<Self>,
 	) {
 		match message {
-			TaskListSidebarInput::AddTaskListToSidebar(name) => {
+			ListSidebarInput::AddTaskListToSidebar(name) => {
 				match self
 					.service
 					.get_service()
@@ -242,52 +254,52 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							self.service,
 							SidebarList::Custom(list),
 						));
-						self.state = TaskListSidebarStatus::Loaded;
+						self.state = ListSidebarStatus::Loaded;
 					},
 					Err(e) => {
 						tracing::error!("Error while creating task list: {}", e);
 					},
 				}
 			},
-			TaskListSidebarInput::ReloadSidebar(service) => self
+			ListSidebarInput::ReloadSidebar(service) => self
 				.services_sidebar_controller
 				.sender()
-				.send(ServicesSidebarInput::ReloadSidebar(service))
+				.send(ServicesInput::ReloadServices(service))
 				.unwrap_or_default(),
-			TaskListSidebarInput::OpenNewTaskListDialog => {
+			ListSidebarInput::OpenNewTaskListDialog => {
 				let list_entry = self.list_entry.widget();
 				list_entry.present();
 			},
-			TaskListSidebarInput::ServiceSelected(service) => {
+			ListSidebarInput::ServiceSelected(service) => {
 				self.service = service;
 				if let Some(handle) = &self.handle {
 					handle.abort()
 				}
-				self.state = TaskListSidebarStatus::Loading;
-				sender.input(TaskListSidebarInput::LoadTaskLists);
+				self.state = ListSidebarStatus::Loading;
+				sender.input(ListSidebarInput::LoadTaskLists);
 			},
-			TaskListSidebarInput::ServiceDisabled(service) => {
+			ListSidebarInput::ServiceDisabled(service) => {
 				if self.service == service {
 					self.service = Service::Smart;
-					self.state = TaskListSidebarStatus::Loading;
-					sender.input(TaskListSidebarInput::LoadTaskLists);
+					self.state = ListSidebarStatus::Loading;
+					sender.input(ListSidebarInput::LoadTaskLists);
 				}
 				sender
-					.output(TaskListSidebarOutput::ServiceDisabled(service))
+					.output(ListSidebarOutput::ServiceDisabled(service))
 					.unwrap_or_default()
 			},
-			TaskListSidebarInput::LoadTaskList(list) => {
+			ListSidebarInput::LoadTaskList(list) => {
 				let mut guard = self.task_list_factory.guard();
 				guard.push_back(TaskListFactoryInit::new(
 					self.service,
 					SidebarList::Custom(list),
 				));
-				self.state = TaskListSidebarStatus::Loaded;
+				self.state = ListSidebarStatus::Loaded;
 			},
-			TaskListSidebarInput::SetStatus(status) => {
+			ListSidebarInput::SetStatus(status) => {
 				self.state = status;
 			},
-			TaskListSidebarInput::LoadTaskLists => {
+			ListSidebarInput::LoadTaskLists => {
 				let mut guard = self.task_list_factory.guard();
 				guard.clear();
 
@@ -299,14 +311,13 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 							Ok(mut stream) => {
 								let first = stream.next().await;
 								if let Some(list) = first {
-									sender_clone.input(TaskListSidebarInput::LoadTaskList(list));
+									sender_clone.input(ListSidebarInput::LoadTaskList(list));
 									while let Some(list) = stream.next().await {
-										sender_clone
-											.input(TaskListSidebarInput::LoadTaskList(list));
+										sender_clone.input(ListSidebarInput::LoadTaskList(list));
 									}
 								} else {
-									sender_clone.input(TaskListSidebarInput::SetStatus(
-										TaskListSidebarStatus::Empty,
+									sender_clone.input(ListSidebarInput::SetStatus(
+										ListSidebarStatus::Empty,
 									));
 								}
 							},
@@ -330,22 +341,22 @@ impl SimpleAsyncComponent for TaskListSidebarModel {
 						}
 					}
 					if guard.is_empty() {
-						self.state = TaskListSidebarStatus::Empty;
+						self.state = ListSidebarStatus::Empty;
 					} else {
-						self.state = TaskListSidebarStatus::Loaded;
+						self.state = ListSidebarStatus::Loaded;
 					}
 				}
 			},
-			TaskListSidebarInput::SelectList(list) => sender
-				.output(TaskListSidebarOutput::SelectList(list, self.service))
+			ListSidebarInput::SelectList(list) => sender
+				.output(ListSidebarOutput::SelectList(list, self.service))
 				.unwrap(),
-			TaskListSidebarInput::DeleteTaskList(index) => {
+			ListSidebarInput::DeleteTaskList(index) => {
 				self.task_list_factory.guard().remove(index.current_index());
 				sender
-					.output(TaskListSidebarOutput::CleanContent)
+					.output(ListSidebarOutput::CleanContent)
 					.unwrap_or_default();
 				if self.task_list_factory.is_empty() {
-					self.state = TaskListSidebarStatus::Empty;
+					self.state = ListSidebarStatus::Empty;
 				}
 			},
 		}
