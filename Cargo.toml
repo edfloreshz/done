@@ -65,6 +65,7 @@ features = [
     "list-large",
     "dock-left",
     "horizontal-arrows",
+    "size-vertically",
 ]
 
 [dependencies.core_done]

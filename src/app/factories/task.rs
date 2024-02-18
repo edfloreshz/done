@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use crate::app::config::info::APP_ID;
+use crate::app::config::preferences::Preferences;
 use crate::fl;
 use adw::prelude::{
 	ActionRowExt, BoxExt, ExpanderRowExt, OrientableExt, PreferencesGroupExt,
@@ -12,6 +14,7 @@ use core_done::models::priority::Priority;
 use core_done::models::recurrence::Day;
 use core_done::models::status::Status;
 use core_done::models::task::Task;
+use libset::Config;
 use relm4::factory::{AsyncFactoryComponent, FactoryVecDeque};
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
 use relm4::{
@@ -33,6 +36,7 @@ pub struct TaskModel {
 	pub parent_list: List,
 	pub index: DynamicIndex,
 	notes_buffer: gtk::TextBuffer,
+	preferences: Preferences,
 }
 
 #[derive(derive_new::new)]
@@ -56,6 +60,7 @@ pub enum TaskInput {
 	SetDate(DateType, DateDay),
 	UpdateSubTask(DynamicIndex, Task),
 	RemoveSubTask(DynamicIndex),
+	ExpandSubTask(bool),
 	CreateSubTask,
 }
 
@@ -100,7 +105,7 @@ impl AsyncFactoryComponent for TaskModel {
 				format!("Sub tasks: {}", self.task.sub_tasks.len())
 			},
 			#[watch]
-			set_expanded: !self.task.sub_tasks.is_empty(),
+			set_expanded: self.preferences.expand_subtasks && !self.task.sub_tasks.is_empty(),
 			#[watch]
 			set_enable_expansion: !self.task.sub_tasks.is_empty(),
 			#[name(check_button)]
@@ -527,6 +532,11 @@ impl AsyncFactoryComponent for TaskModel {
 			parent_list: init.parent_list,
 			index: index.clone(),
 			notes_buffer,
+			preferences: if let Ok(config) = Config::new(APP_ID, 1, None) {
+				config.get_json("preferences").unwrap_or(Preferences::new())
+			} else {
+				Preferences::new()
+			},
 		};
 
 		model
@@ -574,6 +584,9 @@ impl AsyncFactoryComponent for TaskModel {
 						)
 						.to_string(),
 				);
+			},
+			TaskInput::ExpandSubTask(expand) => {
+				self.preferences.expand_subtasks = expand
 			},
 			TaskInput::SetPriority(priority) => {
 				self.task.priority = priority.into();

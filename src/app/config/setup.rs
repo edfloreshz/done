@@ -11,7 +11,7 @@ pub fn init() -> Result<()> {
 	localization::init();
 	#[cfg(debug_assertions)]
 	tracing_subscriber::fmt()
-		.with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
+		.compact()
 		.with_max_level(tracing::Level::INFO)
 		.init();
 	resources::init()?;
