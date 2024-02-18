@@ -81,7 +81,8 @@ msft-todo-description = To Do ti aiuta a concentrarti, dal lavoro al divertiment
 # Details
 details = Dettagli
 title = Titolo
-favorite-task = Attività preferite
+favorite = Preferite
+favorite-desc = Mark as preferite
 notes = Note
 add-tags = Aggiungi tag...
 remove-tag = Rimuovi tag

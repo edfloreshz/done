@@ -85,7 +85,7 @@ impl AsyncComponent for Done {
 	view! {
 		#[root]
 		adw::ApplicationWindow {
-			set_size_request: (450, 500),
+			set_size_request: (350, 500),
 			set_default_size: (800, 800),
 			connect_close_request[sender] => move |_| {
 				sender.input(AppInput::Quit);

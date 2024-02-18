@@ -64,6 +64,7 @@ features = [
     "dark-mode",
     "list-large",
     "dock-left",
+    "horizontal-arrows",
 ]
 
 [dependencies.core_done]
