@@ -69,6 +69,7 @@ pub enum AppInput {
 	ServiceDisabled(Service),
 	ListSelected(SidebarList, Service),
 	ReloadSidebar(Service),
+	ExpandSubTasks(bool),
 	CollapseSidebar,
 	CleanContent,
 	Refresh,
@@ -271,6 +272,9 @@ impl AsyncComponent for Done {
 					PreferencesComponentOutput::ServiceDisabled(service) => {
 						AppInput::ReloadSidebar(service)
 					},
+					PreferencesComponentOutput::ExpandSubTasks(expand) => {
+						AppInput::ExpandSubTasks(expand)
+					},
 				},
 			),
 			startup_failed: false,
@@ -344,6 +348,11 @@ impl AsyncComponent for Done {
 					Err(_) => main_adw_application().quit(),
 				};
 			},
+			AppInput::ExpandSubTasks(expand) => self
+				.content_controller
+				.sender()
+				.send(ContentInput::ExpandSubTasks(expand))
+				.unwrap(),
 			AppInput::CollapseSidebar => {
 				let collapsed = widgets.outter_view.shows_sidebar();
 				widgets.outter_view.set_show_sidebar(!collapsed);

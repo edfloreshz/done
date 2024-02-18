@@ -11,6 +11,7 @@ use relm4::{
 	component::{AsyncComponent, AsyncComponentParts},
 	gtk, AsyncComponentSender,
 };
+use relm4_icons::icon_name;
 
 use crate::app::config::preferences::Preferences;
 use crate::app::config::{appearance::ColorScheme, info::APP_ID};
@@ -24,6 +25,7 @@ pub struct PreferencesComponentModel {
 #[derive(Debug)]
 pub enum PreferencesComponentInput {
 	SetColorScheme(ColorScheme),
+	ExpandSubTasks,
 	MicrosoftLogin,
 	MicrosoftLogout,
 }
@@ -31,6 +33,7 @@ pub enum PreferencesComponentInput {
 #[derive(Debug)]
 pub enum PreferencesComponentOutput {
 	ServiceDisabled(Service),
+	ExpandSubTasks(bool),
 }
 
 #[relm4::component(pub async)]
@@ -83,6 +86,15 @@ impl AsyncComponent for PreferencesComponentModel {
 										}
 									},
 								},
+								adw::SwitchRow {
+									set_title: fl!("expand-subtask"),
+									set_subtitle: fl!("expand-subtask-desc"),
+									add_prefix = &gtk::Image {
+										set_icon_name: Some(icon_name::SIZE_VERTICALLY),
+									},
+									set_active: model.preferences.expand_subtasks,
+									connect_active_notify => PreferencesComponentInput::ExpandSubTasks
+								}
 							},
 							add = &adw::PreferencesGroup {
 								set_title: fl!("services"),
@@ -94,7 +106,6 @@ impl AsyncComponent for PreferencesComponentModel {
 									},
 									set_active: Service::Microsoft.get_service().available(),
 									connect_active_notify[sender] => move |switch| {
-										println!("Switch activated");
 										if switch.is_active() {
 											sender.input_sender().send(PreferencesComponentInput::MicrosoftLogin).unwrap();
 										} else {
@@ -158,6 +169,17 @@ impl AsyncComponent for PreferencesComponentModel {
 				if let Err(err) = update_preferences(&self.preferences) {
 					tracing::error!("{err}")
 				}
+			},
+			PreferencesComponentInput::ExpandSubTasks => {
+				self.preferences.expand_subtasks = !self.preferences.expand_subtasks;
+				if let Err(err) = update_preferences(&self.preferences) {
+					tracing::error!("{err}")
+				}
+				sender
+					.output(PreferencesComponentOutput::ExpandSubTasks(
+						self.preferences.expand_subtasks,
+					))
+					.unwrap();
 			},
 			PreferencesComponentInput::MicrosoftLogin => {
 				let service = Service::Microsoft.get_service();

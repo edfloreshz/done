@@ -1,5 +1,5 @@
 use crate::app::components::task_input::TaskInputOutput;
-use crate::app::factories::task::{TaskInit, TaskModel, TaskOutput};
+use crate::app::factories::task::{TaskInit, TaskInput, TaskModel, TaskOutput};
 use crate::app::models::sidebar_list::SidebarList;
 use crate::fl;
 
@@ -56,6 +56,7 @@ pub enum ContentInput {
 	ServiceDisabled(Service),
 	LoadTasks(SidebarList, Service),
 	SetState(ContentState),
+	ExpandSubTasks(bool),
 	CollapseSidebar,
 	Clean,
 }
@@ -307,6 +308,12 @@ impl AsyncComponent for ContentModel {
 		match message {
 			ContentInput::Clean => self.state = ContentState::Unselected,
 			ContentInput::SetState(state) => self.state = state,
+			ContentInput::ExpandSubTasks(expand) => {
+				println!("{}", self.task_factory.len());
+				for (i, _) in self.task_factory.iter().enumerate() {
+					self.task_factory.send(i, TaskInput::ExpandSubTask(expand))
+				}
+			},
 			ContentInput::CollapseSidebar => sender
 				.output(ContentOutput::CollapseSidebar)
 				.unwrap_or_default(),
