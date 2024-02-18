@@ -81,7 +81,8 @@ msft-todo-description = To Do gives you focus, from work to play
 # Details
 details = Detalles
 title = Titulo
-favorite-task = Tarea favorita
+favorite = Favorita
+favorite-desc = Marca como favorita
 notes = Notas
 add-tags = Añadir etiquetas...
 remove-tag = Remover etiqueta

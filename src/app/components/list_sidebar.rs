@@ -121,7 +121,7 @@ impl SimpleAsyncComponent for ListSidebarModel {
 					set_margin_end: 15,
 					set_margin_bottom: 5,
 					gtk::Label {
-						set_css_classes: &["heading", "accent"],
+						set_css_classes: &["heading"],
 						#[watch]
 						set_text: &model.service.to_string()
 					}
@@ -173,8 +173,8 @@ impl SimpleAsyncComponent for ListSidebarModel {
 								set_orientation: gtk::Orientation::Vertical,
 								#[local_ref]
 								task_list_widget -> gtk::ListBox {
-									set_margin_all: 5,
-									set_css_classes: &["navigation-sidebar"],
+									set_margin_all: 10,
+									set_css_classes: &["boxed-list"],
 								},
 							}
 						}

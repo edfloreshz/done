@@ -75,7 +75,6 @@ impl AsyncFactoryComponent for TaskListFactoryModel {
 			#[watch]
 			set_tooltip: self.list.name().as_str(),
 			connect_activate => TaskListFactoryInput::Select,
-			set_css_classes: &["card"],
 			#[name(container)]
 			gtk::Box {
 				add_controller = gtk::GestureClick {

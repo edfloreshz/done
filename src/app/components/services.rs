@@ -1,9 +1,11 @@
 use core_done::service::Service;
+use glib::Cast;
+use libadwaita::prelude::{FlowBoxChildExt, ToggleButtonExt};
 use relm4::{
 	component::{AsyncComponent, AsyncComponentParts},
 	factory::{AsyncFactoryVecDeque, DynamicIndex},
-	gtk::{self, prelude::OrientableExt, traits::WidgetExt},
-	AsyncComponentSender, RelmWidgetExt,
+	gtk::{self, prelude::OrientableExt},
+	AsyncComponentSender, RelmIterChildrenExt, RelmWidgetExt,
 };
 
 use crate::{
@@ -38,15 +40,23 @@ impl AsyncComponent for ServicesModel {
 		#[root]
 		gtk::Box {
 			#[local_ref]
-			services_list -> gtk::FlowBox {
+			flow_box -> gtk::FlowBox {
 				set_margin_all: 10,
 				set_column_spacing: 5,
-				set_valign: gtk::Align::Start,
-				set_orientation: gtk::Orientation::Horizontal,
-				set_selection_mode: gtk::SelectionMode::Single,
+				#[watch]
+				set_orientation: if model.services_factory.len() == 1 {
+					gtk::Orientation::Vertical
+				} else {
+					gtk::Orientation::Horizontal
+				},
+				set_selection_mode: gtk::SelectionMode::None,
 				set_homogeneous: true,
-				set_max_children_per_line: 7,
-				set_min_children_per_line: 2,
+				#[watch]
+				set_max_children_per_line: if model.services_factory.len() == 1 {
+					1
+				} else {
+					2
+				},
 			},
 		}
 	}
@@ -80,10 +90,17 @@ impl AsyncComponent for ServicesModel {
 
 		let model = ServicesModel { services_factory };
 
-		let services_list = model.services_factory.widget();
+		let flow_box = model.services_factory.widget();
 
-		let selected_child = services_list.child_at_index(0).unwrap();
-		services_list.select_child(&selected_child);
+		let selected_child = flow_box
+			.child_at_index(0)
+			.unwrap()
+			.child()
+			.unwrap()
+			.downcast::<gtk::ToggleButton>();
+		if let Ok(button) = selected_child {
+			button.set_active(true);
+		}
 
 		let widgets = view_output!();
 
@@ -111,10 +128,17 @@ impl AsyncComponent for ServicesModel {
 			},
 			ServicesInput::ServiceSelected(index, service) => {
 				let flow_box = self.services_factory.widget();
-				let selected_child = flow_box
-					.child_at_index(index.current_index() as i32)
-					.unwrap();
-				flow_box.select_child(&selected_child);
+
+				for (i, child) in flow_box.iter_children().enumerate() {
+					if let Ok(button) =
+						child.child().unwrap().downcast::<gtk::ToggleButton>()
+					{
+						if i != index.current_index() {
+							button.set_active(false);
+						}
+					}
+				}
+
 				sender
 					.output(ServicesOutput::ServiceSelected(service))
 					.unwrap();

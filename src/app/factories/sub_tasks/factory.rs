@@ -30,8 +30,7 @@ impl FactoryComponent for SubTaskModel {
 	view! {
 		#[root]
 		adw::EntryRow {
-			#[watch]
-			set_title: "Sub-task",
+			set_title: "Sub task",
 			set_enable_emoji_completion: true,
 			set_show_apply_button: true,
 			set_text: self.sub_task.title.as_str(),
@@ -44,7 +43,7 @@ impl FactoryComponent for SubTaskModel {
 			add_suffix = &gtk::Button {
 				set_valign: gtk::Align::Center,
 				set_icon_name: icon_name::X_CIRCULAR,
-				set_css_classes: &["destructive-action", "circular"],
+				set_css_classes: &["error", "circular"],
 				set_tooltip: fl!("remove-sub-task"),
 				connect_clicked[sender, index] => move |_| {
 					sender.input(SubTaskInput::Remove(index.clone()));
