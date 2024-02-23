@@ -82,6 +82,6 @@ To deploy the app, head to [RELEASE.md](RELEASE.md)
 Copyright and licensing
 -----------------------
 
-Copyright 2023 © Eduardo Flores
+Copyright 2024 © Eduardo Flores
 
 Done is released under the terms of the [Mozilla Public License v2](https://github.com/edfloreshz/done/blob/main/LICENSE)
