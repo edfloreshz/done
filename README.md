@@ -23,8 +23,8 @@
   </a>
 </div>
 
-  ![Screenshot](./data/resources/screenshots/tasks.png#gh-light-mode-only)
-  ![Screenshot](./data/resources/screenshots/dark.png#gh-dark-mode-only)
+  ![Screenshot](./data/resources/screenshots/sidebar-light.png#gh-light-mode-only)
+  ![Screenshot](./data/resources/screenshots/sidebar-dark.png#gh-dark-mode-only)
 
 Our user-friendly app allows you to effortlessly consolidate your existing tasks into a single application for optimal productivity and organization.
 
