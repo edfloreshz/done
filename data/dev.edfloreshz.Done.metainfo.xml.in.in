@@ -19,16 +19,16 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/tasks.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/content-light.png</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/dark.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/content-dark.png</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/task_details.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/sidebar-light.png</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/dark_details.png</image>
+      <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/sidebar-dark.png</image>
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/edfloreshz/done/main/data/resources/screenshots/about.png</image>
@@ -45,6 +45,18 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="0.2.2" date="2024-02-24">
+      <description>
+        <p>Lots of improvements!</p>
+        <ul>
+          <li>The sidebar has a new style.</li>
+          <li>The task list can now expand sub tasks.</li>
+          <li>Task details have been moved to a pop up dialog.</li>
+          <li>The date picker has been reworked to be easier to use.</li>
+          <li>The Notes field can now accept multiline text.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.2.1" date="2024-02-11">
       <description>
         <p>New design!</p>

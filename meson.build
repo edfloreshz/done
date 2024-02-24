@@ -1,5 +1,5 @@
 project('done', 'rust',
-          version: '0.2.1',
+          version: '0.2.2',
           license: ['MPL-2.0'],
     meson_version: '>= 0.59.0',
   default_options: [ 'warning_level=2'],

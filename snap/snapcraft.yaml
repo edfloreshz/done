@@ -23,7 +23,7 @@ parts:
     after: [rustup]
     plugin: meson
     source: https://github.com/done-devs/done.git
-    source-tag: "v0.2.1"
+    source-tag: "v0.2.2"
     source-depth: 1
     build-environment:
       - PATH: ${HOME}/.cargo/bin:$PATH
