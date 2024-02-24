@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2024-02-24
+- The sidebar has a new style.
+- The task list can now expand sub tasks.
+- Task details have been moved to a pop up dialog.
+- The date picker has been reworked to be easier to use.
+- The Notes field can now accept multiline text.
+
 ## [0.2.1] - 2024-02-11
 - Moved services bar to the top of the sidebar.
 - Task details can now be expanded from within each task.
