@@ -65,8 +65,8 @@ color-scheme-description = Imposta la combinazione di colori dell'app
 color-scheme-light = Chiaro
 color-scheme-dark = Scuro
 color-scheme-default = Sistema
-expand-subtask = Expand sub tasks
-expand-subtask-desc = Expand sub tasks by default when you open a list
+expand-subtask = Espandi le attività secondarie
+expand-subtask-desc = Espandi le attività secondarie per impostazione predefinita quando apri un elenco
 services = Servizi
 install = Installa
 remove = Rimuovi
@@ -84,7 +84,7 @@ msft-todo-description = To Do ti aiuta a concentrarti, dal lavoro al divertiment
 details = Dettagli
 title = Titolo
 favorite = Preferite
-favorite-desc = Mark as preferite
+favorite-desc = Segna come preferito
 notes = Note
 add-tags = Aggiungi tag...
 remove-tag = Rimuovi tag
@@ -140,4 +140,4 @@ sun = Dom
 
 
 # Translator credits
-translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella
+translator-credits = Eduardo Flores <edfloreshz@gmail.com> \n Sergio Varela <sergiovg01@outlook.com> \n Jürgen Benvenuti <gastornis@posteo.org> \n Sabri Ünal<libreajans@gmail.com> \n Isabella Breder \n albanobattistella <albanobattistella@gmail.com>
