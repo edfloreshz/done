@@ -1,14 +1,16 @@
-use anyhow::Result;
-use app::config::{info::APP_ID, setup};
-use relm4::RelmApp;
-
 use app::Done;
+use gpui::*;
+use options::window_options;
 
 mod app;
+mod options;
 
-fn main() -> Result<()> {
-	let app = RelmApp::new(APP_ID);
-	setup::init()?;
-	app.run_async::<Done>(());
-	Ok(())
+fn main() {
+    App::new().run(|cx: &mut AppContext| {
+        cx.open_window(window_options(), |cx| {
+            cx.new_view(|_cx| Done {
+                title: "Done".into(),
+            })
+        });
+    });
 }
