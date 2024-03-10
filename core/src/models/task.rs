@@ -11,7 +11,18 @@ use uuid::Uuid;
 
 use super::{priority::Priority, recurrence::Recurrence, status::Status};
 
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(
+	Clone,
+	Default,
+	Debug,
+	PartialEq,
+	Eq,
+	Hash,
+	PartialOrd,
+	Ord,
+	Serialize,
+	Deserialize,
+)]
 pub struct Task {
 	pub id: String,
 	pub parent: String,

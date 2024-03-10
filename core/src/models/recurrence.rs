@@ -1,7 +1,20 @@
+use std::fmt::Display;
 use crate::services::microsoft::models::recurrence::DayOfWeek;
 use crate::services::microsoft::models::recurrence::TaskRecurrence;
 use serde::{Deserialize, Serialize};
-#[derive(Debug)]
+
+#[derive(
+	Clone,
+	Copy,
+	Debug,
+	PartialEq,
+	Eq,
+	Hash,
+	PartialOrd,
+	Ord,
+	Serialize,
+	Deserialize,
+)]
 pub enum Day {
 	Monday,
 	Tuesday,
@@ -12,9 +25,9 @@ pub enum Day {
 	Sunday,
 }
 
-impl ToString for Day {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for Day {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let str: String = match self {
 			Day::Monday => "Mon".into(),
 			Day::Tuesday => "Tue".into(),
 			Day::Wednesday => "Wed".into(),
@@ -22,11 +35,24 @@ impl ToString for Day {
 			Day::Friday => "Fri".into(),
 			Day::Saturday => "Sat".into(),
 			Day::Sunday => "Sun".into(),
-		}
+		};
+		write!(f, "{}", str)
 	}
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(
+	Clone,
+	Copy,
+	Debug,
+	Default,
+	PartialEq,
+	Eq,
+	Hash,
+	PartialOrd,
+	Ord,
+	Serialize,
+	Deserialize,
+)]
 pub struct Recurrence {
 	pub monday: bool,
 	pub tuesday: bool,
@@ -51,8 +77,8 @@ impl Recurrence {
 	}
 }
 
-impl ToString for Recurrence {
-	fn to_string(&self) -> String {
+impl Display for Recurrence {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let mut rec = vec![];
 		if self.monday {
 			rec.push(Day::Monday.to_string())
@@ -75,7 +101,7 @@ impl ToString for Recurrence {
 		if self.sunday {
 			rec.push(Day::Sunday.to_string())
 		}
-		rec.join(", ")
+		write!(f, "{}", rec.join(", "))
 	}
 }
 

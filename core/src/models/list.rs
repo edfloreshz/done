@@ -5,7 +5,17 @@ use uuid::Uuid;
 use crate::service::Service;
 use crate::services::microsoft::models::list::TodoTaskList;
 
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(
+	Clone,
+	Default,
+	Debug,
+	PartialEq,
+	Eq,
+	PartialOrd,
+	Ord,
+	Serialize,
+	Deserialize,
+)]
 pub struct List {
 	pub id: String,
 	pub name: String,
