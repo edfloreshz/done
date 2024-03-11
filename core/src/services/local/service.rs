@@ -20,12 +20,17 @@ use super::database::{
 	Database,
 };
 
-#[derive(Debug, Clone, Copy)]
-pub struct ComputerStorage;
+#[derive(Debug, Clone)]
+pub struct ComputerStorage {
+	database: Database,
+}
 
 impl ComputerStorage {
-	pub(crate) fn new() -> Self {
-		Self
+	pub(crate) fn new(application_id: String) -> Self {
+		let database =
+			Database::new(application_id).expect("Failed to create database");
+
+		Self { database }
 	}
 }
 
@@ -35,11 +40,11 @@ impl TodoProvider for ComputerStorage {
 		Ok(())
 	}
 
-	fn login(&self) -> anyhow::Result<()> {
+	fn login(&self) -> Result<()> {
 		Ok(())
 	}
 
-	fn logout(&self) -> anyhow::Result<()> {
+	fn logout(&self) -> Result<()> {
 		Ok(())
 	}
 
@@ -53,26 +58,12 @@ impl TodoProvider for ComputerStorage {
 
 	async fn read_tasks(&mut self) -> Result<Vec<Task>> {
 		let task_list: Vec<Task> = tasks
-			.load::<QueryableTask>(&mut Database::establish_connection()?)?
+			.load::<QueryableTask>(&mut self.database.establish_connection()?)?
 			.iter()
 			.map(|t| t.clone().into())
 			.collect();
 
 		Ok(task_list)
-	}
-
-	async fn read_tasks_from_list(
-		&mut self,
-		parent_list: String,
-	) -> Result<Vec<Task>> {
-		let response: Vec<Task> = tasks
-			.filter(parent.eq(parent_list))
-			.load::<QueryableTask>(&mut Database::establish_connection()?)?
-			.iter()
-			.map(|t| t.clone().into())
-			.collect();
-
-		Ok(response)
 	}
 
 	async fn get_tasks(
@@ -82,6 +73,20 @@ impl TodoProvider for ComputerStorage {
 		todo!("This service does not implement streams")
 	}
 
+	async fn read_tasks_from_list(
+		&mut self,
+		parent_list: String,
+	) -> Result<Vec<Task>> {
+		let response: Vec<Task> = tasks
+			.filter(parent.eq(parent_list))
+			.load::<QueryableTask>(&mut self.database.establish_connection()?)?
+			.iter()
+			.map(|t| t.clone().into())
+			.collect();
+
+		Ok(response)
+	}
+
 	async fn read_task(
 		&mut self,
 		_task_list_id: String,
@@ -89,7 +94,7 @@ impl TodoProvider for ComputerStorage {
 	) -> Result<Task> {
 		let task: QueryableTask = tasks
 			.find(task_id)
-			.first(&mut Database::establish_connection()?)
+			.first(&mut self.database.establish_connection()?)
 			.context("Failed to fetch list of tasks.")?;
 
 		Ok(task.into())
@@ -100,7 +105,7 @@ impl TodoProvider for ComputerStorage {
 
 		diesel::insert_into(tasks)
 			.values(&queryable_task)
-			.execute(&mut Database::establish_connection()?)?;
+			.execute(&mut self.database.establish_connection()?)?;
 
 		Ok(())
 	}
@@ -129,7 +134,7 @@ impl TodoProvider for ComputerStorage {
 				created_date_time.eq(queryable_task.created_date_time),
 				last_modified_date_time.eq(queryable_task.last_modified_date_time),
 			))
-			.execute(&mut Database::establish_connection()?)
+			.execute(&mut self.database.establish_connection()?)
 			.context("Failed to update task.")?;
 
 		Ok(original_task)
@@ -141,14 +146,14 @@ impl TodoProvider for ComputerStorage {
 		task_id: String,
 	) -> Result<()> {
 		diesel::delete(tasks.filter(id_task.eq(task_id)))
-			.execute(&mut Database::establish_connection()?)?;
+			.execute(&mut self.database.establish_connection()?)?;
 
 		Ok(())
 	}
 
 	async fn read_lists(&mut self) -> Result<Vec<List>> {
-		let results =
-			lists.load::<QueryableList>(&mut Database::establish_connection()?)?;
+		let results = lists
+			.load::<QueryableList>(&mut self.database.establish_connection()?)?;
 
 		let results: Vec<List> = results.iter().map(|t| t.clone().into()).collect();
 		Ok(results)
@@ -163,7 +168,7 @@ impl TodoProvider for ComputerStorage {
 	async fn read_list(&mut self, id: String) -> Result<List> {
 		let result: QueryableList = lists
 			.find(id)
-			.first(&mut Database::establish_connection()?)?;
+			.first(&mut self.database.establish_connection()?)?;
 		Ok(result.into())
 	}
 
@@ -172,7 +177,7 @@ impl TodoProvider for ComputerStorage {
 
 		diesel::insert_into(lists)
 			.values(&list)
-			.execute(&mut Database::establish_connection()?)?;
+			.execute(&mut self.database.establish_connection()?)?;
 
 		Ok(list.into())
 	}
@@ -182,7 +187,7 @@ impl TodoProvider for ComputerStorage {
 
 		diesel::update(lists.filter(id_list.eq(list.id_list.clone())))
 			.set((name.eq(list.name.clone()), icon_name.eq(list.icon_name)))
-			.execute(&mut Database::establish_connection()?)
+			.execute(&mut self.database.establish_connection()?)
 			.context("Failed to update list.")?;
 
 		Ok(())
@@ -190,7 +195,7 @@ impl TodoProvider for ComputerStorage {
 
 	async fn delete_list(&mut self, id: String) -> Result<()> {
 		diesel::delete(lists.filter(id_list.eq(id)))
-			.execute(&mut Database::establish_connection()?)?;
+			.execute(&mut self.database.establish_connection()?)?;
 		Ok(())
 	}
 }
