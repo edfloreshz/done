@@ -1,5 +1,4 @@
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use core_done::models::status::Status;
 use gtk::traits::{ButtonExt, CheckButtonExt, ListBoxRowExt, WidgetExt};
 use relm4::gtk::traits::EditableExt;
 use relm4::RelmWidgetExt;
@@ -11,6 +10,8 @@ use relm4::{
 	FactorySender,
 };
 use relm4_icons::icon_name;
+
+use done_core::models::status::Status;
 
 use crate::fl;
 

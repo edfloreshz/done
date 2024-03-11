@@ -1,4 +1,3 @@
-use core_done::service::Service;
 use glib::Cast;
 use libadwaita::prelude::{FlowBoxChildExt, ToggleButtonExt};
 use relm4::{
@@ -7,6 +6,8 @@ use relm4::{
 	gtk::{self, prelude::OrientableExt},
 	AsyncComponentSender, RelmIterChildrenExt, RelmWidgetExt,
 };
+
+use done_core::service::Service;
 
 use crate::{
 	app::factories::service::{ServiceFactoryModel, ServiceFactoryOutput},

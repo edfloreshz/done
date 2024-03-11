@@ -1,4 +1,3 @@
-use core_done::service::Service;
 use libadwaita::prelude::{BoxExt, ButtonExt, OrientableExt, WidgetExt};
 use relm4::{
 	factory::{AsyncFactoryComponent, FactoryView},
@@ -7,6 +6,8 @@ use relm4::{
 	prelude::DynamicIndex,
 	AsyncFactorySender, RelmWidgetExt,
 };
+
+use done_core::service::Service;
 
 pub struct ServiceFactoryModel {
 	service: Service,

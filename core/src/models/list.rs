@@ -6,15 +6,7 @@ use crate::service::Service;
 use crate::services::microsoft::models::list::TodoTaskList;
 
 #[derive(
-	Clone,
-	Default,
-	Debug,
-	PartialEq,
-	Eq,
-	PartialOrd,
-	Ord,
-	Serialize,
-	Deserialize,
+	Clone, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
 )]
 pub struct List {
 	pub id: String,

@@ -1,4 +1,3 @@
-use core_done::{models::list::List, service::Service};
 use futures::StreamExt;
 use relm4::{
 	adw,
@@ -17,6 +16,8 @@ use relm4::{
 	JoinHandle, RelmWidgetExt,
 };
 use relm4_icons::icon_name;
+
+use done_core::{models::list::List, service::Service};
 
 use crate::{
 	app::{

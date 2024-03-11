@@ -1,11 +1,13 @@
-use crate::{app::models::sidebar_list::SidebarList, fl};
 use adw::traits::{EntryRowExt, PreferencesRowExt};
-use core_done::models::task::Task;
 use gtk::traits::{EditableExt, ListBoxRowExt};
 use relm4::{
 	adw, gtk, gtk::prelude::WidgetExt, Component, ComponentParts,
 	ComponentSender, RelmWidgetExt,
 };
+
+use done_core::models::task::Task;
+
+use crate::{app::models::sidebar_list::SidebarList, fl};
 
 #[derive(Debug)]
 pub struct TaskInputModel {

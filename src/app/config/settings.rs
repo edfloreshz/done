@@ -1,6 +1,7 @@
 use anyhow::Result;
-use core_done::services::local::database::{Database, DATABASE_NAME};
 use libset::{Config, FileType};
+
+use done_core::services::local::database::{Database, DATABASE_NAME};
 
 use super::{info::APP_ID, preferences::Preferences};
 

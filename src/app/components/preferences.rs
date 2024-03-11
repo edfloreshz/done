@@ -1,5 +1,4 @@
 use anyhow::Result;
-use core_done::service::Service;
 use libset::Config;
 use relm4::{
 	adw,
@@ -12,6 +11,8 @@ use relm4::{
 	gtk, AsyncComponentSender,
 };
 use relm4_icons::icon_name;
+
+use done_core::service::Service;
 
 use crate::app::config::preferences::Preferences;
 use crate::app::config::{appearance::ColorScheme, info::APP_ID};

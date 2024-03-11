@@ -68,7 +68,7 @@ features = [
     "size-vertically",
 ]
 
-[dependencies.core_done]
+[dependencies.done_core]
 path = "core"
 
 [dependencies.chrono]

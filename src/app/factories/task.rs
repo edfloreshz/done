@@ -1,19 +1,11 @@
 use std::str::FromStr;
 
-use crate::app::config::info::APP_ID;
-use crate::app::config::preferences::Preferences;
-use crate::fl;
 use adw::prelude::{
 	ActionRowExt, BoxExt, ExpanderRowExt, OrientableExt, PreferencesGroupExt,
 	TextBufferExt, TextViewExt, ToggleButtonExt,
 };
 use adw::traits::{EntryRowExt, PreferencesRowExt};
 use chrono::{DateTime, Datelike, Duration, Timelike, Utc};
-use core_done::models::list::List;
-use core_done::models::priority::Priority;
-use core_done::models::recurrence::Day;
-use core_done::models::status::Status;
-use core_done::models::task::Task;
 use libset::Config;
 use relm4::factory::{AsyncFactoryComponent, FactoryVecDeque};
 use relm4::factory::{AsyncFactorySender, DynamicIndex, FactoryView};
@@ -25,6 +17,16 @@ use relm4::{
 	RelmWidgetExt,
 };
 use relm4_icons::icon_name;
+
+use done_core::models::list::List;
+use done_core::models::priority::Priority;
+use done_core::models::recurrence::Day;
+use done_core::models::status::Status;
+use done_core::models::task::Task;
+
+use crate::app::config::info::APP_ID;
+use crate::app::config::preferences::Preferences;
+use crate::fl;
 
 use super::sub_tasks::messages::SubTaskOutput;
 use super::sub_tasks::model::{SubTaskInit, SubTaskModel};
@@ -475,7 +477,7 @@ impl AsyncFactoryComponent for TaskModel {
 							set_activatable: false,
 							set_margin_top: 10,
 							adw::PreferencesGroup {
-								set_description: Some(&fl!("notes")),
+								set_description: Some(fl!("notes")),
 								add = &gtk::TextView {
 									set_css_classes: &["card"],
 									set_top_margin: 10,
@@ -516,7 +518,7 @@ impl AsyncFactoryComponent for TaskModel {
 		let mut task = init.task.clone();
 		let notes_buffer = gtk::TextBuffer::default();
 		if let Some(ref note) = task.notes {
-			notes_buffer.set_text(&note);
+			notes_buffer.set_text(note);
 		}
 		task.parent = init.parent_list.id.clone();
 		let mut model = Self {

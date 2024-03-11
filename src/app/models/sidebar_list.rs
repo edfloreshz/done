@@ -1,7 +1,8 @@
-use core_done::models::list::List;
 use relm4_icons::icon_name;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+
+use done_core::models::list::List;
 
 use crate::fl;
 

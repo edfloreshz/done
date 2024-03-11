@@ -1,7 +1,7 @@
-use std::fmt::Display;
 use crate::services::microsoft::models::recurrence::DayOfWeek;
 use crate::services::microsoft::models::recurrence::TaskRecurrence;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(
 	Clone,

@@ -1,10 +1,6 @@
-pub mod components;
-pub mod factories;
-pub mod models;
 use std::str::FromStr;
 
 use adw::glib::Propagation;
-use core_done::service::Service;
 use relm4::{
 	actions::{ActionGroupName, RelmAction, RelmActionGroup},
 	adw,
@@ -27,6 +23,8 @@ use relm4::{
 };
 use relm4_icons::icon_name;
 
+use done_core::service::Service;
+
 use crate::{
 	app::{
 		components::{
@@ -48,7 +46,10 @@ use self::{
 	models::sidebar_list::SidebarList,
 };
 
+pub mod components;
 pub mod config;
+pub mod factories;
+pub mod models;
 
 new_action_group!(pub(super) WindowActionGroup, "win");
 new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");

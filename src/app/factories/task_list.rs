@@ -1,4 +1,3 @@
-use core_done::service::Service;
 use relm4::actions::{ActionGroupName, RelmAction, RelmActionGroup};
 use relm4::factory::AsyncFactoryComponent;
 use relm4::factory::{DynamicIndex, FactoryView};
@@ -8,6 +7,8 @@ use relm4::{
 	gtk, AsyncFactorySender, Component, ComponentController, Controller,
 	RelmWidgetExt,
 };
+
+use done_core::service::Service;
 
 use crate::app::components::delete::{
 	DeleteComponent, DeleteInit, DeleteOutput,
