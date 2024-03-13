@@ -20,7 +20,7 @@ diesel::table! {
 				priority -> Integer,
 				sub_tasks -> Text,
 				tags -> Text,
-				notes -> Nullable<Text>,
+				notes -> Text,
 				completion_date -> Nullable<Timestamp>,
 				deletion_date -> Nullable<Timestamp>,
 				due_date -> Nullable<Timestamp>,

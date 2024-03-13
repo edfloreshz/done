@@ -1,13 +1,14 @@
 use std::str::FromStr;
 
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
 use crate::services::microsoft::models::{
 	body::{BodyType, ItemBody},
 	checklist_item::ChecklistItem,
 	task::TodoTask,
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use super::{priority::Priority, recurrence::Recurrence, status::Status};
 
@@ -33,7 +34,7 @@ pub struct Task {
 	pub priority: Priority,
 	pub sub_tasks: Vec<Task>,
 	pub tags: Vec<String>,
-	pub notes: Option<String>,
+	pub notes: String,
 	pub completion_date: Option<DateTime<Utc>>,
 	pub deletion_date: Option<DateTime<Utc>>,
 	pub due_date: Option<DateTime<Utc>>,
@@ -56,7 +57,7 @@ impl Task {
 			priority: Priority::Low,
 			sub_tasks: vec![],
 			tags: vec![],
-			notes: None,
+			notes: String::new(),
 			completion_date: None,
 			deletion_date: None,
 			due_date: None,
@@ -88,7 +89,7 @@ impl From<TodoTask> for Task {
 				.map(|item| item.clone().into())
 				.collect(),
 			tags: vec![],
-			notes: Some(task.body.content),
+			notes: task.body.content,
 			completion_date: task.completed_date_time.map(|date| date.into()),
 			deletion_date: None,
 			due_date: task.due_date_time.map(|date| date.into()),
@@ -111,7 +112,7 @@ impl From<Task> for TodoTask {
 		Self {
 			id: task.id,
 			body: ItemBody {
-				content: task.notes.unwrap_or_default(),
+				content: task.notes,
 				content_type: BodyType::Text,
 			},
 			categories: vec![],

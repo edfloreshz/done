@@ -517,9 +517,7 @@ impl AsyncFactoryComponent for TaskModel {
 	) -> Self {
 		let mut task = init.task.clone();
 		let notes_buffer = gtk::TextBuffer::default();
-		if let Some(ref note) = task.notes {
-			notes_buffer.set_text(note);
-		}
+		notes_buffer.set_text(&task.notes);
 		task.parent = init.parent_list.id.clone();
 		let mut model = Self {
 			task,
@@ -574,18 +572,16 @@ impl AsyncFactoryComponent for TaskModel {
 	) {
 		match message {
 			TaskInput::SetNotes => {
-				self.task.notes = Some(
-					self
-						.notes_buffer
-						.text(
-							&self.notes_buffer.iter_at_offset(0),
-							&self
-								.notes_buffer
-								.iter_at_offset(self.notes_buffer.char_count()),
-							false,
-						)
-						.to_string(),
-				);
+				self.task.notes = self
+					.notes_buffer
+					.text(
+						&self.notes_buffer.iter_at_offset(0),
+						&self
+							.notes_buffer
+							.iter_at_offset(self.notes_buffer.char_count()),
+						false,
+					)
+					.to_string();
 			},
 			TaskInput::ExpandSubTask(expand) => {
 				self.preferences.expand_subtasks = expand
