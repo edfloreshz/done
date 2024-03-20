@@ -1,20 +1,20 @@
 @media (prefers-color-scheme: dark) {
     #screenshot {
-        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/dark.png?raw=true");
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/sidebar-dark.png?raw=true");
     }
 
     #screenshot:hover {
-        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/dark_details.png?raw=true");
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/content-dark.png?raw=true");
     }
 }
 
 @media (prefers-color-scheme: light) {
     #screenshot {
-        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/tasks.png?raw=true");
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/sidebar-light.png?raw=true");
     }
 
     #screenshot:hover {
-        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/task_details.png?raw=true");
+        content: url("https://github.com/done-devs/done/blob/main/data/resources/screenshots/content-light.png?raw=true");
     }
 }
 
