@@ -21,10 +21,10 @@
   <a href="https://t.me/done_devs">
     <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
   </a>
-</div>
 
   ![Screenshot](./data/resources/screenshots/sidebar-light.png#gh-light-mode-only)
   ![Screenshot](./data/resources/screenshots/sidebar-dark.png#gh-dark-mode-only)
+</div>
 
 Our user-friendly app allows you to effortlessly consolidate your existing tasks into a single application for optimal productivity and organization.
 
